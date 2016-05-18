@@ -16,19 +16,30 @@ generated internally.
 This needs to be replaced by a proper grown-up FSM.
 """
 
+# The state machine's current state
 _state = 'standby'
+
+# The queue of events waiting to be processed
 _event_queue = deque()
 
 
 def start():
-    """ Constructor
+    """ Start the master controller state machine
     """
+
+    # The state machine event handler is implemented as a coroutine which
+    # must be stored and then executed to start it.
     global _state_machine
     _state_machine = run()
     next(_state_machine)
     logger.info('Master controller started')
 
 def run():
+    """ State machine event loop
+    
+    This a coroutine that loops until the state become 'exit'. When the
+    event queue is empty it relinquishes control until 'send' is called
+    """
     global _event_queue
 
     # Loop until the state is 'exit' (which isn't really a state)
@@ -43,6 +54,10 @@ def run():
 
 def _process_event(event):
     """Process an event
+
+    This function does the work of processing a single event; calling the
+    appropriate action routine and setting the new state as returned by
+    the action routine.
     """
     global _state
     logger.trace('processing event "' + event + '"')
