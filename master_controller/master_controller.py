@@ -1,9 +1,9 @@
 from collections import deque
-import logger
 import sys
 import threading
 import time
 
+import logger
 
 """The integration prototype master controller
 
