@@ -1,3 +1,4 @@
+from docker import Client
 from collections import deque
 import sys
 import threading
@@ -15,6 +16,7 @@ generated internally.
 
 This needs to be replaced by a proper grown-up FSM.
 """
+__author__ = 'David Terrett'
 
 # The state machine's current state
 _state = 'standby'
@@ -22,6 +24,35 @@ _state = 'standby'
 # The queue of events waiting to be processed
 _event_queue = deque()
 
+# This dictionary defines the properties of all the slave controllers that
+# we might want to start. It is indexed by the slave 'name' (just some
+# arbitrary string) and each entry is a dictionary containing at least the
+# following
+#
+# - The 'type' of the slave. This allows the master control to use the
+#   appropriate method to start the slave
+# - slave's state, which can be one:
+#   - an empty string: Either we have never tried to start the slave or
+#     we have shut it down cleanly.
+#   - 'running': we managed to start the slave and we are receiving
+#     heartbeat messages from it.
+#   - 'timed out': we haven't had any heartbeat messages for some time
+# - 'timeout': The number of polling intervals we are prepared to not
+#   see a heartbeat message for before declaring the slave awol.
+# - timeout counter: The number of missed heartbeats left to go.
+#
+# The polling loop decrements the timout counter each time it runs and if
+# it goes to zero the slave is declared to be timed-out. Each time a 
+# heartbeat message is received the counter is reset to the value of 
+# 'timeout'.
+#
+# Other stuff in the entry contains the info need to start the slave (e.g.
+# what host it should run on).
+_slave_map = {}
+_slave_map['lts'] = {'state':'', 'type': 'docker', 'timeout': 10, 
+                     'timeout-count': 0, 
+                     'engine_url': 'unix:///var/run/docker.sock', 
+                     'image': 'slave_controller'}
 
 def start():
     """ Start the master controller state machine
@@ -132,24 +163,71 @@ def _action_shutdown():
 
 class _configure(threading.Thread):
     """ Does the actual work of configuring the system
-
-    All it does for now is sleep for 10 seconds
     """
     def run(self):
         logger.trace('starting configuration')
-        time.sleep(10)
+        
+        # Start the local telescope state
+        _start_slave('lts', _slave_map['lts'])
         logger.trace('configure done')
         post_event('configure done')
+
+def _start_slave(name, properties):
+    """ Start a slave controller
+    """
+    if properties['type'] == 'docker':
+        _start_docker_slave(name, properties)
+    else:
+       logger.error('failed to start "' + name + '": "' + properties['type'] +
+                    '" is not a known slave type')
+
+def _start_docker_slave(name, properties):
+    """ Start a slave controller that is a Docker container
+    """
+    # Create a Docker client
+    client = Client(version='1.21', base_url=properties['engine_url'])
+
+    # Create a container and store its id in the properties array
+    container_id = client.create_container(
+                                 image=properties['image'])['Id']
+
+    # Start it
+    client.start(container_id)
+    properties['state'] = 'running'
+    properties['container_id'] = container_id
+
+def _stop_slave(name, properties):
+    """ Stop a slave controller
+    """
+    if properties['type'] == 'docker':
+        _stop_docker_slave(name, properties)
+    else:
+       logger.error('failed to stop "' + name + '": "' + properties['type'] +
+                    '" is not a known slave type')
+
+def _stop_docker_slave(name, properties):
+
+    # Create a Docker client
+    client = Client(version='1.21', base_url=properties['engine_url'])
+
+    # Stop the container
+    client.stop(properties['container_id'])
+
+    # Clear the status
+    properties['state'] = ''
 
 
 class _unconfigure(threading.Thread):
     """ Does the actual work of un-configuring the system
 
-    All it does for now is sleep for 5 seconds
+    Stops all the running slaves
     """
     def run(self):
         logger.trace('starting un-configuration')
-        time.sleep(5)
+        for entry in _slave_map:
+            properties = _slave_map[entry]
+            if properties['state'] == 'running':
+               _stop_slave(entry, properties)
         logger.trace('un-configure done')
         post_event('un-configure done')
 
