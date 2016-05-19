@@ -14,6 +14,11 @@ import logging
 logging.basicConfig(level=logging.NOTSET)
 _logger = logging.getLogger(__name__)
 
+def error(msg):
+    """ Log an ERROR level message
+    """
+    _logger.error(msg)
+
 def info(msg):
     """ Log an INFO level message
     """

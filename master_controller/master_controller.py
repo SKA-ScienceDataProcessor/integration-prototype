@@ -4,6 +4,7 @@ import sys
 import threading
 import time
 
+import heartbeat
 import logger
 
 """The integration prototype master controller
@@ -50,13 +51,17 @@ _event_queue = deque()
 # what host it should run on).
 _slave_map = {}
 _slave_map['lts'] = {'state':'', 'type': 'docker', 'timeout': 10, 
-                     'timeout-count': 0, 
+                     'timeout counter': 0, 
                      'engine_url': 'unix:///var/run/docker.sock', 
-                     'image': 'slave_controller'}
+                     'image': 'slave_controller',
+                     'host': 'localhost'}
 
 def start():
     """ Start the master controller state machine
     """
+    global _heartbeat_listener
+    _heartbeat_listener = _HeartbeatListener()
+    _heartbeat_listener.start()
 
     # The state machine event handler is implemented as a coroutine which
     # must be stored and then executed to start it.
@@ -161,6 +166,49 @@ def _action_shutdown():
     """
     return 'exit'
 
+class _HeartbeatListener(threading.Thread):
+    def __init__(self):
+
+        # Create a heartbeat listener with a 1s timeout
+        self._listener = heartbeat.Listener(1000)
+        super(_HeartbeatListener, self).__init__(daemon=True)
+
+    def connect(self, endpoint):
+        """ Connect to a sender
+        """
+        self._listener.connect(endpoint)
+
+    def run(self):
+        """ Listens for heartbeats and updates the slave map
+
+        Each time round the loop we decrement all the timeout counter for all
+        the running slaves then reset the count for any slaves that we get
+        a message from. If any slaves then have a count of zero we log a
+        message and change the state to 'timed out'.
+        """
+        global _slave_map
+        while True:
+
+            # Decrement timeout counters
+            for slave in _slave_map:
+                if _slave_map[slave]['state'] == 'running':
+                    _slave_map[slave]['timeout counter'] -= 1
+            msg = self._listener.listen()
+
+            # Reset counters of slaves that we get a message from
+            while msg != '':
+                _slave_map[msg]['timeout counter'] = _slave_map[msg]['timeout']
+                msg = self._listener.listen()
+
+            # Check for timed out slaves
+            for slave in _slave_map:
+                if _slave_map[slave]['state'] == 'running' and \
+                         _slave_map[slave]['timeout counter'] == 0:
+                    print(_slave_map)
+                    _slave_map[slave]['state'] == 'timed out'
+                    logger.error('No heartbeat from slave controller "' + 
+                                 slave + '"')
+
 class _configure(threading.Thread):
     """ Does the actual work of configuring the system
     """
@@ -188,13 +236,23 @@ def _start_docker_slave(name, properties):
     client = Client(version='1.21', base_url=properties['engine_url'])
 
     # Create a container and store its id in the properties array
-    container_id = client.create_container(
-                                 image=properties['image'])['Id']
+    container_id = client.create_container(image=properties['image'],
+                   environment={'MY_NAME':name},
+                   )['Id']
 
     # Start it
     client.start(container_id)
+    info = client.inspect_container(container_id)
+    ip_address = info['NetworkSettings']['IPAddress']
+    properties['address'] = ip_address
     properties['state'] = 'running'
     properties['container_id'] = container_id
+    properties['timeout counter'] = properties['timeout']
+    logger.info(name + ' started in container ' + container_id + ' at ' +
+                ip_address)
+
+    # Connect it to the heartbeat listener
+    _heartbeat_listener.connect(ip_address)
 
 def _stop_slave(name, properties):
     """ Stop a slave controller
