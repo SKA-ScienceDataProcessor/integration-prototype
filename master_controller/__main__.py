@@ -1,7 +1,7 @@
 """ Master controller main program
 """
-from .master_controller import start
-from .master_controller import post_event
+from .state_machine import start
+from .state_machine import post_event
 
 if __name__ == "__main__":
     """ For testing we simply post events typed on the terminal

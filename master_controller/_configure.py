@@ -20,7 +20,7 @@ class _configure(threading.Thread):
         # Start the local telescope state
         _start_slave('lts', _slave_map['lts'])
         logger.trace('configure done')
-        from .master_controller import post_event
+        from .state_machine import post_event
         post_event('configure done')
 
 def _start_slave(name, properties):

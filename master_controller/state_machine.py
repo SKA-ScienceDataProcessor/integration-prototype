@@ -1,4 +1,4 @@
-"""The integration prototype master controller
+"""The SIP master controller
 
 The master controller implements a simple state machine. It only
 has 4 states; "standby", "configuring", "available" and "unconfiguring"

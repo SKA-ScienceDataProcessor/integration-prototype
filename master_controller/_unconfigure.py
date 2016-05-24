@@ -43,5 +43,5 @@ class _unconfigure(threading.Thread):
             if properties['state'] == 'running':
                _stop_slave(entry, properties)
         logger.trace('un-configure done')
-        from .master_controller import post_event
+        from .state_machine import post_event
         post_event('un-configure done')
