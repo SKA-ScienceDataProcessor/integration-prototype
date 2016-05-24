@@ -1,6 +1,6 @@
 #!/usr/bin/python3
 
-""" Skelton slave controller for use in a Docker container
+""" Skeleton slave controller for use in a Docker container
 
 All it does is send heartbeat messages
 
