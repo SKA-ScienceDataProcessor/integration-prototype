@@ -13,6 +13,12 @@ if __name__ == "__main__":
     """ For testing we simply post events typed on the terminal
     """
     from ._states import sm
+    import threading
+    from ._rpyc_server import MasterControllerService
+    from rpyc.utils.server import ThreadedServer
+    server = ThreadedServer(MasterControllerService,port=12345)
+    t = threading.Thread(target=server.start)
+    t.start()
 
    # Read and process events
     while True:
