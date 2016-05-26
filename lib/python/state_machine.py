@@ -8,13 +8,17 @@ States are represented by objects derived from "state" and their __init__
 and __del__ methods (if the exist) define the state entry and exit actions. 
 The state diagram is stored in a dictionary with an entry per state. The 
 value of each entry is a dictionary with the key being events and the value 
-a tuple containing the destination state and the name of the transition 
-action function.
+a tuple containing whether the event should be accepted (1) or rejected
+(0), destination state and the name of the transition 
+action function. If an event is not in the table it is ignored.
 
 Events are represented by arrays or tuples (or anything that supports [] with
 numeric arguments) the first element of which is used to look up entries in
 the state table. The remaining elements are passed to the action function
 as positional arguments.
+
+post_event returns a string indicating whether the event was accepted ('ok'),
+rejected or ignored.
 """
 __author__ = 'David Terrett'
 
@@ -35,7 +39,7 @@ class state:
              return transition
 
          # No transition defined for this event
-         return (None, None)
+         return (None, None, None)
 
 class state_machine:
     """ State machine
@@ -60,21 +64,26 @@ class state_machine:
         """ Process a single event
         """
 
-        # Get the new state and transion action from the state table
-        new_state, action = self._state.process_event(self._state_table, 
-                event)
+        # Get the new state and transition action from the state table
+        status, new_state, action = self._state.process_event(
+                self._state_table, event)
 
-        # If there is a new state, destroy the current state
-        if new_state:
-            self._state = None
+        if status == 1:
+            # If there is a new state, destroy the current state
+            if new_state:
+                self._state = None
 
-        # If there is an action, call it.
-        if action:
-            action(event[0], *event[1:])
+            # If there is an action, call it.
+            if action:
+                action(event[0], *event[1:])
 
-        # If there is a new state, create it.
-        if new_state:
-            self._state = new_state()
+            # If there is a new state, create it.
+            if new_state:
+                self._state = new_state()
+            return 'ok'
+        elif status == 0:
+            return 'rejected'
+        return 'ignored'
 
     def _run(self):
         """ State machine event loop
@@ -82,11 +91,18 @@ class state_machine:
         This a coroutine that loops for ever. When the event queue is empty 
         it yields control until 'send' is called
         """
+        result = None
         while True:
-            event = yield
-            self._event_queue.appendleft(event)
+            event = yield(result)
     
             # If there are any events in the queue, process them.
+            while len(self._event_queue) > 0:
+                self._process_one_event(self._event_queue.pop())
+
+            # Process the event we were just sent and save the result
+            result = self._process_one_event(event)
+    
+            # If process any events added to the queue
             while len(self._event_queue) > 0:
                 self._process_one_event(self._event_queue.pop())
 
@@ -97,7 +113,7 @@ class state_machine:
         be called from a state machine action routine. queue_event should 
         be used instead.
         """
-        self._state_machine.send(event)
+        return self._state_machine.send(event)
 
     def queue_event(self, event):
         """ Add an event to the event queue
@@ -141,16 +157,19 @@ if __name__ == "__main__":
 
     state_table = {
         'offline': {
-            'start': (online,  action_online),
-            'exit':  (None,    action_exit)
+            'start': (1, online,  action_online),
+            'exit':  (1, None,    action_exit)
         },
         'online' : {
-            'stop' : (offline, action_offline)
+            'stop' : (1, offline, action_offline),
+            'exit':  (0, None, None)
         }
     }
 
     sm = state_machine(state_table, offline)
 
-    sm.post_event(['start'])
-    sm.post_event(['stop'])
-    sm.post_event(['exit'])
+    print('start', sm.post_event(['start']))
+    print('start', sm.post_event(['start']))
+    print('exit', sm.post_event(['exit']))
+    print('stop', sm.post_event(['stop']))
+    print('exit', sm.post_event(['exit']))

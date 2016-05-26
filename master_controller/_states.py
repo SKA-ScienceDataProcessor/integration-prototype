@@ -51,14 +51,14 @@ def _online(event):
 
     # Start a configure thread
     global mc
-    _configure(mc).start()
+    _configure(sm).start()
 
 def _offline(event):
     """Action routine that starts un-configuring the controller
     """
     # Start an un-configure thread
     global mc
-    _unconfigure(mc).start()
+    _unconfigure(sm).start()
 
 def _shutdown(event):
     """Action routine that shuts down the controller
@@ -67,21 +67,28 @@ def _shutdown(event):
 
 state_table = {
     'standby': {
-        'shutdown': (None, _shutdown),
-        'online': (configuring, _online)
+        'offline':          (0, None, None),
+        'online':           (1, configuring, _online),
+        'shutdown':         (1, None, _shutdown)
     },
     'configuring': {
-        'configure done': (available, None)
+        'configure done' :  (1, available, None),
+        'offline':          (0, None, None),
+        'online':           (0, None, None),
+        'shutdown':         (0, None, None)
     },
     'available': {
-        'offline': (unconfiguring, _offline)
+        'offline':          (1, unconfiguring, _offline),
+        'online':           (0, None, None),
+        'shutdown':         (0, None, None)
     },
     'unconfiguring': {
-        'unconfigure done': (standby, None)
+        'unconfigure done': (1, standby, None),
+        'offline':          (0, None, None),
+        'online':           (0, None, None),
+        'shutdown':         (0, None, None)
     }
 }
 
 # Create the master controller state machine
-mc = state_machine(state_table, standby)
-
- 
+sm = state_machine(state_table, standby)
