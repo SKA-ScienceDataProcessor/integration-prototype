@@ -18,21 +18,29 @@ from ._configure import _configure
 from ._unconfigure import _unconfigure
 
 class standby(state):
+    """ Standby state
+    """
     def __init__(self):
         self._name = 'standby'
         logger.info('state->standby')
 
 class configuring(state):
+    """ Configuring state
+    """
     def __init__(self):
         self._name = 'configuring'
         logger.info('state->configuring')
 
 class unconfiguring(state):
+    """ Unconfiguring state
+    """
     def __init__(self):
         self._name = 'unconfiguring'
         logger.info('state->unconfiguring')
 
 class available(state):
+    """ Available state
+    """
     def __init__(self):
         self._name = 'available'
         logger.info('state->available')

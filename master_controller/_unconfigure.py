@@ -28,7 +28,7 @@ def _stop_docker_slave(name, properties):
     # Stop the container
     client.stop(properties['container_id'])
 
-    # Clear the status
+    # Clear the status in the property map
     properties['state'] = ''
 
 class _unconfigure(threading.Thread):
@@ -37,9 +37,17 @@ class _unconfigure(threading.Thread):
     Stops all the running slaves
     """
     def __init__(self, mc):
+        """ Stores the state machine
+
+        The state machine is needed so that we can post an "unconfigure done"
+        event when the system is unconfigured.
+        """
         self._mc = mc
         super(_unconfigure, self).__init__()
+
     def run(self):
+        """ Thread run routine
+        """
         logger.trace('starting unconfiguration')
         for entry in _slave_map:
             properties = _slave_map[entry]

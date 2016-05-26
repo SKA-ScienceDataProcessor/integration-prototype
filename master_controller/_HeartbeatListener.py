@@ -17,8 +17,8 @@ from ._slave_map import _slave_map
 
 class _HeartbeatListener(threading.Thread):
     def __init__(self):
-
-        # Create a heartbeat listener with a 1s timeout
+        """ Creates a heartbeat listener with a 1s timeout
+        """
         self._listener = heartbeat.Listener(1000)
         super(_HeartbeatListener, self).__init__(daemon=True)
 
@@ -46,18 +46,18 @@ class _HeartbeatListener(threading.Thread):
 
             # Reset counters of slaves that we get a message from
             while msg != '':
-                _slave_map[msg]['timeout counter'] = _slave_map[msg]['timeout']
+                _slave_map[msg]['timeout counter'] = (
+                       _slave_map[msg]['timeout'])
                 msg = self._listener.listen()
 
             # Check for timed out slaves
             for slave in _slave_map:
-                if _slave_map[slave]['state'] == 'running' and \
-                         _slave_map[slave]['timeout counter'] == 0:
+                if _slave_map[slave]['state'] == 'running' and (
+                         _slave_map[slave]['timeout counter'] == 0):
                     _slave_map[slave]['state'] == 'timed out'
                     logger.error('No heartbeat from slave controller "' + 
                                  slave + '"')
 
 # Create and start the global heartbeat listener
-global _heartbeat_listener
 _heartbeat_listener = _HeartbeatListener()
 _heartbeat_listener.start()

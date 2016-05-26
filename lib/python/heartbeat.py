@@ -1,10 +1,14 @@
 """ This defines the SIP API for sending and receiving heartbeat messages
 """
+__author__ = 'David Terrett'
+
 import zmq
 
 _context = zmq.Context()
 
 class Sender:
+    """ Class for sending heartbeat messages
+    """
     def __init__(self, name):
 
         # Create a publish socket and bind it to port 6478 
@@ -19,6 +23,8 @@ class Sender:
         self._socket.send_string(self._name)
 
 class Listener:
+     """ Class for listening for heartbeat messages
+     """
      def __init__(self, timeout):
         self._timeout = timeout
 

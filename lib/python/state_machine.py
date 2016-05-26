@@ -61,7 +61,8 @@ class state_machine:
         """
 
         # Get the new state and transion action from the state table
-        new_state, action = self._state.process_event(self._state_table, event)
+        new_state, action = self._state.process_event(self._state_table, 
+                event)
 
         # If there is a new state, destroy the current state
         if new_state:

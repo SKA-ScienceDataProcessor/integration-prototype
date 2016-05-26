@@ -15,12 +15,20 @@ class _configure(threading.Thread):
     """ Does the actual work of configuring the system
     """
     def __init__(self, mc):
+        """ Stores the state machine
+
+        The state machine is needed so that we can post a "configure done"
+        event when the system is configured.
+        """
         self._mc = mc
         super(_configure, self).__init__()
+
     def run(self):
+        """ Thread run routine
+        """
         logger.trace('starting configuration')
         
-        # Start the local telescope state
+        # Start the local telescope state application
         _start_slave('lts', _slave_map['lts'])
         logger.trace('configure done')
         self._mc.post_event(['configure done'])
@@ -56,6 +64,6 @@ def _start_docker_slave(name, properties):
     logger.info(name + ' started in container ' + container_id + ' at ' +
                 ip_address)
 
-    # Connect it to the heartbeat listener
+    # Connect the heartbeat listener to the address it is sending heartbeats
+    # to.
     _heartbeat_listener.connect(ip_address)
-

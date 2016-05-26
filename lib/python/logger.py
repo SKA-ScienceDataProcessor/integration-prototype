@@ -25,11 +25,17 @@ def info(msg):
     _logger.info(msg)
 
 def trace(msg):
-    """ Log an TRACE level message
+    """ Log a TRACE level message
     """
     _logger.log(5, msg)
 
 def warn(msg):
-    """ Log an WARN level message
+    """ Log a WARN level message
     """
     _logger.warn(msg)
+
+if __name__ == '__main__':
+    error('An error message')
+    info('An info message')
+    trace('A trace message')
+    warn('A warn message')
