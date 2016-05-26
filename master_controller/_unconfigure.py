@@ -36,12 +36,14 @@ class _unconfigure(threading.Thread):
 
     Stops all the running slaves
     """
+    def __init__(self, mc):
+        self._mc = mc
+        super(_unconfigure, self).__init__()
     def run(self):
-        logger.trace('starting un-configuration')
+        logger.trace('starting unconfiguration')
         for entry in _slave_map:
             properties = _slave_map[entry]
             if properties['state'] == 'running':
                _stop_slave(entry, properties)
-        logger.trace('un-configure done')
-        from .state_machine import post_event
-        post_event('un-configure done')
+        logger.trace('unconfigure done')
+        self._mc.post_event(['unconfigure done'])

@@ -14,14 +14,16 @@ from ._slave_map import _slave_map
 class _configure(threading.Thread):
     """ Does the actual work of configuring the system
     """
+    def __init__(self, mc):
+        self._mc = mc
+        super(_configure, self).__init__()
     def run(self):
         logger.trace('starting configuration')
         
         # Start the local telescope state
         _start_slave('lts', _slave_map['lts'])
         logger.trace('configure done')
-        from .state_machine import post_event
-        post_event('configure done')
+        self._mc.post_event(['configure done'])
 
 def _start_slave(name, properties):
     """ Start a slave controller
