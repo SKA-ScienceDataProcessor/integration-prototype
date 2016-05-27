@@ -25,3 +25,6 @@ class MasterControllerService(rpyc.Service):
       sm.post_event([state_command])
       if(callback != None):
          callback(state_command)
+   def exposed_get_current_state(self):
+      return sm.current_state()
+

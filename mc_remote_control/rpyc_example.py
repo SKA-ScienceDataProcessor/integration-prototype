@@ -18,4 +18,8 @@ conn.root.command("online",callb)
 # and silently go offline again
 conn.root.command("offline")
 
+# print current state
+print("Master Controller state is:",conn.root.get_current_state())
+
+
 
