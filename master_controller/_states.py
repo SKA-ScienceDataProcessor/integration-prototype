@@ -11,34 +11,34 @@ __author__ = 'David Terrett'
 import sys
 
 import logger
-from state_machine import state_machine
-from state_machine import state
+from state_machine import StateMachine
+from state_machine import State
 
 from ._configure import _configure
 from ._unconfigure import _unconfigure
 
-class standby(state):
+class standby(State):
     """ Standby state
     """
     def __init__(self):
         self._name = 'standby'
         logger.info('state->standby')
 
-class configuring(state):
+class configuring(State):
     """ Configuring state
     """
     def __init__(self):
         self._name = 'configuring'
         logger.info('state->configuring')
 
-class unconfiguring(state):
+class unconfiguring(State):
     """ Unconfiguring state
     """
     def __init__(self):
         self._name = 'unconfiguring'
         logger.info('state->unconfiguring')
 
-class available(state):
+class available(State):
     """ Available state
     """
     def __init__(self):
@@ -91,4 +91,4 @@ state_table = {
 }
 
 # Create the master controller state machine
-sm = state_machine(state_table, standby)
+sm = StateMachine(state_table, standby)

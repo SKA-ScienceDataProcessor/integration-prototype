@@ -4,7 +4,7 @@ This module defines a simple state machine framework. It supports entry,
 exit and transition actions and in-state transitions. It does not support
 nested states or a history states.
 
-States are represented by objects derived from "state" and their __init__ 
+States are represented by objects derived from "State" and their __init__ 
 and __del__ methods (if the exist) define the state entry and exit actions. 
 The state diagram is stored in a dictionary with an entry per state. The 
 value of each entry is a dictionary with the key being events and the value 
@@ -24,7 +24,7 @@ __author__ = 'David Terrett'
 
 from collections import deque
 
-class state:
+class State:
     """ Base class for states
 
     The derived class must set self._name to the name of the state
@@ -41,7 +41,7 @@ class state:
          # No transition defined for this event
          return (None, None, None)
 
-class state_machine:
+class StateMachine:
     """ State machine
     """
     def __init__(self, state_table, initial_state):
@@ -131,14 +131,14 @@ if __name__ == "__main__":
 
     # Simple demo state machine
 
-    class offline(state):
+    class offline(State):
         def __init__(self):
             self._name = 'offline'
             print("entering offline")
         def __del__(self):
             print("exiting offline")
          
-    class online(state):
+    class online(State):
         def __init__(self):
             self._name = 'online'
             print("entering online")
@@ -166,7 +166,7 @@ if __name__ == "__main__":
         }
     }
 
-    sm = state_machine(state_table, offline)
+    sm = StateMachine(state_table, offline)
 
     print('start', sm.post_event(['start']))
     print('start', sm.post_event(['start']))
