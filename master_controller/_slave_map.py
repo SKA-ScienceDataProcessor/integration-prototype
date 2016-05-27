@@ -6,12 +6,11 @@ following
 
 - The 'type' of the slave. This allows the master control to use the
   appropriate method to start the slave
-- slave's state, which can be one:
-  - an empty string: Either we have never tried to start the slave or
-    we have shut it down cleanly.
-  - 'running': we managed to start the slave and we are receiving
-    heartbeat messages from it.
-  - 'timed out': we haven't had any heartbeat messages for some time
+- slave's state, which can be one:	
+	- an empty string: Either we have never tried to start the slave or we have shut it down cleanly.
+	- 'running': we managed to start the slave and we are receiving heartbeat messages from it.
+	- 'timed out': we haven't had any heartbeat messages for some time
+	
 - 'timeout': The number of polling intervals we are prepared to not
   see a heartbeat message for before declaring the slave awol.
 - timeout counter: The number of missed heartbeats left to go.
