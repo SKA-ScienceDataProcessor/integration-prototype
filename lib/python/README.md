@@ -1,4 +1,5 @@
 # Integration prototype python packages
 
-* logging.py: Simple logging API
 * heartbeat.py: Heartbeat API
+* logging.py: Simple logging API
+* state_machine.py: Simple, table driven, state machine framework
