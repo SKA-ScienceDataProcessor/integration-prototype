@@ -3,17 +3,27 @@
 __author__ = 'Brian McIlwrath'
 
 import rpyc
+import logger
 from ._states import mc
+
+""" This is a rpyc service where the commands starting with 'exposed_'
+    are available to the client - less the 'exposed_' text
+    Example client code:
+       conn=rpyc.connect('localhost',port=12345)
+  :    conn.root.command('offline')
+
+A (tpd) command returning a value with client arguments
+       retval=conn.root.tpd_command(arg1,arg2,arg3)
+"""
 
 class MasterControllerService(rpyc.Service):
    def on_connect(self):
-      print (" master controller connected")
+      logger.info(" master controller client controller connected")
    def on_disconnect(self):
-      print ("master controller disconnected")
+      logger.info("master controller client controller disconnected")
    def exposed_command(self, state_command):
       mc.post_event([state_command])
-   def exposed_command_and_cb(self, state_command,callback):
+   def exposed_command(self, state_command,callback=None):
       mc.post_event([state_command])
-      callback(state_command)
-   def exposed_callback(self,func,text):
-      func(text)
+      if(callback != None):
+         callback(state_command)

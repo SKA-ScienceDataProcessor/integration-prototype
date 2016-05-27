@@ -5,33 +5,25 @@ has 4 states; "standby", "configuring", "available" and "unconfiguring"
 and 6 events; "online", "offline", "configure done", "unconfigure done"
 and "error". "online" and "offline" are external and the others are
 generated internally.
+
+This needs to be replaced by a proper grown-up FSM.
 """
 __author__ = 'David Terrett + Brian McIlwrath'
 
 
 if __name__ == "__main__":
-    from ._states import sm
-    import threading
-
-    """ This starts the rpyc 'ThreadedServer' - this creates a new 
-        thread for each connection on the given port
+    """ For testing we simply post events typed on the terminal
     """
+    from ._states import mc
+    import threading
     from ._rpyc_server import MasterControllerService
     from rpyc.utils.server import ThreadedServer
     server = ThreadedServer(MasterControllerService,port=12345)
     t = threading.Thread(target=server.start)
     t.start()
 
-    """ For testing we can also run events typed on the terminal
-    """
-    # Read and process events
+   # Read and process events
     while True:
         event = input('?')
-        result = sm.post_event([event])
-        if result == 'rejected':
-            print('not allowed in current state')
-        if result == 'ignored':
-            print('command ignored')
-        else:
-            print('master controller state:', sm.current_state())
+        mc.post_event([event])
 
