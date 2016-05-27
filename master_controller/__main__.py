@@ -22,4 +22,6 @@ if __name__ == "__main__":
             print('not allowed in current state')
         if result == 'ignored':
             print('command ignored')
+        else:
+            print('master controller state:', sm.current_state())
 

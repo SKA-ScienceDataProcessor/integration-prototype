@@ -125,6 +125,11 @@ class StateMachine:
         """
         self._event_queue.appendleft(event)
 
+    def current_state(self):
+        """ Returns the name of the current state
+        """
+        return self._state._name
+
 if __name__ == "__main__":
 
     import sys
@@ -169,7 +174,9 @@ if __name__ == "__main__":
     sm = StateMachine(state_table, offline)
 
     print('start', sm.post_event(['start']))
+    print('state is now', sm.current_state())
     print('start', sm.post_event(['start']))
     print('exit', sm.post_event(['exit']))
     print('stop', sm.post_event(['stop']))
+    print('state is now', sm.current_state())
     print('exit', sm.post_event(['exit']))
