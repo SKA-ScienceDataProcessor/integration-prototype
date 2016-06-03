@@ -46,8 +46,9 @@ class HeartbeatListener(threading.Thread):
 
             # Reset counters of slaves that we get a message from
             while msg != '':
-                slave_map[msg]['timeout counter'] = (
-                       slave_map[msg]['timeout'])
+                name = msg[0]
+                slave_map[name]['timeout counter'] = (
+                       slave_map[name]['timeout'])
                 msg = self._listener.listen()
 
             # Check for timed out slaves

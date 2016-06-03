@@ -70,11 +70,11 @@ def run():
         comp_msg=heartbeat_comp_listener.listen()
 	# Extract a component's state
         _state_component = _get_state(comp_msg)
-	# If the state cganges log it
+	# If the state changes log it
         if _state_component != _state_component_prev :
              logger.info(comp_msg)
              _state_component_prev = _state_component		
-        heartbeat_sender.send()
+        heartbeat_sender.send('ok')
         time.sleep(1)
 
 if __name__ == '__main__':

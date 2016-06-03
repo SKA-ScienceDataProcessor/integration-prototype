@@ -2,6 +2,7 @@
 """
 __author__ = 'David Terrett'
 
+import string
 import zmq
 
 _context = zmq.Context()
@@ -18,9 +19,9 @@ class Sender:
         # Store our name
         self._name = name
 
-    def send(self):
+    def send(self, status):
         """ Send a heartbeat message """
-        self._socket.send_string(self._name)
+        self._socket.send_string(self._name + ':' + status)
 
 class Listener:
      """ Class for listening for heartbeat messages
@@ -42,9 +43,11 @@ class Listener:
      def listen(self):
         """ Listens for heartbeat messages
 
-        Returns the name of the sender of the heartbeat
+        Returns the name of the sender of the heartbeat and the status or 
+        an empty string if no message is received
         """
         if self._socket.poll(self._timeout) != 0:
-            return self._socket.recv_string()
+            msg = self._socket.recv_string()
+            return msg.split(':')
         return ''
        
