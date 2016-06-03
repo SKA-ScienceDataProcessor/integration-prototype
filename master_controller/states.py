@@ -14,35 +14,35 @@ import logger
 from state_machine import StateMachine
 from state_machine import State
 
-from ._configure import _configure
-from ._unconfigure import _unconfigure
+from .Configure import Configure
+from .UnConfigure import UnConfigure
 
-class standby(State):
+class Standby(State):
     """ Standby state
     """
     def __init__(self):
-        self._name = 'standby'
+        super(Standby, self).__init__('standby')
         logger.info('state->standby')
 
-class configuring(State):
+class Configuring(State):
     """ Configuring state
     """
     def __init__(self):
-        self._name = 'configuring'
+        super(Configuring, self).__init__('configuring')
         logger.info('state->configuring')
 
-class unconfiguring(State):
+class UnConfiguring(State):
     """ Unconfiguring state
     """
     def __init__(self):
-        self._name = 'unconfiguring'
+        super(UnConfiguring, self).__init__('unconfiguring')
         logger.info('state->unconfiguring')
 
-class available(State):
+class Available(State):
     """ Available state
     """
     def __init__(self):
-        self._name = 'available'
+        super(Available, self).__init__('available')
         logger.info('state->available')
 
 def _online(event):
@@ -51,14 +51,14 @@ def _online(event):
 
     # Start a configure thread
     global mc
-    _configure(sm).start()
+    Configure(sm).start()
 
 def _offline(event):
     """Action routine that starts un-configuring the controller
     """
     # Start an un-configure thread
     global mc
-    _unconfigure(sm).start()
+    UnConfigure(sm).start()
 
 def _shutdown(event):
     """Action routine that shuts down the controller
@@ -68,22 +68,22 @@ def _shutdown(event):
 state_table = {
     'standby': {
         'offline':          (0, None, None),
-        'online':           (1, configuring, _online),
+        'online':           (1, Configuring, _online),
         'shutdown':         (1, None, _shutdown)
     },
     'configuring': {
-        'configure done' :  (1, available, None),
+        'configure done' :  (1, Available, None),
         'offline':          (0, None, None),
         'online':           (0, None, None),
         'shutdown':         (0, None, None)
     },
     'available': {
-        'offline':          (1, unconfiguring, _offline),
+        'offline':          (1, UnConfiguring, _offline),
         'online':           (0, None, None),
         'shutdown':         (0, None, None)
     },
     'unconfiguring': {
-        'unconfigure done': (1, standby, None),
+        'unconfigure done': (1, Standby, None),
         'offline':          (0, None, None),
         'online':           (0, None, None),
         'shutdown':         (0, None, None)
@@ -91,4 +91,4 @@ state_table = {
 }
 
 # Create the master controller state machine
-sm = StateMachine(state_table, standby)
+sm = StateMachine(state_table, Standby)

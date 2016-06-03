@@ -13,14 +13,14 @@ import threading
 import heartbeat
 import logger
 
-from ._slave_map import _slave_map
+from .slave_map import slave_map
 
-class _HeartbeatListener(threading.Thread):
+class HeartbeatListener(threading.Thread):
     def __init__(self):
         """ Creates a heartbeat listener with a 1s timeout
         """
         self._listener = heartbeat.Listener(1000)
-        super(_HeartbeatListener, self).__init__(daemon=True)
+        super(HeartbeatListener, self).__init__(daemon=True)
 
     def connect(self, endpoint):
         """ Connect to a sender
@@ -35,29 +35,29 @@ class _HeartbeatListener(threading.Thread):
         a message from. If any slaves then have a count of zero we log a
         message and change the state to 'timed out'.
         """
-        global _slave_map
+        global slave_map
         while True:
 
             # Decrement timeout counters
-            for slave in _slave_map:
-                if _slave_map[slave]['state'] == 'running':
-                    _slave_map[slave]['timeout counter'] -= 1
+            for slave in slave_map:
+                if slave_map[slave]['state'] == 'running':
+                    slave_map[slave]['timeout counter'] -= 1
             msg = self._listener.listen()
 
             # Reset counters of slaves that we get a message from
             while msg != '':
-                _slave_map[msg]['timeout counter'] = (
-                       _slave_map[msg]['timeout'])
+                slave_map[msg]['timeout counter'] = (
+                       slave_map[msg]['timeout'])
                 msg = self._listener.listen()
 
             # Check for timed out slaves
-            for slave in _slave_map:
-                if _slave_map[slave]['state'] == 'running' and (
-                         _slave_map[slave]['timeout counter'] == 0):
-                    _slave_map[slave]['state'] == 'timed out'
+            for slave in slave_map:
+                if slave_map[slave]['state'] == 'running' and (
+                         slave_map[slave]['timeout counter'] == 0):
+                    slave_map[slave]['state'] == 'timed out'
                     logger.error('No heartbeat from slave controller "' + 
                                  slave + '"')
 
 # Create and start the global heartbeat listener
-_heartbeat_listener = _HeartbeatListener()
-_heartbeat_listener.start()
+heartbeat_listener = HeartbeatListener()
+heartbeat_listener.start()

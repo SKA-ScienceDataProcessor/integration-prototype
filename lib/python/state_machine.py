@@ -5,7 +5,7 @@ exit and transition actions and in-state transitions. It does not support
 nested states or a history states.
 
 States are represented by objects derived from "State" and their __init__ 
-and __del__ methods (if the exist) define the state entry and exit actions. 
+and exit methods (if they exist) define the state entry and exit actions. 
 The state diagram is stored in a dictionary with an entry per state. The 
 value of each entry is a dictionary with the key being events and the value 
 a tuple containing whether the event should be accepted (1) or rejected
@@ -20,32 +20,44 @@ as positional arguments.
 post_event returns a string indicating whether the event was accepted ('ok'),
 rejected or ignored.
 """
-__author__ = 'David Terrett'
 
 from collections import deque
 
 class State:
     """ Base class for states
-
-    The derived class must set self._name to the name of the state
     """
+    def __init__(self, name):
+        """ Stores the name of the state
+        """
+        self._name = name
+
     def process_event(self, state_table, event):
+        """ Processes an event
+            
+        The event is looked up in the state table and if an entry exists
+        it is return. Otherwise a tuple of None's is returned.
+        """
 
-         # Check that the event is in the table
-         if event[0] in state_table[self._name]:
+        # Check that the event is in the table
+        if event[0] in state_table[self._name]:
 
-             # Return the table entry for this event
-             transition = state_table[self._name][event[0]]
-             return transition
+            # Return the table entry for this event
+            transition = state_table[self._name][event[0]]
+            return transition
 
-         # No transition defined for this event
-         return (None, None, None)
+        # No transition defined for this event
+        return (None, None, None)
+
+    def exit(self):
+        """ Default exit action
+        """
+        pass
 
 class StateMachine:
     """ State machine
     """
     def __init__(self, state_table, initial_state):
-        """ Constructor
+        """ Creates and initialise a state machine
     
         Stores the state table, creates the initial state and calls _run
         to initialise the coroutine.
@@ -71,6 +83,7 @@ class StateMachine:
         if status == 1:
             # If there is a new state, destroy the current state
             if new_state:
+                self._state.exit()
                 self._state = None
 
             # If there is an action, call it.
@@ -136,18 +149,18 @@ if __name__ == "__main__":
 
     # Simple demo state machine
 
-    class offline(State):
+    class Offline(State):
         def __init__(self):
-            self._name = 'offline'
+            super(Offline, self).__init__('offline')
             print("entering offline")
-        def __del__(self):
+        def exit(self):
             print("exiting offline")
          
-    class online(State):
+    class Online(State):
         def __init__(self):
-            self._name = 'online'
+            super(Online, self).__init__('online')
             print("entering online")
-        def __del__(self):
+        def exit(self):
             print("exiting online")
 
     def action_offline(event_name):
@@ -162,16 +175,16 @@ if __name__ == "__main__":
 
     state_table = {
         'offline': {
-            'start': (1, online,  action_online),
+            'start': (1, Online,  action_online),
             'exit':  (1, None,    action_exit)
         },
         'online' : {
-            'stop' : (1, offline, action_offline),
+            'stop' : (1, Offline, action_offline),
             'exit':  (0, None, None)
         }
     }
 
-    sm = StateMachine(state_table, offline)
+    sm = StateMachine(state_table, Offline)
 
     print('start', sm.post_event(['start']))
     print('state is now', sm.current_state())

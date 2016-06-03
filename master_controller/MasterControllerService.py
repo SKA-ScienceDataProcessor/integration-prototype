@@ -4,7 +4,7 @@ __author__ = 'Brian McIlwrath'
 
 import rpyc
 import logger
-from ._states import sm 
+from .states import sm 
 
 """ This is a rpyc service where the commands starting with 'exposed_'
     are available to the client - less the 'exposed_' text

@@ -7,7 +7,7 @@ import threading
 
 import logger
 
-from ._slave_map import _slave_map
+from .slave_map import slave_map
 
 def _stop_slave(name, properties):
     """ Stop a slave controller
@@ -31,7 +31,7 @@ def _stop_docker_slave(name, properties):
     # Clear the status in the property map
     properties['state'] = ''
 
-class _unconfigure(threading.Thread):
+class UnConfigure(threading.Thread):
     """ Does the actual work of un-configuring the system
 
     Stops all the running slaves
@@ -43,14 +43,14 @@ class _unconfigure(threading.Thread):
         event when the system is unconfigured.
         """
         self._mc = mc
-        super(_unconfigure, self).__init__()
+        super(UnConfigure, self).__init__()
 
     def run(self):
         """ Thread run routine
         """
         logger.trace('starting unconfiguration')
-        for entry in _slave_map:
-            properties = _slave_map[entry]
+        for entry in slave_map:
+            properties = slave_map[entry]
             if properties['state'] == 'running':
                _stop_slave(entry, properties)
         logger.trace('unconfigure done')

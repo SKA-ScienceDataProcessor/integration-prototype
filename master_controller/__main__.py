@@ -10,13 +10,13 @@ __author__ = 'David Terrett + Brian McIlwrath'
 
 
 if __name__ == "__main__":
-    from ._states import sm
+    from .states import sm
     import threading
 
     """ This starts the rpyc 'ThreadedServer' - this creates a new 
         thread for each connection on the given port
     """
-    from ._rpyc_server import MasterControllerService
+    from .MasterControllerService import MasterControllerService
     from rpyc.utils.server import ThreadedServer
     server = ThreadedServer(MasterControllerService,port=12345)
     t = threading.Thread(target=server.start)

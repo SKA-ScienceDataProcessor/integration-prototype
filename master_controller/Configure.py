@@ -7,11 +7,10 @@ import threading
 
 import logger
 
-from ._HeartbeatListener import _HeartbeatListener
-from ._HeartbeatListener import _heartbeat_listener
-from ._slave_map import _slave_map
+from .HeartbeatListener import heartbeat_listener
+from .slave_map import slave_map
 
-class _configure(threading.Thread):
+class Configure(threading.Thread):
     """ Does the actual work of configuring the system
     """
     def __init__(self, mc):
@@ -21,7 +20,7 @@ class _configure(threading.Thread):
         event when the system is configured.
         """
         self._mc = mc
-        super(_configure, self).__init__()
+        super(Configure, self).__init__()
 
     def run(self):
         """ Thread run routine
@@ -29,7 +28,7 @@ class _configure(threading.Thread):
         logger.trace('starting configuration')
         
         # Start the local telescope state application
-        _start_slave('lts', _slave_map['lts'])
+        _start_slave('lts', slave_map['lts'])
         logger.trace('configure done')
         self._mc.post_event(['configure done'])
 
@@ -66,4 +65,4 @@ def _start_docker_slave(name, properties):
 
     # Connect the heartbeat listener to the address it is sending heartbeats
     # to.
-    _heartbeat_listener.connect(ip_address)
+    heartbeat_listener.connect(ip_address)
