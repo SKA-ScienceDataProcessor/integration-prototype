@@ -9,11 +9,11 @@ _context = zmq.Context()
 class Sender:
     """ Class for sending heartbeat messages
     """
-    def __init__(self, name):
+    def __init__(self, name, port = '6478'):
 
         # Create a publish socket and bind it to port 6478 
         self._socket = _context.socket(zmq.PUB)
-        self._socket.bind('tcp://*:6478')
+        self._socket.bind('tcp://*:' + port)
 
         # Store our name
         self._name = name

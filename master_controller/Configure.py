@@ -50,8 +50,15 @@ def _start_docker_slave(name, properties):
     client = Client(version='1.21', base_url=properties['engine_url'])
 
     # Create a container and store its id in the properties array
-    container_id = client.create_container(image=properties['image'],
-                   command=['/home/sdp/docker_slave.py', name],
+    image = properties['image']
+    heartbeat_port = properties['heartbeat_port']
+    rpc_port = properties['rpc_port']
+    container_id = client.create_container(image=image,
+                   command=['/home/sdp/docker_slave.py', 
+                            name, 
+                            heartbeat_port,
+                            rpc_port
+                           ],
 		   volumes=['/home/sdp/components/'],
 		   host_config=client.create_host_config(binds={
         		os.getcwd()+'/components': {
@@ -73,4 +80,4 @@ def _start_docker_slave(name, properties):
 
     # Connect the heartbeat listener to the address it is sending heartbeats
     # to.
-    heartbeat_listener.connect(ip_address)
+    heartbeat_listener.connect(ip_address, heartbeat_port)

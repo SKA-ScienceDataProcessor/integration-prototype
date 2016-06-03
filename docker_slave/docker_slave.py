@@ -42,6 +42,7 @@ def run():
     _state_component = 'off'
     _state_component_prev = 'off'
     name = sys.argv[1]
+    heartbeat_port = sys.argv[2]
     logger.info('Slave controller "' + name + '" starting')
 
     # Install handler to respond to SIGTERM
@@ -61,7 +62,7 @@ def run():
     heartbeat_comp_listener.connect('localhost', str(port))
 
     # Create a heartbeat sender to MC
-    heartbeat_sender = heartbeat.Sender(name)
+    heartbeat_sender = heartbeat.Sender(name, heartbeat_port)
 
     # Start polling loop
     while True:

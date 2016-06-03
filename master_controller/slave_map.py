@@ -30,4 +30,6 @@ slave_map['lts'] = {'state':'', 'type': 'docker', 'timeout': 10,
                      'timeout counter': 0, 
                      'engine_url': 'unix:///var/run/docker.sock', 
                      'image': 'slave_controller',
-                     'host': 'localhost'}
+                     'host': 'localhost',
+                     'heartbeat_port': '6477',
+                     'rpc_port': '6479'}

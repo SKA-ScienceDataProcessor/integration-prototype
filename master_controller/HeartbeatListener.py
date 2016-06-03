@@ -22,10 +22,10 @@ class HeartbeatListener(threading.Thread):
         self._listener = heartbeat.Listener(1000)
         super(HeartbeatListener, self).__init__(daemon=True)
 
-    def connect(self, endpoint):
+    def connect(self, host, port):
         """ Connect to a sender
         """
-        self._listener.connect(endpoint)
+        self._listener.connect(host, port)
 
     def run(self):
         """ Listens for heartbeats and updates the slave map
