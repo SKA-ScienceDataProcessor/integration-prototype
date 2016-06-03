@@ -6,6 +6,7 @@ from docker import Client
 import threading 
 
 import logger
+import os
 
 from ._HeartbeatListener import _HeartbeatListener
 from ._HeartbeatListener import _heartbeat_listener
@@ -45,13 +46,20 @@ def _start_slave(name, properties):
 def _start_docker_slave(name, properties):
     """ Start a slave controller that is a Docker container
     """
+
     # Create a Docker client
     client = Client(version='1.21', base_url=properties['engine_url'])
 
     # Create a container and store its id in the properties array
     container_id = client.create_container(image=properties['image'],
                    environment={'MY_NAME':name},
-                   )['Id']
+		   volumes=['/home/sdp/components/'],
+		   host_config=client.create_host_config(binds={
+        		os.getcwd()+'/components': {
+            		'bind': '/home/sdp/components/',
+            		'mode': 'rw',
+        		}
+                   }))['Id']
 
     # Start it
     client.start(container_id)
