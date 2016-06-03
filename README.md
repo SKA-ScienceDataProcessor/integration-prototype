@@ -5,4 +5,5 @@ SDP Integration Prototype
 * Python 3.4 or later
 * DockerPy
 * rpyc
+* zmq
 
