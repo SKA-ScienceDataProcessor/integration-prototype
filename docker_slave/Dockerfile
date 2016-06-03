@@ -23,8 +23,3 @@ COPY docker_slave/docker_slave.py /home/sdp/
 
 # Make the application executable
 RUN chmod +x /home/sdp/docker_slave.py
-
-# Define entry point. We use CMD rather than ENTRYPOINT because we need to
-# have Python running as PID 0 so that it gets the SIGTERM that "docker stop"
-# sends.
-CMD ["/home/sdp/docker_slave.py"]

@@ -15,7 +15,6 @@ A handler for SIGTERM is set up that just exits because that is what
 'Docker stop' sends.
 """
 
-import os
 import signal
 import sys
 import time
@@ -31,7 +30,7 @@ import subprocess
 def _sig_handler(signum, frame):
     sys.exit(0)
 """
-The funtion _get_state(msg) extracts the state from the heartbeat message
+The function _get_state(msg) extracts the state from the heartbeat message
 """
 def _get_state(msg):
     tokens = msg.split(" ")
@@ -42,7 +41,7 @@ def _get_state(msg):
 def run():
     _state_component = 'off'
     _state_component_prev = 'off'
-    name = os.environ['MY_NAME']
+    name = sys.argv[1]
     logger.info('Slave controller "' + name + '" starting')
 
     # Install handler to respond to SIGTERM
