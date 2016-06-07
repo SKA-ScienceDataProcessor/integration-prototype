@@ -20,6 +20,7 @@ if __name__ == "__main__":
     from rpyc.utils.server import ThreadedServer
     server = ThreadedServer(MasterControllerService,port=12345)
     t = threading.Thread(target=server.start)
+    t.setDaemon(True)
     t.start()
 
     """ For testing we can also run events typed on the terminal
