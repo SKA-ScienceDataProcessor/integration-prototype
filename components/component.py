@@ -18,8 +18,9 @@ import signal
 import time
 import datetime
 
-sys.path.append('/home/sdp/lib/python')
-import heartbeat_component
+sys.path.append(os.path.join(os.path.dirname(__file__),'..', 'common'))
+
+from sip_common import heartbeat_component
 
 _context = zmq.Context()
 
