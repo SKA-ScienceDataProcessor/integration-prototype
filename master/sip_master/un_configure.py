@@ -5,9 +5,10 @@ __author__ = 'David Terrett'
 from docker import Client
 import threading
 
-import logger
+from sip_common import logger
 
-from .slave_map import slave_map
+from sip_master.slave_map import slave_map
+from sip_master import config
 
 def _stop_slave(name, properties):
     """ Stop a slave controller
@@ -36,13 +37,7 @@ class UnConfigure(threading.Thread):
 
     Stops all the running slaves
     """
-    def __init__(self, mc):
-        """ Stores the state machine
-
-        The state machine is needed so that we can post an "unconfigure done"
-        event when the system is unconfigured.
-        """
-        self._mc = mc
+    def __init__(self):
         super(UnConfigure, self).__init__()
 
     def run(self):
@@ -54,4 +49,4 @@ class UnConfigure(threading.Thread):
             if properties['state'] == 'running':
                _stop_slave(entry, properties)
         logger.trace('unconfigure done')
-        self._mc.post_event(['unconfigure done'])
+        config.state_machine.post_event(['unconfigure done'])

@@ -20,10 +20,14 @@ import sys
 import time
 import copy
 
-sys.path.append('/home/sdp/lib/python')
-import heartbeat
-import heartbeat_component
-import logger
+import os
+import sys
+
+sys.path.append(os.path.join(os.path.dirname(__file__),'..', '..', 'common'))
+
+from sip_common import heartbeat
+from sip_common import heartbeat_component
+from sip_common import logger
 
 import subprocess
 

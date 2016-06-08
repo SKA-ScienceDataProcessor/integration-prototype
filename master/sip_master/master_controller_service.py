@@ -3,8 +3,8 @@
 __author__ = 'Brian McIlwrath'
 
 import rpyc
-import logger
-from .states import sm 
+from sip_common import logger
+from sip_master import config
 
 """ This is a rpyc service where the commands starting with 'exposed_'
     are available to the client - less the 'exposed_' text
@@ -22,9 +22,9 @@ class MasterControllerService(rpyc.Service):
    def on_disconnect(self):
       logger.info("master controller client controller disconnected")
    def exposed_command(self, state_command,callback=None):
-      sm.post_event([state_command])
+      config.state_machine.post_event([state_command])
       if(callback != None):
          callback(state_command)
    def exposed_get_current_state(self):
-      return sm.current_state()
+      return config.state_machine.current_state()
 

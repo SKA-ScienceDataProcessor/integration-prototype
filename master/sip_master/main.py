@@ -8,15 +8,27 @@ generated internally.
 """
 __author__ = 'David Terrett + Brian McIlwrath'
 
+import threading
 
-if __name__ == "__main__":
-    from .states import sm
-    import threading
+from sip_common.state_machine import StateMachine
+from sip_master.states import state_table
+from sip_master.states import Standby
+from sip_master.heartbeat_listener import HeartbeatListener
+from sip_master import config
+from sip_master.master_controller_service import MasterControllerService
+
+def main():
+
+    # Create the master controller state machine
+    config.state_machine = StateMachine(state_table, Standby)
+
+    # Create and start the global heartbeat listener
+    config.heartbeat_listener = HeartbeatListener(config.state_machine)
+    config.heartbeat_listener.start()
 
     """ This starts the rpyc 'ThreadedServer' - this creates a new 
         thread for each connection on the given port
     """
-    from .MasterControllerService import MasterControllerService
     from rpyc.utils.server import ThreadedServer
     server = ThreadedServer(MasterControllerService,port=12345)
     t = threading.Thread(target=server.start)
@@ -28,11 +40,12 @@ if __name__ == "__main__":
     # Read and process events
     while True:
         event = input('?')
-        result = sm.post_event([event])
+        result = config.state_machine.post_event([event])
         if result == 'rejected':
             print('not allowed in current state')
         if result == 'ignored':
             print('command ignored')
         else:
-            print('master controller state:', sm.current_state())
+            print('master controller state:', 
+                    config.state_machine.current_state())
 

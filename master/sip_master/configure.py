@@ -3,24 +3,18 @@
 __author__ = 'David Terrett'
 
 from docker import Client
+import os
 import threading 
 
-import logger
-import os
+from sip_common import logger
 
-from .HeartbeatListener import heartbeat_listener
-from .slave_map import slave_map
+from sip_master.slave_map import slave_map
+from sip_master import config
 
 class Configure(threading.Thread):
     """ Does the actual work of configuring the system
     """
-    def __init__(self, mc):
-        """ Stores the state machine
-
-        The state machine is needed so that we can post a "configure done"
-        event when the system is configured.
-        """
-        self._mc = mc
+    def __init__(self):
         super(Configure, self).__init__()
 
     def run(self):
@@ -29,9 +23,9 @@ class Configure(threading.Thread):
         logger.trace('starting configuration')
         
         # Start the local telescope state application
-        _start_slave('lts', slave_map['lts'])
+        _start_slave('LTS', slave_map['LTS'])
         logger.trace('configure done')
-        self._mc.post_event(['configure done'])
+        config.state_machine.post_event(['configure done'])
 
 def _start_slave(name, properties):
     """ Start a slave controller
@@ -54,7 +48,7 @@ def _start_docker_slave(name, properties):
     heartbeat_port = properties['heartbeat_port']
     rpc_port = properties['rpc_port']
     container_id = client.create_container(image=image,
-                   command=['/home/sdp/docker_slave.py', 
+                   command=['/home/sdp/integration-prototype/slave/bin/slave', 
                             name, 
                             heartbeat_port,
                             rpc_port
@@ -80,4 +74,4 @@ def _start_docker_slave(name, properties):
 
     # Connect the heartbeat listener to the address it is sending heartbeats
     # to.
-    heartbeat_listener.connect(ip_address, heartbeat_port)
+    config.heartbeat_listener.connect(ip_address, heartbeat_port)

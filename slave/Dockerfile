@@ -17,9 +17,8 @@ RUN python3 -m pip install zmq
 RUN adduser --disabled-password -gecos 'unprivileged user' sdp
 
 # Copy application files
-COPY lib /home/sdp/lib
-COPY lib/python/ /home/sdp/lib/python/
-COPY docker_slave/docker_slave.py /home/sdp/
+COPY common/sip_common/ /home/sdp/integration-prototype/common/sip_common/
+COPY slave/bin/ /home/sdp/integration-prototype/slave/bin/
 
 # Make the application executable
-RUN chmod +x /home/sdp/docker_slave.py
+RUN chmod +x /home/sdp/integration-prototype/slave/bin/slave

@@ -26,7 +26,7 @@ what host it should run on).
 __author__ = 'David Terrett'
 
 slave_map = {}
-slave_map['lts'] = {'state':'', 'type': 'docker', 'timeout': 10, 
+slave_map['LTS'] = {'state':'', 'type': 'docker', 'timeout': 10, 
                      'timeout counter': 0, 
                      'engine_url': 'unix:///var/run/docker.sock', 
                      'image': 'slave_controller',
