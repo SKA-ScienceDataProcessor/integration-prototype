@@ -15,7 +15,7 @@ from sip_master.states import state_table
 from sip_master.states import Standby
 from sip_master.heartbeat_listener import HeartbeatListener
 from sip_master import config
-from sip_master.master_controller_service import MasterControllerService
+from sip_master.rpc_service import RpcService
 
 def main():
 
@@ -30,7 +30,7 @@ def main():
         thread for each connection on the given port
     """
     from rpyc.utils.server import ThreadedServer
-    server = ThreadedServer(MasterControllerService,port=12345)
+    server = ThreadedServer(RpcService,port=12345)
     t = threading.Thread(target=server.start)
     t.setDaemon(True)
     t.start()

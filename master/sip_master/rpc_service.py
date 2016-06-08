@@ -16,7 +16,7 @@ A (tpd) command returning a value with client arguments
        retval=conn.root.tpd_command(arg1,arg2,arg3)
 """
 
-class MasterControllerService(rpyc.Service):
+class RpcService(rpyc.Service):
    def on_connect(self):
       logger.info(" master controller client controller connected")
    def on_disconnect(self):
