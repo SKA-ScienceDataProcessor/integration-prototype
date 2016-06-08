@@ -33,9 +33,3 @@ def warn(msg):
     """ Log a WARN level message
     """
     _logger.warn(msg)
-
-if __name__ == '__main__':
-    error('An error message')
-    info('An info message')
-    trace('A trace message')
-    warn('A warn message')
