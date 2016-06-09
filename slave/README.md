@@ -5,5 +5,5 @@ To build the docker image issue this command from this file's parent
 directory:
 
 ```
-docker build -f docker_slave/Dockerfile -t slave_controller .
+docker build -f slave/Dockerfile -t slave_controller .
 ```

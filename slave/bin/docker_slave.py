@@ -2,7 +2,8 @@
 
 """ Skeleton slave controller for use in a Docker container
 
-All it does is send heartbeat messages to MC.
+This currently starts up a rpyc slave server and also sends heartbeat 
+messages to MC.
 
 It also can start a component, currently /home/sdp/components/component.py,
 monitor it's hearbeat messages, extract the component's state and write 
@@ -20,20 +21,14 @@ import sys
 import time
 import copy
 
-import os
-import sys
-import threading
-from rpyc.utils.server import ThreadedServer
-
-sys.path.append(os.path.join(os.path.dirname(__file__),'..', '..', 'common'))
-sys.path.append(os.path.join(os.path.dirname(__file__),'..'))
-
-from sip_common import heartbeat
-from sip_common import heartbeat_component
-from sip_common import logger
-from sip_slave.sip_slave_service import SlaveService
-
+sys.path.append('/home/sdp/lib/python')
+import heartbeat
+import heartbeat_component
+import logger
 import subprocess
+import threading
+from .SlaveService import SlaveService
+from rpyc.utils.server import ThreadedServer
 
 def _sig_handler(signum, frame):
     sys.exit(0)
@@ -60,7 +55,7 @@ def run():
     port = 6577
 
     # Start a component
-    component = '/home/sdp/integration-prototype/components/component.py'
+    component = '/home/sdp/components/component.py'
     subprocess.Popen([component , str(port)])
     logger.info('Starting component ' + component + ', port ' + str(port))
 
@@ -87,7 +82,7 @@ def run():
 
 if __name__ == '__main__':
     server = ThreadedServer(SlaveService,port=12346)  
-    t = threading.Thread(target=server.start)
+    t = Threading.thread(target=server)
     t.setDaemon(True)
     t.start()
     run()

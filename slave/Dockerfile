@@ -12,6 +12,7 @@ USER root
 # Install Python 3 and pip
 RUN apt-get -y update && apt-get -y install python3 python3-pip
 RUN python3 -m pip install zmq
+RUN python3 -m pip install rpyc 
 
 # Create non-privileged user
 RUN adduser --disabled-password -gecos 'unprivileged user' sdp
@@ -20,6 +21,7 @@ RUN adduser --disabled-password -gecos 'unprivileged user' sdp
 COPY common/sip_common/ /home/sdp/integration-prototype/common/sip_common/
 COPY components/ /home/sdp/integration-prototype/components/
 COPY slave/bin/ /home/sdp/integration-prototype/slave/bin/
+COPY slave/sip_slave/ /home/sdp/integration-prototype/slave/sip_slave
 
 # Make the application executable
 RUN chmod +x /home/sdp/integration-prototype/slave/bin/slave
