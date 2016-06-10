@@ -20,7 +20,6 @@ class HeartbeatListener(threading.Thread):
     def __init__(self, sm):
         """ Creates a heartbeat listener with a 1s timeout
         """
-        self._sm = sm
         self._listener = heartbeat.Listener(1000)
         super(HeartbeatListener, self).__init__(daemon=True)
 
