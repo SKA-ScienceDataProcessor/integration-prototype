@@ -48,11 +48,10 @@ class Shutdown(threading.Thread):
         """ Thread run routine
         """
         logger.trace('starting shutdown')
-        for entry in slave_map:
-            properties = slave_map[entry]
+        for name, entry in slave_map.items():
 
             # If the slave is running tell it to shut down
-            if properties['state'] == 'running':
-                _stop_slave(entry, properties)
+            if entry['state'] == 'running':
+                _stop_slave(name, entry)
         logger.trace('shutdown done')
         os._exit(0)

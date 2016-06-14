@@ -37,13 +37,12 @@ class HeartbeatListener(threading.Thread):
         a message from. If any slaves then have a count of zero we log a
         message and change the state to 'timed out'.
         """
-        global slave_map
         while True:
 
             # Decrement timeout counters
-            for slave in slave_map:
-                if slave_map[slave]['timeout counter'] > 0:
-                    slave_map[slave]['timeout counter'] -= 1
+            for slave, entry in slave_map.items():
+                if entry['timeout counter'] > 0:
+                    entry['timeout counter'] -= 1
 
             # Process any waiting messages
             msg = self._listener.listen()
@@ -62,17 +61,17 @@ class HeartbeatListener(threading.Thread):
                 msg = self._listener.listen()
 
             # Check for timed out slaves
-            for slave in slave_map:
-                if slave_map[slave]['state'] != '' and (
-                         slave_map[slave]['timeout counter'] == 0):
-                    if slave_map[slave]['state'] != 'timed out':
+            for name, entry in slave_map.items():
+                if entry['state'] != '' and (
+                         entry['timeout counter'] == 0):
+                    if entry['state'] != 'timed out':
                         logger.error('No heartbeat from slave controller "' + 
-                                 slave + '"')
-                    slave_map[slave]['new_state'] = 'timed out'
+                                 name + '"')
+                    entry['new_state'] = 'timed out'
 
                 # Process slave state change
-                if slave_map[slave]['new_state'] != slave_map[slave]['state']:
-                     self._update_slave_state(slave, slave_map[slave])
+                if entry['new_state'] != entry['state']:
+                     self._update_slave_state(name, entry)
 
             # Evalute the state of the system
             new_state = self._evaluate_state()
