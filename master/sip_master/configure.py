@@ -4,6 +4,7 @@ __author__ = 'David Terrett'
 
 from docker import Client
 import os
+import rpyc
 import threading 
 
 from sip_common import logger
@@ -24,14 +25,21 @@ class Configure(threading.Thread):
         
         # Start the local telescope state application
         _start_slave('LTS', slave_map['LTS'])
-        logger.trace('configure done')
-        config.state_machine.post_event(['configure done'])
 
 def _start_slave(name, properties):
     """ Start a slave controller
     """
     if properties['type'] == 'docker':
-        _start_docker_slave(name, properties)
+
+        # Start a container if it isn't already running
+        if properties['state'] == '':
+            _start_docker_slave(name, properties)
+        else:
+
+            # Send the container a load command
+            conn = rpyc.connect(properties['address'], properties['rpc_port'])
+            conn.root.load()
+            properties['state']= 'loading'
     else:
        logger.error('failed to start "' + name + '": "' + properties['type'] +
                     '" is not a known slave type')
@@ -66,7 +74,8 @@ def _start_docker_slave(name, properties):
     info = client.inspect_container(container_id)
     ip_address = info['NetworkSettings']['IPAddress']
     properties['address'] = ip_address
-    properties['state'] = 'running'
+    properties['state'] = 'starting'
+    properties['new_state'] = 'starting'
     properties['container_id'] = container_id
     properties['timeout counter'] = properties['timeout']
     logger.info(name + ' started in container ' + container_id + ' at ' +

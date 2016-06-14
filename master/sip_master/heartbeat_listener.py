@@ -8,6 +8,7 @@ timed-out in the global slave map and an error message logged.
 """
 __author__ = 'David Terrett'
 
+import rpyc
 import threading
 
 from sip_common import heartbeat
@@ -43,28 +44,42 @@ class HeartbeatListener(threading.Thread):
             for slave in slave_map:
                 if slave_map[slave]['state'] == 'running':
                     slave_map[slave]['timeout counter'] -= 1
-            msg = self._listener.listen()
 
-            # Reset counters of slaves that we get a message from
+            # Process any waiting messages
+            msg = self._listener.listen()
             while msg != '':
                 name = msg[0]
+                state = msg[1]
+
+                # Reset counters of slaves that we get a message from
                 slave_map[name]['timeout counter'] = (
                        slave_map[name]['timeout'])
+
+                # Store the state from the message
+                slave_map[name]['new_state'] = state
+
+                # Check for more messages
                 msg = self._listener.listen()
 
             # Check for timed out slaves
             for slave in slave_map:
-                if slave_map[slave]['state'] == 'running' and (
+                if slave_map[slave]['state'] == 'loaded' and (
                          slave_map[slave]['timeout counter'] == 0):
-                    slave_map[slave]['state'] = 'timed out'
+                    slave_map[slave]['new_state'] = 'timed out'
                     logger.error('No heartbeat from slave controller "' + 
                                  slave + '"')
+
+                # Process slave state change
+                if slave_map[slave]['new_state'] != slave_map[slave]['state']:
+                     self._update_slave_state(slave, slave_map[slave])
 
             # Evalute the state of the system
             new_state = self._evaluate_state()
 
             # If the state has changed, post the appropriate event
             old_state = config.state_machine.current_state()
+            if old_state == 'configuring' and new_state == 'available':
+                config.state_machine.post_event(['configure done'])
             if old_state == 'available' and new_state == 'degraded':
                 config.state_machine.post_event(['degrade'])
             if old_state == 'available' and new_state == 'unavailable':
@@ -84,9 +99,21 @@ class HeartbeatListener(threading.Thread):
         This examines the states of all the slaves and decides what state
         we are in.
 
-        For the moment it just looks to see if the LTS is running
+        For the moment it just looks to see if the LTS is loaded
         """
-        if slave_map['LTS']['state'] == 'running':
+        if slave_map['LTS']['state'] == 'loaded':
             return 'available'
         else:
             return 'unavailable'
+
+    def _update_slave_state(self, name, rec):
+        old_state = rec['state']
+        rec['state'] = rec['new_state']
+
+        # If the state went from 'starting' to 'running' send a
+        # load command to the slave.
+        if old_state == 'starting' and rec['state'] == 'running':
+            conn = rpyc.connect(rec['address'], rec['rpc_port'])
+            conn.root.load()
+            rec['state']= 'loading'
+

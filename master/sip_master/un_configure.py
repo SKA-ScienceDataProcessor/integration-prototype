@@ -2,22 +2,20 @@
 """
 __author__ = 'David Terrett'
 
-from docker import Client
+import rpyc
 import threading
+import time
 
 from sip_common import logger
 
 from sip_master.slave_map import slave_map
 from sip_master import config
 
-def _stop_slave(name, properties):
-    """ Stop a slave controller
+def _unload_task(name, properties):
+    """ Command the slave to unload the task
     """
-    if properties['type'] == 'docker':
-        _stop_docker_slave(name, properties)
-    else:
-       logger.error('failed to stop "' + name + '": "' + properties['type'] +
-                    '" is not a known slave type')
+    conn = rpyc.connect(properties['address'], properties['rpc_port'])
+    conn.root.unload()
 
 def _stop_docker_slave(name, properties):
     """ Stop a docker based slave controller
@@ -35,7 +33,7 @@ def _stop_docker_slave(name, properties):
 class UnConfigure(threading.Thread):
     """ Does the actual work of un-configuring the system
 
-    Stops all the running slaves
+    Unloads all the loaded tasks
     """
     def __init__(self):
         super(UnConfigure, self).__init__()
@@ -46,7 +44,7 @@ class UnConfigure(threading.Thread):
         logger.trace('starting unconfiguration')
         for entry in slave_map:
             properties = slave_map[entry]
-            if properties['state'] == 'running':
-               _stop_slave(entry, properties)
+            if properties['state'] == 'loaded':
+               _unload_task(entry, properties)
         logger.trace('unconfigure done')
         config.state_machine.post_event(['unconfigure done'])

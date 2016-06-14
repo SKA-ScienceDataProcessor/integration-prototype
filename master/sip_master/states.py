@@ -16,6 +16,7 @@ from sip_common.state_machine import State
 
 from sip_master.configure import Configure
 from sip_master.un_configure import UnConfigure
+from sip_master.shutdown import Shutdown
 
 class Standby(State):
     """ Standby state
@@ -64,20 +65,19 @@ def _online(event):
     """
 
     # Start a configure thread
-    global mc
     Configure().start()
 
 def _offline(event):
     """Action routine that starts un-configuring the controller
     """
     # Start an un-configure thread
-    global mc
     UnConfigure().start()
 
 def _shutdown(event):
     """Action routine that shuts down the controller
     """
-    sys.exit()
+    # Start an un-configure thread
+    Shutdown().start()
 
 state_table = {
     'standby': {
