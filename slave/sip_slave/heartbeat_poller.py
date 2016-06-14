@@ -1,3 +1,5 @@
+""" Class for polling for heartbeat messages from a component
+"""
 import time
 import threading
 
@@ -5,7 +7,6 @@ from sip_common import heartbeat
 from sip_common import heartbeat_component
 from sip_common import logger
 from sip_slave import config
-
 
 def _get_state(msg):
     """ extracts the state from the heartbeat message
@@ -16,7 +17,7 @@ def _get_state(msg):
     return tokens[3]	
 
 class HeartbeatPoller(threading.Thread):
-    """ Polls for heartbeat messages from the task
+    """ Polls for heartbeat messages from the component
     """
     def __init__(self, heartbeat_comp_listener):
         self._state_component_prev = ''

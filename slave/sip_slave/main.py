@@ -10,10 +10,9 @@ A handler for SIGTERM is set up that just exits because that is what
 'Docker stop' sends.
 """
 
+from rpyc.utils.server import ThreadedServer
 import threading
 import time
-
-from rpyc.utils.server import ThreadedServer
 
 from sip_common import heartbeat
 from sip_common import logger

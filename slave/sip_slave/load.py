@@ -1,3 +1,5 @@
+""" Function ithat does the actual work of loading a component
+"""
 import subprocess
 
 from sip_common import heartbeat
