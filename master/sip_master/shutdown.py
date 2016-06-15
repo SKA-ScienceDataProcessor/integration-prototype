@@ -51,7 +51,7 @@ class Shutdown(threading.Thread):
         for name, entry in slave_map.items():
 
             # If the slave is running tell it to shut down
-            if entry['state'] == 'running':
+            if entry['state'] != '' and entry['state'] != 'dead':
                 _stop_slave(name, entry)
         logger.trace('shutdown done')
         os._exit(0)

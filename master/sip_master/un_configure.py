@@ -43,7 +43,7 @@ class UnConfigure(threading.Thread):
         """
         logger.trace('starting unconfiguration')
         for name, entry in slave_map.items():
-            if entry['state'] == 'loaded':
+            if entry['state'] == 'busy':
                _unload_task(name, entry)
         logger.trace('unconfigure done')
         config.state_machine.post_event(['unconfigure done'])

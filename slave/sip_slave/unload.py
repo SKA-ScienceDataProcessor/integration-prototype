@@ -15,4 +15,4 @@ def unload():
     config.subproc.kill()
 
     # Reset state
-    config.state = 'running'
+    config.state = 'idle'

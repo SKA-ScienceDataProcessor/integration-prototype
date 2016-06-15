@@ -4,7 +4,13 @@ A HeartbeatListener runs in a separate thread and once a second looks for
 heartbeat messages sent by slave controllers. If a message is received from
 a slave, that slave's timeout counter is reset. The counter for all the other
 slaves is decremented and if any have reached zero the slave is marked as
-timed-out in the global slave map and an error message logged.
+dead in the global slave map and an error message logged.
+
+If a slave state goes from starting to idle it is sent a load command.
+
+The states of states of all the slaves is then checked against a list of
+those that need to be running for the system to be considered available,
+degraded or unavailable and an appropriate event posted.
 """
 __author__ = 'David Terrett'
 
@@ -35,7 +41,7 @@ class HeartbeatListener(threading.Thread):
         Each time round the loop we decrement all the timeout counter for all
         the running slaves then reset the count for any slaves that we get
         a message from. If any slaves then have a count of zero we log a
-        message and change the state to 'timed out'.
+        message and change the state to 'dead'.
         """
         while True:
 
@@ -64,10 +70,10 @@ class HeartbeatListener(threading.Thread):
             for name, entry in slave_map.items():
                 if entry['state'] != '' and (
                          entry['timeout counter'] == 0):
-                    if entry['state'] != 'timed out':
+                    if entry['state'] != 'dead':
                         logger.error('No heartbeat from slave controller "' + 
                                  name + '"')
-                    entry['new_state'] = 'timed out'
+                    entry['new_state'] = 'dead'
 
                 # Process slave state change
                 if entry['new_state'] != entry['state']:
@@ -101,7 +107,7 @@ class HeartbeatListener(threading.Thread):
 
         For the moment it just looks to see if the LTS is loaded
         """
-        if slave_map['LTS']['state'] == 'loaded':
+        if slave_map['LTS']['state'] == 'busy':
             return 'available'
         else:
             return 'unavailable'
@@ -110,9 +116,9 @@ class HeartbeatListener(threading.Thread):
         old_state = rec['state']
         rec['state'] = rec['new_state']
 
-        # If the state went from 'starting' to 'running' send a
+        # If the state went from 'starting' to 'idle' send a
         # load command to the slave.
-        if old_state == 'starting' and rec['state'] == 'running':
+        if old_state == 'starting' and rec['state'] == 'idle':
             conn = rpyc.connect(rec['address'], rec['rpc_port'])
             conn.root.load()
             rec['state']= 'loading'

@@ -36,5 +36,5 @@ class HeartbeatPoller(threading.Thread):
             if state_component != self._state_component_prev :
                  logger.info(comp_msg)
                  self._state_component_prev = state_component		
-            config.state = 'loaded'
+            config.state = 'busy'
             time.sleep(1)
