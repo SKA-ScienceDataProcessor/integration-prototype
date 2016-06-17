@@ -26,11 +26,6 @@ from collections import deque
 class State:
     """ Base class for states
     """
-    def __init__(self, name):
-        """ Stores the name of the state
-        """
-        self._name = name
-
     def process_event(self, state_table, event):
         """ Processes an event
             
@@ -39,10 +34,10 @@ class State:
         """
 
         # Check that the event is in the table
-        if event[0] in state_table[self._name]:
+        if event[0] in state_table[type(self).__name__]:
 
             # Return the table entry for this event
-            transition = state_table[self._name][event[0]]
+            transition = state_table[type(self).__name__][event[0]]
             return transition
 
         # No transition defined for this event
@@ -51,6 +46,12 @@ class State:
     def exit(self):
         """ Default exit action
         """
+        pass
+
+class _End(State):
+    """ Pseudo end state
+    """
+    def __init__(self):
         pass
 
 class StateMachine:
@@ -141,4 +142,4 @@ class StateMachine:
     def current_state(self):
         """ Returns the name of the current state
         """
-        return self._state._name
+        return type(self._state).__name__

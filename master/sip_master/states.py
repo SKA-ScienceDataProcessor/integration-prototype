@@ -13,6 +13,7 @@ import sys
 from sip_common import logger
 from sip_common.state_machine import StateMachine
 from sip_common.state_machine import State
+from sip_common.state_machine import _End
 
 from sip_master.configure import Configure
 from sip_master.un_configure import UnConfigure
@@ -22,42 +23,36 @@ class Standby(State):
     """ Standby state
     """
     def __init__(self):
-        super(Standby, self).__init__('standby')
         logger.info('state->standby')
 
 class Configuring(State):
     """ Configuring state
     """
     def __init__(self):
-        super(Configuring, self).__init__('configuring')
         logger.info('state->configuring')
 
 class UnConfiguring(State):
     """ Unconfiguring state
     """
     def __init__(self):
-        super(UnConfiguring, self).__init__('unconfiguring')
         logger.info('state->unconfiguring')
 
 class Available(State):
     """ Available state
     """
     def __init__(self):
-        super(Available, self).__init__('available')
         logger.info('state->available')
 
 class Degraded(State):
     """ Degraded state
     """
     def __init__(self):
-        super(Degraded, self).__init__('degraded')
         logger.info('state->degraded')
 
 class Unavailable(State):
     """ Unavailable state
     """
     def __init__(self):
-        super(Unavailable, self).__init__('unavailable')
         logger.info('state->unavailable')
 
 def _online(event):
@@ -80,37 +75,37 @@ def _shutdown(event):
     Shutdown().start()
 
 state_table = {
-    'standby': {
+    'Standby': {
         'offline':          (0, None, None),
         'online':           (1, Configuring, _online),
-        'shutdown':         (1, None, _shutdown)
+        'shutdown':         (1, _End, _shutdown)
     },
-    'configuring': {
+    'Configuring': {
         'configure done' :  (1, Available, None),
         'offline':          (0, None, None),
         'online':           (0, None, None),
         'shutdown':         (0, None, None)
     },
-    'available': {
+    'Available': {
         'offline':          (1, UnConfiguring, _offline),
         'online':           (0, None, None),
         'shutdown':         (0, None, None),
         'degrade':          (1, Degraded, None)
     },
-    'degraded': {
+    'Degraded': {
         'offline':          (1, UnConfiguring, _offline),
         'online':           (0, None, None),
         'shutdown':         (0, None, None),
         'upgrade':          (1, Available, None),
         'degrade':          (1, Unavailable, None)
     },
-    'unavailable': {
+    'Unavailable': {
         'offline':          (1, UnConfiguring, _offline),
         'online':           (0, None, None),
         'shutdown':         (0, None, None),
         'upgrade':          (1, Degraded, None)
     },
-    'unconfiguring': {
+    'UnConfiguring': {
         'unconfigure done': (1, Standby, None),
         'offline':          (0, None, None),
         'online':           (0, None, None),

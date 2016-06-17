@@ -84,19 +84,19 @@ class HeartbeatListener(threading.Thread):
 
             # If the state has changed, post the appropriate event
             old_state = config.state_machine.current_state()
-            if old_state == 'configuring' and new_state == 'available':
+            if old_state == 'Configuring' and new_state == 'Available':
                 config.state_machine.post_event(['configure done'])
-            if old_state == 'available' and new_state == 'degraded':
+            if old_state == 'Available' and new_state == 'Degraded':
                 config.state_machine.post_event(['degrade'])
-            if old_state == 'available' and new_state == 'unavailable':
+            if old_state == 'Available' and new_state == 'Unavailable':
                 config.state_machine.post_event(['degrade'])
-            if old_state == 'degraded' and new_state == 'unavailable':
+            if old_state == 'Degraded' and new_state == 'Unavailable':
                 config.state_machine.post_event(['degrade'])
-            if old_state == 'unavailable' and new_state == 'degraded':
+            if old_state == 'Unavailable' and new_state == 'Degraded':
                 config.state_machine.post_event(['upgrade'])
-            if old_state == 'unavailable' and new_state == 'available':
+            if old_state == 'Unavailable' and new_state == 'Available':
                 config.state_machine.post_event(['upgrade'])
-            if old_state == 'degraded' and new_state == 'available':
+            if old_state == 'Degraded' and new_state == 'Available':
                 config.state_machine.post_event(['upgrade'])
 
     def _evaluate_state(self):
@@ -108,9 +108,9 @@ class HeartbeatListener(threading.Thread):
         For the moment it just looks to see if the LTS is loaded
         """
         if slave_map['LTS']['state'] == 'busy':
-            return 'available'
+            return 'Available'
         else:
-            return 'unavailable'
+            return 'Unavailable'
 
     def _update_slave_state(self, name, rec):
         old_state = rec['state']
