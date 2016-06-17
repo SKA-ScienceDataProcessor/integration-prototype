@@ -23,6 +23,14 @@ rejected or ignored.
 
 from collections import deque
 
+# pygraphviz is only needed for the method that creates a graphviz 
+# representation of the state machine. This in not needed to use the state
+# machine so, if we can't import it we ignore the error.
+try:
+    import pygraphviz as pgv
+except:
+    pass
+
 class State:
     """ Base class for states
     """
@@ -50,6 +58,10 @@ class State:
 
 class _End(State):
     """ Pseudo end state
+
+    This state is used as the destination of any transition that ends the
+    state machine. It has a special name so that the graph represention can
+    use the correct symbol.
     """
     def __init__(self):
         pass
@@ -143,3 +155,48 @@ class StateMachine:
         """ Returns the name of the current state
         """
         return type(self._state).__name__
+
+    def get_graph(self, title=''):
+        """ Return graphviz representation of the state machine
+
+            The state machine's current state is taken to the the initial
+            state so this method should be called before the state machine
+            has been run.
+        """
+
+        # Create a graph
+        graph = pgv.AGraph(title=title, directed=True, strict=False,
+               rankdir='LR', ratio='0.3')
+
+        # Create a node for each state
+        for state in self._state_table:
+            graph.add_node(n=state, shape='box', height='1.2')
+
+        # Create a start node
+        graph.add_node('start', shape='circle', height='0.1')
+        graph.add_edge('start', type(self._state).__name__)
+
+        # Create an end node
+        graph.add_node('_End', shape='circle', height='0.1', label='end')
+
+        # Add and edge for every transition.
+        for state, events in self._state_table.items():
+            for event, transition in events.items():
+                if transition[0] == 1:
+
+                    # For in-state transitions the destination is the
+                    # current state
+                    destination = transition[1]
+                    if destination == None:
+                        destination = state
+                    else:
+                        destination = destination.__name__
+
+                    # Label the edge with the event name
+                    label = event
+
+                    # Add the name of the action if there is one
+                    if transition[2]:
+                        label += '/' + transition[2].__name__
+                    graph.add_edge(state, destination, label=label)
+        return graph
