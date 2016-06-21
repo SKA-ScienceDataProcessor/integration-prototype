@@ -9,8 +9,6 @@ import threading
 
 from sip_common import logger
 
-from sip_master.slave_map import slave_config
-from sip_master.slave_map import slave_status
 from sip_master import config
 
 def _stop_slave(name, config, status):
@@ -49,10 +47,10 @@ class Shutdown(threading.Thread):
         """ Thread run routine
         """
         logger.trace('starting shutdown')
-        for slave, status in slave_status.items():
+        for slave, status in config.slave_status.items():
 
             # If the slave is running tell it to shut down
             if status['state'] != '' and status['state'] != 'dead':
-                _stop_slave(slave, slave_config[slave], status)
+                _stop_slave(slave, config.slave_config[slave], status)
         logger.trace('shutdown done')
         os._exit(0)

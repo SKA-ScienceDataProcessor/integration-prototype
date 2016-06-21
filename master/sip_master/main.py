@@ -8,6 +8,7 @@ generated internally.
 """
 __author__ = 'David Terrett + Brian McIlwrath'
 
+import json
 import threading
 
 from sip_common.state_machine import StateMachine
@@ -17,7 +18,17 @@ from sip_master.heartbeat_listener import HeartbeatListener
 from sip_master import config
 from sip_master.rpc_service import RpcService
 
-def main():
+def main(config_file):
+
+    # Create the slave config array from the configuration (a JSON string)
+    with open(config_file) as f:
+        config.slave_config = json.load(f)
+
+    # Initialise the slave status array
+    for slave in config.slave_config:
+        config.slave_status[slave] = {'state': '', 
+                                      'new_state': '',
+                                      'timeout counter': 0}
 
     # Create the master controller state machine
     config.state_machine = StateMachine(state_table, Standby)

@@ -7,4 +7,7 @@ sys.path.append(os.path.join(os.path.dirname(__file__),'..', '..', 'common'))
 sys.path.append(os.path.join(os.path.dirname(__file__),'..'))
 from sip_master.main import main
 
-main()
+config_file = os.path.join(os.path.dirname(__file__), '..', 'etc', 
+        'slave_map.json')
+
+main(config_file)

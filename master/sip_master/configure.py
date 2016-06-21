@@ -9,8 +9,6 @@ import threading
 
 from sip_common import logger
 
-from sip_master.slave_map import slave_config
-from sip_master.slave_map import slave_status
 from sip_master import config
 
 class Configure(threading.Thread):
@@ -25,7 +23,8 @@ class Configure(threading.Thread):
         logger.trace('starting configuration')
         
         # Start the local telescope state application
-        _start_slave('LTS', slave_config['LTS'], slave_status['LTS'])
+        _start_slave('LTS', config.slave_config['LTS'], 
+                config.slave_status['LTS'])
 
 def _start_slave(name, cfg, status):
     """ Start a slave controller

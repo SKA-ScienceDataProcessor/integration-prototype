@@ -8,8 +8,6 @@ import time
 
 from sip_common import logger
 
-from sip_master.slave_map import slave_config
-from sip_master.slave_map import slave_status
 from sip_master import config
 
 def _unload_task(slave, cfg, status):
@@ -43,8 +41,8 @@ class UnConfigure(threading.Thread):
         """ Thread run routine
         """
         logger.trace('starting unconfiguration')
-        for slave, status in slave_status.items():
+        for slave, status in config.slave_status.items():
             if status['state'] == 'busy':
-               _unload_task(slave, slave_config[slave], status)
+               _unload_task(slave, config.slave_config[slave], status)
         logger.trace('unconfigure done')
         config.state_machine.post_event(['unconfigure done'])

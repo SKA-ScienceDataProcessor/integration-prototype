@@ -20,8 +20,6 @@ import threading
 from sip_common import heartbeat
 from sip_common import logger
 
-from sip_master.slave_map import slave_config
-from sip_master.slave_map import slave_status
 from sip_master import config
 
 class HeartbeatListener(threading.Thread):
@@ -47,7 +45,7 @@ class HeartbeatListener(threading.Thread):
         while True:
 
             # Decrement timeout counters
-            for slave, status in slave_status.items():
+            for slave, status in config.slave_status.items():
                 if status['timeout counter'] > 0:
                     status['timeout counter'] -= 1
 
@@ -58,17 +56,17 @@ class HeartbeatListener(threading.Thread):
                 state = msg[1]
 
                 # Reset counters of slaves that we get a message from
-                slave_status[name]['timeout counter'] = (
-                       slave_config[name]['timeout'])
+                config.slave_status[name]['timeout counter'] = (
+                       config.slave_config[name]['timeout'])
 
                 # Store the state from the message
-                slave_status[name]['new_state'] = state
+                config.slave_status[name]['new_state'] = state
 
                 # Check for more messages
                 msg = self._listener.listen()
 
             # Check for timed out slaves
-            for name, status in slave_status.items():
+            for name, status in config.slave_status.items():
                 if status['state'] != '' and (
                          status['timeout counter'] == 0):
                     if status['state'] != 'dead':
@@ -78,7 +76,8 @@ class HeartbeatListener(threading.Thread):
 
                 # Process slave state change
                 if status['new_state'] != status['state']:
-                     self._update_slave_state(name, slave_config[slave], status)
+                     self._update_slave_state(name, config.slave_config[slave],
+                             status)
 
             # Evalute the state of the system
             new_state = self._evaluate_state()
@@ -108,7 +107,7 @@ class HeartbeatListener(threading.Thread):
 
         For the moment it just looks to see if the LTS is loaded
         """
-        if slave_status['LTS']['state'] == 'busy':
+        if config.slave_status['LTS']['state'] == 'busy':
             return 'Available'
         else:
             return 'Unavailable'

@@ -1,0 +1,11 @@
+{
+    "LTS": {
+        "host": "localhost",
+        "timeout": 10,
+        "engine_url": "unix:///var/run/docker.sock",
+        "type": "docker",
+        "heartbeat_port": "6477",
+        "rpc_port": "6479",
+        "image": "slave_controller"
+    }
+}
