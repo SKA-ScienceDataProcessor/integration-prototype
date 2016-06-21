@@ -20,7 +20,8 @@ import threading
 from sip_common import heartbeat
 from sip_common import logger
 
-from sip_master.slave_map import slave_map
+from sip_master.slave_map import slave_config
+from sip_master.slave_map import slave_status
 from sip_master import config
 
 class HeartbeatListener(threading.Thread):
@@ -46,9 +47,9 @@ class HeartbeatListener(threading.Thread):
         while True:
 
             # Decrement timeout counters
-            for slave, entry in slave_map.items():
-                if entry['timeout counter'] > 0:
-                    entry['timeout counter'] -= 1
+            for slave, status in slave_status.items():
+                if status['timeout counter'] > 0:
+                    status['timeout counter'] -= 1
 
             # Process any waiting messages
             msg = self._listener.listen()
@@ -57,27 +58,27 @@ class HeartbeatListener(threading.Thread):
                 state = msg[1]
 
                 # Reset counters of slaves that we get a message from
-                slave_map[name]['timeout counter'] = (
-                       slave_map[name]['timeout'])
+                slave_status[name]['timeout counter'] = (
+                       slave_config[name]['timeout'])
 
                 # Store the state from the message
-                slave_map[name]['new_state'] = state
+                slave_status[name]['new_state'] = state
 
                 # Check for more messages
                 msg = self._listener.listen()
 
             # Check for timed out slaves
-            for name, entry in slave_map.items():
-                if entry['state'] != '' and (
-                         entry['timeout counter'] == 0):
-                    if entry['state'] != 'dead':
+            for name, status in slave_status.items():
+                if status['state'] != '' and (
+                         status['timeout counter'] == 0):
+                    if status['state'] != 'dead':
                         logger.error('No heartbeat from slave controller "' + 
                                  name + '"')
-                    entry['new_state'] = 'dead'
+                    status['new_state'] = 'dead'
 
                 # Process slave state change
-                if entry['new_state'] != entry['state']:
-                     self._update_slave_state(name, entry)
+                if status['new_state'] != status['state']:
+                     self._update_slave_state(name, slave_config[slave], status)
 
             # Evalute the state of the system
             new_state = self._evaluate_state()
@@ -107,19 +108,19 @@ class HeartbeatListener(threading.Thread):
 
         For the moment it just looks to see if the LTS is loaded
         """
-        if slave_map['LTS']['state'] == 'busy':
+        if slave_status['LTS']['state'] == 'busy':
             return 'Available'
         else:
             return 'Unavailable'
 
-    def _update_slave_state(self, name, rec):
-        old_state = rec['state']
-        rec['state'] = rec['new_state']
+    def _update_slave_state(self, name, config, status):
+        old_state = status['state']
+        status['state'] = status['new_state']
 
         # If the state went from 'starting' to 'idle' send a
         # load command to the slave.
-        if old_state == 'starting' and rec['state'] == 'idle':
-            conn = rpyc.connect(rec['address'], rec['rpc_port'])
+        if old_state == 'starting' and status['state'] == 'idle':
+            conn = rpyc.connect(status['address'], config['rpc_port'])
             conn.root.load()
-            rec['state']= 'loading'
+            status['state']= 'loading'
 

@@ -9,34 +9,35 @@ import threading
 
 from sip_common import logger
 
-from sip_master.slave_map import slave_map
+from sip_master.slave_map import slave_config
+from sip_master.slave_map import slave_status
 from sip_master import config
 
-def _stop_slave(name, properties):
+def _stop_slave(name, config, status):
     """ Stop a slave controller
     """
-    conn = rpyc.connect(properties['address'], properties['rpc_port'])
+    conn = rpyc.connect(status['address'], config['rpc_port'])
     conn.root.shutdown()
-    if properties['type'] == 'docker':
-        _stop_docker_slave(name, properties)
+    if config['type'] == 'docker':
+        _stop_docker_slave(name, config, status)
     else:
-       logger.error('failed to stop "' + name + '": "' + properties['type'] +
+       logger.error('failed to stop "' + name + '": "' + config['type'] +
                     '" is not a known slave type')
 
 
-def _stop_docker_slave(name, properties):
+def _stop_docker_slave(name, config, status):
     """ Stop a docker based slave controller
     """
 
     # Create a Docker client
-    client = Client(version='1.21', base_url=properties['engine_url'])
+    client = Client(version='1.21', base_url=config['engine_url'])
 
     # Stop the container and remove the container
-    client.stop(properties['container_id'])
-    client.remove_container(properties['container_id'])
+    client.stop(status['container_id'])
+    client.remove_container(status['container_id'])
 
     # Clear the status in the property map
-    properties['state'] = ''
+    status['state'] = ''
 
 class Shutdown(threading.Thread):
     """ Does the actual work of shutting down the system
@@ -48,10 +49,10 @@ class Shutdown(threading.Thread):
         """ Thread run routine
         """
         logger.trace('starting shutdown')
-        for name, entry in slave_map.items():
+        for slave, status in slave_status.items():
 
             # If the slave is running tell it to shut down
-            if entry['state'] != '' and entry['state'] != 'dead':
-                _stop_slave(name, entry)
+            if status['state'] != '' and status['state'] != 'dead':
+                _stop_slave(slave, slave_config[slave], status)
         logger.trace('shutdown done')
         os._exit(0)
