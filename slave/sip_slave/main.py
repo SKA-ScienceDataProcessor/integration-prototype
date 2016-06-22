@@ -2,9 +2,8 @@
 
 All it does is send heartbeat messages to MC.
 
-It also can start a component, currently /home/sdp/components/component.py,
-monitor it's hearbeat messages, extract the component's state and write 
-into a system log when the state changes.
+It also can start a task, monitor it's hearbeat messages, extract the task's 
+state and write into a system log when the state changes.
 
 A handler for SIGTERM is set up that just exits because that is what
 'Docker stop' sends.

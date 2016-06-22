@@ -22,7 +22,10 @@ Heartbeat
     :show-inheritance:
     :private-members:
 
-.. automodule:: sip_common.heartbeat_component
+Heartbeat Task
+--------------
+
+.. automodule:: sip_common.heartbeat_task
     :members:
     :undoc-members:
     :inherited-members:

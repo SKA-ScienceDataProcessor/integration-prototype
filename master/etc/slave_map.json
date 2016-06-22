@@ -8,7 +8,7 @@
         "rpc_port": 6479,
         "image": "slave_controller",
         "task": {
-            "exe": "/home/sdp/integration-prototype/components/component.py"
+            "exe": "/home/sdp/integration-prototype/tasks/task.py"
             }
         }
 }

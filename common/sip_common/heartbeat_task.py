@@ -1,10 +1,10 @@
 """ This defines the SIP API for sending and receiving messages
-    to/from component started by slave.
+    to/from task started by slave.
     It is based on heartbeat module, the main difference is the port number
     which is not fixed but a constructor's parameter.
 
     The hearbeat message is constructed using an arbitary string (usually 
-    a timestamp plus a state of the component) and the component's name.
+    a timestamp plus a state of the task) and the task's name.
 """
 
 import zmq

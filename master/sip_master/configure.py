@@ -61,10 +61,10 @@ def _start_docker_slave(name, cfg, status):
                             str(heartbeat_port),
                             str(rpc_port)
                            ],
-		   volumes=['/home/sdp/components/'],
+		   volumes=['/home/sdp/tasks/'],
 		   host_config=client.create_host_config(binds={
-        		os.getcwd()+'/components': {
-            		'bind': '/home/sdp/components/',
+        		os.getcwd()+'/tasks': {
+            		'bind': '/home/sdp/tasks/',
             		'mode': 'rw',
         		}
                    }))['Id']

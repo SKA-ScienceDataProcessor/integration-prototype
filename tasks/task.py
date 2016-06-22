@@ -20,11 +20,11 @@ import datetime
 
 sys.path.append(os.path.join(os.path.dirname(__file__),'..', 'common'))
 
-from sip_common import heartbeat_component
+from sip_common import heartbeat_task
 
 _context = zmq.Context()
 
-# The state of the component
+# The state of the task
 _state = 'standby'
 
 def _sig_handler(signum, frame):
@@ -43,7 +43,7 @@ def run():
     # Install handler to respond to SIGTERM
 	signal.signal(signal.SIGTERM, _sig_handler)
 	# Create process sender	
-	process_sender = heartbeat_component.Sender(process_name, port)
+	process_sender = heartbeat_task.Sender(process_name, port)
 	while True:
 		# Create a timestamp
 		ts = time.time()

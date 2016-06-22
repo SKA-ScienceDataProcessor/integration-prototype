@@ -19,7 +19,7 @@ RUN adduser --disabled-password -gecos 'unprivileged user' sdp
 
 # Copy application files
 COPY common/sip_common/ /home/sdp/integration-prototype/common/sip_common/
-COPY components/ /home/sdp/integration-prototype/components/
+COPY tasks/ /home/sdp/integration-prototype/tasks/
 COPY slave/bin/ /home/sdp/integration-prototype/slave/bin/
 COPY slave/sip_slave/ /home/sdp/integration-prototype/slave/sip_slave
 
