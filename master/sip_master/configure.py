@@ -58,8 +58,8 @@ def _start_docker_slave(name, cfg, status):
     container_id = client.create_container(image=image,
                    command=['/home/sdp/integration-prototype/slave/bin/slave', 
                             name, 
-                            heartbeat_port,
-                            rpc_port
+                            str(heartbeat_port),
+                            str(rpc_port)
                            ],
 		   volumes=['/home/sdp/components/'],
 		   host_config=client.create_host_config(binds={

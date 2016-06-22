@@ -14,7 +14,7 @@ def _sig_handler(signum, frame):
 
 if __name__ == '__main__':
     name = sys.argv[1]
-    heartbeat_port = sys.argv[2]
+    heartbeat_port = int(sys.argv[2])
     server_port = int(sys.argv[3])
 
     # Install handler to respond to SIGTERM

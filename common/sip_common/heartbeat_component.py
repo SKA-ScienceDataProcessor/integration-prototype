@@ -44,7 +44,7 @@ class Listener():
         
         Can be called multiple times to listen to more than one publisher
         """
-        self._socket.connect('tcp://' + host + ':' + port)
+        self._socket.connect('tcp://' + host + ':' + str(port))
 
      def listen(self):
         """ Listens for heartbeat messages

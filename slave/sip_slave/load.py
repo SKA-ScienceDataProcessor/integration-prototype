@@ -25,7 +25,7 @@ def load():
     # Create a heartbeat listener to listen for a component
     timeout_msec = 1000
     heartbeat_comp_listener = heartbeat_component.Listener(timeout_msec)
-    heartbeat_comp_listener.connect('localhost', str(port))
+    heartbeat_comp_listener.connect('localhost', port)
     config.poller = HeartbeatPoller(heartbeat_comp_listener)
     config.poller_run = True
     config.poller.start()
