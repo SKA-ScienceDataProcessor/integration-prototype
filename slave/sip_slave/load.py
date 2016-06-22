@@ -8,7 +8,7 @@ from sip_common import logger
 from sip_slave import config
 from sip_slave.heartbeat_poller import HeartbeatPoller
 
-def load():
+def load(task):
     """ load the task
     """
     _state_component = 'off'
@@ -17,8 +17,10 @@ def load():
     # Assign some port to communicate with the component
     port = 6577
 
+    # Extract the executable name from the task description
+    component = task['exe']
+
     # Start a component
-    component = '/home/sdp/integration-prototype/components/component.py'
     config.subproc = subprocess.Popen([component , str(port)])
     logger.info('Starting component ' + component + ', port ' + str(port))
 

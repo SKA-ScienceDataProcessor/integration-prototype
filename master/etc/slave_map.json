@@ -6,6 +6,9 @@
         "type": "docker",
         "heartbeat_port": 6477,
         "rpc_port": 6479,
-        "image": "slave_controller"
-    }
+        "image": "slave_controller",
+        "task": {
+            "exe": "/home/sdp/integration-prototype/components/component.py"
+            }
+        }
 }

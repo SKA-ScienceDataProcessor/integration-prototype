@@ -37,8 +37,8 @@ class SlaveService(rpyc.Service):
    #    logger.info("slave service disconnected")
    def exposed_get_state(self):
        return config.state
-   def exposed_load(self):
-       load()
+   def exposed_load(self, task):
+       load(task)
    def exposed_unload(self):
        unload()
    def exposed_shutdown(self):
