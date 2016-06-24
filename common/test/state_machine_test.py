@@ -7,14 +7,12 @@ trace = []
 
 class Offline(State):
     def __init__(self):
-        super(Offline, self).__init__('offline')
         trace.append("entering offline")
     def exit(self):
         trace.append("exiting offline")
-     
+
 class Online(State):
     def __init__(self):
-        super(Online, self).__init__('online')
         trace.append("entering online")
     def exit(self):
         trace.append("exiting online")
@@ -26,10 +24,10 @@ def action_online(event_name):
     trace.append("going online")
 
 state_table = {
-    'offline': {
+    'Offline': {
         'start': (1, Online,  action_online),
     },
-    'online' : {
+    'Online' : {
         'stop' : (1, Offline, action_offline),
     }
 }
@@ -40,11 +38,11 @@ class StateMachineTest(unittest.TestCase):
 
     def testSimple(self):
         self.sm.post_event(['start'])
-        self.assertEqual(self.sm.current_state(), 'online')
+        self.assertEqual(self.sm.current_state(), 'Online')
         self.sm.post_event(['start'])
-        self.assertEqual(self.sm.current_state(), 'online')
+        self.assertEqual(self.sm.current_state(), 'Online')
         self.sm.post_event(['stop'])
-        self.assertEqual(self.sm.current_state(), 'offline')
+        self.assertEqual(self.sm.current_state(), 'Offline')
 
         self.assertEqual(trace[0], 'entering offline')
         self.assertEqual(trace[1], 'exiting offline')
