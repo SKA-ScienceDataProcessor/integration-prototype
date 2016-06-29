@@ -6,6 +6,8 @@ from docker import Client
 import os
 import rpyc
 import threading 
+from plumbum import SshMachine
+import logging
 
 from sip_common import logger
 
@@ -23,8 +25,11 @@ class Configure(threading.Thread):
         logger.trace('starting configuration')
         
         # Start the local telescope state application
-        _start_slave('LTS', config.slave_config['LTS'], 
-                config.slave_status['LTS'])
+        #_start_slave('LTS', config.slave_config['LTS'], 
+        #        config.slave_status['LTS'])
+
+        _start_slave('QA', config.slave_config['QA'], 
+                config.slave_status['QA'])
 
 def _start_slave(name, cfg, status):
     """ Start a slave controller
@@ -40,6 +45,8 @@ def _start_slave(name, cfg, status):
             conn = rpyc.connect(status['address'], cfg['rpc_port'])
             conn.root.load()
             status['state']= 'loading'
+    elif cfg['type'] == 'ssh':
+        _start_ssh_slave(name, cfg, status)
     else:
        logger.error('failed to start "' + name + '": "' + cfg['type'] +
                     '" is not a known slave type')
@@ -84,3 +91,24 @@ def _start_docker_slave(name, cfg, status):
     # Connect the heartbeat listener to the address it is sending heartbeats
     # to.
     config.heartbeat_listener.connect(ip_address, heartbeat_port)
+
+def _start_ssh_slave(name, cfg, status):
+    """ Start a slave controller that is a SSH client
+    """
+    # Improve logging setup!!!
+    logging.getLogger('plumbum').setLevel(logging.INFO)
+   
+    host = cfg['host']
+    ssh_host = SshMachine(host)
+    rpc_port = cfg['rpc_port']
+    heartbeat_port = cfg['heartbeat_port']
+    import pdb
+    #   pdb.set_trace()
+    try:
+        py3 = ssh_host['python3']
+    except:
+        logger.fatal('python3 not available on machine ' + ssh_host)
+    logger.info('python3 is available at ' + py3.executable)
+    cmd = py3['./integration-prototype/slave/bin/slave'] \
+          [name][heartbeat_port][rpc_port]
+    ssh_host.daemonic_popen(cmd, stdout= name + '_sip.output')

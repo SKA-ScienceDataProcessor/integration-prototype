@@ -10,5 +10,15 @@
         "task": {
             "exe": "/home/sdp/integration-prototype/tasks/task.py"
             }
+        },
+    "QA": {
+        "host": "localhost",
+        "timeout": 10,
+        "type": "ssh",
+        "heartbeat_port": 6477,
+        "rpc_port": 6479,
+        "task": {
+            "exe": "/home/sdp/integration-prototype/tasks/task.py"
+            }
         }
 }
