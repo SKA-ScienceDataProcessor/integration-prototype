@@ -25,11 +25,11 @@ class Configure(threading.Thread):
         logger.trace('starting configuration')
         
         # Start the local telescope state application
-        #_start_slave('LTS', config.slave_config['LTS'], 
-        #        config.slave_status['LTS'])
+        _start_slave('LTS', config.slave_config['LTS'], 
+                config.slave_status['LTS'])
 
-        _start_slave('QA', config.slave_config['QA'], 
-                config.slave_status['QA'])
+        #_start_slave('QA', config.slave_config['QA'], 
+        #        config.slave_status['QA'])
 
 def _start_slave(name, cfg, status):
     """ Start a slave controller
@@ -54,6 +54,8 @@ def _start_slave(name, cfg, status):
 def _start_docker_slave(name, cfg, status):
     """ Start a slave controller that is a Docker container
     """
+    # Improve logging soon!
+    logging.getLogger('requests').setLevel(logging.INFO)
 
     # Create a Docker client
     client = Client(version='1.21', base_url=cfg['engine_url'])
