@@ -6,7 +6,7 @@ The host name is taken from SIP_HOSTNAME environment variable.
 The value of logging.handlers.DEFAULT_TCP_LOGGING_PORT is 9020 .
 
 The server listens to the port logging.handlers.DEFAULT_TCP_LOGGING_PORT
-where different modules snd their logs, and redirect them to stdout .
+where different modules send their logs, and redirects them to stdout .
 
 """
 

@@ -6,4 +6,8 @@ SDP Integration Prototype
 * DockerPy
 * rpyc
 * zmq
+* logging
+* pickle
+* socketserver
+* subprocess
 
