@@ -55,7 +55,7 @@ def _start_docker_slave(name, cfg, status):
     """ Start a slave controller that is a Docker container
     """
     # Improve logging soon!
-    logging.getLogger('requests').setLevel(logging.INFO)
+    logging.getLogger('requests').setLevel(logging.DEBUG)
 
     # Create a Docker client
     client = Client(version='1.21', base_url=cfg['engine_url'])
@@ -64,12 +64,13 @@ def _start_docker_slave(name, cfg, status):
     image = cfg['image']
     heartbeat_port = cfg['heartbeat_port']
     rpc_port = cfg['rpc_port']
-    container_id = client.create_container(image=image,
+    container_id = client.create_container(image=image, 
                    command=['/home/sdp/integration-prototype/slave/bin/slave', 
                             name, 
                             str(heartbeat_port),
                             str(rpc_port)
                            ],
+                   environment={"SIP_HOSTNAME":os.environ['SIP_HOSTNAME']},
 		   volumes=['/home/sdp/tasks/'],
 		   host_config=client.create_host_config(binds={
         		os.getcwd()+'/tasks': {
@@ -98,7 +99,7 @@ def _start_ssh_slave(name, cfg, status):
     """ Start a slave controller that is a SSH client
     """
     # Improve logging setup!!!
-    logging.getLogger('plumbum').setLevel(logging.INFO)
+    logging.getLogger('plumbum').setLevel(logging.DEBUG)
    
     host = cfg['host']
     ssh_host = SshMachine(host)
