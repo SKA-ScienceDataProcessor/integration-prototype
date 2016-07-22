@@ -1,4 +1,7 @@
 import unittest
+import os
+
+os.environ['SIP_HOSTNAME'] = os.uname()[1]
 
 from sip_common import logger
 
