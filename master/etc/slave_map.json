@@ -6,9 +6,11 @@
         "type": "docker",
         "heartbeat_port": 6477,
         "rpc_port": 6479,
+        "task_control_module": "task_control",
         "image": "slave_controller",
         "task": {
-            "exe": "/home/sdp/integration-prototype/tasks/task.py"
+            "exe": "/home/sdp/integration-prototype/tasks/task.py",
+            "heartbeat_port": 6481
             }
         },
     "QA": {
@@ -17,8 +19,10 @@
         "type": "ssh",
         "heartbeat_port": 6477,
         "rpc_port": 6479,
+        "task_control_module": "task_control",
         "task": {
-            "exe": "/home/sdp/integration-prototype/tasks/task.py"
+            "exe": "/home/sdp/integration-prototype/tasks/task.py",
+            "heartbeat_port": 6481
             }
         }
 }

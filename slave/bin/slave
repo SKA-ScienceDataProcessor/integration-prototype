@@ -16,9 +16,10 @@ if __name__ == '__main__':
     name = sys.argv[1]
     heartbeat_port = int(sys.argv[2])
     server_port = int(sys.argv[3])
+    task_control_module = sys.argv[4]
 
     # Install handler to respond to SIGTERM
     signal.signal(signal.SIGTERM, _sig_handler)
 
     # Call main program
-    main(name, heartbeat_port, server_port)
+    main(name, heartbeat_port, server_port, task_control_module)

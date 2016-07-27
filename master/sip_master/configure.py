@@ -43,7 +43,7 @@ def _start_slave(name, cfg, status):
 
             # Send the container a load command
             conn = rpyc.connect(status['address'], cfg['rpc_port'])
-            conn.root.load()
+            conn.root.load(cfg['task'])
             status['state']= 'loading'
     elif cfg['type'] == 'ssh':
         _start_ssh_slave(name, cfg, status)
@@ -64,11 +64,13 @@ def _start_docker_slave(name, cfg, status):
     image = cfg['image']
     heartbeat_port = cfg['heartbeat_port']
     rpc_port = cfg['rpc_port']
+    task_control_module = cfg['task_control_module']
     container_id = client.create_container(image=image, 
                    command=['/home/sdp/integration-prototype/slave/bin/slave', 
                             name, 
                             str(heartbeat_port),
-                            str(rpc_port)
+                            str(rpc_port),
+                            task_control_module,
                            ],
                    environment={"SIP_HOSTNAME":os.environ['SIP_HOSTNAME']},
 		   volumes=['/home/sdp/tasks/'],
@@ -105,6 +107,7 @@ def _start_ssh_slave(name, cfg, status):
     ssh_host = SshMachine(host)
     rpc_port = cfg['rpc_port']
     heartbeat_port = cfg['heartbeat_port']
+    task_control_module = cfg['task_control_module']
     import pdb
     #   pdb.set_trace()
     try:
@@ -113,5 +116,5 @@ def _start_ssh_slave(name, cfg, status):
         logger.fatal('python3 not available on machine ' + ssh_host)
     logger.info('python3 is available at ' + py3.executable)
     cmd = py3['./integration-prototype/slave/bin/slave'] \
-          [name][heartbeat_port][rpc_port]
+          [name][heartbeat_port][rpc_port][task_control_module]
     ssh_host.daemonic_popen(cmd, stdout= name + '_sip.output')

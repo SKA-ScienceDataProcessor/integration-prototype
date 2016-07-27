@@ -8,9 +8,10 @@ import threading
 import time
 
 from sip_common import logger
-from sip_slave.load import load
-from sip_slave.unload import unload
 from sip_slave import config
+
+exec('from sip_slave.' + config.task_control_module + ' import load')
+exec('from sip_slave.' + config.task_control_module + ' import unload')
 
 class _Shutdown(threading.Thread):
     """ Shutdown the slave
@@ -37,9 +38,9 @@ class SlaveService(rpyc.Service):
    #    logger.info("slave service disconnected")
    def exposed_get_state(self):
        return config.state
-   def exposed_load(self, task):
-       load(task)
-   def exposed_unload(self):
-       unload()
+   def exposed_load(self, task_description):
+       load(task_description)
+   def exposed_unload(self, task_description):
+       unload(task_description)
    def exposed_shutdown(self):
        _Shutdown().start()

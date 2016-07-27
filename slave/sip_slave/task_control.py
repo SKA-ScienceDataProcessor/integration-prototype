@@ -1,5 +1,9 @@
-""" Function that does the actual work of loading a task
+""" This module defines the load and unload functions for controlling an
+'internal' SIP task.
+
+An internal task sends heartbeat messages to its controller.
 """
+
 import subprocess
 
 from sip_common import heartbeat
@@ -8,17 +12,21 @@ from sip_common import logger
 from sip_slave import config
 from sip_slave.heartbeat_poller import HeartbeatPoller
 
-def load(task):
+def load(task_description):
     """ load the task
+
+    Some sort of task monitoring process should also be started. For
+    'internal' tasks this means checking that the task has is sending
+    heartbeat messages
     """
     _state_task = 'off'
     _state_task_prev = 'off'
 
-    # Assign some port to communicate with the task
-    port = 6577
-
     # Extract the executable name from the task description
-    task = task['exe']
+    task = task_description['exe']
+
+    # Get the port to communicate with the task
+    port = task_description['heartbeat_port']
 
     # Start a task
     config.subproc = subprocess.Popen([task , str(port)])
@@ -32,3 +40,15 @@ def load(task):
     config.poller_run = True
     config.poller.start()
 
+def unload(task_description):
+    """ Unload the task
+    """
+
+    # Stop the heartbeat poller
+    config.poller_run = False
+
+    # Kill the sub-process
+    config.subproc.kill()
+
+    # Reset state
+    config.state = 'idle'

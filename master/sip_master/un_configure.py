@@ -14,7 +14,7 @@ def _unload_task(slave, cfg, status):
     """ Command the slave to unload the task
     """
     conn = rpyc.connect(status['address'], cfg['rpc_port'])
-    conn.root.unload()
+    conn.root.unload(cfg['task'])
 
 def _stop_docker_slave(slave, cfg, status):
     """ Stop a docker based slave controller
