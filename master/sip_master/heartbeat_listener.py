@@ -16,6 +16,7 @@ __author__ = 'David Terrett'
 
 import rpyc
 import threading
+import time
 
 from sip_common import heartbeat
 from sip_common import logger
@@ -26,7 +27,7 @@ class HeartbeatListener(threading.Thread):
     def __init__(self, sm):
         """ Creates a heartbeat listener with a 1s timeout
         """
-        self._listener = heartbeat.Listener(1000)
+        self._listener = heartbeat.Listener(0)
         super(HeartbeatListener, self).__init__(daemon=True)
 
     def connect(self, host, port):
@@ -76,7 +77,7 @@ class HeartbeatListener(threading.Thread):
 
                 # Process slave state change
                 if status['new_state'] != status['state']:
-                     self._update_slave_state(name, config.slave_config[slave],
+                     self._update_slave_state(name, config.slave_config[name],
                              status)
 
             # Evalute the state of the system
@@ -99,15 +100,19 @@ class HeartbeatListener(threading.Thread):
             if old_state == 'Degraded' and new_state == 'Available':
                 config.state_machine.post_event(['upgrade'])
 
+            time.sleep(1.0)
+
     def _evaluate_state(self):
         """ Evaluate current status
 
         This examines the states of all the slaves and decides what state
         we are in.
 
-        For the moment it just looks to see if the LTS is loaded
+        For the moment it just looks to see if the LTS and AQ are loaded
         """
-        if config.slave_status['LTS']['state'] == 'busy':
+        #if config.slave_status['LTS']['state'] == 'busy':
+        if config.slave_status['LTS']['state'] == 'busy' and \
+                config.slave_status['QA']['state'] == 'busy':
             return 'Available'
         else:
             return 'Unavailable'
@@ -122,4 +127,9 @@ class HeartbeatListener(threading.Thread):
             conn = rpyc.connect(status['address'], config['rpc_port'])
             conn.root.load(config['task'])
             status['state']= 'loading'
+
+        # If the state went from loading to busy log the event
+        elif status['state'] == 'busy':
+            logger.info(name + ' online')
+
 

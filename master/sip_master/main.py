@@ -16,6 +16,7 @@ import os
 import time
 
 from sip_common.state_machine import StateMachine
+from sip_common.resource_manager import ResourceManager
 from sip_master.states import state_table
 from sip_master.states import Standby
 from sip_master.heartbeat_listener import HeartbeatListener
@@ -24,8 +25,15 @@ from sip_master.rpc_service import RpcService
 
 def main(config_file):
 
+    # Create the resource manager
+    config.resource = ResourceManager({'localhost': {
+            'sip_root': '/home/dlt87/SKA-SDP/integration-prototype',
+            'launch_protocol': ['ssh', 'docker']
+        }})
+
     # Start logging server as a subprocess
-    logserver = subprocess.Popen('common/sip_common/logging_server.py', shell=True)
+    logserver = subprocess.Popen('common/sip_common/logging_server.py', 
+            shell=True)
     # Wait until it initializes
     time.sleep(2)
 

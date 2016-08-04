@@ -38,3 +38,5 @@ it goes to zero the slave is declared to be timed-out. Each time a
 heartbeat message is received the counter is reset to the value of  
 'timeout' from the config dictionary. 
 """ 
+
+resource = ''

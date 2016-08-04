@@ -29,8 +29,8 @@ def load(task_description):
     port = task_description['heartbeat_port']
 
     # Start a task
-    config.subproc = subprocess.Popen([task , str(port)])
     logger.info('Starting task ' + task + ', port ' + str(port))
+    config.subproc = subprocess.Popen([task, str(port)])
 
     # Create a heartbeat listener to listen for a task
     timeout_msec = 1000

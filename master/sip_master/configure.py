@@ -28,28 +28,27 @@ class Configure(threading.Thread):
         _start_slave('LTS', config.slave_config['LTS'], 
                 config.slave_status['LTS'])
 
-        #_start_slave('QA', config.slave_config['QA'], 
-        #        config.slave_status['QA'])
+        _start_slave('QA', config.slave_config['QA'], 
+                config.slave_status['QA'])
 
 def _start_slave(name, cfg, status):
     """ Start a slave controller
     """
-    if cfg['type'] == 'docker':
 
-        # Start a container if it isn't already running
-        if status['state'] == '':
+    # Start a container if it isn't already running
+    if status['state'] == '':
+        if cfg['type'] == 'docker':
             _start_docker_slave(name, cfg, status)
+        elif cfg['type'] == 'ssh':
+            _start_ssh_slave(name, cfg, status)
         else:
-
-            # Send the container a load command
-            conn = rpyc.connect(status['address'], cfg['rpc_port'])
-            conn.root.load(cfg['task'])
-            status['state']= 'loading'
-    elif cfg['type'] == 'ssh':
-        _start_ssh_slave(name, cfg, status)
-    else:
-       logger.error('failed to start "' + name + '": "' + cfg['type'] +
+            logger.error('failed to start "' + name + '": "' + cfg['type'] +
                     '" is not a known slave type')
+    else:
+        # Send the container a load command
+        conn = rpyc.connect(status['address'], cfg['rpc_port'])
+        conn.root.load(cfg['task'])
+        status['state']= 'loading'
 
 def _start_docker_slave(name, cfg, status):
     """ Start a slave controller that is a Docker container
@@ -103,7 +102,9 @@ def _start_ssh_slave(name, cfg, status):
     # Improve logging setup!!!
     logging.getLogger('plumbum').setLevel(logging.DEBUG)
    
-    host = cfg['host']
+    #host = cfg['host']
+    host = config.resource.allocate_host(name, {'launch_protocol': 'ssh'}, {})
+    sip_root = config.resource.sip_root(host)
     ssh_host = SshMachine(host)
     rpc_port = cfg['rpc_port']
     heartbeat_port = cfg['heartbeat_port']
@@ -115,6 +116,17 @@ def _start_ssh_slave(name, cfg, status):
     except:
         logger.fatal('python3 not available on machine ' + ssh_host)
     logger.info('python3 is available at ' + py3.executable)
-    cmd = py3['./integration-prototype/slave/bin/slave'] \
+    cmd = py3[os.path.join(sip_root, 'slave/bin/slave')] \
           [name][heartbeat_port][rpc_port][task_control_module]
     ssh_host.daemonic_popen(cmd, stdout= name + '_sip.output')
+
+    status['address'] = host
+    status['state'] = 'starting'
+    status['new_state'] = 'starting'
+    status['timeout counter'] = cfg['timeout']
+    logger.info(name + ' started on ' + host)
+
+    # Connect the heartbeat listener to the address it is sending heartbeats
+    # to.
+    config.heartbeat_listener.connect(host, heartbeat_port)
+
