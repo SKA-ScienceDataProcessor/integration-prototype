@@ -22,6 +22,7 @@ from sip_common import heartbeat
 from sip_common import logger
 
 from sip_master import config
+from sip_master import task
 
 class HeartbeatListener(threading.Thread):
     def __init__(self, sm):
@@ -124,9 +125,7 @@ class HeartbeatListener(threading.Thread):
         # If the state went from 'starting' to 'idle' send a
         # load command to the slave.
         if old_state == 'starting' and status['state'] == 'idle':
-            conn = rpyc.connect(status['address'], status['rpc_port'])
-            conn.root.load(config['task'])
-            status['state']= 'loading'
+            task.load(config, status)
 
         # If the state went from loading to busy log the event
         elif status['state'] == 'busy':

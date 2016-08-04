@@ -12,6 +12,7 @@ import logging
 from sip_common import logger
 
 from sip_master import config
+from sip_master import task
 
 class Configure(threading.Thread):
     """ Does the actual work of configuring the system
@@ -45,10 +46,7 @@ def _start_slave(name, cfg, status):
             logger.error('failed to start "' + name + '": "' + cfg['type'] +
                     '" is not a known slave type')
     else:
-        # Send the container a load command
-        conn = rpyc.connect(status['address'], status['rpc_port'])
-        conn.root.load(cfg['task'])
-        status['state']= 'loading'
+        task.load(cfg, status)
 
 def _start_docker_slave(name, cfg, status):
     """ Start a slave controller that is a Docker container
