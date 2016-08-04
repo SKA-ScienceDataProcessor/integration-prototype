@@ -8,6 +8,6 @@ SDP Integration Prototype
 * zmq
 * logging
 * pickle
-* socketserver
+* socket
 * subprocess
 
