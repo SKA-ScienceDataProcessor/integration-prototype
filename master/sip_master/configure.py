@@ -65,7 +65,7 @@ def _start_docker_slave(name, cfg, status):
     host = config.resource.allocate_host(name, 
             {'launch_protocol': 'docker'}, {})
     image = cfg['image']
-    heartbeat_port = cfg['heartbeat_port']
+    heartbeat_port = config.resource.allocate_resource(name, "tcp_port")
     rpc_port = config.resource.allocate_resource(name, "tcp_port")
     task_control_module = cfg['task_control_module']
     container_id = client.create_container(image=image, 
@@ -110,8 +110,8 @@ def _start_ssh_slave(name, cfg, status):
     host = config.resource.allocate_host(name, {'launch_protocol': 'ssh'}, {})
     sip_root = config.resource.sip_root(host)
     ssh_host = SshMachine(host)
+    heartbeat_port = config.resource.allocate_resource(name, "tcp_port")
     rpc_port = config.resource.allocate_resource(name, "tcp_port")
-    heartbeat_port = cfg['heartbeat_port']
     task_control_module = cfg['task_control_module']
     import pdb
     #   pdb.set_trace()
