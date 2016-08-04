@@ -23,13 +23,11 @@ from sip_master.heartbeat_listener import HeartbeatListener
 from sip_master import config
 from sip_master.rpc_service import RpcService
 
-def main(config_file):
+def main(config_file, resources_file):
 
     # Create the resource manager
-    config.resource = ResourceManager({'localhost': {
-            'sip_root': '/home/dlt87/SKA-SDP/integration-prototype',
-            'launch_protocol': ['ssh', 'docker']
-        }})
+    with open(resources_file) as f:
+        config.resource = ResourceManager(json.load(f))
 
     # Start logging server as a subprocess
     logserver = subprocess.Popen('common/sip_common/logging_server.py', 

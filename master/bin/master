@@ -13,4 +13,7 @@ from sip_master.main import main
 config_file = os.path.join(os.path.dirname(__file__), '..', 'etc', 
         'slave_map.json')
 
-main(config_file)
+resources_file = os.path.join(os.path.dirname(__file__), '..', 'etc', 
+        'resources.json')
+
+main(config_file, resources_file)
