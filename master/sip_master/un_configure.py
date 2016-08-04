@@ -13,7 +13,7 @@ from sip_master import config
 def _unload_task(slave, cfg, status):
     """ Command the slave to unload the task
     """
-    conn = rpyc.connect(status['address'], cfg['rpc_port'])
+    conn = rpyc.connect(status['address'], status['rpc_port'])
     conn.root.unload(cfg['task'])
 
 class UnConfigure(threading.Thread):

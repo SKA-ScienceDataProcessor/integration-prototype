@@ -4,7 +4,6 @@
         "engine_url": "unix:///var/run/docker.sock",
         "type": "docker",
         "heartbeat_port": 6477,
-        "rpc_port": 6479,
         "task_control_module": "task_control",
         "image": "slave_controller",
         "task": {
@@ -16,7 +15,6 @@
         "timeout": 10,
         "type": "ssh",
         "heartbeat_port": 6487,
-        "rpc_port": 6489,
         "task_control_module": "task_control",
         "task": {
             "exe": "/home/dlt87/SKA-SDP/integration-prototype/tasks/task.py",

@@ -14,7 +14,7 @@ from sip_master import config
 def _stop_slave(name, config, status):
     """ Stop a slave controller
     """
-    conn = rpyc.connect(status['address'], config['rpc_port'])
+    conn = rpyc.connect(status['address'], status['rpc_port'])
     conn.root.shutdown()
     if config['type'] == 'docker':
         _stop_docker_slave(name, config, status)

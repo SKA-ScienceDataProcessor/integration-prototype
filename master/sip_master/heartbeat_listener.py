@@ -124,7 +124,7 @@ class HeartbeatListener(threading.Thread):
         # If the state went from 'starting' to 'idle' send a
         # load command to the slave.
         if old_state == 'starting' and status['state'] == 'idle':
-            conn = rpyc.connect(status['address'], config['rpc_port'])
+            conn = rpyc.connect(status['address'], status['rpc_port'])
             conn.root.load(config['task'])
             status['state']= 'loading'
 

@@ -46,12 +46,14 @@ def _start_slave(name, cfg, status):
                     '" is not a known slave type')
     else:
         # Send the container a load command
-        conn = rpyc.connect(status['address'], cfg['rpc_port'])
+        conn = rpyc.connect(status['address'], status['rpc_port'])
         conn.root.load(cfg['task'])
         status['state']= 'loading'
 
 def _start_docker_slave(name, cfg, status):
     """ Start a slave controller that is a Docker container
+
+        NB This only works on localhost
     """
     # Improve logging soon!
     logging.getLogger('requests').setLevel(logging.DEBUG)
@@ -60,9 +62,11 @@ def _start_docker_slave(name, cfg, status):
     client = Client(version='1.21', base_url=cfg['engine_url'])
 
     # Create a container and store its id in the properties array
+    host = config.resource.allocate_host(name, 
+            {'launch_protocol': 'docker'}, {})
     image = cfg['image']
     heartbeat_port = cfg['heartbeat_port']
-    rpc_port = cfg['rpc_port']
+    rpc_port = config.resource.allocate_resource(name, "tcp_port")
     task_control_module = cfg['task_control_module']
     container_id = client.create_container(image=image, 
                    command=['/home/sdp/integration-prototype/slave/bin/slave', 
@@ -89,6 +93,7 @@ def _start_docker_slave(name, cfg, status):
     status['new_state'] = 'starting'
     status['container_id'] = container_id
     status['timeout counter'] = cfg['timeout']
+    status['rpc_port'] = rpc_port
     logger.info(name + ' started in container ' + container_id + ' at ' +
                 ip_address)
 
@@ -102,11 +107,10 @@ def _start_ssh_slave(name, cfg, status):
     # Improve logging setup!!!
     logging.getLogger('plumbum').setLevel(logging.DEBUG)
    
-    #host = cfg['host']
     host = config.resource.allocate_host(name, {'launch_protocol': 'ssh'}, {})
     sip_root = config.resource.sip_root(host)
     ssh_host = SshMachine(host)
-    rpc_port = cfg['rpc_port']
+    rpc_port = config.resource.allocate_resource(name, "tcp_port")
     heartbeat_port = cfg['heartbeat_port']
     task_control_module = cfg['task_control_module']
     import pdb
@@ -124,6 +128,7 @@ def _start_ssh_slave(name, cfg, status):
     status['state'] = 'starting'
     status['new_state'] = 'starting'
     status['timeout counter'] = cfg['timeout']
+    status['rpc_port'] = rpc_port
     logger.info(name + ' started on ' + host)
 
     # Connect the heartbeat listener to the address it is sending heartbeats
