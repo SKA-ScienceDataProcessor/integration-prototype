@@ -3,11 +3,22 @@
 
 import rpyc
 
-def load(cfg, status):
+from sip_master import config
+
+def load(name, cfg, status):
     """ Command the slave controller to load a task
     """
+
+    # Scan the task dictionary for entries with values starting with a #
+    # character and replace with an allocated resource.
+    task_cfg = {}
+    for k,v in cfg['task'].items():
+        if v[0] == '#':
+            task_cfg[k] = config.resource.allocate_resource(name, v[1:])
+        else:
+            task_cfg[k] = v
     conn = rpyc.connect(status['address'], status['rpc_port'])
-    conn.root.load(cfg['task'])
+    conn.root.load(task_cfg)
     status['state']= 'loading'
 
 def unload(cfg, status):

@@ -111,7 +111,6 @@ class HeartbeatListener(threading.Thread):
 
         For the moment it just looks to see if the LTS and AQ are loaded
         """
-        #if config.slave_status['LTS']['state'] == 'busy':
         if config.slave_status['LTS']['state'] == 'busy' and \
                 config.slave_status['QA']['state'] == 'busy':
             return 'Available'
@@ -125,7 +124,7 @@ class HeartbeatListener(threading.Thread):
         # If the state went from 'starting' to 'idle' send a
         # load command to the slave.
         if old_state == 'starting' and status['state'] == 'idle':
-            task.load(config, status)
+            task.load(name, config, status)
 
         # If the state went from loading to busy log the event
         elif status['state'] == 'busy':

@@ -7,7 +7,7 @@
         "image": "slave_controller",
         "task": {
             "exe": "/home/sdp/integration-prototype/tasks/task.py",
-            "heartbeat_port": 6481
+            "heartbeat_port": "#tcp_port"
             }
         },
     "QA": {
@@ -16,7 +16,7 @@
         "task_control_module": "task_control",
         "task": {
             "exe": "/home/dlt87/SKA-SDP/integration-prototype/tasks/task.py",
-            "heartbeat_port": 6481
+            "heartbeat_port": "#tcp_port"
             }
         }
 }

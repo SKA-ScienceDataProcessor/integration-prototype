@@ -29,6 +29,11 @@ def main(config_file, resources_file):
     with open(resources_file) as f:
         config.resource = ResourceManager(json.load(f))
 
+    # "Allocate" a host for the master controller so that we can allocate it
+    # resources.
+    config.resource.allocate_host("Master Controller", {'host': 'localhost'}, 
+            {})
+
     # Start logging server as a subprocess
     logserver = subprocess.Popen('common/sip_common/logging_server.py', 
             shell=True)

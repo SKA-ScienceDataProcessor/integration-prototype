@@ -46,7 +46,7 @@ def _start_slave(name, cfg, status):
             logger.error('failed to start "' + name + '": "' + cfg['type'] +
                     '" is not a known slave type')
     else:
-        task.load(cfg, status)
+        task.load(name, cfg, status)
 
 def _start_docker_slave(name, cfg, status):
     """ Start a slave controller that is a Docker container
