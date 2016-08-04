@@ -16,19 +16,6 @@ def _unload_task(slave, cfg, status):
     conn = rpyc.connect(status['address'], cfg['rpc_port'])
     conn.root.unload(cfg['task'])
 
-def _stop_docker_slave(slave, cfg, status):
-    """ Stop a docker based slave controller
-    """
-
-    # Create a Docker client
-    client = Client(version='1.21', base_url=cfg['engine_url'])
-
-    # Stop the container
-    client.stop(status['container_id'])
-
-    # Clear the status in the property map
-    status['state'] = ''
-
 class UnConfigure(threading.Thread):
     """ Does the actual work of un-configuring the system
 
