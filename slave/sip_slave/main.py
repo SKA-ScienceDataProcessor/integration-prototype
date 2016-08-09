@@ -4,6 +4,7 @@ A handler for SIGTERM is set up that just exits because that is what
 'Docker stop' sends.
 """
 
+import os
 from rpyc.utils.server import ThreadedServer
 import threading
 import time
@@ -23,6 +24,7 @@ def main(name, heartbeat_port, server_port, task_control_module):
         task_control_module - The name of the module (in sip_slave) to load
                               the task load and unload functions from.
     """
+
     logger.info('Slave controller "' + name + '" starting')
 
     # Define the modules that the task load and unload functions will be

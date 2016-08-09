@@ -4,7 +4,9 @@ __author__ = 'David Terrett'
 
 from docker import Client
 import os
+from pyroute2 import IPRoute
 import rpyc
+import socket
 import threading 
 from plumbum import SshMachine
 import logging
@@ -32,6 +34,17 @@ class Configure(threading.Thread):
         _start_slave('QA', config.slave_config['QA'], 
                 config.slave_status['QA'])
 
+def _find_route_to_logger(host):
+    """ Figures out what the IP address of the logger is on 'host'
+    """
+    addr = socket.gethostbyname(host)
+    ip = IPRoute()
+    r = ip.get_routes(dst=addr, family=socket.AF_INET)
+    for x in r[0]['attrs']:
+        if x[0] == 'RTA_PREFSRC':
+            return x[1]
+
+
 def _start_slave(name, cfg, status):
     """ Start a slave controller
     """
@@ -43,8 +56,18 @@ def _start_slave(name, cfg, status):
         elif cfg['type'] == 'ssh':
             _start_ssh_slave(name, cfg, status)
         else:
-            logger.error('failed to start "' + name + '": "' + cfg['type'] +
+            raise RuntimeError('failed to start "' + name + '": "' + cfg['type'] +
                     '" is not a known slave type')
+
+        # Initialise the task status
+        status['state'] = 'starting'
+        status['new_state'] = 'starting'
+        status['timeout counter'] = cfg['timeout']
+
+        # Connect the heartbeat listener to the address it is sending heartbeats
+        # to.
+        config.heartbeat_listener.connect(status['address'], 
+                status['heartbeat_port'])
     else:
         task.load(name, cfg, status)
 
@@ -71,9 +94,9 @@ def _start_docker_slave(name, cfg, status):
                             name, 
                             str(heartbeat_port),
                             str(rpc_port),
+                            '172.17.0.1',
                             task_control_module,
                            ],
-                   environment={"SIP_HOSTNAME":os.environ['SIP_HOSTNAME']},
 		   volumes=['/home/sdp/tasks/'],
 		   host_config=client.create_host_config(binds={
         		os.getcwd()+'/tasks': {
@@ -84,20 +107,15 @@ def _start_docker_slave(name, cfg, status):
 
     # Start it
     client.start(container_id)
+
     info = client.inspect_container(container_id)
     ip_address = info['NetworkSettings']['IPAddress']
     status['address'] = ip_address
-    status['state'] = 'starting'
-    status['new_state'] = 'starting'
     status['container_id'] = container_id
-    status['timeout counter'] = cfg['timeout']
     status['rpc_port'] = rpc_port
+    status['heartbeat_port'] = heartbeat_port
     logger.info(name + ' started in container ' + container_id + ' at ' +
                 ip_address)
-
-    # Connect the heartbeat listener to the address it is sending heartbeats
-    # to.
-    config.heartbeat_listener.connect(ip_address, heartbeat_port)
 
 def _start_ssh_slave(name, cfg, status):
     """ Start a slave controller that is a SSH client
@@ -105,12 +123,24 @@ def _start_ssh_slave(name, cfg, status):
     # Improve logging setup!!!
     logging.getLogger('plumbum').setLevel(logging.DEBUG)
    
+    # Find a host tht supports ssh
     host = config.resource.allocate_host(name, {'launch_protocol': 'ssh'}, {})
+
+    # Get the root of the SIP installation on that host
     sip_root = config.resource.sip_root(host)
-    ssh_host = SshMachine(host)
+
+    # Allocate ports for heatbeat and the RPC interface
     heartbeat_port = config.resource.allocate_resource(name, "tcp_port")
     rpc_port = config.resource.allocate_resource(name, "tcp_port")
+
+    # Get the task control module to use for this task
     task_control_module = cfg['task_control_module']
+
+    # Get the address of the logger (as seen from the remote host)
+    logger_address = _find_route_to_logger(host)
+    print(logger_address)
+
+    ssh_host = SshMachine(host)
     import pdb
     #   pdb.set_trace()
     try:
@@ -118,18 +148,13 @@ def _start_ssh_slave(name, cfg, status):
     except:
         logger.fatal('python3 not available on machine ' + ssh_host)
     logger.info('python3 is available at ' + py3.executable)
+
+    # Construct the command line to start the slave
     cmd = py3[os.path.join(sip_root, 'slave/bin/slave')] \
-          [name][heartbeat_port][rpc_port][task_control_module]
+          [name][heartbeat_port][rpc_port][logger_address][task_control_module]
     ssh_host.daemonic_popen(cmd, stdout= name + '_sip.output')
 
     status['address'] = host
-    status['state'] = 'starting'
-    status['new_state'] = 'starting'
-    status['timeout counter'] = cfg['timeout']
     status['rpc_port'] = rpc_port
+    status['heartbeat_port'] = heartbeat_port
     logger.info(name + ' started on ' + host)
-
-    # Connect the heartbeat listener to the address it is sending heartbeats
-    # to.
-    config.heartbeat_listener.connect(host, heartbeat_port)
-

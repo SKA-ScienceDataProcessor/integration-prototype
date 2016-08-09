@@ -37,7 +37,7 @@ port = logging.handlers.DEFAULT_TCP_LOGGING_PORT
 def sub_logger(port, level=logging.DEBUG):
     ctx = zmq.Context()
     sub = ctx.socket(zmq.SUB)
-    sub.bind('tcp://%s:%i' % (sip_address, port))
+    sub.bind('tcp://*:%i' % (port))
     sub.setsockopt_string(zmq.SUBSCRIBE, '')
 
     logging.basicConfig(level=level)

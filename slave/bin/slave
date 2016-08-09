@@ -7,8 +7,6 @@ import sys
 sys.path.append(os.path.join(os.path.dirname(__file__),'..', '..', 'common'))
 sys.path.append(os.path.join(os.path.dirname(__file__),'..'))
 
-from sip_slave.main import main
-
 def _sig_handler(signum, frame):
     sys.exit(0)
 
@@ -16,10 +14,15 @@ if __name__ == '__main__':
     name = sys.argv[1]
     heartbeat_port = int(sys.argv[2])
     server_port = int(sys.argv[3])
-    task_control_module = sys.argv[4]
+    logging_address = sys.argv[4]
+    task_control_module = sys.argv[5]
 
     # Install handler to respond to SIGTERM
     signal.signal(signal.SIGTERM, _sig_handler)
 
+    # Define SIP_HOSTNAME 
+    os.environ['SIP_HOSTNAME'] = logging_address
+
     # Call main program
+    from sip_slave.main import main
     main(name, heartbeat_port, server_port, task_control_module)
