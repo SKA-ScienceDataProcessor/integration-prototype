@@ -1,5 +1,6 @@
 {
     "LTS": {
+        "online": 1,
         "timeout": 10,
         "engine_url": "unix:///var/run/docker.sock",
         "type": "docker",
@@ -11,6 +12,7 @@
             }
         },
     "QA": {
+        "online": 1,
         "timeout": 10,
         "type": "ssh",
         "task_control_module": "task_control",

@@ -111,11 +111,11 @@ class HeartbeatListener(threading.Thread):
 
         For the moment it just looks to see if the LTS and AQ are loaded
         """
-        if config.slave_status['LTS']['state'] == 'busy' and \
-                config.slave_status['QA']['state'] == 'busy':
-            return 'Available'
-        else:
-            return 'Unavailable'
+        for task, cfg in config.slave_config.items():
+            if cfg.get('online', False):
+                if config.slave_status[task]['state'] != 'busy':
+                    return 'Unavailable'
+        return 'Available'
 
     def _update_slave_state(self, name, config, status):
         old_state = status['state']

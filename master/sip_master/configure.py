@@ -26,14 +26,13 @@ class Configure(threading.Thread):
         """ Thread run routine
         """
         logger.trace('starting configuration')
+
+        # Go through the slave map and start all the tasks that are marked
+        # as being required for the system to be online
+        for task, cfg in config.slave_config.items():
+            if cfg.get('online', False):
+                _start_slave(task, cfg, config.slave_status[task])
         
-        # Start the local telescope state application
-        _start_slave('LTS', config.slave_config['LTS'], 
-                config.slave_status['LTS'])
-
-        _start_slave('QA', config.slave_config['QA'], 
-                config.slave_status['QA'])
-
 def _find_route_to_logger(host):
     """ Figures out what the IP address of the logger is on 'host'
     """
@@ -56,8 +55,8 @@ def _start_slave(name, cfg, status):
         elif cfg['type'] == 'ssh':
             _start_ssh_slave(name, cfg, status)
         else:
-            raise RuntimeError('failed to start "' + name + '": "' + cfg['type'] +
-                    '" is not a known slave type')
+            raise RuntimeError('failed to start "' + name + '": "' + 
+                    cfg['type'] + '" is not a known slave type')
 
         # Initialise the task status
         status['state'] = 'starting'
