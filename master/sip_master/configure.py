@@ -3,6 +3,7 @@
 __author__ = 'David Terrett'
 
 from docker import Client
+import netifaces
 import os
 from pyroute2 import IPRoute
 import rpyc
@@ -88,12 +89,14 @@ def _start_docker_slave(name, cfg, status):
     heartbeat_port = config.resource.allocate_resource(name, "tcp_port")
     rpc_port = config.resource.allocate_resource(name, "tcp_port")
     task_control_module = cfg['task_control_module']
+    logger_address = \
+            netifaces.ifaddresses('docker0')[netifaces.AF_INET][0]['addr']
     container_id = client.create_container(image=image, 
                    command=['/home/sdp/integration-prototype/slave/bin/slave', 
                             name, 
                             str(heartbeat_port),
                             str(rpc_port),
-                            '172.17.0.1',
+                            logger_address,
                             task_control_module,
                            ],
 		   volumes=['/home/sdp/tasks/'],
@@ -137,7 +140,6 @@ def _start_ssh_slave(name, cfg, status):
 
     # Get the address of the logger (as seen from the remote host)
     logger_address = _find_route_to_logger(host)
-    print(logger_address)
 
     ssh_host = SshMachine(host)
     import pdb
