@@ -12,7 +12,7 @@ from sip_common import logger
 from sip_slave import config
 from sip_slave.heartbeat_poller import HeartbeatPoller
 
-def load(task_description):
+def load(task):
     """ load the task
 
     Some sort of task monitoring process should also be started. For
@@ -22,15 +22,12 @@ def load(task_description):
     _state_task = 'off'
     _state_task_prev = 'off'
 
-    # Extract the executable name from the task description
-    task = task_description['exe']
-
-    # Get the port to communicate with the task
-    port = task_description['heartbeat_port']
+    # Extract the port number
+    port = int(task[1])
 
     # Start a task
-    logger.info('Starting task ' + task + ', port ' + str(port))
-    config.subproc = subprocess.Popen([task, str(port)])
+    logger.info('Starting task ' + task[0])
+    config.subproc = subprocess.Popen(task)
 
     # Create a heartbeat listener to listen for a task
     timeout_msec = 1000

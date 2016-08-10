@@ -6,19 +6,19 @@
         "type": "docker",
         "task_control_module": "task_control",
         "image": "slave_controller",
-        "task": {
-            "exe": "/home/sdp/integration-prototype/tasks/task.py",
-            "heartbeat_port": "#tcp_port"
-            }
+        "task": [
+            "/home/sdp/integration-prototype/tasks/task.py",
+            "#tcp_port"
+            ]
         },
     "QA": {
         "online": 1,
         "timeout": 10,
         "type": "ssh",
         "task_control_module": "task_control",
-        "task": {
-            "exe": "/home/dlt87/SKA-SDP/integration-prototype/tasks/task.py",
-            "heartbeat_port": "#tcp_port"
-            }
+        "task": [
+            "/home/dlt87/SKA-SDP/integration-prototype/tasks/task.py",
+            "#tcp_port"
+            ]
         }
 }

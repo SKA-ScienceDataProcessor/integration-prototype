@@ -9,14 +9,12 @@ def load(name, cfg, status):
     """ Command the slave controller to load a task
     """
 
-    # Scan the task dictionary for entries with values starting with a #
+    # Scan the task parameter list for entries with values starting with a #
     # character and replace with an allocated resource.
-    task_cfg = {}
-    for k,v in cfg['task'].items():
+    task_cfg = cfg['task']
+    for k,v in enumerate(task_cfg):
         if v[0] == '#':
-            task_cfg[k] = config.resource.allocate_resource(name, v[1:])
-        else:
-            task_cfg[k] = v
+            task_cfg[k] = str(config.resource.allocate_resource(name, v[1:]))
     conn = rpyc.connect(status['address'], status['rpc_port'])
     conn.root.load(task_cfg)
     status['state']= 'loading'
