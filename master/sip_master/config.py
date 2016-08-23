@@ -27,10 +27,9 @@ slave_status = {}
 This dictionary records the state and other dynamic information about the
 slaves. It includes:
 - the slave type; an index into the slave map.
-- the slave's state, which can be one:	 
- - an empty string: Either we have never tried to start the slave or we have shut it down cleanly. 
- - 'running': we managed to start the slave and we are receiving heartbeat messages from it. 
- - 'timed out': we haven't had any heartbeat messages for some time 
+- the slave's state as reported by (or the absence of) heatbeat messages
+- the state the slave ought to be in
+- the previous state of the slave
 - timeout counter: The number of missed heartbeats left to go. 
 
 The polling loop decrements the timout counter each time it runs and if 

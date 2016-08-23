@@ -33,16 +33,26 @@ def start_slave(name, type):
 
     # Check that the type exists
     if not type in config.slave_config:
-        raise RuntimeError('"' + type + '" is not a known task type')
+        raise RuntimeError('"{}" is not a known task type'.format(type))
 
     # Create an entry in the slave status dictionary if one doesn't already
     # exist
     if not name in config.slave_status:
-        config.slave_status[name] = {'type': type, 'state': '', 
-                'new_state': '', 'timeout counter': 0}
+        config.slave_status[name] = {
+                'type': type, 
+                'state': '', 
+                'prev_state': '', 
+                'expected_state': '',
+                'timeout counter': 0}
+
+    # Check that the slave isn't already running
+    status = config.slave_status[name]
+    if status == 'loading' or status == 'busy':
+        raise RuntimeError('Error starting {}: task is already {}'.format(
+                name, status))
 
     # Start a slave if it isn't already running
-    if config.slave_status[name].get('state', '') == '':
+    if status['state'] == '' or status['state'] == 'dead':
 
         # Start the slave
         if config.slave_config[type]['launch_policy'] == 'docker':
@@ -52,13 +62,15 @@ def start_slave(name, type):
             _start_ssh_slave(name, config.slave_config[type], 
                     config.slave_status[name])
         else:
-            raise RuntimeError('failed to start "' + name + '": "' + 
-                    config.slave_config[type]['launch_policy'] + 
-                    '" is not a known slave launch policy')
+            raise RuntimeError(
+                    'Error starting "{}": {} is not a known slave launch ' \
+                     'policy'.format(name, 
+                     config.slave_config[type]['launch_policy']))
 
         # Initialise the task status
         config.slave_status[name]['state'] = 'starting'
-        config.slave_status[name]['new_state'] = 'starting'
+        config.slave_status[name]['prev_state'] = 'starting'
+        config.slave_status[name]['expected_state'] = 'starting'
         config.slave_status[name]['timeout counter'] = \
                 config.slave_config[type]['timeout']
 
@@ -67,6 +79,9 @@ def start_slave(name, type):
         config.heartbeat_listener.connect(config.slave_status[name]['address'], 
                 config.slave_status[name]['heartbeat_port'])
     else:
+
+        # Otherwise a slave was running (but no task) so we can just instruct
+        # the slave to load the task.
         task.load(name, config.slave_config[type], config.slave_status[name])
 
 def _start_docker_slave(name, cfg, status):
@@ -166,6 +181,9 @@ def stop_slave(name, status):
     if config.slave_config[status['type']]['launch_policy'] == 'docker':
         _stop_docker_slave(name, status)
 
+    # Clear the state in the status array
+    status['state'] = ''
+
 def _stop_docker_slave(name, status):
     """ Stop a docker based slave controller
     """
@@ -177,7 +195,4 @@ def _stop_docker_slave(name, status):
     # Stop the container and remove the container
     client.stop(status['container_id'])
     client.remove_container(status['container_id'])
-
-    # Clear the status in the property map
-    status['state'] = ''
 
