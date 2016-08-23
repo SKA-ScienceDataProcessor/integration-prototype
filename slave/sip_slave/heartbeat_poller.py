@@ -26,15 +26,21 @@ class HeartbeatPoller(threading.Thread):
     def run(self):
         while config.poller_run:
 
-	    # Listen to the task's heartbeat
+            # Listen to the task's heartbeat
             comp_msg = self._heartbeat_comp_listener.listen()
 
 	    # Extract a task's state
             state_task = _get_state(comp_msg)
 
-	    # If the state changes log it
+	    # If the task state changes log it
             if state_task != self._state_task_prev :
                  logger.info(comp_msg)
                  self._state_task_prev = state_task		
-            config.state = 'busy'
+
+            # Update the controller state
+            if state_task == 'starting' or state_task == 'state1' or \
+                    state_task == 'state2':
+                config.state = 'busy'
+            else:
+                config.state = state_task
             time.sleep(1)

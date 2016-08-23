@@ -37,9 +37,10 @@ def load(task):
     config.poller_run = True
     config.poller.start()
 
-def unload(task_description):
+def unload(task):
     """ Unload the task
     """
+    logger.info('unloading task ' + task[0])
 
     # Stop the heartbeat poller
     config.poller_run = False

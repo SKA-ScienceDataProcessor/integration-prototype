@@ -25,6 +25,7 @@ class UnConfigure(threading.Thread):
         logger.trace('starting unconfiguration')
         for slave, status in config.slave_status.items():
             if status['state'] == 'busy':
-               task.unload(config.slave_config[slave], status)
+               type = status['type']
+               task.unload(config.slave_config[type], status)
         logger.trace('unconfigure done')
         config.state_machine.post_event(['unconfigure done'])

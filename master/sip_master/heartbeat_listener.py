@@ -22,6 +22,7 @@ from sip_common import heartbeat
 from sip_common import logger
 
 from sip_master import config
+from sip_master import slave_control
 from sip_master import task
 
 class HeartbeatListener(threading.Thread):
@@ -58,18 +59,27 @@ class HeartbeatListener(threading.Thread):
                 state = msg[1]
 
                 # Reset counters of slaves that we get a message from
+                type = config.slave_status[name]['type']
                 config.slave_status[name]['timeout counter'] = (
-                       config.slave_config[name]['timeout'])
+                       config.slave_config[type]['timeout'])
 
                 # Store the state from the message
                 config.slave_status[name]['new_state'] = state
+
+                # If the status was finished and it is now idle, set it back to 
+                # finished.
+                if config.slave_status[name]['state'] == 'finished' and (
+                            state == 'idle'):
+                    config.slave_status[name]['new_state'] = 'finished'
 
                 # Check for more messages
                 msg = self._listener.listen()
 
             # Check for timed out slaves
             for name, status in config.slave_status.items():
+                #print(name, status['state'])
                 if status['state'] != '' and (
+                         status['state'] != 'finished') and (
                          status['timeout counter'] == 0):
                     if status['state'] != 'dead':
                         logger.error('No heartbeat from slave controller "' + 
@@ -78,8 +88,9 @@ class HeartbeatListener(threading.Thread):
 
                 # Process slave state change
                 if status['new_state'] != status['state']:
-                     self._update_slave_state(name, config.slave_config[name],
-                             status)
+                     self._update_slave_state(name, 
+                            config.slave_config[status['type']],
+                            status)
 
             # Evalute the state of the system
             new_state = self._evaluate_state()
@@ -108,26 +119,28 @@ class HeartbeatListener(threading.Thread):
 
         This examines the states of all the slaves and decides what state
         we are in.
-
-        For the moment it just looks to see if the LTS and AQ are loaded
         """
         for task, cfg in config.slave_config.items():
             if cfg.get('online', False):
-                if config.slave_status[task]['state'] != 'busy':
+                if not task in config.slave_status or \
+                        config.slave_status[task]['state'] != 'busy':
                     return 'Unavailable'
         return 'Available'
 
-    def _update_slave_state(self, name, config, status):
+    def _update_slave_state(self, name, cfg, status):
         old_state = status['state']
         status['state'] = status['new_state']
 
         # If the state went from 'starting' to 'idle' send a
         # load command to the slave.
         if old_state == 'starting' and status['state'] == 'idle':
-            task.load(name, config, status)
+            task.load(name, cfg, status)
 
         # If the state went from loading to busy log the event
         elif status['state'] == 'busy':
             logger.info(name + ' online')
 
-
+        # If the state is finished, unload the task and stop the slave.
+        elif status['state'] == 'finished':
+            task.unload(cfg, status)
+            slave_control.stop_slave(name, status)

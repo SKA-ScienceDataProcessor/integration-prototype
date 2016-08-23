@@ -3,7 +3,7 @@
         "online": 1,
         "timeout": 10,
         "engine_url": "unix:///var/run/docker.sock",
-        "type": "docker",
+        "launch_policy": "docker",
         "task_control_module": "task_control",
         "image": "slave_controller",
         "task": [
@@ -14,11 +14,22 @@
     "QA": {
         "online": 1,
         "timeout": 10,
-        "type": "ssh",
+        "launch_policy": "ssh",
         "task_control_module": "task_control",
         "task": [
             "/home/dlt87/SKA-SDP/integration-prototype/tasks/task.py",
             "#tcp_port"
+            ]
+        },
+    "ingest": {
+        "online": 0,
+        "timeout": 10,
+        "launch_policy": "ssh",
+        "task_control_module": "task_control",
+        "task": [
+            "/home/dlt87/SKA-SDP/integration-prototype/tasks/exec_eng.py",
+            "#tcp_port",
+            "30"
             ]
         }
 }

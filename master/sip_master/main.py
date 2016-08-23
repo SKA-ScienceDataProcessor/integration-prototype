@@ -44,12 +44,6 @@ def main(config_file, resources_file):
     with open(config_file) as f:
         config.slave_config = json.load(f)
 
-    # Initialise the slave status array
-    for slave in config.slave_config:
-        config.slave_status[slave] = {'state': '', 
-                                      'new_state': '',
-                                      'timeout counter': 0}
-
     # Create the master controller state machine
     config.state_machine = StateMachine(state_table, Standby)
 
@@ -70,17 +64,17 @@ def main(config_file, resources_file):
     """
     # Read and process events
     while True:
-        event = input('?')
-        result = config.state_machine.post_event([event])
+        event = input('?').split()
+        if event:
+            result = config.state_machine.post_event(event)
 
-        if result == 'rejected':
-            print('not allowed in current state')
-        if result == 'ignored':
-            print('command ignored')
-        else:
-            print('master controller state:', 
-                    config.state_machine.current_state())
-            if config.state_machine.current_state() == '_End':
-                   print('Terminating logserver, pid ', logserver.pid)
-                   os.kill(logserver.pid, signal.SIGTERM)
-   
+            if result == 'rejected':
+                print('not allowed in current state')
+            if result == 'ignored':
+                print('command ignored')
+            else:
+                print('master controller state:', 
+                        config.state_machine.current_state())
+                if config.state_machine.current_state() == '_End':
+                       print('Terminating logserver, pid ', logserver.pid)
+                       os.kill(logserver.pid, signal.SIGTERM)
