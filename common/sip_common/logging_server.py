@@ -48,7 +48,7 @@ def sub_logger(port, level=logging.DEBUG):
             # trim trailing newline, which will get appended again
             message = message[:-1]
         log = getattr(logging, level.lower().decode("utf-8"))
-        log(message)
+        log(message.decode("utf-8"))
   
 # start the log watcher
 try:
