@@ -68,12 +68,6 @@ class HeartbeatListener(threading.Thread):
                     status['prev_state'] = status['state']
                     status['state'] = state
 
-                # If the status was finished and it is now idle, set it back to 
-                # finished.
-                #if config.slave_status[name]['state'] == 'finished' and (
-                #            state == 'idle'):
-                #    config.slave_status[name]['new_state'] = 'finished'
-
                 # Check for more messages
                 msg = self._listener.listen()
 
@@ -123,8 +117,8 @@ class HeartbeatListener(threading.Thread):
         """
         for task, cfg in config.slave_config.items():
             if cfg.get('online', False):
-                if not task in config.slave_status or \
-                        config.slave_status[task]['state'] != 'busy':
+                if not task in config.slave_status or (
+                        config.slave_status[task]['state']) != 'busy':
                     return 'Unavailable'
         return 'Available'
 

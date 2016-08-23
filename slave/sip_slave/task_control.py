@@ -26,7 +26,7 @@ def load(task):
     port = int(task[1])
 
     # Start a task
-    logger.info('Starting task ' + task[0])
+    logger.info('Starting task {}'.format(task[0]))
     config.subproc = subprocess.Popen(task)
 
     # Create a heartbeat listener to listen for a task
@@ -40,7 +40,7 @@ def load(task):
 def unload(task):
     """ Unload the task
     """
-    logger.info('unloading task ' + task[0])
+    logger.info('unloading task {}'.format(task[0]))
 
     # Stop the heartbeat poller
     config.poller_run = False

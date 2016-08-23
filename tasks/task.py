@@ -47,7 +47,8 @@ def run():
 	while True:
 		# Create a timestamp
 		ts = time.time()
-		st = datetime.datetime.fromtimestamp(ts).strftime('%Y-%m-%d %H:%M:%S')
+		st = datetime.datetime.fromtimestamp(ts).strftime(
+                        '%Y-%m-%d %H:%M:%S')
 		# Change the state w.r.t. the time
 		if int(time.time())%10 < 5 :
 			# Doing something
@@ -64,7 +65,3 @@ def run():
 
 if __name__ == '__main__':
     run()
-
-
-
-

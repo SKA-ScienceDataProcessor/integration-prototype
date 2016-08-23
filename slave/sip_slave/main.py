@@ -25,7 +25,7 @@ def main(name, heartbeat_port, server_port, task_control_module):
                               the task load and unload functions from.
     """
 
-    logger.info('Slave controller "' + name + '" starting')
+    logger.info('Slave controller "{}" starting'.format(name))
 
     # Define the modules that the task load and unload functions will be
     # loaded from

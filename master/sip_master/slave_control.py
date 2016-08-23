@@ -129,8 +129,8 @@ def _start_docker_slave(name, cfg, status):
     status['container_id'] = container_id
     status['rpc_port'] = rpc_port
     status['heartbeat_port'] = heartbeat_port
-    logger.info(name + ' started in container ' + container_id + ' at ' +
-                ip_address)
+    logger.info('"{}" started in container {} at {}'.format(
+            name, container_id, ip_address))
 
 def _start_ssh_slave(name, cfg, status):
     """ Start a slave controller that is a SSH client
@@ -160,13 +160,13 @@ def _start_ssh_slave(name, cfg, status):
     try:
         py3 = ssh_host['python3']
     except:
-        logger.fatal('python3 not available on machine ' + ssh_host)
-    logger.info('python3 is available at ' + py3.executable)
+        logger.fatal('python3 not available on machine {}'.format(ssh_host))
+    logger.info('python3 is available at {}'.format(py3.executable))
 
     # Construct the command line to start the slave
     cmd = py3[os.path.join(sip_root, 'slave/bin/slave')] \
           [name][heartbeat_port][rpc_port][logger_address][task_control_module]
-    ssh_host.daemonic_popen(cmd, stdout= name + '_sip.output')
+    ssh_host.daemonic_popen(cmd, stdout='{}_sip.output'.format(name))
 
     status['address'] = host
     status['rpc_port'] = rpc_port

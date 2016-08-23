@@ -10,8 +10,8 @@ import time
 from sip_common import logger
 from sip_slave import config
 
-exec('from sip_slave.' + config.task_control_module + ' import load')
-exec('from sip_slave.' + config.task_control_module + ' import unload')
+exec('from sip_slave.{} import load'.format(config.task_control_module))
+exec('from sip_slave.{} import unload'.format(config.task_control_module))
 
 class _Shutdown(threading.Thread):
     """ Shutdown the slave
