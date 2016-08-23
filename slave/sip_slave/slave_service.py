@@ -10,6 +10,7 @@ import time
 from sip_common import logger
 from sip_slave import config
 
+# Import the task specific task control module
 exec('from sip_slave.{} import load'.format(config.task_control_module))
 exec('from sip_slave.{} import unload'.format(config.task_control_module))
 
