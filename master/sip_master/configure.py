@@ -23,5 +23,5 @@ class Configure(threading.Thread):
         # as being required for the system to be online
         for task, cfg in config.slave_config.items():
             if cfg.get('online', False):
-                slave_control.start_slave(task, task)
+                slave_control.start(task, task)
         

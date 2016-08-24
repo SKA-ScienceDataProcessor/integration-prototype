@@ -14,7 +14,7 @@ import socket
 from sip_common import logger
 
 from sip_master import config
-from sip_master import task
+from sip_master import task_control
 
 def _find_route_to_logger(host):
     """ Figures out what the IP address of the logger is on 'host'
@@ -27,7 +27,7 @@ def _find_route_to_logger(host):
             return x[1]
 
 
-def start_slave(name, type):
+def start(name, type):
     """ Start a slave controller
     """
 
@@ -82,7 +82,8 @@ def start_slave(name, type):
 
         # Otherwise a slave was running (but no task) so we can just instruct
         # the slave to load the task.
-        task.load(name, config.slave_config[type], config.slave_status[name])
+        task_control.load(name, config.slave_config[type], 
+                config.slave_status[name])
 
 def _start_docker_slave(name, cfg, status):
     """ Start a slave controller that is a Docker container
@@ -167,7 +168,7 @@ def _start_ssh_slave(name, cfg, status):
     status['heartbeat_port'] = heartbeat_port
     logger.info(name + ' started on ' + host)
 
-def stop_slave(name, status):
+def stop(name, status):
     """ Stop a slave controller
     """
     conn = rpyc.connect(status['address'], status['rpc_port'])

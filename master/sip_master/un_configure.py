@@ -9,7 +9,7 @@ import time
 from sip_common import logger
 
 from sip_master import config
-from sip_master import task
+from sip_master import task_control
 
 class UnConfigure(threading.Thread):
     """ Does the actual work of un-configuring the system
@@ -26,6 +26,6 @@ class UnConfigure(threading.Thread):
         for slave, status in config.slave_status.items():
             if status['state'] == 'busy':
                type = status['type']
-               task.unload(config.slave_config[type], status)
+               task_control.unload(config.slave_config[type], status)
         logger.trace('unconfigure done')
         config.state_machine.post_event(['unconfigure done'])

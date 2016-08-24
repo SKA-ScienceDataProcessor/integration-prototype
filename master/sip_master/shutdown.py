@@ -28,6 +28,6 @@ class Shutdown(threading.Thread):
             if status['expected_state'] != '' and (
                     status['state'] != 'dead') and (
                     status['state'] != 'finished'):
-                slave_control.stop_slave(slave, status)
+                slave_control.stop(slave, status)
         logger.trace('shutdown done')
         os._exit(0)

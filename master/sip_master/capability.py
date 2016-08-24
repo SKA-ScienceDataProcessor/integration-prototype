@@ -20,4 +20,4 @@ class Capability(threading.Thread):
         """
         logger.trace('starting capability ' + self._args[0])
 
-        slave_control.start_slave(self._args[0], self._args[1])
+        slave_control.start(self._args[0], self._args[1])

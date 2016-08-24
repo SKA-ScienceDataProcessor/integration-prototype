@@ -23,7 +23,7 @@ from sip_common import logger
 
 from sip_master import config
 from sip_master import slave_control
-from sip_master import task
+from sip_master import task_control
 
 class HeartbeatListener(threading.Thread):
     def __init__(self, sm):
@@ -127,7 +127,7 @@ class HeartbeatListener(threading.Thread):
         # If the state went from 'starting' to 'idle' send a
         # load command to the slave.
         if status['expected_state'] == 'starting' and status['state'] == 'idle':
-            task.load(name, cfg, status)
+            task_control.load(name, cfg, status)
             status['expected_state'] = 'loading'
 
         # If the state went from loading to busy log the event
@@ -138,7 +138,7 @@ class HeartbeatListener(threading.Thread):
 
         # If the state is finished, unload the task and stop the slave.
         elif status['state'] == 'finished':
-            task.unload(cfg, status)
-            slave_control.stop_slave(name, status)
+            task_control.unload(cfg, status)
+            slave_control.stop(name, status)
             status['state'] = ''
             status['expected_state'] = ''
