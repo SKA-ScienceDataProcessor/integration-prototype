@@ -175,6 +175,9 @@ def stop_slave(name, status):
     if config.slave_config[status['type']]['launch_policy'] == 'docker':
         _stop_docker_slave(name, status)
 
+    # Release the resources allocated to this task.
+    config.resource.release_host(name)
+
     # Clear the state in the status array
     status['state'] = ''
 
