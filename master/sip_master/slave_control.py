@@ -111,14 +111,8 @@ def _start_docker_slave(name, cfg, status):
                             str(rpc_port),
                             logger_address,
                             task_control_module,
-                           ],
-		   volumes=['/home/sdp/tasks/'],
-		   host_config=client.create_host_config(binds={
-        		os.getcwd()+'/tasks': {
-            		'bind': '/home/sdp/tasks/',
-            		'mode': 'rw',
-        		}
-                   }))['Id']
+                           ]
+                   )['Id']
 
     # Start it
     client.start(container_id)
