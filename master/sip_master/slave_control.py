@@ -98,7 +98,7 @@ def _start_docker_slave(name, cfg, status):
     # Create a container and store its id in the properties array
     host = config.resource.allocate_host(name, 
             {'launch_protocol': 'docker'}, {})
-    image = cfg['image']
+    image = cfg['docker_image']
     heartbeat_port = config.resource.allocate_resource(name, "tcp_port")
     rpc_port = config.resource.allocate_resource(name, "tcp_port")
     task_control_module = cfg['task_control_module']
