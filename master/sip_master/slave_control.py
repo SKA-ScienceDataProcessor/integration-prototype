@@ -118,12 +118,16 @@ def _start_docker_slave(name, cfg, status):
     # Start it
     client.start(container_id)
 
+    # Fill in the docker specific entries in the status dictionary
     info = client.inspect_container(container_id)
     ip_address = info['NetworkSettings']['IPAddress']
     status['address'] = ip_address
     status['container_id'] = container_id
+
+    # Fill in the generic entries
     status['rpc_port'] = rpc_port
     status['heartbeat_port'] = heartbeat_port
+    status['sip_root'] = '/home/sdp/integration-prototype'
     logger.info('"{}" started in container {} at {}'.format(
             name, container_id, ip_address))
 
@@ -133,7 +137,7 @@ def _start_ssh_slave(name, cfg, status):
     # Improve logging setup!!!
     logging.getLogger('plumbum').setLevel(logging.DEBUG)
    
-    # Find a host tht supports ssh
+    # Find a host that supports ssh
     host = config.resource.allocate_host(name, {'launch_protocol': 'ssh'}, {})
 
     # Get the root of the SIP installation on that host
@@ -163,9 +167,11 @@ def _start_ssh_slave(name, cfg, status):
           [name][heartbeat_port][rpc_port][logger_address][task_control_module]
     ssh_host.daemonic_popen(cmd, stdout='{}_sip.output'.format(name))
 
+    # Fill in the status dictionary
     status['address'] = host
     status['rpc_port'] = rpc_port
     status['heartbeat_port'] = heartbeat_port
+    status['sip_root'] = sip_root
     logger.info(name + ' started on ' + host)
 
 def stop(name, status):

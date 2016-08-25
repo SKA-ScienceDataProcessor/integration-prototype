@@ -7,7 +7,7 @@
         "task_control_module": "task_control",
         "docker_image": "slave_controller",
         "task": [
-            "/home/sdp/integration-prototype/tasks/task.py",
+            "tasks/task.py",
             "#tcp_port"
             ]
         },
@@ -17,7 +17,7 @@
         "launch_policy": "ssh",
         "task_control_module": "task_control",
         "task": [
-            "/home/dlt87/SKA-SDP/integration-prototype/tasks/task.py",
+            "tasks/task.py",
             "#tcp_port"
             ]
         },
@@ -27,7 +27,7 @@
         "launch_policy": "ssh",
         "task_control_module": "task_control",
         "task": [
-            "/home/dlt87/SKA-SDP/integration-prototype/tasks/exec_eng.py",
+            "tasks/exec_eng.py",
             "#tcp_port",
             "30"
             ]
