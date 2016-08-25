@@ -21,7 +21,7 @@ class Shutdown(threading.Thread):
     def run(self):
         """ Thread run routine
         """
-        logger.trace('starting shutdown')
+        logger.info('starting shutdown')
         for slave, status in config.slave_status.items():
 
             # If the slave is running tell it to shut down
@@ -29,5 +29,5 @@ class Shutdown(threading.Thread):
                     status['state'] != 'dead') and (
                     status['state'] != 'finished'):
                 slave_control.stop(slave, status)
-        logger.trace('shutdown done')
+        logger.info('shutdown done')
         os._exit(0)

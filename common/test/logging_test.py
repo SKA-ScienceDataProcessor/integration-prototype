@@ -12,11 +12,14 @@ class LoggerTest(unittest.TestCase):
     def testInfo(self):
         logger.info('An info message')
 
-    def testTrace(self):
-        logger.info('A trace message')
+    def testDebug(self):
+        logger.info('A debug message')
 
     def testWarn(self):
         logger.info('A warn message')
+
+    def testFatal(self):
+        logger.info('A fatal message')
 
 if __name__ == "__main__":
     unittest.main()

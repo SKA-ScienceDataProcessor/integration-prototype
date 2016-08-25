@@ -33,25 +33,25 @@ pub.connect('tcp://%s:%i' % (os.environ['SIP_HOSTNAME'], port))
 handler = PUBHandler(pub)
 _logger.addHandler(handler)
 
-def error(msg):
-    """ Log an ERROR level message
+def debug(msg):
+    """ Log an DEBUG level message
     """
-    _logger.error(msg)
+    _logger.debug(msg)
 
 def info(msg):
     """ Log an INFO level message
     """
     _logger.info(msg)
 
-def trace(msg):
-    """ Log a TRACE level message
-    """
-    _logger.log(10, msg)
-
 def warn(msg):
     """ Log a WARN level message
     """
     _logger.warn(msg)
+
+def error(msg):
+    """ Log an ERROR level message
+    """
+    _logger.error(msg)
 
 def fatal(msg):
     """ Log a FATAL level message

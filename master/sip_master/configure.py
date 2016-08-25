@@ -17,7 +17,7 @@ class Configure(threading.Thread):
     def run(self):
         """ Thread run routine
         """
-        logger.trace('starting configuration')
+        logger.info('starting configuration')
 
         # Go through the slave map and start all the tasks that are marked
         # as being required for the system to be online

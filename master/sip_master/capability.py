@@ -18,6 +18,6 @@ class Capability(threading.Thread):
     def run(self):
         """ Thread run routine
         """
-        logger.trace('starting capability ' + self._args[0])
+        logger.info('starting capability ' + self._args[0])
 
         slave_control.start(self._args[0], self._args[1])
