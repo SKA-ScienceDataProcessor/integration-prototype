@@ -30,8 +30,8 @@ def main(config_file, resources_file):
 
     # "Allocate" localhost for the master controller so that we can 
     # allocate it resources.
-    config.resource.allocate_host("Master Controller", {'host': 'localhost'}, 
-            {})
+    config.resource.allocate_host("Master Controller", 
+            {'host': 'localhost'}, {})
 
     # Start logging server as a subprocess
     config.logserver = subprocess.Popen(
