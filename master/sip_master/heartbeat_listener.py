@@ -89,39 +89,30 @@ class HeartbeatListener(threading.Thread):
                             status)
 
             # Evalute the state of the system
-            new_state = self._evaluate_state()
-
-            # If the state has changed, post the appropriate event
-            old_state = config.state_machine.current_state()
-            if old_state == 'Configuring' and new_state == 'Available':
-                config.state_machine.post_event(['configure done'])
-            if old_state == 'Available' and new_state == 'Degraded':
-                config.state_machine.post_event(['degrade'])
-            if old_state == 'Available' and new_state == 'Unavailable':
-                config.state_machine.post_event(['degrade'])
-            if old_state == 'Degraded' and new_state == 'Unavailable':
-                config.state_machine.post_event(['degrade'])
-            if old_state == 'Unavailable' and new_state == 'Degraded':
-                config.state_machine.post_event(['upgrade'])
-            if old_state == 'Unavailable' and new_state == 'Available':
-                config.state_machine.post_event(['upgrade'])
-            if old_state == 'Degraded' and new_state == 'Available':
-                config.state_machine.post_event(['upgrade'])
+            self._evaluate_state()
 
             time.sleep(1.0)
 
     def _evaluate_state(self):
         """ Evaluate current status
 
-        This examines the states of all the slaves and decides what state
-        we are in.
+        This examines the states of all the slaves and posts an event
         """
+
+        number_of_services = 0
+        services_up = 0
         for task, cfg in config.slave_config.items():
             if cfg.get('online', False):
-                if not task in config.slave_status or (
-                        config.slave_status[task]['state']) != 'busy':
-                    return 'Unavailable'
-        return 'Available'
+                number_of_services += 1
+                if task in config.slave_status and (
+                        config.slave_status[task]['state']) == 'busy':
+                    services_up += 1
+        if services_up == 0:
+            config.state_machine.post_event(['no services'])
+        elif services_up == number_of_services:
+            config.state_machine.post_event(['all services'])
+        else:
+            config.state_machine.post_event(['some services'])
 
     def _update_slave_state(self, name, cfg, status):
 

@@ -82,17 +82,20 @@ def _shutdown(event):
 
 state_table = {
     'Standby': {
+        'all services':     (1, Available, None),
         'offline':          (0, None, None),
         'online':           (1, Configuring, _online),
         'shutdown':         (1, _End, _shutdown)
     },
     'Configuring': {
-        'configure done' :  (1, Available, None),
-        'offline':          (0, None, None),
+        'all services':     (1, Available, None),
+        'offline':          (1, UnConfiguring, _offline),
         'online':           (0, None, None),
         'shutdown':         (0, None, None)
     },
     'Available': {
+        'no services':      (1, Unavailable, None),
+        'some services':    (1, Unavailable, None),
         'offline':          (1, UnConfiguring, _offline),
         'online':           (0, None, None),
         'cap':              (1, None, _cap),
@@ -100,20 +103,20 @@ state_table = {
         'degrade':          (1, Degraded, None)
     },
     'Degraded': {
+        'no services':      (1, Unavailable, None),
+        'all services':     (1, Available, None),
         'offline':          (1, UnConfiguring, _offline),
         'online':           (0, None, None),
         'shutdown':         (0, None, None),
-        'upgrade':          (1, Available, None),
-        'degrade':          (1, Unavailable, None)
     },
     'Unavailable': {
+        'all services':     (1, Available, None),
         'offline':          (1, UnConfiguring, _offline),
         'online':           (0, None, None),
         'shutdown':         (0, None, None),
-        'upgrade':          (1, Degraded, None)
     },
     'UnConfiguring': {
-        'unconfigure done': (1, Standby, None),
+        'no services':      (1, Standby, None),
         'offline':          (0, None, None),
         'online':           (0, None, None),
         'shutdown':         (0, None, None)
