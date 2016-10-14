@@ -78,6 +78,11 @@ class StateMachine:
         to initialise the coroutine.
         """
         self._state_table = state_table
+
+        # Add an entry for the end state
+        state_table['_End'] = {}
+
+        # Set the initial state
         self._state = initial_state()
 
         # Create empty event queue
