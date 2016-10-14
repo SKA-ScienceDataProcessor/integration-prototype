@@ -10,7 +10,7 @@ from sip_master import config
     are available to the client - less the 'exposed_' text
     Example client code:
        conn=rpyc.connect('localhost',port=12345)
-  :    conn.root.command('offline')
+       result = conn.root.offline()
 
 A (tpd) command returning a value with client arguments
        retval=conn.root.tpd_command(arg1,arg2,arg3)
