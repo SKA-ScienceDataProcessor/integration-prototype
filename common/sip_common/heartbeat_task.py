@@ -1,5 +1,5 @@
 """ This defines the SIP API for sending and receiving messages
-    to/from task started by slave.
+    to and from a task started by slave.
     It is based on heartbeat module, the main difference is the port number
     which is not fixed but a constructor's parameter.
 

@@ -1,4 +1,4 @@
-""" Functions executed when a capability is started
+""" A thread class that is run when a capability is started.
 """
 __author__ = 'David Terrett'
 

@@ -1,4 +1,4 @@
-""" Functions executed when the master controller is configured
+""" A thread class run when the master controller is configured.
 """
 __author__ = 'David Terrett'
 

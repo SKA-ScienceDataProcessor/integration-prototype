@@ -6,6 +6,10 @@ This file defines the master control global data.
 state_machine = None
 heartbeat_listener = None
 
+resource = None
+""" Resource manager
+"""
+
 slave_config = {}
 """ Slave map 
 This dictionary defines the properties of all the slave controllers that 
@@ -37,5 +41,3 @@ it goes to zero the slave is declared to be timed-out. Each time a
 heartbeat message is received the counter is reset to the value of  
 'timeout' from the config dictionary. 
 """ 
-
-resource = ''

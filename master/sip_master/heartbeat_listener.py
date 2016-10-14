@@ -27,7 +27,8 @@ from sip_master import task_control
 
 class HeartbeatListener(threading.Thread):
     def __init__(self, sm):
-        """ Creates a heartbeat listener with a 1s timeout
+        """ Creates a heartbeat listener that return immediately if there
+            are no messages to retrieve.
         """
         self._listener = heartbeat.Listener(0)
         super(HeartbeatListener, self).__init__(daemon=True)
@@ -81,7 +82,7 @@ class HeartbeatListener(threading.Thread):
                     status['state'] = 'dead'
                     status['expected_state'] = 'dead'
 
-                # Process slaves not in its expected state
+                # Process any slave not in its expected state
                 if status['state'] != status['expected_state']:
                      self._update_slave_state(name, 
                             config.slave_config[status['type']],

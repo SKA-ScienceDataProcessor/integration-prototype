@@ -7,10 +7,12 @@ LMC interface guidelines (see 0026 LMC Design table 1) and the levels
 defined by the logging package except that FATAL is mapped to critical
 and TRACE maps to 10 (DEBUG).
 
-It uses zmq.PUB to publish the logs to the logging_server which subscribes to all publishers;
-the name of the host where to send logs is taken from the environment variable
-SIP_HOSTNAME, defined in the beginning of $SIP_HOME/master/bin/master script .
-The TCP port used is logging.handlers.DEFAULT_TCP_LOGGING_PORT, which is 9020 .
+It uses zmq.PUB to publish the logs to the logging_server which subscribes 
+to all publishers; the name of the host where to send logs is taken from 
+the environment variable SIP_HOSTNAME, defined in the beginning of 
+$SIP_HOME/master/bin/master script.
+
+The TCP port used is logging.handlers.DEFAULT_TCP_LOGGING_PORT, which is 9020.
 
 """
 __author__ = 'David Terrett, Vlad Stolyarov'

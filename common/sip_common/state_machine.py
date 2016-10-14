@@ -17,10 +17,12 @@ numeric arguments) the first element of which is used to look up entries in
 the state table. The remaining elements are passed to the action function
 as positional arguments.
 
-post_event returns a string indicating whether the event was accepted ('ok'),
-rejected or ignored.
-"""
+The method for posting events to the state machine returns a string 
+indicating whether the event was accepted ('ok'), rejected or ignored.
 
+The get_graph method creates a pygraphvis representation of the state machine.
+"""
+ 
 from collections import deque
 
 # pygraphviz is only needed for the method that creates a graphviz 
@@ -179,7 +181,7 @@ class StateMachine:
         # Create an end node
         graph.add_node('_End', shape='circle', height='0.1', label='end')
 
-        # Add and edge for every transition.
+        # Add an edge for every transition.
         for state, events in self._state_table.items():
             for event, transition in events.items():
                 if transition[0] == 1:

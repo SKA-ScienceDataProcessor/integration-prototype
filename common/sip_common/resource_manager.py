@@ -1,7 +1,18 @@
 """ Integration prototype resource manager
 
-__author__ = David Terrett
+At this time, the only resources it manages are hosts and TCP ports. The 
+available resources are loaded from a JSON file.
+
+Each host has a list of properties and when a host is requested a list of
+properties that the host must have is specified. The only property defined
+so far is the "launch policy" which describes which mechanisms for starting
+a slave controller the host supports. Exclusive access to a host can be
+requested in which case only one task will be allocated to that host.
+
+Once a task has been assigned a host, other resources (e.g. a TCP port) can
+be allocated to the task.
 """
+__author__ = 'David Terrett'
 
 class ResourceManager:
     """ Resource manager class

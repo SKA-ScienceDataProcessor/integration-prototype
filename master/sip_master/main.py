@@ -29,7 +29,7 @@ def main(config_file, resources_file):
     with open(resources_file) as f:
         config.resource = ResourceManager(json.load(f))
 
-    # "Allocate" a host for the master controller so that we can allocate it
+    # "Allocate" localhost for the master controller so that we can allocate it
     # resources.
     config.resource.allocate_host("Master Controller", {'host': 'localhost'}, 
             {})
@@ -51,30 +51,32 @@ def main(config_file, resources_file):
     config.heartbeat_listener = HeartbeatListener(config.state_machine)
     config.heartbeat_listener.start()
 
-    """ This starts the rpyc 'ThreadedServer' - this creates a new 
-        thread for each connection on the given port
-    """
+    # This starts the rpyc 'ThreadedServer' - this creates a new 
+    # thread for each connection on the given port
     from rpyc.utils.server import ThreadedServer
     server = ThreadedServer(RpcService,port=12345)
     t = threading.Thread(target=server.start)
     t.setDaemon(True)
     t.start()
 
-    """ For testing we can also run events typed on the terminal
-    """
-    # Read and process events
+    # For testing we can also post events typed on the terminal
     while True:
+
+        # Read from the terminal and process the event
         event = input('?').split()
         if event:
             result = config.state_machine.post_event(event)
-
             if result == 'rejected':
                 print('not allowed in current state')
             if result == 'ignored':
                 print('command ignored')
             else:
+
+                # Print what our state we are now in.
                 print('master controller state:', 
                         config.state_machine.current_state())
+
+                # If we are in the end state, shut down the log server
                 if config.state_machine.current_state() == '_End':
                        print('Terminating logserver, pid ', logserver.pid)
                        os.kill(logserver.pid, signal.SIGTERM)

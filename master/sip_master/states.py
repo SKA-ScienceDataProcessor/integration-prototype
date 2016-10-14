@@ -77,7 +77,7 @@ def _offline(event):
 def _shutdown(event):
     """Action routine that shuts down the controller
     """
-    # Start an un-configure thread
+    # Start an shutdown thread
     Shutdown().start()
 
 state_table = {
