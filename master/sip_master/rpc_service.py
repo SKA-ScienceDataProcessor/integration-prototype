@@ -19,12 +19,22 @@ A (tpd) command returning a value with client arguments
 class RpcService(rpyc.Service):
    def on_connect(self):
       logger.info(" master controller client controller connected")
+
    def on_disconnect(self):
       logger.info("master controller client controller disconnected")
-   def exposed_command(self, state_command,callback=None):
-      config.state_machine.post_event([state_command])
-      if(callback != None):
-         callback(state_command)
+
+   def exposed_online(self,callback=None):
+      return config.state_machine.post_event(['online'])
+
+   def exposed_capability(self, host, type, callback=None):
+      return config.state_machine.post_event(['cap', host, type])
+
+   def exposed_offline(self,callback=None):
+      return config.state_machine.post_event(['offline'])
+
+   def exposed_shutdown(self,callback=None):
+      return config.state_machine.post_event(['shutdown'])
+
    def exposed_get_current_state(self):
       return config.state_machine.current_state()
 
