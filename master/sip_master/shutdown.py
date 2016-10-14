@@ -7,6 +7,7 @@ import rpyc
 import os
 import signal
 import threading
+import time
 
 from sip_common import logger
 
@@ -36,4 +37,7 @@ class Shutdown(threading.Thread):
         os.kill(config.logserver.pid, signal.SIGTERM)
 
         logger.info('shutdown done')
+
+        # Give the rpc service a change to send a reply
+        time.sleep(1)
         os._exit(0)
