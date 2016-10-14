@@ -25,11 +25,18 @@ def online():
     global connection_
     return connection_.root.online()
 
-def capability(type):
+def capability(name, type):
     """ Configure a capability
+
+        :param name: A name for the capability
+        :param type: The capability type
+
+    The name must be unique (i.e. different from all the task names
+    defined in the slave map). The type corresponds to one of the task
+    names in the map (.e.g. 'ingest').
     """
     global connection_
-    return connection_.root.capability('localhost', type)
+    return connection_.root.capability(name, type)
 
 def offline():
     """ Set SIP offline

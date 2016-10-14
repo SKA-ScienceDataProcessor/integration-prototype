@@ -26,8 +26,8 @@ class RpcService(rpyc.Service):
    def exposed_online(self,callback=None):
       return config.state_machine.post_event(['online'])
 
-   def exposed_capability(self, host, type, callback=None):
-      return config.state_machine.post_event(['cap', host, type])
+   def exposed_capability(self, name, type, callback=None):
+      return config.state_machine.post_event(['cap', name, type])
 
    def exposed_offline(self,callback=None):
       return config.state_machine.post_event(['offline'])
