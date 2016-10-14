@@ -11,7 +11,6 @@ __author__ = 'David Terrett + Brian McIlwrath'
 import json
 import threading
 import subprocess
-import signal
 import os
 import time
 
@@ -29,14 +28,15 @@ def main(config_file, resources_file):
     with open(resources_file) as f:
         config.resource = ResourceManager(json.load(f))
 
-    # "Allocate" localhost for the master controller so that we can allocate it
-    # resources.
+    # "Allocate" localhost for the master controller so that we can 
+    # allocate it resources.
     config.resource.allocate_host("Master Controller", {'host': 'localhost'}, 
             {})
 
     # Start logging server as a subprocess
-    logserver = subprocess.Popen('common/sip_common/logging_server.py', 
-            shell=True)
+    config.logserver = subprocess.Popen(
+            'common/sip_common/logging_server.py', shell=True)
+
     # Wait until it initializes
     time.sleep(2)
 
@@ -75,8 +75,3 @@ def main(config_file, resources_file):
                 # Print what our state we are now in.
                 print('master controller state:', 
                         config.state_machine.current_state())
-
-                # If we are in the end state, shut down the log server
-                if config.state_machine.current_state() == '_End':
-                       print('Terminating logserver, pid ', logserver.pid)
-                       os.kill(logserver.pid, signal.SIGTERM)

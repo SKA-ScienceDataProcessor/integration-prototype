@@ -5,6 +5,7 @@ __author__ = 'David Terrett'
 from docker import Client
 import rpyc
 import os
+import signal
 import threading
 
 from sip_common import logger
@@ -22,12 +23,17 @@ class Shutdown(threading.Thread):
         """ Thread run routine
         """
         logger.info('starting shutdown')
-        for slave, status in config.slave_status.items():
 
-            # If the slave is running tell it to shut down
+        # Shut down any slaves that are still running
+        for slave, status in config.slave_status.items():
             if status['expected_state'] != '' and (
                     status['state'] != 'dead') and (
                     status['state'] != 'finished'):
                 slave_control.stop(slave, status)
+
+        # Shut down the log server
+        print('Terminating logserver, pid ', config.logserver.pid)
+        os.kill(config.logserver.pid, signal.SIGTERM)
+
         logger.info('shutdown done')
         os._exit(0)
