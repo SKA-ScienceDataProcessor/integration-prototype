@@ -14,7 +14,7 @@ os.environ['SIP_HOSTNAME'] = 'localhost'
 
 from sip_master.slave_states import SlaveControllerSM
 
-sm = SlaveControllerSM()
+sm = SlaveControllerSM('test')
 g = sm.get_graph(title="slave controller")
 g.write("slave.dot")
 

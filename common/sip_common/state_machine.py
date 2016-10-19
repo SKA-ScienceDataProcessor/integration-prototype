@@ -6,11 +6,17 @@ nested states or a history states.
 
 States are represented by objects derived from "State" and their __init__ 
 and exit methods (if they exist) define the state entry and exit actions. 
+The __init__ method must have one parameter which is a reference to the
+state machine.
+
+The state machine is a class that inherits "StateMachine" and transition 
+actions are state machine methods.
+
 The state diagram is stored in a dictionary with an entry per state. The 
 value of each entry is a dictionary with the key being events and the value 
 a tuple containing whether the event should be accepted (1) or rejected
 (0), destination state and the name of the transition 
-action function. If an event is not in the table it is ignored.
+action method. If an event is not in the table it is ignored.
 
 Events are represented by arrays or tuples (or anything that supports [] with
 numeric arguments) the first element of which is used to look up entries in

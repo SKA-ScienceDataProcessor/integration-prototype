@@ -48,24 +48,29 @@ class SlaveControllerSM(StateMachine):
     state_table = {
         'Starting': {
             'idle heartbeat':   (1, Idle, LoadTask),
-            'busy heartbeat':   (1, Busy, None)
+            'busy heartbeat':   (1, Busy, None),
+            'stop sent':        (1, _End, None)
         },
         'Idle': {
             'busy heartbeat':   (1, Busy, None),
             'load sent':        (1, Loading, None),
-            'no heartbeat':     (1, Missing, None)
+            'no heartbeat':     (1, Missing, None),
+            'stop sent':        (1, _End, None)
         },
         'Loading': {
             'busy heartbeat':   (1, Busy, None),
             'idle heartbeat':   (1, Idle, None),
-            'no heartbeat':     (1, Missing, None)
+            'no heartbeat':     (1, Missing, None),
+            'stop sent':        (1, _End, None)
         },
         'Busy': {
             'idle heartbeat':   (1, Idle, None),
-            'no heartbeat':     (1, Missing, None)
+            'no heartbeat':     (1, Missing, None),
+            'stop sent':        (1, _End, None)
         },
         'Missing': {
             'idle heartbeat':   (1, Idle, LoadTask),
-            'busy heartbeat':   (1, Busy, None)
+            'busy heartbeat':   (1, Busy, None),
+            'stop sent':        (1, _End, None)
         }
 }

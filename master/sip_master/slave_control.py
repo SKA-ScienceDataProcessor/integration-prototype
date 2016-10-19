@@ -183,6 +183,9 @@ def stop(name, status):
     # Release the resources allocated to this task.
     config.resource.release_host(name)
 
+    # Send the stop sent event to the state machine
+    status['state'].post_event(['stop sent'])
+
 def _stop_docker_slave(name, status):
     """ Stop a docker based slave controller
     """
