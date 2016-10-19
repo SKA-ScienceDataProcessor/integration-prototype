@@ -6,18 +6,15 @@ Creates master.dot.
 
 To turn this into a pdf:
 
-    dot -Tpdf master.for -o master.pdf
+    dot -Tpdf master.dot -o master.pdf
 """
 
 import os
 os.environ['SIP_HOSTNAME'] = 'localhost'
 
-from sip_master.states import state_table
-from sip_common.state_machine import StateMachine
-from sip_master.states import state_table
-from sip_master.states import Standby
+from sip_master.master_states import MasterControllerSM
 
-sm = StateMachine(state_table, Standby)
+sm = MasterControllerSM()
 g = sm.get_graph(title="master controller")
 g.write("master.dot")
 

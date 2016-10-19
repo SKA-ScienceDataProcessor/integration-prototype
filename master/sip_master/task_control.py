@@ -24,7 +24,9 @@ def load(name, cfg, status):
     # Send the slave the command to load the task
     conn = rpyc.connect(status['address'], status['rpc_port'])
     conn.root.load(task_cfg)
-    status['state']= 'loading'
+
+    # Post a load sent event to the slave's state machine
+    status['state'].post_event(['load sent'])
 
 def unload(cfg, status):
     """ Command the slave controller to unload the task

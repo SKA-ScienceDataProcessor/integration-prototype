@@ -27,9 +27,7 @@ class Shutdown(threading.Thread):
 
         # Shut down any slaves that are still running
         for slave, status in config.slave_status.items():
-            if status['expected_state'] != '' and (
-                    status['state'] != 'dead') and (
-                    status['state'] != 'finished'):
+            if status['state'].current_state() != '_End':
                 slave_control.stop(slave, status)
 
         # Shut down the log server

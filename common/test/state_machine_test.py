@@ -6,35 +6,39 @@ from sip_common.state_machine import StateMachine
 trace = []
 
 class Offline(State):
-    def __init__(self):
+    def __init__(self, sm):
         trace.append("entering offline")
     def exit(self):
         trace.append("exiting offline")
 
 class Online(State):
-    def __init__(self):
+    def __init__(self, sm):
         trace.append("entering online")
     def exit(self):
         trace.append("exiting online")
 
-def action_offline(event_name):
-    trace.append("going offline")
+class TestSM(StateMachine):
+    def __init__(self):
+        super(TestSM, self).__init__(self.state_table, Offline)
 
-def action_online(event_name):
-    trace.append("going online")
+    def action_offline(self, event_name):
+        trace.append("going offline")
 
-state_table = {
-    'Offline': {
-        'start': (1, Online,  action_online),
-    },
-    'Online' : {
-        'stop' : (1, Offline, action_offline),
-    }
+    def action_online(self, event_name):
+        trace.append("going online")
+
+    state_table = {
+        'Offline': {
+            'start': (1, Online,  action_online),
+        },
+        'Online' : {
+            'stop' : (1, Offline, action_offline),
+        }
 }
-
+    
 class StateMachineTest(unittest.TestCase):
     def setUp(self):
-        self.sm = StateMachine(state_table, Offline)
+        self.sm = TestSM()
 
     def testSimple(self):
         self.sm.post_event(['start'])

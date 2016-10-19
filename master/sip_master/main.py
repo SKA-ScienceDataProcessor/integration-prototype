@@ -14,10 +14,9 @@ import subprocess
 import os
 import time
 
-from sip_common.state_machine import StateMachine
 from sip_common.resource_manager import ResourceManager
-from sip_master.states import state_table
-from sip_master.states import Standby
+from sip_master.master_states import MasterControllerSM
+from sip_master.master_states import Standby
 from sip_master.heartbeat_listener import HeartbeatListener
 from sip_master import config
 from sip_master.rpc_service import RpcService
@@ -45,7 +44,7 @@ def main(config_file, resources_file):
         config.slave_config = json.load(f)
 
     # Create the master controller state machine
-    config.state_machine = StateMachine(state_table, Standby)
+    config.state_machine = MasterControllerSM()
 
     # Create and start the global heartbeat listener
     config.heartbeat_listener = HeartbeatListener(config.state_machine)

@@ -24,6 +24,7 @@ The get_graph method creates a pygraphvis representation of the state machine.
 """
  
 from collections import deque
+import threading
 
 # pygraphviz is only needed for the method that creates a graphviz 
 # representation of the state machine. This in not needed to use the state
@@ -65,7 +66,7 @@ class _End(State):
     state machine. It has a special name so that the graph represention can
     use the correct symbol.
     """
-    def __init__(self):
+    def __init__(self, sm):
         pass
 
 class StateMachine:
@@ -83,7 +84,7 @@ class StateMachine:
         state_table['_End'] = {}
 
         # Set the initial state
-        self._state = initial_state()
+        self._state = initial_state(self)
 
         # Create empty event queue
         self._event_queue = deque()
@@ -91,6 +92,10 @@ class StateMachine:
         # Prime the coroutine
         self._state_machine = self._run()
         next(self._state_machine)
+
+        # Create a lock object for ensuring that posting events is single
+        # threaded.
+        self._lock = threading.Lock()
 
     def _process_one_event(self, event):
         """ Process a single event
@@ -108,11 +113,11 @@ class StateMachine:
 
             # If there is an action, call it.
             if action:
-                action(event[0], *event[1:])
+                action(self, event[0], *event[1:])
 
             # If there is a new state, create it.
             if new_state:
-                self._state = new_state()
+                self._state = new_state(self)
             return 'ok'
         elif status == 0:
             return 'rejected'
@@ -142,11 +147,15 @@ class StateMachine:
     def post_event(self, event):
         """ Post an event to the state machine
 
-        This causes the state machine to process the event queue and must not
-        be called from a state machine action routine. queue_event should 
-        be used instead.
+        If called recursively (i.e. from an action routine) the event is
+        just placed on the back of the event queue.
         """
-        return self._state_machine.send(event)
+        if self._lock.acquire(blocking=False):
+            result = self._state_machine.send(event)
+            self._lock.release()
+            return result;
+        else:
+            self.queue_event(event)
 
     def queue_event(self, event):
         """ Add an event to the event queue

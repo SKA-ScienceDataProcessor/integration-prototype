@@ -64,29 +64,21 @@ class HeartbeatListener(threading.Thread):
                 status['timeout counter'] = (
                        config.slave_config[status['type']]['timeout'])
 
-                # Store the state from the message
-                if state != status['state']:
-                    status['prev_state'] = status['state']
-                    status['state'] = state
+                # Post an event according to the state in the heartbeat
+                # message
+                if state == 'busy':
+                    status['state'].post_event(['busy heartbeat'])
+                elif state == 'idle':
+                    status['state'].post_event(['idle heartbeat'])
 
                 # Check for more messages
                 msg = self._listener.listen()
 
             # Check for timed out slaves
             for name, status in config.slave_status.items():
-                if status['expected_state'] != '' and (
-                         status['expected_state'] != 'dead') and (
-                         status['timeout counter'] == 0):
-                    logger.error( 
-                        'No heartbeat from slave controller "{} "'.format(name))
-                    status['state'] = 'dead'
-                    status['expected_state'] = 'dead'
-
-                # Process any slave not in its expected state
-                if status['state'] != status['expected_state']:
-                     self._update_slave_state(name, 
-                            config.slave_config[status['type']],
-                            status)
+                if status['state'].current_state() != '_End':
+                    if status['timeout counter'] == 0:
+                        status['state'].post_event(['no heartbeat'])
 
             # Evalute the state of the system
             self._evaluate_state()
@@ -99,38 +91,27 @@ class HeartbeatListener(threading.Thread):
         This examines the states of all the slaves and posts an event
         """
 
+        # Count the number of services
         number_of_services = 0
-        services_up = 0
+        services_running = 0
         for task, cfg in config.slave_config.items():
             if cfg.get('online', False):
                 number_of_services += 1
                 if task in config.slave_status and (
-                        config.slave_status[task]['state']) == 'busy':
-                    services_up += 1
-        if services_up == 0:
-            config.state_machine.post_event(['no services'])
-        elif services_up == number_of_services:
+                        config.slave_status[task]['state'].current_state()) == \
+                        'Busy':
+                    services_running += 1
+
+        # Count the number of running tasks
+        tasks_running = 0
+        for task, status in config.slave_status.items():
+            if config.slave_status[task]['state'].current_state() == 'Busy':
+                tasks_running += 1
+
+        # Post an event to the MC state machine
+        if tasks_running == 0:
+            config.state_machine.post_event(['no tasks'])
+        elif services_running == number_of_services:
             config.state_machine.post_event(['all services'])
         else:
             config.state_machine.post_event(['some services'])
-
-    def _update_slave_state(self, name, cfg, status):
-
-        # If the state went from 'starting' to 'idle' send a
-        # load command to the slave.
-        if status['expected_state'] == 'starting' and status['state'] == 'idle':
-            task_control.load(name, cfg, status)
-            status['expected_state'] = 'loading'
-
-        # If the state went from loading to busy log the event
-        elif status['expected_state'] == 'loading' and (
-                status['state'] == 'busy'):
-            logger.info(name + ' online')
-            status['expected_state'] = 'busy'
-
-        # If the state is finished, unload the task and stop the slave.
-        elif status['state'] == 'finished':
-            task_control.unload(cfg, status)
-            slave_control.stop(name, status)
-            status['state'] = ''
-            status['expected_state'] = ''

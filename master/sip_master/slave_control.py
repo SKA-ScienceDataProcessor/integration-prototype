@@ -15,6 +15,7 @@ from sip_common import logger
 
 from sip_master import config
 from sip_master import task_control
+from sip_master.slave_states import SlaveControllerSM
 
 def _find_route_to_logger(host):
     """ Figures out what the IP address of the logger is on 'host'
@@ -40,19 +41,19 @@ def start(name, type):
     if not name in config.slave_status:
         config.slave_status[name] = {
                 'type': type, 
-                'state': '', 
-                'prev_state': '', 
-                'expected_state': '',
+                'state': SlaveControllerSM(name), 
                 'timeout counter': 0}
 
     # Check that the slave isn't already running
     status = config.slave_status[name]
-    if status == 'loading' or status == 'busy':
+    if status['state'].current_state() == 'loading' or (
+            status['state'].current_state() == 'busy'):
         raise RuntimeError('Error starting {}: task is already {}'.format(
-                name, status))
+                name, status['state'].current_state()))
 
     # Start a slave if it isn't already running
-    if status['state'] == '' or status['state'] == 'dead':
+    if status['state'].current_state() ==  '_End' or (
+            status['state'].current_state() == 'Starting'):
 
         # Start the slave
         if config.slave_config[type]['launch_policy'] == 'docker':
@@ -68,9 +69,6 @@ def start(name, type):
                      config.slave_config[type]['launch_policy']))
 
         # Initialise the task status
-        config.slave_status[name]['state'] = 'starting'
-        config.slave_status[name]['prev_state'] = 'starting'
-        config.slave_status[name]['expected_state'] = 'starting'
         config.slave_status[name]['timeout counter'] = \
                 config.slave_config[type]['timeout']
 
@@ -184,9 +182,6 @@ def stop(name, status):
 
     # Release the resources allocated to this task.
     config.resource.release_host(name)
-
-    # Clear the state in the status array
-    status['state'] = ''
 
 def _stop_docker_slave(name, status):
     """ Stop a docker based slave controller
