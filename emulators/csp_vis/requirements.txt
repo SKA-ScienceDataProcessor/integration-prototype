@@ -1,0 +1,4 @@
+numpy==1.11.2
+simplejson==3.9.0
+six==1.10.0
+spead2==1.1.2

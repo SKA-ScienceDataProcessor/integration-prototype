@@ -1,0 +1,31 @@
+{
+  "payload": {
+    "num_blocks": 5
+  },
+
+  "flavour": {
+    "version": 4,
+    "item_pointer_bits": 64,
+    "heap_address_bits": 48,
+    "bug_compat_mask": 0
+  },
+
+  "streams":
+  [
+    {
+      "rate": 1e12,
+      "host": "127.0.0.1",
+      "port": 2000,
+      "items":
+      [
+        {
+          "id": "0x0001",
+          "name": "channel0-data",
+          "description": "",
+          "type": "c8",
+          "shape": [130816, 1]
+        }
+      ]
+    }
+  ]
+}
