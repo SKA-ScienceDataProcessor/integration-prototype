@@ -1,7 +1,8 @@
 # -*- coding: utf-8 -*-
 """Test code for sending visibility data using SPEAD.
 
-Issues:
+Issues/TODO:
+    - Integrate documentation in this module with sphinx
     - Need better way of configuration of what data is to be sent.
     - Need to investigate exactly what data items need to be sent.
         - Visibility amplitudes (+ coords?)
