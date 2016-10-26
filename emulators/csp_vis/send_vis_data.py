@@ -46,12 +46,11 @@ def _parse_command_line():
     parser = argparse.ArgumentParser(
         description='Send fake visibility data using the SPEAD protocol.')
     parser.add_argument('config_file', type=argparse.FileType('r'),
-                        help='JSON configuration file.')
+                        help='JSON configuration file..')
     parser.add_argument('-v', '--verbose', help='Enable verbose messages.',
                         action='store_true')
     parser.add_argument('-p', '--print_settings', help='Print settings file.',
                         action='store_true')
-
     return parser.parse_args()
 
 
@@ -89,14 +88,15 @@ def _create_streams(config, log):
         for j, item in enumerate(stream["items"]):
             item_id = int(item['id'], 0)
             name, desc = item['name'], item['description']
-            shape, dtype = tuple(item['shape']), item['type']
+            shape, item_type = tuple(item['shape']), item['type']
             log.debug('Adding item {}'.format(j))
             log.debug('  id = 0x{:02X}'.format(item_id))
             log.debug('  name = {}'.format(name))
             log.debug('  description = {}'.format(desc))
             log.debug('  shape = {}'.format(shape))
-            log.debug('  type = {}'.format(dtype))
-            item_group.add_item(item_id, name, desc, shape=shape, dtype=type)
+            log.debug('  type = {}'.format(item_type))
+            item_group.add_item(item_id, name, desc, shape=shape,
+                                dtype=item_type)
     del thread_pool
     return streams
 
