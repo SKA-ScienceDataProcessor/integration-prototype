@@ -28,7 +28,7 @@ import argparse
 import simplejson as json
 
 
-def _init_log(level=logging.DEBUG, log_file=None):
+def _init_log(level=logging.DEBUG):
     """Initialise the logging object."""
     log = logging.getLogger(__file__)
     log.setLevel(level)
@@ -69,7 +69,7 @@ def _create_streams(config, log):
     item_group = spead2.send.ItemGroup(flavour=flavour)
 
     # Create a thread pool of 1 thread used to send packets
-    thread_pool = spead2.ThreadPool(threads=1, affinity=[])
+    thread_pool = spead2.ThreadPool()
     # Construct a UDP stream object for a blocking send.
     streams = list()
     for i, stream in enumerate(config['streams']):
@@ -87,16 +87,16 @@ def _create_streams(config, log):
         streams.append((spead2.send.UdpStream(thread_pool, host, port,
                                               stream_config), item_group))
         for j, item in enumerate(stream["items"]):
-            id = int(item['id'], 0)
+            item_id = int(item['id'], 0)
             name, desc = item['name'], item['description']
-            shape, type = tuple(item['shape']), item['type']
+            shape, dtype = tuple(item['shape']), item['type']
             log.debug('Adding item {}'.format(j))
-            log.debug('  id = 0x{:02X}'.format(id))
+            log.debug('  id = 0x{:02X}'.format(item_id))
             log.debug('  name = {}'.format(name))
             log.debug('  description = {}'.format(desc))
             log.debug('  shape = {}'.format(shape))
-            log.debug('  type = {}'.format(type))
-            item_group.add_item(id, name, desc, shape=shape, dtype=type)
+            log.debug('  type = {}'.format(dtype))
+            item_group.add_item(item_id, name, desc, shape=shape, dtype=type)
     del thread_pool
     return streams
 
@@ -108,11 +108,9 @@ def _send_blocks(config, streams, log):
     num_blocks = config['payload']['num_blocks']
     total_bytes = 0
 
-    # Send start-of-stream marker (FIXME(BM) needed?)
-    for stream_ in streams:
-        ig = stream_[1]
-        stream = stream_[0]
-        stream.send_heap(ig.get_start())
+    # Send start-of-stream marker.
+    for stream, item_group in streams:
+        stream.send_heap(item_group.get_start())
 
     # Send main data payload.
     for b in range(num_blocks):
@@ -131,8 +129,9 @@ def _send_blocks(config, streams, log):
             # Blocking send.
             stream.send_heap(new_heap)
 
-    # Send a heap that contains only an end-of-stream marker.
-    stream.send_heap(ig.get_end())
+    # Send a end-of-stream marker for each
+    for stream, item_group in streams:
+        stream.send_heap(item_group.get_end())
 
     total_time = time.time() - t0
     log.info('Sending complete in {} s'.format(total_time))
