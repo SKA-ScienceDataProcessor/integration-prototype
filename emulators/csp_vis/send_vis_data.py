@@ -8,7 +8,6 @@ Issues/TODO:
         - Visibility amplitudes (+ coords?)
     - look at SPEAD2 optimisation guidelines
     - Look into non-blocking sends?
-    - Currently python2.7 code need to look at making this python3?
 
 References:
     - ICD documents:
