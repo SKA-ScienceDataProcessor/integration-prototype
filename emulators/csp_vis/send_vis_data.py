@@ -132,6 +132,9 @@ class Simulation(object):
         self.log.debug('Number of channels per heap = {}'.
                        format(self.num_channels))
         self.log.debug('Number of baselines = {}'.format(self.num_baselines))
+
+        # Heap payload data dictionary.
+        # *IMPORTANT* Keys have to to match the names of items in __heap__
         self.payload = {
             'timestamp_utc': [(0, 0)],
             'channel_baseline_id': [(0, 0)],
@@ -210,16 +213,20 @@ def _create_streams(config, log):
     flavour = spead2.Flavour(version, item_pointer_bits, heap_address_bits,
                              bug_compat_mask)
 
-    # Create a thread pool of 1 thread used to send packets
-
-    # Construct a UDP stream object for a blocking send.
+    # Construct UDP stream objects and associated heap item groups.
     streams = list()
     for i, stream in enumerate(config['sender_node']['streams']):
-        # Create ItemGroup & HeapGenerator associated with the item group.
         host = stream['host']
         port = stream['port']
         rate = stream['rate'] if 'rate' in stream else 0
         threads = stream['threads'] if 'threads' in stream else 1
+        stream_config = spead2.send.StreamConfig(rate=rate)
+        thread_pool = spead2.ThreadPool(threads=threads)
+        stream = spead2.send.UdpStream(thread_pool, host, port, stream_config)
+        item_group = spead2.send.ItemGroup(flavour=flavour)
+
+        # Append stream & item group the stream list.
+        streams.append((stream, item_group))
 
         log.debug('Configuring stream {}:'.format(i))
         log.debug('  Address = {}:{}'.format(host, port))
@@ -228,13 +235,8 @@ def _create_streams(config, log):
                          flavour.version, flavour.bug_compat))
         log.debug('  Threads = {}'.format(threads))
         log.debug('  Rate    = {}'.format(rate))
-        stream_config = spead2.send.StreamConfig(rate=rate)
 
-        thread_pool = spead2.ThreadPool(threads=threads)
-        stream = spead2.send.UdpStream(thread_pool, host, port, stream_config)
-        item_group = spead2.send.ItemGroup(flavour=flavour)
-        streams.append((stream, item_group))
-
+        # Add items to the item group based on the heap description.
         for j, item in enumerate(__heap__):
             item_id = item['id']
             if isinstance(item_id, str):
@@ -244,6 +246,8 @@ def _create_streams(config, log):
             item_type = item['type'] if 'type' in item else None
             item_format = item['format'] if 'format' in item else None
             shape = item['shape']
+            item_group.add_item(item_id, name, desc, shape=shape,
+                                dtype=item_type, format=item_format)
             log.debug('Adding item {} : {} {}'.format(j, item_id, name))
             log.debug('  description = {}'.format(desc))
             if item_type is not None:
@@ -251,8 +255,6 @@ def _create_streams(config, log):
             if item_format is not None:
                 log.debug('  format = {}'.format(item_format))
             log.debug('  shape = {}'.format(shape))
-            item_group.add_item(item_id, name, desc, shape=shape,
-                                dtype=item_type, format=item_format)
     return streams
 
 
@@ -269,7 +271,11 @@ def _send_blocks(config, streams, log, sim):
     # Send main data payload for each stream.
     for i in range(num_heaps):
         log.debug('  heap {:03d}/{:03d}'.format(i, num_heaps))
+
+        # Generate the payload for the heap / frame.
         _payload = sim.get_heap(i)
+
+        # Update the values of items in the item group for this stream.
         for stream, item_group in streams:
             for name, item in item_group.items():
                 log.debug('    item: 0x{:04X} {}'.format(item.id, name))
@@ -283,14 +289,15 @@ def _send_blocks(config, streams, log, sim):
     for stream, item_group in streams:
         stream.send_heap(item_group.get_end())
 
+    # Print some performance statistics.
     heap_size = _get_heap_size()
     total_bytes = heap_size * num_heaps
     total_time = time.time() - t0
     log.info('Sending complete in {} s'.format(total_time))
     log.info('Total bytes = {} ({:.3f} MiB)'.
-              format(total_bytes, total_bytes / 1024**2))
+             format(total_bytes, total_bytes / 1024**2))
     log.info('Rate = {:.3f} MiB/s'
-              .format(total_bytes / (1024**2 * total_time)))
+             .format(total_bytes / (1024**2 * total_time)))
 
 
 def main():
@@ -311,7 +318,7 @@ def main():
     # Create simulation object
     sim = Simulation(config, log)
 
-    # Set the shape of the visibility data item.
+    # Set the shape of the per visibility data items.
     for item in __heap__:
         if 'complex_visibility' in item['name']:
             item['shape'] = sim.frame_shape
