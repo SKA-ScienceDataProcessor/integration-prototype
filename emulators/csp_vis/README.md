@@ -1,6 +1,10 @@
 ## CSP visibility data (SPEAD) emulator  
 
-**TODO(BM) convert to rst for use with sphinx**
+##### ***TODO:***
+* Add to sphinx doc.
+* Talk to Iain E. about how to deploy the docker image.
+
+### Introduction
 
 This is a python script that can be used to send very simple fake SPEAD data 
 packets with the aim of emulating the CSP visibility data interface. 
@@ -31,8 +35,8 @@ directory as a data volume using the `-v` flag.*
 
 TODO(BM)
 
-
 ##### References
-1. https://confluence.ska-sdp.org/pages/viewpage.action?pageId=145653762
-2. https://github.com/ska-sa/spead2
-3. https://docs.docker.com/engine/tutorials/dockervolumes/
+1. **ICDs**: https://confluence.ska-sdp.org/pages/viewpage.action?pageId=145653762
+2. **SPEAD format** https://casper.berkeley.edu/astrobaki/images/9/93/SPEADsignedRelease.pdf
+3. **SPEAD2**: https://github.com/ska-sa/spead2
+
