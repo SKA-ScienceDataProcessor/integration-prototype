@@ -40,22 +40,33 @@ Heartbeat Listener
     :show-inheritance:
     :private-members:
 
-Slave Map
----------
+Slave Control
+-------------
 
-.. automodule:: sip_master.slave_map
+.. automodule:: sip_master.slave_control
     :members:
     :undoc-members:
     :inherited-members:
     :show-inheritance:
     :private-members:
 
-States
-------
+Master States
+-------------
 
-.. automodule:: sip_master.states
+.. automodule:: sip_master.master_states
     :members:
     :undoc-members:
     :inherited-members:
     :show-inheritance:
     :private-members:
+
+Slave States
+------------
+
+.. automodule:: sip_master.slave_states
+    :members:
+    :undoc-members:
+    :inherited-members:
+    :show-inheritance:
+    :private-members:
+
