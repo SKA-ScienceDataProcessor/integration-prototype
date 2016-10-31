@@ -6,7 +6,7 @@
     "bug_compat_mask": 0
   },
 
-  "observation": {
+    "observation": {
     "num_channels": 1,
     "start_freq": 50e6,
     "num_times": 5,
@@ -28,4 +28,6 @@
       }
     ]
   }
+
+
 }
