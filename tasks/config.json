@@ -1,0 +1,25 @@
+{
+  "observation":
+  {
+    "num_stations": 512,
+    "start_frequency_hz": 100e6,
+    "channel_width_hz": 5e3
+  },
+  "output":
+  {
+    "max_times_per_file": 4
+  },
+  "streams":
+  [
+    {
+      "port": 8001
+    }
+  ],
+  "memory_pool":
+  {
+    "lower": 16384,
+    "upper": 26214400,
+    "max_free": 12,
+    "initial": 8
+  }
+}
