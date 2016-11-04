@@ -2,17 +2,26 @@
   "spead_flavour": {
     "version": 4,
     "item_pointer_bits": 64,
-    "heap_address_bits": 48,
+    "heap_address_bits": 40,
     "bug_compat_mask": 0
   },
 
-    "observation": {
-    "num_channels": 1,
-    "start_freq": 50e6,
-    "num_times": 5,
-    "start_time": "xxx",
-    "simulation": {
+  "observation":
+  {
+    "telescope": {
       "num_baselines": 130816
+    },
+    "frequency": {
+      "num_channels": 4,
+      "start_hz": "xxx",
+      "end_hz": "xxx"
+    },
+    "time": {
+      "num_times": 5,
+      "start_time": "xxx"
+    },
+    "simulation": {
+      "TBD": "xxx"
     }
   },
 
@@ -28,6 +37,4 @@
       }
     ]
   }
-
-
 }
