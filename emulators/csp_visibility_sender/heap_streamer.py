@@ -7,6 +7,7 @@ import spead2.send
 import numpy as np
 import time
 
+
 class HeapStreamer(object):
     """Class providing methods to set up and send SPEAD heaps"""
 
@@ -206,7 +207,7 @@ class HeapStreamer(object):
                 "id": 0x0051,
                 "name": "complex_visibility",
                 "description": "SDP_REQ_INT-51",
-                "format": [('f', 32), ('f', 32)],
+                "type": 'c8',
                 "shape": self.frame_shape
             },
             {
@@ -227,7 +228,7 @@ class HeapStreamer(object):
             channel_baseline_count=[(0, 0)],
             schedule_block=[0],
             hardware_source_id=[0],
-            complex_visibility=np.zeros(self.frame_shape),
+            complex_visibility=np.zeros(self.frame_shape, dtype=np.complex64),
             time_centroid_index=np.ones(self.frame_shape, dtype=np.uint8),
             flagging_fraction=np.ones(self.frame_shape, dtype=np.uint8)
         )

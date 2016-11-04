@@ -26,7 +26,6 @@
   },
 
   "sender_node": {
-    "num_channels": 1,
     "start_channel": 0,
     "streams": [
       {

@@ -61,11 +61,11 @@ class Test1(unittest.TestCase):
                 "telescope": dict(num_baselines=100000)
             },
             "sender_node": {
-                "num_channels": 1,
+                "stream_num_channels": 1,
                 "streams": [dict(port=8001, host="127.0.0.1")]
             }
         }
-        frame_shape = (1, 1, config["sender_node"]["num_channels"],
+        frame_shape = (1, 1, config["sender_node"]["stream_num_channels"],
                        config["observation"]["telescope"]["num_baselines"], 4)
         return config, frame_shape
 
