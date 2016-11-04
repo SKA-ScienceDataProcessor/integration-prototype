@@ -27,7 +27,6 @@ class Simulator(object):
 
     def simulate_heaps(self, streamer: HeapStreamer):
         """Simulate and send a stream of heaps."""
-        streamer.start()
         num_streams = len(streamer.streams)
         assert(num_streams == self.num_streams)
 
