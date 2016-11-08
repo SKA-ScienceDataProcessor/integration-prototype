@@ -20,7 +20,8 @@ class Simulator(object):
         self.sender_start_channel = config['sender_node']['start_channel']
         self.num_streams = len(config['sender_node']['streams'])
         self.stream_num_channels = self.total_channels // self.num_streams
-        self.frame_shape = (1, 1, self.stream_num_channels, self.num_baselines, 4)
+        self.frame_shape = (1, 1, self.stream_num_channels, self.num_baselines,
+                            4)
         self.log.debug('Number of channels per heap_descriptor = {}'.
                        format(self.stream_num_channels))
         self.log.debug('Number of baselines = {}'.format(self.num_baselines))
@@ -34,7 +35,8 @@ class Simulator(object):
         self.log.info('  * No. times = {}'.format(self.num_times))
         self.log.info('  * No. channels (per stream) = {}'.
                       format(self.stream_num_channels))
-        self.log.info('  * Start channel = {}'.format(self.sender_start_channel))
+        self.log.info('  * Start channel = {}'.
+                      format(self.sender_start_channel))
         self.log.info('  * No. streams = {}'.format(self.num_streams))
 
         streamer.start()

@@ -37,26 +37,24 @@ def _parse_command_line():
     return parser.parse_args()
 
 
-def main():
+def main(config, log):
     """Main script function"""
+    # Create simulation object, and start streaming SPEAD heaps
+    sim = Simulator(config, log)
+    sim.simulate_heaps(HeapStreamer(config, sim.frame_shape, log))
+
+if __name__ == '__main__':
     # Parse command line arguments
     args = _parse_command_line()
 
     # Initialise logging.
-    log = _init_log(level=logging.DEBUG if args.verbose else logging.INFO)
+    _log = _init_log(level=logging.DEBUG if args.verbose else logging.INFO)
 
     # Load configuration.
-    log.info('Loading config: {}'.format(args.config_file.name))
-    config = json.load(args.config_file)
+    _log.info('Loading config: {}'.format(args.config_file.name))
+    _config = json.load(args.config_file)
     if args.print_settings:
-        log.debug('Settings:\n {}'.format(json.dumps(config, indent=4,
-                                                     sort_keys=True)))
+        _log.debug('Settings:\n {}'.format(json.dumps(_config, indent=4,
+                                                      sort_keys=True)))
 
-    # Create simulation object
-    sim = Simulator(config, log)
-
-    # Create streamer
-    sim.simulate_heaps(HeapStreamer(config, sim.frame_shape, log))
-
-if __name__ == '__main__':
-    main()
+    main(_config, _log)
