@@ -1,6 +1,6 @@
 {
     "LTS": {
-        "online": 1,
+        "online": 0,
         "timeout": 10,
         "engine_url": "unix:///var/run/docker.sock",
         "launch_policy": "docker",
@@ -12,7 +12,7 @@
             ]
         },
     "QA": {
-        "online": 1,
+        "online": 0,
         "timeout": 10,
         "launch_policy": "ssh",
         "task_control_module": "task_control",
@@ -30,6 +30,17 @@
             "tasks/exec_eng.py",
             "#tcp_port",
             "30"
+            ]
+        },
+    "vis_receive": {
+        "online": 1,
+        "timeout": 10,
+        "launch_policy": "ssh",
+        "task_control_module": "task_control",
+        "task": [
+            "tasks/vis_receiver_task.py",
+            "#tcp_port",
+            "/home/ska/SDP/integration-prototype.git/tasks/vis_receiver_config.json"
             ]
         }
 }

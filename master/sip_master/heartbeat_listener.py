@@ -47,6 +47,8 @@ class HeartbeatListener(threading.Thread):
         message and change the state to 'dead'.
         """
         while True:
+            # Moved sleep from end to start of this loop!
+            time.sleep(1.0)
 
             # Decrement timeout counters
             for slave, status in config.slave_status.items():
@@ -55,6 +57,7 @@ class HeartbeatListener(threading.Thread):
 
             # Process any waiting messages
             msg = self._listener.listen()
+            print("HeartbeatListener msg: '{}'".format(msg))
             while msg != '':
                 name = msg[0]
                 state = msg[1]
@@ -82,8 +85,6 @@ class HeartbeatListener(threading.Thread):
 
             # Evalute the state of the system
             self._evaluate_state()
-
-            time.sleep(1.0)
 
     def _evaluate_state(self):
         """ Evaluate current status
