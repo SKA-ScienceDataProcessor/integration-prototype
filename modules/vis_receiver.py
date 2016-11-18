@@ -39,7 +39,7 @@ class VisReceiver:
             self._streams.append(s)
 
     def run(self):
-        """Task run method.
+        """Run (start) the visibility receiver to read SPEAD heaps.
 
         Reads SPEAD heaps and writes them to pickle files.
         """
