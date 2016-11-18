@@ -1,19 +1,25 @@
 # -*- coding: utf-8 -*-
-import datetime
+"""Module to provide visibility receiver function.
+
+This currently consists of the VisReceiver class which reads spead packets
+and writes them to pickle files.
+"""
 import pickle
 import spead2
 import spead2.recv
-import time
 
 
-class VisReceiver(object):
-    """Receives visibility data using SPEAD.
-    """
-    def __init__(self, config, log, heartbeat_sender=None):
+class VisReceiver:
+    """Receives visibility data using SPEAD."""
+
+    def __init__(self, config, log):
+        """Constructor.
+
+        Creates SPEAD stream objects
+        """
         # Initialise class variables.
         self._config = config
         self._log = log
-        self._heartbeat_sender = heartbeat_sender
         self._streams = []
 
         # Construct streams.
@@ -33,16 +39,18 @@ class VisReceiver(object):
             self._streams.append(s)
 
     def run(self):
+        """Task run method.
+
+        Reads SPEAD heaps and writes them to pickle files.
+        """
         # ms = {}
         self._log.info('Waiting to receive...')
-        self._send_heartbeat('standby')
         for stream in self._streams:
             item_group = spead2.ItemGroup()
 
             # Loop over all heaps in the stream.
             for heap in stream:
                 self._log.info("Received heap {}".format(heap.cnt))
-                self._send_heartbeat('busy')
 
                 # Extract data from the heap into a dictionary.
                 data = {}
@@ -87,17 +95,3 @@ class VisReceiver(object):
 
             # Stop the stream when there are no more heaps.
             stream.stop()
-
-        # Send idle heartbeat once finished.
-        self._send_heartbeat('standby')
-
-    def _send_heartbeat(self, state):
-        if self._heartbeat_sender:
-            # Create a timestamp
-            ts = time.time()
-            st = datetime.datetime.fromtimestamp(ts).strftime(
-                '%Y-%m-%d %H:%M:%S')
-            # Add current state to the heartbeat sequence
-            st += ' State: ' + state + ' Component: '
-            # Sent to the socket
-            self._heartbeat_sender.send(st)
