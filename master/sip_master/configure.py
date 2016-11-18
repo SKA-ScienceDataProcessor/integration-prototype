@@ -1,12 +1,13 @@
-""" A thread class run when the master controller is configured.
-"""
-__author__ = 'David Terrett'
-
-import threading 
+import threading
 
 from sip_common import logger
 from sip_master import config
 from sip_master import slave_control
+
+""" A thread class run when the master controller is configured.
+"""
+__author__ = 'David Terrett'
+
 
 class Configure(threading.Thread):
     """ Does the actual work of configuring the system
@@ -24,4 +25,4 @@ class Configure(threading.Thread):
         for task, cfg in config.slave_config.items():
             if cfg.get('online', False):
                 slave_control.start(task, task)
-        
+

@@ -1,12 +1,13 @@
-""" A thread class that is run when a capability is started.
-"""
-__author__ = 'David Terrett'
-
-import threading 
+import threading
 
 from sip_common import logger
 from sip_master import config
 from sip_master import slave_control
+
+""" A thread class that is run when a capability is started.
+"""
+__author__ = 'David Terrett'
+
 
 class Capability(threading.Thread):
     """ Does the actual work of starting a capability

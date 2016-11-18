@@ -1,3 +1,14 @@
+import rpyc
+import threading
+import time
+
+from sip_common import heartbeat
+from sip_common import logger
+
+from sip_master import config
+from sip_master import slave_control
+from sip_master import task_control
+
 """ Heartbeat listener
 
 A HeartbeatListener runs in a separate thread and once a second looks for
@@ -14,16 +25,6 @@ degraded or unavailable and an appropriate event posted.
 """
 __author__ = 'David Terrett'
 
-import rpyc
-import threading
-import time
-
-from sip_common import heartbeat
-from sip_common import logger
-
-from sip_master import config
-from sip_master import slave_control
-from sip_master import task_control
 
 class HeartbeatListener(threading.Thread):
     def __init__(self, sm):
@@ -31,7 +32,7 @@ class HeartbeatListener(threading.Thread):
             are no messages to retrieve.
         """
         self._listener = heartbeat.Listener(0)
-        super(HeartbeatListener, self).__init__(daemon=True)
+        super(HeartbeatListener, self).__init__(daemon = True)
 
     def connect(self, host, port):
         """ Connect to a sender
@@ -80,7 +81,7 @@ class HeartbeatListener(threading.Thread):
                     if status['timeout counter'] == 0:
                         status['state'].post_event(['no heartbeat'])
 
-            # Evalute the state of the system
+            # Evaluate the state of the system
             self._evaluate_state()
 
             time.sleep(1.0)

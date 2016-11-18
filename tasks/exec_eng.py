@@ -1,5 +1,13 @@
 #!/usr/bin/python3
 
+import sys
+import os
+import zmq
+import time
+import signal
+import time
+import datetime
+
 """ Skeleton execution engine
 
 It has three states - starting, running and and finished. It starts in
@@ -11,20 +19,13 @@ the current state and its name
 
 """
 
-import sys
-import os
-import zmq
-import time
-import signal
-import time
-import datetime
-
 sys.path.append(os.path.join(os.path.dirname(__file__),'..', 'common'))
 
 from sip_common import heartbeat_task
 from sip_common import logger
 
 _context = zmq.Context()
+
 
 def _sig_handler(signum, frame):
     sys.exit(0)
@@ -36,13 +37,13 @@ def run():
 
     # Read port number
     if len(sys.argv) < 2 :
-       	port = 6477
+        port = 6477
     else :
-       	port = int(sys.argv[1])
+        port = int(sys.argv[1])
     if len(sys.argv) < 3 :
-       	run_time = 60
+        run_time = 60
     else :
-       	run_time = int(sys.argv[2])
+        run_time = int(sys.argv[2])
 
     # Define a process name to be sent to the socket
     process_name = 'exec_eng'
@@ -58,7 +59,7 @@ def run():
         ts = time.time()
         st = datetime.datetime.fromtimestamp(ts).strftime('%Y-%m-%d %H:%M:%S')
 
-	# Change the state w.r.t. the time
+        # Change the state w.r.t. the time
         if time.time() - start_time > run_time + 10.0:
             logger.info('exec engine has finished')
             _state = 'finished'

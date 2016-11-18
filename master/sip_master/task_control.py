@@ -1,10 +1,11 @@
-""" Functions for comanding a slave controller to load and unload tasks
-"""
-
 import os
 import rpyc
 
 from sip_master import config
+
+""" Functions for comanding a slave controller to load and unload tasks
+"""
+
 
 def load(name, cfg, status):
     """ Command the slave controller to load a task
@@ -27,6 +28,7 @@ def load(name, cfg, status):
 
     # Post a load sent event to the slave's state machine
     status['state'].post_event(['load sent'])
+
 
 def unload(cfg, status):
     """ Command the slave controller to unload the task

@@ -1,9 +1,3 @@
-""" Skeleton slave controller 
-
-A handler for SIGTERM is set up that just exits because that is what
-'Docker stop' sends.
-"""
-
 import os
 from rpyc.utils.server import ThreadedServer
 import threading
@@ -13,13 +7,20 @@ from sip_common import heartbeat
 from sip_common import logger
 from sip_slave import config
 
+""" Skeleton slave controller
+
+A handler for SIGTERM is set up that just exits because that is what
+'Docker stop' sends.
+"""
+
+
 def main(name, heartbeat_port, server_port, task_control_module):
     """ Slave controller main program
 
     Parameters:
         name - The name of the slave as known to the master controller. This
                name is included in the heartbeat messages.
-        heatbeat_port - The TCP port to send heatbeat messages to.
+        heartbeat_port - The TCP port to send heatbeat messages to.
         server_port - The TCP port the command server bind to.
         task_control_module - The name of the module (in sip_slave) to load
                               the task load and unload functions from.

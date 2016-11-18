@@ -1,7 +1,3 @@
-""" Functions executed when the master controller is un-configured
-"""
-__author__ = 'David Terrett'
-
 import rpyc
 import threading
 import time
@@ -10,6 +6,11 @@ from sip_common import logger
 
 from sip_master import config
 from sip_master import task_control
+
+""" Functions executed when the master controller is un-configured
+"""
+__author__ = 'David Terrett'
+
 
 class UnConfigure(threading.Thread):
     """ Does the actual work of un-configuring the system

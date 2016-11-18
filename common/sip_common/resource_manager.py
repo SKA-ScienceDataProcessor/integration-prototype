@@ -14,6 +14,7 @@ be allocated to the task.
 """
 __author__ = 'David Terrett'
 
+
 class ResourceManager:
     """ Resource manager class
     """
@@ -49,7 +50,7 @@ class ResourceManager:
 
         # Create a tcp port entry for this host in the allocation dictionary
         # if it doesn't already exist.
-        if not 'tcp_port' in self._host_alloc[host]:
+        if  'tcp_port' not in self._host_alloc[host]:
             self._host_alloc[host]['tcp_port'] = []
 
         return host
@@ -59,7 +60,7 @@ class ResourceManager:
 
         If the task hasn't been allocated a host, an exception is raised
         """
-        if not task_name in self._task_dict:
+        if task_name not in self._task_dict:
             raise RuntimeError("Resources can't be allocated before a host")
 
         if resource_type == 'tcp_port':
@@ -67,7 +68,7 @@ class ResourceManager:
                     task_name)
         else:
             raise RuntimeError('Resource type "' + resource_type + 
-                    '" not recognised')
+                               '" not recognised')
 
     def release_host(self, task_name):
         """ Deallocate a task's host
@@ -109,7 +110,6 @@ class ResourceManager:
 
         # The host must be in the host properties list
         if host in self._host_props:
-            #host_props = self._host_props[host]
 
             # If the exclusive flag is set for this host we can't allocate
             # it to any more tasks.

@@ -1,11 +1,12 @@
+import string
+import zmq
+
 """ This defines the SIP API for sending and receiving heartbeat messages
 """
 __author__ = 'David Terrett'
 
-import string
-import zmq
-
 _context = zmq.Context()
+
 
 class Sender:
     """ Class for sending heartbeat messages
@@ -29,19 +30,20 @@ class Sender:
         """
         self._socket.send_string(self._name + ':' + status)
 
+
 class Listener:
-     """ Class for listening for heartbeat messages
+    """ Class for listening for heartbeat messages
 
          :param timeout: timeout in milli-seconds
-     """
-     def __init__(self, timeout):
-         self._timeout = timeout
+    """
+    def __init__(self, timeout):
+        self._timeout = timeout
 
-         # Create a subscriber socket that excepts all messages
-         self._socket = _context.socket(zmq.SUB)
-         self._socket.setsockopt_string(zmq.SUBSCRIBE, '')
+        # Create a subscriber socket that excepts all messages
+        self._socket = _context.socket(zmq.SUB)
+        self._socket.setsockopt_string(zmq.SUBSCRIBE, '')
 
-     def connect(self, host, port=6478):
+    def connect(self, host, port=6478):
         """ Connects to a sender
         
         Can be called multiple times to listen to more than one publisher
@@ -51,7 +53,7 @@ class Listener:
         """
         self._socket.connect('tcp://' + host + ':' + str(port))
 
-     def listen(self):
+    def listen(self):
         """ Listens for heartbeat messages
 
         Returns the name of the sender of the heartbeat and the status or 
@@ -61,4 +63,4 @@ class Listener:
             msg = self._socket.recv_string()
             return msg.split(':')
         return ''
-       
+

@@ -1,13 +1,3 @@
-"""The master controller states and actions
-
-The master controller implements a simple state machine. It only
-has 4 states; "standby", "configuring", "available" and "unconfiguring"
-and 5 events; "online", "offline", "shutdown, "cap", "configure done", and 
-"unconfigure done".  "cap", "online", "offline" and "shutdown are external 
-and the others are generated internally.
-"""
-__author__ = 'David Terrett'
-
 import sys
 
 from sip_common import logger
@@ -20,11 +10,23 @@ from sip_master.configure import Configure
 from sip_master.un_configure import UnConfigure
 from sip_master.shutdown import Shutdown
 
+""" The master controller states and actions
+
+The master controller implements a simple state machine. It only
+has 4 states; "standby", "configuring", "available" and "unconfiguring"
+and 5 events; "online", "offline", "shutdown, "cap", "configure done", and 
+"unconfigure done".  "cap", "online", "offline" and "shutdown are external 
+and the others are generated internally.
+"""
+__author__ = 'David Terrett'
+
+
 class Standby(State):
     """ Standby state
     """
     def __init__(self, sm):
         logger.info('state->standby')
+
 
 class Configuring(State):
     """ Configuring state
@@ -32,11 +34,13 @@ class Configuring(State):
     def __init__(self, sm):
         logger.info('state->configuring')
 
+
 class UnConfiguring(State):
     """ Unconfiguring state
     """
     def __init__(self, sm):
         logger.info('state->unconfiguring')
+
 
 class Available(State):
     """ Available state
@@ -44,17 +48,20 @@ class Available(State):
     def __init__(self, sm):
         logger.info('state->available')
 
+
 class Degraded(State):
     """ Degraded state
     """
     def __init__(self, sm):
         logger.info('state->degraded')
 
+
 class Unavailable(State):
     """ Unavailable state
     """
     def __init__(self, sm):
         logger.info('state->unavailable')
+
 
 class MasterControllerSM(StateMachine):
     def __init__(self):

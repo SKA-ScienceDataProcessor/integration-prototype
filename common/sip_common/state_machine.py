@@ -1,3 +1,6 @@
+from collections import deque
+import threading
+
 """ State machine framework
 
 This module defines a simple state machine framework. It supports entry,
@@ -28,9 +31,6 @@ indicating whether the event was accepted ('ok'), rejected or ignored.
 
 The get_graph method creates a pygraphvis representation of the state machine.
 """
- 
-from collections import deque
-import threading
 
 # pygraphviz is only needed for the method that creates a graphviz 
 # representation of the state machine. This in not needed to use the state
@@ -39,6 +39,7 @@ try:
     import pygraphviz as pgv
 except:
     pass
+
 
 class State:
     """ Base class for states
@@ -65,6 +66,7 @@ class State:
         """
         pass
 
+
 class _End(State):
     """ Pseudo end state
 
@@ -74,6 +76,7 @@ class _End(State):
     """
     def __init__(self, sm):
         pass
+
 
 class StateMachine:
     """ State machine
@@ -137,7 +140,7 @@ class StateMachine:
         """
         result = None
         while True:
-            event = yield(result)
+            event = yield result
     
             # If there are any events in the queue, process them.
             while len(self._event_queue) > 0:
@@ -159,7 +162,7 @@ class StateMachine:
         if self._lock.acquire(blocking=False):
             result = self._state_machine.send(event)
             self._lock.release()
-            return result;
+            return result
         else:
             self.queue_event(event)
 
@@ -188,7 +191,7 @@ class StateMachine:
 
         # Create a graph
         graph = pgv.AGraph(title=title, directed=True, strict=False,
-               rankdir='LR', ratio='0.3')
+                           rankdir='LR', ratio='0.3')
 
         # Create a node for each state
         for state in self._state_table:
@@ -209,7 +212,7 @@ class StateMachine:
                     # For in-state transitions the destination is the
                     # current state
                     destination = transition[1]
-                    if destination == None:
+                    if destination is None:
                         destination = state
                     else:
                         destination = destination.__name__

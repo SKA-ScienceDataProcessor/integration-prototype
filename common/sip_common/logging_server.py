@@ -1,4 +1,13 @@
 #!/usr/bin/env python3
+
+import logging, logging.handlers
+import os
+import sys
+import time
+import socket
+import zmq
+from zmq.log.handlers import PUBHandler
+
 """
 An example of logging server which uses ZeroMQ module, based on
 http://nullege.com/codes/show/src@p@y@pyzmq-14.2.0@examples@logger@zmqlogger.py/17/zmq.log.handlers.PUBHandler
@@ -17,27 +26,16 @@ where the different modules send their logs, and redirects them to stdout .
 
 __author__ = 'Vlad Stolyarov'
 
-
-import logging, logging.handlers
-import os
-import sys
-import time
-import socket
-  
-import zmq
-from zmq.log.handlers import PUBHandler
-  
-#LOG_LEVELS = (logging.DEBUG, logging.INFO, logging.WARN, logging.ERROR, logging.CRITICAL)
-
 sip_hostname = os.environ['SIP_HOSTNAME'] = os.uname()[1]
 print('Hostname is %s' % sip_hostname)
 sip_address = socket.gethostbyname(sip_hostname)
 port = logging.handlers.DEFAULT_TCP_LOGGING_PORT
-  
-def sub_logger(port, level=logging.DEBUG):
+
+
+def sub_logger(p, level=logging.DEBUG):
     ctx = zmq.Context()
     sub = ctx.socket(zmq.SUB)
-    sub.bind('tcp://*:%i' % (port))
+    sub.bind('tcp://*:%i' % (p))
     sub.setsockopt_string(zmq.SUBSCRIBE, '')
 
     logging.basicConfig(level=level)
@@ -52,7 +50,7 @@ def sub_logger(port, level=logging.DEBUG):
   
 # start the log watcher
 try:
-   sub_logger(port)
+    sub_logger(port)
 except KeyboardInterrupt:
-   pass
+    pass
 
