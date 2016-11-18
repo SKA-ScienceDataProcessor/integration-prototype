@@ -10,6 +10,7 @@ from plumbum import SshMachine
 from pyroute2 import IPRoute
 import rpyc
 import socket
+import time
 
 from sip_common import logger
 
@@ -29,59 +30,61 @@ def _find_route_to_logger(host):
 
 
 def start(name, type):
-    """ Start a slave controller
-    """
+    """Start a slave controller."""
 
     # Check that the type exists
-    if not type in config.slave_config:
+    if type not in config.slave_config:
         raise RuntimeError('"{}" is not a known task type'.format(type))
 
     # Create an entry in the slave status dictionary if one doesn't already
     # exist
     if not name in config.slave_status:
+        task_controller = task_control.TaskControllerRPyC()
         config.slave_status[name] = {
-                'type': type, 
-                'state': SlaveControllerSM(name), 
+                'type': type,
+                'task_controller': task_controller,
+                'state': SlaveControllerSM(name, task_controller),
                 'timeout counter': 0}
 
     # Check that the slave isn't already running
-    status = config.slave_status[name]
-    if status['state'].current_state() == 'loading' or (
-            status['state'].current_state() == 'busy'):
+    slave_status = config.slave_status[name]
+    if slave_status['state'].current_state() == 'loading' or (
+            slave_status['state'].current_state() == 'busy'):
         raise RuntimeError('Error starting {}: task is already {}'.format(
-                name, status['state'].current_state()))
+                name, slave_status['state'].current_state()))
 
     # Start a slave if it isn't already running
-    if status['state'].current_state() ==  '_End' or (
-            status['state'].current_state() == 'Starting'):
+    if slave_status['state'].current_state() ==  '_End' or (
+            slave_status['state'].current_state() == 'Starting'):
 
         # Start the slave
         if config.slave_config[type]['launch_policy'] == 'docker':
-            _start_docker_slave(name, config.slave_config[type], 
-                    config.slave_status[name])
+            _start_docker_slave(name, config.slave_config[type], slave_status)
         elif config.slave_config[type]['launch_policy'] == 'ssh':
-            _start_ssh_slave(name, config.slave_config[type], 
-                    config.slave_status[name])
+            _start_ssh_slave(name, config.slave_config[type], slave_status)
         else:
             raise RuntimeError(
                     'Error starting "{}": {} is not a known slave launch ' \
-                     'policy'.format(name, 
+                     'policy'.format(name,
                      config.slave_config[type]['launch_policy']))
 
         # Initialise the task status
-        config.slave_status[name]['timeout counter'] = \
-                config.slave_config[type]['timeout']
+        slave_status['timeout counter'] = config.slave_config[type]['timeout']
 
         # Connect the heartbeat listener to the address it is sending heartbeats
         # to.
-        config.heartbeat_listener.connect(config.slave_status[name]['address'], 
-                config.slave_status[name]['heartbeat_port'])
-    else:
+        config.heartbeat_listener.connect(slave_status['address'],
+                                          slave_status['heartbeat_port'])
 
+        # RPyC connected when the first heartbeat is received
+        # (in heartbeat_listener.py).
+    else:
         # Otherwise a slave was running (but no task) so we can just instruct
-        # the slave to load the task.
-        task_control.load(name, config.slave_config[type], 
+        # the slave to start the task.
+        slave_status['task_controller'].start(name, config.slave_config[type],
                 config.slave_status[name])
+        slave_status['state'].post_event(['load sent'])
+
 
 def _start_docker_slave(name, cfg, status):
     """ Start a slave controller that is a Docker container
@@ -95,7 +98,7 @@ def _start_docker_slave(name, cfg, status):
     client = Client(version='1.21', base_url=cfg['engine_url'])
 
     # Create a container and store its id in the properties array
-    host = config.resource.allocate_host(name, 
+    host = config.resource.allocate_host(name,
             {'launch_protocol': 'docker'}, {})
     image = cfg['docker_image']
     heartbeat_port = config.resource.allocate_resource(name, "tcp_port")
@@ -103,9 +106,9 @@ def _start_docker_slave(name, cfg, status):
     task_control_module = cfg['task_control_module']
     logger_address = \
             netifaces.ifaddresses('docker0')[netifaces.AF_INET][0]['addr']
-    container_id = client.create_container(image=image, 
-                   command=['/home/sdp/integration-prototype/slave/bin/slave', 
-                            name, 
+    container_id = client.create_container(image=image,
+                   command=['/home/sdp/integration-prototype/slave/bin/slave',
+                            name,
                             str(heartbeat_port),
                             str(rpc_port),
                             logger_address,
@@ -134,7 +137,7 @@ def _start_ssh_slave(name, cfg, status):
     """
     # Improve logging setup!!!
     logging.getLogger('plumbum').setLevel(logging.DEBUG)
-   
+
     # Find a host that supports ssh
     host = config.resource.allocate_host(name, {'launch_protocol': 'ssh'}, {})
 
@@ -172,11 +175,11 @@ def _start_ssh_slave(name, cfg, status):
     status['sip_root'] = sip_root
     logger.info(name + ' started on ' + host)
 
+
 def stop(name, status):
     """ Stop a slave controller
     """
-    conn = rpyc.connect(status['address'], status['rpc_port'])
-    conn.root.shutdown()
+    status['task_controller'].shutdown()
     if config.slave_config[status['type']]['launch_policy'] == 'docker':
         _stop_docker_slave(name, status)
 
@@ -185,6 +188,7 @@ def stop(name, status):
 
     # Send the stop sent event to the state machine
     status['state'].post_event(['stop sent'])
+
 
 def _stop_docker_slave(name, status):
     """ Stop a docker based slave controller

@@ -35,15 +35,17 @@ class Missing(State):
         logger.info('{0} state timed-out'.format(sm._name))
 
 class SlaveControllerSM(StateMachine):
-    def __init__(self, name):
+    def __init__(self, name, task_controller):
         super(SlaveControllerSM, self).__init__(self.state_table, Starting)
         self._name = name
+        self._task_controller = task_controller
 
     def LoadTask(self, event):
         type = config.slave_status[self._name]['type']
-        task_control.load(self._name, config.slave_config[type], 
-                config.slave_status[self._name]);
-        pass
+        self._task_controller.start(self._name,
+                                    config.slave_config[type],
+                                    config.slave_status[self._name])
+        self.post_event(['load sent'])
 
     state_table = {
         'Starting': {

@@ -2,14 +2,11 @@
 """
 __author__ = 'David Terrett'
 
-import rpyc
 import threading
-import time
 
 from sip_common import logger
-
 from sip_master import config
-from sip_master import task_control
+
 
 class UnConfigure(threading.Thread):
     """ Does the actual work of un-configuring the system
@@ -20,11 +17,10 @@ class UnConfigure(threading.Thread):
         super(UnConfigure, self).__init__()
 
     def run(self):
-        """ Thread run routine
-        """
+        """Thread run routine."""
         logger.info('starting unconfiguration')
         for slave, status in config.slave_status.items():
             if status['state'].current_state() == 'Busy':
                type = status['type']
-               task_control.unload(config.slave_config[type], status)
+               status['task_controller'].stop(config.slave_config[type])
         logger.info('unconfigure done')

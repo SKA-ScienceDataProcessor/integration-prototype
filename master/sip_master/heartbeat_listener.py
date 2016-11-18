@@ -14,16 +14,11 @@ degraded or unavailable and an appropriate event posted.
 """
 __author__ = 'David Terrett'
 
-import rpyc
 import threading
 import time
 
-from sip_common import heartbeat
-from sip_common import logger
-
+from sip_common import heartbeat, logger
 from sip_master import config
-from sip_master import slave_control
-from sip_master import task_control
 
 
 class HeartbeatListener(threading.Thread):
@@ -70,11 +65,16 @@ class HeartbeatListener(threading.Thread):
 
             # Process any waiting messages
             msg = self._listener.listen()
-            print("HeartbeatListener msg: '{}'".format(msg))
             while msg != '':
                 name = msg[0]
                 state = msg[1]
                 status = config.slave_status[name]
+
+                # Ensure RPyC connection is established
+                # once the slave is running
+                # (i.e. after the first heartbeat has been received).
+                status['task_controller'].connect(status['address'],
+                                                  status['rpc_port'])
 
                 # Reset counters of slaves that we get a message from
                 status['timeout counter'] = (
@@ -90,7 +90,7 @@ class HeartbeatListener(threading.Thread):
                     logger.error('Invalid state received from slave: {}'.
                                  format(state))
 
-                # Check for more messages FIXME(BM) why check again?
+                # Check for more messages.
                 msg = self._listener.listen()
 
             # Check for timed out slaves

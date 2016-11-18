@@ -58,45 +58,48 @@ class TaskControlVisReceiver(TaskControl):
     def __init__(self):
         TaskControl.__init__(self)
         self._poller = None
+        self._subproc = None
 
     def start(self, task):
         """Starts the task and the task poller thread."""
         # Start a task
         logger.info('Starting task {}'.format(task[0]))
-        config.subproc = subprocess.Popen(task)
+        self._subproc = subprocess.Popen(task)
 
         # Create and start a thread which checks if the task is still running
         # or timed out.
-        timeout_s = 60  # FIXME(BM) make this an option!!
-        self._poller = self.TaskPoller(self, config.subproc, timeout_s)
+        timeout_s = 15  # FIXME(BM) make this an option!!
+        self._poller = self.TaskPoller(self, self._subproc, timeout_s)
         self._poller.start()
 
     def stop(self, task):
         """Stops (kills) the task"""
         logger.info('unloading task {}'.format(task[0]))
-        # FIXME(BM) need to stop the TaskPoller (if its running)!
-        # see: http://stackoverflow.com/questions/27102881/python-threading-self-stop-event-object-is-not-callable
-        # ... might be ok as daemonic threads are stopped at shutdown
-        # see: https://docs.python.org/3/library/threading.html
-        # also see: https://mail.python.org/pipermail/python-list/2014-March/668991.html
-        # Kill the sub-process
-        config.subproc.kill()
+
+        # Kill the sub-process and the polling thread.
+        self._poller.stop_thread()
+        self._subproc.kill()
+
         # Reset state
         self.set_slave_state_idle()
 
     class TaskPoller(threading.Thread):
         """Checks task is still running and has not exceeded a timeout."""
         def __init__(self, task_controller, pid, timeout_s):
-            threading.Thread.__init__(self, daemon=True)
+            threading.Thread.__init__(self)
             self._task_controller = task_controller
             self._pid = pid
             self._timeout_s = timeout_s
+            self._done = threading.Event()
+
+        def stop_thread(self):
+            self._done.set()
 
         def run(self):
             """Thread run method."""
             self._task_controller.set_slave_state_busy()
             total_time = 0
-            while self._pid.poll() is None:
+            while self._pid.poll() is None and not self._done.is_set():
                 time.sleep(1)
                 total_time += 1
                 # TODO(BM) interaction with slave time-out in HeartbeatListener?
@@ -115,6 +118,8 @@ class TaskControlExample(TaskControl):
     """
     def __init__(self):
         TaskControl.__init__(self)
+        self._poller = None
+        self._subproc = None
 
     def start(self, task):
         """load the task
@@ -129,27 +134,24 @@ class TaskControlExample(TaskControl):
         # Extract the port number
         port = int(task[1])
 
-        # Start a task
-        logger.info('Starting task {}'.format(task[0]))
-        config.subproc = subprocess.Popen(task)
-
         # Create a heartbeat listener to listen for a task
         timeout_msec = 1000
         heartbeat_comp_listener = heartbeat_task.Listener(timeout_msec)
         heartbeat_comp_listener.connect('localhost', port)
-        config.poller = self._HeartbeatPoller(self, heartbeat_comp_listener)
-        config.poller_run = True
-        config.poller.start()
+        self._poller = self._HeartbeatPoller(self, heartbeat_comp_listener)
+        self._poller.start()
+
+        # Start a task
+        logger.info('Starting task {}'.format(task[0]))
+        self._subproc = subprocess.Popen(task)
 
     def stop(self, task):
         """Unload the task"""
         logger.info('unloading task {}'.format(task[0]))
 
-        # Stop the heartbeat poller
-        config.poller_run = False
-
-        # Kill the sub-process
-        config.subproc.kill()
+        # Kill the sub-process and the polling thread.
+        self._poller.stop_thread()
+        self._subproc.kill()
 
         # Reset state
         self.set_slave_state_idle()
@@ -160,16 +162,20 @@ class TaskControlExample(TaskControl):
         When it get the message starting, state1, or state2 sets the slave state
         to busy, otherwise set it to off.
         """
-        def __init__(self, task_contoller, heartbeat_comp_listener):
+        def __init__(self, task_controller, heartbeat_comp_listener):
             """Constructor."""
-            self._task_controller = task_contoller
+            threading.Thread.__init__(self)
+            self._task_controller = task_controller
             self._state_task_prev = ''
             self._heartbeat_comp_listener = heartbeat_comp_listener
-            threading.Thread.__init__(self, daemon=True)
+            self._done = threading.Event()
+
+        def stop_thread(self):
+            self._done.set()
 
         def run(self):
             """Thread run method."""
-            while config.poller_run:
+            while not self._done.is_set():
 
                 # Listen to the task's heartbeat
                 comp_msg = self._heartbeat_comp_listener.listen()
@@ -179,7 +185,7 @@ class TaskControlExample(TaskControl):
 
                 # If the task state changes log it
                 if state_task != self._state_task_prev:
-                    logger.info('**' + comp_msg)
+                    logger.info(comp_msg)
                     self._state_task_prev = state_task
 
                 # Update the controller state
@@ -189,6 +195,9 @@ class TaskControlExample(TaskControl):
                 else:
                     config.state = state_task
                 time.sleep(1)
+
+            # Set to idle before exiting.
+            self._task_controller.set_slave_state_idle()
 
         @staticmethod
         def _get_state(msg):
