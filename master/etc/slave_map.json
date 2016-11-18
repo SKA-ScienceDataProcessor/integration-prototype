@@ -1,10 +1,10 @@
 {
     "LTS": {
-        "online": 0,
+        "online": 1,
         "timeout": 10,
         "engine_url": "unix:///var/run/docker.sock",
         "launch_policy": "docker",
-        "task_control_module": "task_control",
+        "task_control_module": "TaskControlExample",
         "docker_image": "slave_controller",
         "task": [
             "tasks/task.py",
@@ -12,10 +12,10 @@
             ]
         },
     "QA": {
-        "online": 0,
+        "online": 1,
         "timeout": 10,
         "launch_policy": "ssh",
-        "task_control_module": "task_control",
+        "task_control_module": "TaskControlExample",
         "task": [
             "tasks/task.py",
             "#tcp_port"
@@ -25,7 +25,7 @@
         "online": 0,
         "timeout": 10,
         "launch_policy": "ssh",
-        "task_control_module": "task_control",
+        "task_control_module": "TaskControlExample",
         "task": [
             "tasks/exec_eng.py",
             "#tcp_port",
@@ -33,14 +33,13 @@
             ]
         },
     "vis_receive": {
-        "online": 1,
+        "online": 0,
         "timeout": 10,
         "launch_policy": "ssh",
-        "task_control_module": "task_control",
+        "task_control_module": "TaskControlVisReceiver",
         "task": [
             "tasks/vis_receiver_task.py",
-            "#tcp_port",
-            "/home/ska/SDP/integration-prototype.git/tasks/vis_receiver_config.json"
+            "/home/sip/integration-prototype.git/tasks/vis_receiver_config.json"
             ]
         }
 }
