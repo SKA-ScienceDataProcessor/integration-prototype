@@ -54,23 +54,6 @@ class SipRunner(object):
         slave_map = os.path.join('master', 'etc', 'slave_map.json')
         master_main(slave_map, resources)
 
-    @staticmethod
-    def run_slave():
-        print('Running slave...')
-        sys.path.append(os.path.join(os.path.dirname(__file__), 'common'))
-        sys.path.append(os.path.join(os.path.dirname(__file__), 'slave'))
-        config = {'name': 'slave1',
-                  'heartbeat_port': 2000,
-                  'server_port': 2001,
-                  'logging_address': '127.0.0.1',
-                  'task_control_module': 'task_control'}
-        import signal
-        signal.signal(signal.SIGTERM, lambda: sys.exit(0))
-        os.environ['SIP_HOSTNAME'] = config['logging_address']
-        from sip_slave.main import main as slave_main
-        slave_main(config['name'], config['heartbeat_port'],
-                   config['server_port'], config['task_control_module'])
-
     def run_csp_vis_sender(self):
         """Run the visibility (SPEAD) data emulator / sender"""
         if self.args.config is not None:
