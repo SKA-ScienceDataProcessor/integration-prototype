@@ -19,5 +19,7 @@ class Capability(threading.Thread):
         """ Thread run routine
         """
         logger.info('starting capability ' + self._args[0])
-
-        slave_control.start(self._args[0], self._args[1])
+        try:
+            slave_control.start(self._args[0], self._args[1])
+        except RuntimeError as err:
+            logger.error('Failed to start capability: {}'.format(err))
