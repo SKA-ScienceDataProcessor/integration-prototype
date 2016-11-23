@@ -21,6 +21,5 @@ class UnConfigure(threading.Thread):
         logger.info('starting unconfiguration')
         for slave, status in config.slave_status.items():
             if status['state'].current_state() == 'Busy':
-               type = status['type']
-               status['task_controller'].stop(config.slave_config[type])
+                status['task_controller'].stop()
         logger.info('unconfigure done')

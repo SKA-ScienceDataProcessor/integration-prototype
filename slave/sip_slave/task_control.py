@@ -1,6 +1,12 @@
 # -*- coding: utf-8 -*-
-"""This module defines the start (load) and stop (unload) functions for
-controlling a SIP task."""
+"""This module defines the interface used to control a SIP task.
+
+This module also contains an implementation to start a task as a subprocess
+and poll to check when it has finished, or reached a timeout.
+
+To implement new task controllers, inherit the base class TaskControl and
+implement the start() and stop() methods.
+"""
 import subprocess
 import threading
 import time
@@ -10,24 +16,24 @@ from sip_slave import config
 
 
 class TaskControl:
-    """Class to define the slave task control interface (base class)"""
+    """Base class to define the slave task control interface."""
 
     def __init__(self):
         """Constructor."""
+        self.settings = None
 
-    def start(self, task):
+    def start(self, task, settings):
         """Start (load) the task
 
         Args:
             task: Task description (name or path?)
+            settings: Settings dictionary for the task control object.
         """
+        raise RuntimeError("Implement TaskControl.start()!")
 
-    def stop(self, task):
-        """Stop (unload) the task
-
-        Args:
-            task: Task description (name or path?)
-        """
+    def stop(self):
+        """Stop (unload) the task."""
+        raise RuntimeError("Implement TaskControl.stop()!")
 
     def set_slave_state_idle(self):
         """Update the slave state (global) to idle.
@@ -46,50 +52,52 @@ class TaskControl:
         config.state = 'busy'
 
 
-class TaskControlVisReceiver(TaskControl):
+class TaskControlProcessPoller(TaskControl):
     """Task controller for the visibility receiver.
 
-    - FIXME(BM) Need a good name: perhaps TaskControlProcessPoller
-
-    - Uses subprocess.Popen() to start the task
-    - Polls the process to check if it has finished or a certain amount of time
-      has passed.
+    Uses subprocess.Popen() to start the task and polls the process to check
+    if it has finished, or a certain amount of time has passed.
     """
     def __init__(self):
         TaskControl.__init__(self)
         self._poller = None
-        self._subproc = None
+        self.name = ''
+        self.subproc = None
 
-    def start(self, task):
-        """Starts the task and the task poller thread."""
+    def start(self, task, settings):
+        """Starts the task and the task poller thread.
+
+        Args:
+            task (string list): Path to the task and its command line arguments.
+            settings (dict): Settings dictionary for the task control object.
+        """
         # Start a task
-        logger.info('Starting task {}'.format(task[0]))
-        self._subproc = subprocess.Popen(task)
+        self.name = task[0]
+        self.settings = settings
+        logger.info('Starting task {}'.format(self.name))
+        self.subproc = subprocess.Popen(task)
 
         # Create and start a thread which checks if the task is still running
         # or timed out.
-        timeout_s = 15  # FIXME(BM) make this an option!!
-        self._poller = self.TaskPoller(self, self._subproc, timeout_s)
+        self._poller = self.TaskPoller(self)
         self._poller.start()
 
-    def stop(self, task):
-        """Stops (kills) the task"""
-        logger.info('unloading task {}'.format(task[0]))
+    def stop(self):
+        """Stops (kills) the task."""
+        logger.info('unloading task {}'.format(self.name))
 
         # Kill the sub-process and the polling thread.
         self._poller.stop_thread()
-        self._subproc.kill()
+        self.subproc.kill()
 
         # Reset state
         self.set_slave_state_idle()
 
     class TaskPoller(threading.Thread):
         """Checks task is still running and has not exceeded a timeout."""
-        def __init__(self, task_controller, pid, timeout_s):
+        def __init__(self, task_controller):
             threading.Thread.__init__(self)
             self._task_controller = task_controller
-            self._pid = pid
-            self._timeout_s = timeout_s
             self._done = threading.Event()
 
         def stop_thread(self):
@@ -98,14 +106,21 @@ class TaskControlVisReceiver(TaskControl):
         def run(self):
             """Thread run method."""
             self._task_controller.set_slave_state_busy()
+            name = self._task_controller.name
+            timeout = self._task_controller.settings['timeout']
             total_time = 0
-            while self._pid.poll() is None and not self._done.is_set():
+            while (self._task_controller.subproc.poll() is None
+                    and not self._done.is_set()):
                 time.sleep(1)
                 total_time += 1
                 # TODO(BM) interaction with slave time-out in HeartbeatListener?
-                if self._timeout_s is not None and total_time > self._timeout_s:
+                if timeout is not None and total_time > timeout:
+                    logger.warn("Task {} timed out".format(name))
                     break
-            self._task_controller.set_slave_state_idle()
+
+            # TODO(FD) Check we're OK to kill the process here.
+            # Possible interaction with master controller UnConfigure.
+            self._task_controller.stop()
 
 
 class TaskControlExample(TaskControl):
@@ -119,15 +134,21 @@ class TaskControlExample(TaskControl):
     def __init__(self):
         TaskControl.__init__(self)
         self._poller = None
+        self.name = ''
         self._subproc = None
 
-    def start(self, task):
+    def start(self, task, settings):
         """load the task
 
         Some sort of task monitoring process should also be started. For
         'internal' tasks this means checking that the task is sending
         heartbeat messages.
+
+        Args:
+            task (string list): Path to the task and its command line arguments.
+            settings (dict): Settings dictionary for the task control object.
         """
+        self.name = task[0]
         _state_task = 'off'
         _state_task_prev = 'off'
 
@@ -145,9 +166,9 @@ class TaskControlExample(TaskControl):
         logger.info('Starting task {}'.format(task[0]))
         self._subproc = subprocess.Popen(task)
 
-    def stop(self, task):
-        """Unload the task"""
-        logger.info('unloading task {}'.format(task[0]))
+    def stop(self):
+        """Unload the task."""
+        logger.info('unloading task {}'.format(self.name))
 
         # Kill the sub-process and the polling thread.
         self._poller.stop_thread()

@@ -18,6 +18,7 @@ from sip_master import config
 from sip_master import task_control
 from sip_master.slave_states import SlaveControllerSM
 
+
 def _find_route_to_logger(host):
     """ Figures out what the IP address of the logger is on 'host'
     """
@@ -39,7 +40,7 @@ def start(name, type):
     # Create an entry in the slave status dictionary if one doesn't already
     # exist
     if not name in config.slave_status:
-        task_controller = task_control.TaskControllerRPyC()
+        task_controller = task_control.SlaveTaskControllerRPyC()
         config.slave_status[name] = {
                 'type': type,
                 'task_controller': task_controller,
@@ -103,7 +104,7 @@ def _start_docker_slave(name, cfg, status):
     image = cfg['docker_image']
     heartbeat_port = config.resource.allocate_resource(name, "tcp_port")
     rpc_port = config.resource.allocate_resource(name, "tcp_port")
-    task_control_module = cfg['task_control_module']
+    task_control_module = cfg['task_control_module']['name']
     logger_address = \
             netifaces.ifaddresses('docker0')[netifaces.AF_INET][0]['addr']
     container_id = client.create_container(image=image,
@@ -132,6 +133,7 @@ def _start_docker_slave(name, cfg, status):
     logger.info('"{}" started in container {} at {}'.format(
             name, container_id, ip_address))
 
+
 def _start_ssh_slave(name, cfg, status):
     """ Start a slave controller that is a SSH client
     """
@@ -149,14 +151,12 @@ def _start_ssh_slave(name, cfg, status):
     rpc_port = config.resource.allocate_resource(name, "tcp_port")
 
     # Get the task control module to use for this task
-    task_control_module = cfg['task_control_module']
+    task_control_module = cfg['task_control_module']['name']
 
     # Get the address of the logger (as seen from the remote host)
     logger_address = _find_route_to_logger(host)
 
     ssh_host = SshMachine(host)
-    import pdb
-    #   pdb.set_trace()
     try:
         py3 = ssh_host['python3']
     except:

@@ -1,4 +1,7 @@
-""" Functions for comanding a slave controller to load and unload tasks
+# -*- coding: utf-8 -*-
+""" Functions for commanding a slave controller to load and unload tasks
+
+FIXME(FD) Rename this file to slave_task_controller.py ?
 """
 
 import os
@@ -8,26 +11,37 @@ from sip_master import config
 from sip_common import logger
 
 
-class TaskController:
+class SlaveTaskController:
+    """Base class to define the slave task controller interface.
+
+    This commands the slave controller to start and stop tasks.
+    """
     def __init__(self):
         pass
 
     def shutdown(self):
         """Command the slave controller to shut down."""
-        pass
+        raise RuntimeError("Implement TaskController.shutdown().")
 
     def start(self, name, cfg, status):
-        """Command the slave controller to load a task."""
-        pass
+        """Command the slave controller to load a task.
 
-    def stop(self, cfg):
+        Args:
+            name (str): Name of the capability (slave/task name).
+            cfg (dict): Configuration for the capability (from slave_map.json).
+            status (dict): Slave status dictionary.
+        """
+        raise RuntimeError("Implement TaskController.start().")
+
+    def stop(self):
         """Command the slave controller to unload the task."""
-        pass
+        raise RuntimeError("Implement TaskController.stop().")
 
 
-class TaskControllerRPyC(TaskController):
+class SlaveTaskControllerRPyC(SlaveTaskController):
+    """Implementation of a slave task controller using RPyC."""
     def __init__(self):
-        TaskController.__init__(self)
+        SlaveTaskController.__init__(self)
         self._conn = None
 
     def connect(self, address, port):
@@ -43,7 +57,13 @@ class TaskControllerRPyC(TaskController):
         self._conn.root.shutdown()
 
     def start(self, name, cfg, status):
-        """Command the slave controller to load a task."""
+        """Command the slave controller to load a task.
+
+        Args:
+            name (str): Name of the capability (slave/task name).
+            cfg (dict): Configuration for the capability (from slave_map.json).
+            status (dict): Slave status dictionary.
+        """
         # Scan the task parameter list for entries with values starting with a #
         # character and replace with an allocated resource.
         task_cfg = cfg['task']
@@ -60,12 +80,12 @@ class TaskControllerRPyC(TaskController):
         if self._conn is None:
             logger.fatal("Need to connect to RPyC first!")
             return
-        self._conn.root.load(task_cfg)
+        self._conn.root.load(task_cfg, cfg['task_control_module'])
 
-    def stop(self, cfg):
+    def stop(self):
         """Command the slave controller to unload the task."""
         if self._conn is None:
             logger.fatal("Need to connect to RPyC first!")
             return
-        self._conn.root.unload(cfg['task'])
+        self._conn.root.unload()
 

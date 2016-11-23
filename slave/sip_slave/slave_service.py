@@ -30,13 +30,13 @@ class SlaveService(rpyc.Service):
         """Return the current slave state."""
         return config.state
 
-    def exposed_load(self, task_description):
+    def exposed_load(self, task_description, task_control_settings):
         """Load (start) a task using the task control module."""
-        self.task_control.start(task_description)
+        self.task_control.start(task_description, task_control_settings)
 
-    def exposed_unload(self, task_description):
+    def exposed_unload(self):
         """Unload (stop) a task using the task control module."""
-        self.task_control.stop(task_description)
+        self.task_control.stop()
 
     def exposed_shutdown(self):
         _Shutdown().start()

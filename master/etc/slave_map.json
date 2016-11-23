@@ -4,7 +4,9 @@
         "timeout": 10,
         "engine_url": "unix:///var/run/docker.sock",
         "launch_policy": "docker",
-        "task_control_module": "TaskControlExample",
+        "task_control_module": {
+            "name": "TaskControlExample"
+        },
         "docker_image": "slave_controller",
         "task": [
             "tasks/task.py",
@@ -15,7 +17,9 @@
         "online": 1,
         "timeout": 10,
         "launch_policy": "ssh",
-        "task_control_module": "TaskControlExample",
+        "task_control_module": {
+            "name": "TaskControlExample"
+        },
         "task": [
             "tasks/task.py",
             "#tcp_port"
@@ -25,7 +29,9 @@
         "online": 0,
         "timeout": 10,
         "launch_policy": "ssh",
-        "task_control_module": "TaskControlExample",
+        "task_control_module": {
+            "name": "TaskControlExample"
+        },
         "task": [
             "tasks/exec_eng.py",
             "#tcp_port",
@@ -36,10 +42,13 @@
         "online": 0,
         "timeout": 10,
         "launch_policy": "ssh",
-        "task_control_module": "TaskControlVisReceiver",
+        "task_control_module": {
+            "name": "TaskControlProcessPoller",
+            "timeout": 10
+        },
         "task": [
             "tasks/vis_receiver_task.py",
-            "/home/sip/integration-prototype.git/tasks/vis_receiver_config.json"
+            "/home/ska/integration-prototype.git/tasks/etc/vis_receiver_config.json"
             ]
         }
 }

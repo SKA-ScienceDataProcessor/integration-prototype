@@ -15,7 +15,15 @@ class VisReceiver:
     def __init__(self, config, log):
         """Constructor.
 
-        Creates SPEAD stream objects
+        Creates SPEAD stream objects.
+        The supplied configuration dictionary must contain all parameters
+        needed for setting up the SPEAD streams and output files.
+
+        See vis_receiver_config.json for an example.
+
+        Args:
+            config (dict): Dictionary containing JSON configuration file.
+            log: Logger.
         """
         # Initialise class variables.
         self._config = config
@@ -39,7 +47,7 @@ class VisReceiver:
             self._streams.append(s)
 
     def run(self):
-        """Run (start) the visibility receiver to read SPEAD heaps.
+        """Start the visibility receiver to receive SPEAD heaps.
 
         Reads SPEAD heaps and writes them to pickle files.
         """
