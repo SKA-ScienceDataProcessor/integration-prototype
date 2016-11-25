@@ -64,7 +64,9 @@ class ResourceManager:
 
         if resource_type == 'tcp_port':
             return self._allocate_tcp_port(self._task_dict[task_name], 
-                    task_name)
+                                           task_name)
+        elif resource_type == 'sip_root':
+            return self._host_props[self._task_dict[task_name]]['sip_root']
         else:
             raise RuntimeError('Resource type "' + resource_type + 
                     '" not recognised')
@@ -180,7 +182,7 @@ class ResourceManager:
                     allocated_tasks = len(alloc.get('tasks', []))
                     if allocated_tasks == 0:
                         backup_host = ''
-                        break;
+                        break
                     else:
                         if backup_host == '':
                             backup_host = host

@@ -5,10 +5,13 @@ FIXME(FD) Rename this file to slave_task_controller.py ?
 """
 
 import os
+import re
+
 import rpyc
 
-from sip_master import config
 from sip_common import logger
+from sip_common.resource_manager import ResourceManager
+from sip_master import config
 
 
 class SlaveTaskController:
@@ -64,13 +67,15 @@ class SlaveTaskControllerRPyC(SlaveTaskController):
             cfg (dict): Configuration for the capability (from slave_map.json).
             status (dict): Slave status dictionary.
         """
-        # Scan the task parameter list for entries with values starting with a #
-        # character and replace with an allocated resource.
+        # Scan the task parameter list for entries with values starting with
+        # a # character, or contained in a hash followed by curly brackets
+        # (ie. #{...}), and replace with an allocated resource.
         task_cfg = cfg['task']
-        for k, v in enumerate(task_cfg):
-            if v[0] == '#':
-                task_cfg[k] = str(
-                    config.resource.allocate_resource(name, v[1:]))
+        for i, value_str in enumerate(task_cfg):
+            task_cfg[i] = self._set_resource(value_str, name, config.resource)
+            # if v[0] == '#':
+            #     task_cfg[i] = str(
+            #         config.resource.allocate_resource(name, v[1:]))
 
         # Update the task executable (the first element of the list) to an
         # absolute path
@@ -89,3 +94,21 @@ class SlaveTaskControllerRPyC(SlaveTaskController):
             return
         self._conn.root.unload()
 
+    @staticmethod
+    def _set_resource(value_str, name, resource_manager: ResourceManager):
+        """Set the values of resources in task configuration strings.
+
+        This replaces values starting with '#' or '#' followed by
+        curly brackets (ie. #{...}) with resources obtained from the
+        ResourceManager.
+        """
+        def _replace(match):
+            """Replacement function."""
+            value = match.groups()[0]
+            # FIXME(BM) calling allocate_resource() is not ideal ...
+            # should be get_resource()? instead and this function can
+            # allocate if needed?
+            return str(resource_manager.allocate_resource(name, value))
+
+        s = re.sub(r'^#(\w+)$', _replace, value_str)
+        return re.sub(r'#{(\w+)}', _replace, s)

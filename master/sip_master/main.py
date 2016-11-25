@@ -15,17 +15,30 @@ import os
 import time
 
 from sip_common.resource_manager import ResourceManager
+from sip_common import logger as log
 from sip_master.master_states import MasterControllerSM
 from sip_master.master_states import Standby
 from sip_master.heartbeat_listener import HeartbeatListener
 from sip_master import config
 from sip_master.rpc_service import RpcService
 
+
 def main(config_file, resources_file):
+    """Master Controller main."""
 
     # Create the resource manager
     with open(resources_file) as f:
-        config.resource = ResourceManager(json.load(f))
+        _resources = json.load(f)
+        # If using localhost, and sip root is set to #cwd replace it.
+        if 'localhost' in _resources and \
+                _resources['localhost']['sip_root'] == '#cwd':
+            _resources['localhost']['sip_root'] = os.getcwd()
+        print('Resource table:')
+        for i, resource in enumerate(_resources):
+            print('[{:03d}] {}'.format(i, resource))
+            for key, value in _resources[resource].items():
+                print('  - {} {}'.format(key, value))
+        config.resource = ResourceManager(_resources)
 
     # "Allocate" localhost for the master controller so that we can
     # allocate it resources.

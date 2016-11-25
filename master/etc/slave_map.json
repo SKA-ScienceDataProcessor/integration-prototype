@@ -44,11 +44,11 @@
         "launch_policy": "ssh",
         "task_control_module": {
             "name": "TaskControlProcessPoller",
-            "timeout": 10
+            "timeout": 10.0
         },
         "task": [
             "tasks/vis_receiver_task.py",
-            "/home/ska/integration-prototype.git/tasks/etc/vis_receiver_config.json"
+            "#{sip_root}/tasks/etc/vis_receiver_config.json"
             ]
         }
 }
