@@ -44,33 +44,32 @@ def start(name, type):
         config.slave_status[name] = {
                 'type': type,
                 'task_controller': task_controller,
-                'state': SlaveControllerSM(name, task_controller),
+                'state': SlaveControllerSM(name, type, task_controller),
                 'timeout counter': 0}
 
     # Check that the slave isn't already running
-    slave_status = config.slave_status[name]
-    if slave_status['state'].current_state() == 'loading' or (
-            slave_status['state'].current_state() == 'busy'):
+    slave_status = config.slave_status[name]  # Shallow copy (i.e. reference)
+    slave_config = config.slave_config[type]  # Shallow copy (i.e. reference)
+    current_state = slave_status['state'].current_state()
+    if current_state == 'loading' or current_state == 'busy':
         raise RuntimeError('Error starting {}: task is already {}'.format(
-                name, slave_status['state'].current_state()))
+                name, current_state))
 
     # Start a slave if it isn't already running
-    if slave_status['state'].current_state() ==  '_End' or (
-            slave_status['state'].current_state() == 'Starting'):
+    if current_state == '_End' or current_state == 'Starting':
 
         # Start the slave
-        if config.slave_config[type]['launch_policy'] == 'docker':
-            _start_docker_slave(name, config.slave_config[type], slave_status)
-        elif config.slave_config[type]['launch_policy'] == 'ssh':
-            _start_ssh_slave(name, config.slave_config[type], slave_status)
+        if slave_config['launch_policy'] == 'docker':
+            _start_docker_slave(name, type, slave_config, slave_status)
+        elif slave_config['launch_policy'] == 'ssh':
+            _start_ssh_slave(name, type, slave_config, slave_status)
         else:
             raise RuntimeError(
-                    'Error starting "{}": {} is not a known slave launch ' \
-                     'policy'.format(name,
-                     config.slave_config[type]['launch_policy']))
+                    'Error starting "{}": {} is not a known slave launch '
+                    'policy'.format(name, slave_config['launch_policy']))
 
         # Initialise the task status
-        slave_status['timeout counter'] = config.slave_config[type]['timeout']
+        slave_status['timeout counter'] = slave_config['timeout']
 
         # Connect the heartbeat listener to the address it is sending heartbeats
         # to.
@@ -82,12 +81,11 @@ def start(name, type):
     else:
         # Otherwise a slave was running (but no task) so we can just instruct
         # the slave to start the task.
-        slave_status['task_controller'].start(name, config.slave_config[type],
-                config.slave_status[name])
+        slave_status['task_controller'].start(name, slave_config, slave_status)
         slave_status['state'].post_event(['load sent'])
 
 
-def _start_docker_slave(name, cfg, status):
+def _start_docker_slave(name, type, cfg, status):
     """ Start a slave controller that is a Docker container
 
         NB This only works on localhost
@@ -130,11 +128,11 @@ def _start_docker_slave(name, cfg, status):
     status['rpc_port'] = rpc_port
     status['heartbeat_port'] = heartbeat_port
     status['sip_root'] = '/home/sdp/integration-prototype'
-    logger.info('"{}" started in container {} at {}'.format(
-            name, container_id, ip_address))
+    logger.info('"{}" (type {}) started in container {} at {}'.format(
+            name, type, container_id, ip_address))
 
 
-def _start_ssh_slave(name, cfg, status):
+def _start_ssh_slave(name, type, cfg, status):
     """ Start a slave controller that is a SSH client
     """
     # Improve logging setup!!!
@@ -173,7 +171,7 @@ def _start_ssh_slave(name, cfg, status):
     status['rpc_port'] = rpc_port
     status['heartbeat_port'] = heartbeat_port
     status['sip_root'] = sip_root
-    logger.info(name + ' started on ' + host)
+    logger.info('{} (type {}) started on {}'.format(name, type, host))
 
 
 def stop(name, status):

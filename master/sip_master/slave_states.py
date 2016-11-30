@@ -20,30 +20,30 @@ class Idle(State):
 
 class Loading(State):
     def __init__(self, sm):
-        logger.info('{0} state loading'.format(sm._name))
+        logger.info('{} (type {}) state loading'.format(sm._name, sm._type))
 
 class Busy(State):
     def __init__(self, sm):
-        logger.info('{0} state online'.format(sm._name))
+        logger.info('{} (type {}) state online'.format(sm._name, sm._type))
 
 class Finished(State):
     def __init__(self, sm):
-        logger.info('{0} state finished'.format(sm._name))
+        logger.info('{} (type {}) state finished'.format(sm._name, sm._type))
 
 class Missing(State):
     def __init__(self, sm):
-        logger.info('{0} state timed-out'.format(sm._name))
+        logger.info('{} (type {}) state timed-out'.format(sm._name, sm._type))
 
 class SlaveControllerSM(StateMachine):
-    def __init__(self, name, task_controller):
+    def __init__(self, name, type, task_controller):
         super(SlaveControllerSM, self).__init__(self.state_table, Starting)
         self._name = name
+        self._type = type
         self._task_controller = task_controller
 
     def LoadTask(self, event):
-        type = config.slave_status[self._name]['type']
         self._task_controller.start(self._name,
-                                    config.slave_config[type],
+                                    config.slave_config[self._type],
                                     config.slave_status[self._name])
         self.post_event(['load sent'])
 
