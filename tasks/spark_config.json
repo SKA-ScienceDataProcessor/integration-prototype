@@ -1,0 +1,14 @@
+{
+  "pipeline":
+  {
+    "jarPath": "/home/vlad/software.x32/tests/scala/target/scala-2.10",
+    "jarName": "sdp-pipeline_2.10-1.0.jar"
+  },
+  "parameters":
+  {
+    "--master": "spark://apvsws.ra.phy.private.cam.ac.uk:7077",
+    "--executor-memory": "13g",
+    "--driver-memory": "13g",
+    "--total-executor-cores": "8"
+  }
+}
