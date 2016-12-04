@@ -7,7 +7,6 @@ import time
 import signal
 import time
 import datetime
-from sip_common import heartbeat_task
 
 """ Skeleton process to be started by slave
 
@@ -20,6 +19,7 @@ the current state and its name
 """
 
 sys.path.append(os.path.join(os.path.dirname(__file__),'..', 'common'))
+from sip_common import heartbeat_task
 
 _context = zmq.Context()
 

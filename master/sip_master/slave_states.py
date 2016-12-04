@@ -5,9 +5,9 @@ from sip_common.state_machine import _End
 from sip_master import config
 from sip_master import task_control
 
-""" Slave controller state machine
+"""Slave controller state machine.
 
-This defines the state machines used to track the state of slave controllers
+This defines the state machines used to track the state of slave controllers.
 """
 
 

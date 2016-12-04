@@ -10,20 +10,18 @@ from sip_common import logger
 from sip_master import config
 from sip_master import slave_control
 
-""" Functions executed when the master controller is shut down
-"""
+"""Functions executed when the master controller is shut down."""
 __author__ = 'David Terrett'
 
 
 class Shutdown(threading.Thread):
-    """ Does the actual work of shutting down the system
-    """
+    """Does the actual work of shutting down the system."""
+
     def __init__(self):
         super(Shutdown, self).__init__()
 
     def run(self):
-        """ Thread run routine
-        """
+        """Thread run routine."""
         logger.info('starting shutdown')
 
         # Shut down any slaves that are still running

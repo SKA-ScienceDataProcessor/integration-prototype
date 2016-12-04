@@ -4,20 +4,20 @@ from sip_common import logger
 from sip_master import config
 from sip_master import slave_control
 
-""" A thread class run when the master controller is configured.
-"""
+"""A thread class run when the master controller is configured."""
+
 __author__ = 'David Terrett'
 
 
 class Configure(threading.Thread):
-    """ Does the actual work of configuring the system
-    """
+    """Does the actual work of configuring the system."""
+
     def __init__(self):
         super(Configure, self).__init__()
 
     def run(self):
-        """ Thread run routine
-        """
+        """Thread run routine."""
+
         logger.info('starting configuration')
 
         # Go through the slave map and start all the tasks that are marked

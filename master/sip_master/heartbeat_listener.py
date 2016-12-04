@@ -9,7 +9,7 @@ from sip_master import config
 from sip_master import slave_control
 from sip_master import task_control
 
-""" Heartbeat listener
+"""Heartbeat listener.
 
 A HeartbeatListener runs in a separate thread and once a second looks for
 heartbeat messages sent by slave controllers. If a message is received from
@@ -23,24 +23,28 @@ The states of states of all the slaves is then checked against a list of
 those that need to be running for the system to be considered available,
 degraded or unavailable and an appropriate event posted.
 """
+
 __author__ = 'David Terrett'
 
 
 class HeartbeatListener(threading.Thread):
+    """Heartbeat listener."""
+
     def __init__(self, sm):
-        """ Creates a heartbeat listener that return immediately if there
-            are no messages to retrieve.
+        """Constructor.
+
+        Creates a heartbeat listener that returns immediately if there
+        are no messages to retrieve.
         """
         self._listener = heartbeat.Listener(0)
         super(HeartbeatListener, self).__init__(daemon = True)
 
     def connect(self, host, port):
-        """ Connect to a sender
-        """
+        """Connect to a sender."""
         self._listener.connect(host, port)
 
     def run(self):
-        """ Listens for heartbeats and updates the slave map
+        """Listens for heartbeats and updates the slave map.
 
         Each time round the loop we decrement all the timeout counter for all
         the running slaves then reset the count for any slaves that we get
@@ -87,11 +91,11 @@ class HeartbeatListener(threading.Thread):
             time.sleep(1.0)
 
     def _evaluate_state(self):
-        """ Evaluate current status
+        """Evaluates the current status.
 
-        This examines the states of all the slaves and posts an event
+        This examines the states of all the slaves and posts an appropriate
+        event.
         """
-
         # Count the number of services
         number_of_services = 0
         services_running = 0

@@ -2,13 +2,11 @@
 
 import logging, logging.handlers
 import os
-import sys
-import time
 import socket
 import zmq
-from zmq.log.handlers import PUBHandler
 
-"""
+"""Logging server.
+
 An example of logging server which uses ZeroMQ module, based on
 http://nullege.com/codes/show/src@p@y@pyzmq-14.2.0@examples@logger@zmqlogger.py/17/zmq.log.handlers.PUBHandler
 using the publish-subscribe pattern, PUB/SUB.
@@ -39,7 +37,7 @@ def sub_logger(p, level=logging.DEBUG):
     sub.setsockopt_string(zmq.SUBSCRIBE, '')
 
     logging.basicConfig(level=level)
-  
+
     while True:
         level, message = sub.recv_multipart()
         if message.endswith(str.encode("\n")):
@@ -47,7 +45,7 @@ def sub_logger(p, level=logging.DEBUG):
             message = message[:-1]
         log = getattr(logging, level.lower().decode("utf-8"))
         log(message.decode("utf-8"))
-  
+
 # start the log watcher
 try:
     sub_logger(port)

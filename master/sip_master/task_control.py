@@ -3,13 +3,11 @@ import rpyc
 
 from sip_master import config
 
-""" Functions for comanding a slave controller to load and unload tasks
-"""
+"""Functions for comanding a slave controller to load and unload tasks."""
 
 
 def load(name, cfg, status):
-    """ Command the slave controller to load a task
-    """
+    """Commands the slave controller to load a task."""
 
     # Scan the task parameter list for entries with values starting with a #
     # character and replace with an allocated resource.
@@ -31,8 +29,7 @@ def load(name, cfg, status):
 
 
 def unload(cfg, status):
-    """ Command the slave controller to unload the task
-    """
+    """Commands the slave controller to unload the task."""
     conn = rpyc.connect(status['address'], status['rpc_port'])
     conn.root.unload(cfg['task'])
 

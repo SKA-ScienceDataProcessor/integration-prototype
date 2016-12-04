@@ -2,7 +2,7 @@ import rpyc
 from sip_common import logger
 from sip_master import config
 
-""" Master controller rpyc server
+"""Master controller rpyc server.
 
 This is a rpyc service where the commands starting with 'exposed_'
 are available to the client - less the 'exposed_' text
@@ -14,6 +14,7 @@ are available to the client - less the 'exposed_' text
 A (tpd) command returning a value with client arguments
        retval=conn.root.tpd_command(arg1,arg2,arg3)
 """
+
 __author__ = 'Brian McIlwrath'
 
 

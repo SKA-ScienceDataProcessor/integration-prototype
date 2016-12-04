@@ -13,14 +13,12 @@ from sip_master import config
 from sip_master import task_control
 from sip_master.slave_states import SlaveControllerSM
 
-""" Functions for starting and stopping slave controllers
-"""
+"""Functions for starting and stopping slave controllers."""
 __author__ = 'David Terrett'
 
 
 def _find_route_to_logger(host):
-    """ Figures out what the IP address of the logger is on 'host'
-    """
+    """Figures out what the IP address of the logger is on 'host'."""
     addr = socket.gethostbyname(host)
     ip = IPRoute()
     r = ip.get_routes(dst=addr, family=socket.AF_INET)
@@ -30,8 +28,7 @@ def _find_route_to_logger(host):
 
 
 def start(name, type):
-    """ Start a slave controller
-    """
+    """Starts a slave controller."""
 
     # Check that the type exists
     if type not in config.slave_config:
@@ -86,9 +83,9 @@ def start(name, type):
 
 
 def _start_docker_slave(name, cfg, status):
-    """ Start a slave controller that is a Docker container
+    """Starts a slave controller that is a Docker container.
 
-        NB This only works on localhost
+    NB This only works on localhost
     """
     # Improve logging soon!
     logging.getLogger('requests').setLevel(logging.DEBUG)
@@ -134,8 +131,7 @@ def _start_docker_slave(name, cfg, status):
 
 
 def _start_ssh_slave(name, cfg, status):
-    """ Start a slave controller that is a SSH client
-    """
+    """Starts a slave controller that is a SSH client."""
     # Improve logging setup!!!
     logging.getLogger('plumbum').setLevel(logging.DEBUG)
    
@@ -178,8 +174,7 @@ def _start_ssh_slave(name, cfg, status):
 
 
 def stop(name, status):
-    """ Stop a slave controller
-    """
+    """Stops a slave controller."""
     conn = rpyc.connect(status['address'], status['rpc_port'])
     conn.root.shutdown()
     if config.slave_config[status['type']]['launch_policy'] == 'docker':
@@ -193,8 +188,7 @@ def stop(name, status):
 
 
 def _stop_docker_slave(name, status):
-    """ Stop a docker based slave controller
-    """
+    """Stops a docker based slave controller."""
 
     # Create a Docker client
     base_url = config.slave_config[status['type']]['engine_url']
