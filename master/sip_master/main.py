@@ -1,10 +1,23 @@
-""" Master controller main program
+# -*- coding: utf-8 -*-
+"""Master controller main program.
 
-The master controller implements a simple state machine. It only
-has 4 states; "standby", "configuring", "available" and "unconfiguring"
-and 6 events; "online", "offline", "configure done", "unconfigure done"
-and "error". "online" and "offline" are external and the others are
-generated internally.
+1. Creates a Resource Manager object.
+   :class:`sip_common.resource_manager.ResourceManager`..
+2. Starts the logger (log aggregator) as a subprocess.
+3. Loads the slave configuration JSON file (``slave_map.json``).
+4. Creates the Master Controller state machine:
+   :class:`sip_master.master_states.MasterControllerSM`.
+5. Creates the Master Controller RPC interface.
+   :class:`sip_master.rpc_service.RpcService`.
+6. Enters a event loop waiting for command line inputs.
+
+The master controller implements a simple state machine (see
+`state machine uml`_).
+
+.. _state machine uml: https://goo.gl/Xyri5Q
+
+.. codeauthor:: David Terrett,
+                Brian McIlwrath
 """
 __author__ = 'David Terrett + Brian McIlwrath'
 
