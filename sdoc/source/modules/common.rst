@@ -1,6 +1,6 @@
-
-Common
-======
+==============
+``sip.common``
+==============
 
 Logger
 ------
@@ -36,6 +36,16 @@ State Machine
 -------------
 
 .. automodule:: sip_common.state_machine
+    :members:
+    :undoc-members:
+    :inherited-members:
+    :show-inheritance:
+    :private-members:
+
+Resource Manager
+----------------
+
+.. automodule:: sip_common.resource_manager
     :members:
     :undoc-members:
     :inherited-members:
