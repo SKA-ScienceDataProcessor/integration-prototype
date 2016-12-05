@@ -19,8 +19,6 @@ The master controller implements a simple state machine (see
 .. codeauthor:: David Terrett,
                 Brian McIlwrath
 """
-__author__ = 'David Terrett + Brian McIlwrath'
-
 import json
 import threading
 import subprocess
@@ -34,7 +32,12 @@ from sip_master.heartbeat_listener import HeartbeatListener
 from sip_master import config
 from sip_master.rpc_service import RpcService
 
+
 def main(config_file, resources_file):
+    """Master controller main program.
+    """
+
+    __author__ = 'David Terrett + Brian McIlwrath'
 
     # Create the resource manager
     with open(resources_file) as f:
@@ -86,4 +89,4 @@ def main(config_file, resources_file):
 
                 # Print what our state we are now in.
                 print('master controller state:', 
-                        config.state_machine.current_state())
+                      config.state_machine.current_state())

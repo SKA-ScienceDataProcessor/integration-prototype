@@ -1,10 +1,11 @@
 # -*- coding: utf-8 -*-
-"""Master controller rpyc server"""
-__author__ = 'Brian McIlwrath'
-
+"""Master controller rpyc server."""
 import rpyc
 from sip_common import logger
 from sip_master import config
+
+
+__author__ = 'Brian McIlwrath'
 
 
 class RpcService(rpyc.Service):

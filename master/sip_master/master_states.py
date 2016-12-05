@@ -1,13 +1,3 @@
-"""The master controller states and actions
-
-The master controller implements a simple state machine. It only
-has 4 states; "standby", "configuring", "available" and "unconfiguring"
-and 5 events; "online", "offline", "shutdown, "cap", "configure done", and 
-"unconfigure done".  "cap", "online", "offline" and "shutdown are external 
-and the others are generated internally.
-"""
-__author__ = 'David Terrett'
-
 import sys
 
 from sip_common import logger
@@ -20,67 +10,75 @@ from sip_master.configure import Configure
 from sip_master.un_configure import UnConfigure
 from sip_master.shutdown import Shutdown
 
+"""The master controller states and actions.
+
+The master controller implements a simple state machine. It only
+has 4 states; "standby", "configuring", "available" and "unconfiguring"
+and 5 events; "online", "offline", "shutdown, "cap", "all services", 
+"some services" and "no tasks".  "cap", "online", "offline" and 
+"shutdown are external and the others are generated internally.
+"""
+
+__author__ = 'David Terrett'
+
+
 class Standby(State):
-    """ Standby state
-    """
+    """Standby state."""
     def __init__(self, sm):
         logger.info('state->standby')
 
+
 class Configuring(State):
-    """ Configuring state
-    """
+    """Configuring state."""
     def __init__(self, sm):
         logger.info('state->configuring')
 
+
 class UnConfiguring(State):
-    """ Unconfiguring state
-    """
+    """Unconfiguring state."""
     def __init__(self, sm):
         logger.info('state->unconfiguring')
 
+
 class Available(State):
-    """ Available state
-    """
+    """Available state."""
     def __init__(self, sm):
         logger.info('state->available')
 
+
 class Degraded(State):
-    """ Degraded state
-    """
+    """Degraded state."""
     def __init__(self, sm):
         logger.info('state->degraded')
 
+
 class Unavailable(State):
-    """ Unavailable state
-    """
+    """Unavailable state."""
     def __init__(self, sm):
         logger.info('state->unavailable')
+
 
 class MasterControllerSM(StateMachine):
     def __init__(self):
         super(MasterControllerSM, self).__init__(self.state_table, Standby)
 
     def online(self, event):
-        """Action routine that starts configuring the controller
-        """
+        """Action routine that starts configuring the controller."""
 
         # Start a configure thread
         Configure().start()
 
     def cap(self, event, *args):
-        """ Action routine that starts a capability
-        """
+        """ Action routine that starts a capability."""
         Capability(*args).start()
 
     def offline(self, event):
-        """Action routine that starts un-configuring the controller
-        """
+        """Action routine that starts un-configuring the controller."""
         # Start an un-configure thread
         UnConfigure().start()
 
     def shutdown(self, event):
-        """Action routine that shuts down the controller
-        """
+        """Action routine that shuts down the controller."""
         # Start a shutdown thread
         Shutdown().start()
 

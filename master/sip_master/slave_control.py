@@ -1,7 +1,3 @@
-""" Functions for starting and stopping slave controllers
-"""
-__author__ = 'David Terrett'
-
 from docker import Client
 import logging
 import netifaces
@@ -17,9 +13,12 @@ from sip_master import config
 from sip_master import task_control
 from sip_master.slave_states import SlaveControllerSM
 
+"""Functions for starting and stopping slave controllers."""
+__author__ = 'David Terrett'
+
+
 def _find_route_to_logger(host):
-    """ Figures out what the IP address of the logger is on 'host'
-    """
+    """Figures out what the IP address of the logger is on 'host'."""
     addr = socket.gethostbyname(host)
     ip = IPRoute()
     r = ip.get_routes(dst=addr, family=socket.AF_INET)
@@ -29,16 +28,15 @@ def _find_route_to_logger(host):
 
 
 def start(name, type):
-    """ Start a slave controller
-    """
+    """Starts a slave controller."""
 
     # Check that the type exists
-    if not type in config.slave_config:
+    if type not in config.slave_config:
         raise RuntimeError('"{}" is not a known task type'.format(type))
 
     # Create an entry in the slave status dictionary if one doesn't already
     # exist
-    if not name in config.slave_status:
+    if name not in config.slave_status:
         config.slave_status[name] = {
                 'type': type, 
                 'state': SlaveControllerSM(name), 
@@ -83,10 +81,11 @@ def start(name, type):
         task_control.load(name, config.slave_config[type], 
                 config.slave_status[name])
 
-def _start_docker_slave(name, cfg, status):
-    """ Start a slave controller that is a Docker container
 
-        NB This only works on localhost
+def _start_docker_slave(name, cfg, status):
+    """Starts a slave controller that is a Docker container.
+
+    NB This only works on localhost
     """
     # Improve logging soon!
     logging.getLogger('requests').setLevel(logging.DEBUG)
@@ -101,16 +100,17 @@ def _start_docker_slave(name, cfg, status):
     heartbeat_port = config.resource.allocate_resource(name, "tcp_port")
     rpc_port = config.resource.allocate_resource(name, "tcp_port")
     task_control_module = cfg['task_control_module']
-    logger_address = \
-            netifaces.ifaddresses('docker0')[netifaces.AF_INET][0]['addr']
-    container_id = client.create_container(image=image, 
-                   command=['/home/sdp/integration-prototype/slave/bin/slave', 
-                            name, 
-                            str(heartbeat_port),
-                            str(rpc_port),
-                            logger_address,
-                            task_control_module,
-                           ]
+    logger_address = netifaces.ifaddresses(
+                'docker0')[netifaces.AF_INET][0]['addr']
+    container_id = client.create_container(
+                image=image,
+                command=['/home/sdp/integration-prototype/slave/bin/slave',
+                        name,
+                        str(heartbeat_port),
+                        str(rpc_port),
+                        logger_address,
+                        task_control_module,
+                        ]
                    )['Id']
 
     # Start it
@@ -129,9 +129,9 @@ def _start_docker_slave(name, cfg, status):
     logger.info('"{}" started in container {} at {}'.format(
             name, container_id, ip_address))
 
+
 def _start_ssh_slave(name, cfg, status):
-    """ Start a slave controller that is a SSH client
-    """
+    """Starts a slave controller that is a SSH client."""
     # Improve logging setup!!!
     logging.getLogger('plumbum').setLevel(logging.DEBUG)
    
@@ -172,9 +172,9 @@ def _start_ssh_slave(name, cfg, status):
     status['sip_root'] = sip_root
     logger.info(name + ' started on ' + host)
 
+
 def stop(name, status):
-    """ Stop a slave controller
-    """
+    """Stops a slave controller."""
     conn = rpyc.connect(status['address'], status['rpc_port'])
     conn.root.shutdown()
     if config.slave_config[status['type']]['launch_policy'] == 'docker':
@@ -186,9 +186,9 @@ def stop(name, status):
     # Send the stop sent event to the state machine
     status['state'].post_event(['stop sent'])
 
+
 def _stop_docker_slave(name, status):
-    """ Stop a docker based slave controller
-    """
+    """Stops a docker based slave controller."""
 
     # Create a Docker client
     base_url = config.slave_config[status['type']]['engine_url']

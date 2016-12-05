@@ -1,6 +1,6 @@
-""" Integration prototype resource manager
+""" Integration prototype resource manager.
 
-At this time, the only resources it manages are hosts and TCP ports. The 
+At this time, the only resources it manages are hosts and TCP ports. The
 available resources are loaded from a JSON file.
 
 Each host has a list of properties and when a host is requested a list of
@@ -14,9 +14,9 @@ be allocated to the task.
 """
 __author__ = 'David Terrett'
 
+
 class ResourceManager:
-    """ Resource manager class
-    """
+    """Resource manager class."""
     def __init__(self, host_props):
 
         # Create host properties dictionary. This contains the characteristics
@@ -35,8 +35,7 @@ class ResourceManager:
         self._task_dict = {}
 
     def allocate_host(self, task_name, req_props, des_props):
-        """ Allocate a host for a task
-        """
+        """Allocate a host for a task."""
         if task_name in self._task_dict:
             raise RuntimeError(
                     'task entry already exists in the task dictionary')
@@ -49,29 +48,28 @@ class ResourceManager:
 
         # Create a tcp port entry for this host in the allocation dictionary
         # if it doesn't already exist.
-        if not 'tcp_port' in self._host_alloc[host]:
+        if  'tcp_port' not in self._host_alloc[host]:
             self._host_alloc[host]['tcp_port'] = []
 
         return host
 
     def allocate_resource(self, task_name, resource_type):
-        """ Allocate a resource
+        """Allocate a resource.
 
         If the task hasn't been allocated a host, an exception is raised
         """
-        if not task_name in self._task_dict:
+        if task_name not in self._task_dict:
             raise RuntimeError("Resources can't be allocated before a host")
 
         if resource_type == 'tcp_port':
-            return self._allocate_tcp_port(self._task_dict[task_name], 
-                    task_name)
+            return self._allocate_tcp_port(self._task_dict[task_name],
+                                           task_name)
         else:
-            raise RuntimeError('Resource type "' + resource_type + 
-                    '" not recognised')
+            raise RuntimeError('Resource type "' + resource_type +
+                               '" not recognised')
 
     def release_host(self, task_name):
-        """ Deallocate a task's host
-        """
+        """Deallocate a task's host."""
 
         # Get the name of the host from the task dictionary.
         host = self._task_dict[task_name]
@@ -86,11 +84,11 @@ class ResourceManager:
         self._release_tcp_ports(host, task_name)
 
     def sip_root(self, host):
-        """ Returns the path to the root of the SIP on the specified host
-        """
+        """Returns the path to the root of the SIP on the specified host."""
         return self._host_props[host]['sip_root']
-    
+
     def _allocate_tcp_port(self, host, task_name):
+        """Allocate a TCP port."""
 
         # Search the port range for an used port on this host
         for port in range(6000, 7000):
@@ -102,14 +100,13 @@ class ResourceManager:
         raise RuntimeError('No free ports on host "' + host + '"')
 
     def _host_is_suitable(self, host, req_props):
-        """ Checks if host matches the required properties
+        """Checks if host matches the required properties.
 
         Returns the host name if it is and False otherwise
         """
 
         # The host must be in the host properties list
         if host in self._host_props:
-            #host_props = self._host_props[host]
 
             # If the exclusive flag is set for this host we can't allocate
             # it to any more tasks.
@@ -130,11 +127,11 @@ class ResourceManager:
                     if not value in self._host_props[host]['launch_protocol']:
                         return False
 
-                # If exclusive access is requested, check that there are no 
+                # If exclusive access is requested, check that there are no
                 # other tasks allocated to this host
                 elif prop == 'exclusive':
-                   if value:
-                       if 'tasks' in self._host_alloc[host]:
+                    if value:
+                        if 'tasks' in self._host_alloc[host]:
                             return False
             return host
         else:
@@ -154,7 +151,7 @@ class ResourceManager:
         self._host_alloc[host]['tcp_port'] = new_list
 
     def _select_host(self, task, req_props, des_props):
-        """ Find a host that matches the required properties
+        """Find a host that matches the required properties.
 
         A host assigned to the fewest tasks is selected.
 
@@ -168,21 +165,23 @@ class ResourceManager:
                 raise RuntimeError(
                         'specified host does not have the required properties')
         else:
-            
+ 
             # Look for a suitable host that doesn't isn't allocated to a task
             # yet. Any suitable hosts that do have a task allocated are added
             # to a backup list in case there are none to be found.
-            backup_host = ''
+            host = None
+            backup_host = None
+            backup_allocated_tasks = 99999999999
             for host, alloc in self._host_alloc.items():
                 if self._host_is_suitable(host, req_props):
 
                     # If the task list is empty use this host
                     allocated_tasks = len(alloc.get('tasks', []))
                     if allocated_tasks == 0:
-                        backup_host = ''
-                        break;
+                        backup_host = None
+                        break
                     else:
-                        if backup_host == '':
+                        if not backup_host:
                             backup_host = host
                             backup_allocated_tasks = allocated_tasks
                         elif allocated_tasks < backup_allocated_tasks:
@@ -191,7 +190,7 @@ class ResourceManager:
 
             # If backup_host is set it means that we didn't find a host not
             # allocated to any task.
-            if backup_host != '':
+            if backup_host:
                 host = backup_host
 
         # Add this task to the list of tasks this has been allocated to.
