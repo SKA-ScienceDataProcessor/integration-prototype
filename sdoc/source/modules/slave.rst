@@ -1,5 +1,5 @@
-
-Slave Service
+=============
+``sip.slave``
 =============
 
 .. automodule:: sip_slave.main
@@ -9,7 +9,8 @@ Slave Service
     :show-inheritance:
     :private-members:
 
-.. automodule:: sip_slave.slave_service
+.. commented out for now
+   automodule:: sip_slave.slave_service
     :members:
     :undoc-members:
     :inherited-members:
