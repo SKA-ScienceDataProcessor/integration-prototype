@@ -1,6 +1,6 @@
 {
     "localhost": {
-        "sip_root": "/home/dlt87/SKA-SDP/integration-prototype",
+        "sip_root": "#cwd",
         "launch_protocol": ["ssh", "docker"]
     }
 }

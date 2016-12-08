@@ -2,8 +2,7 @@ import rpyc
 import threading
 import time
 
-from sip_common import heartbeat
-from sip_common import logger
+from sip_common import heartbeat, logger
 
 from sip_master import config
 from sip_master import slave_control
@@ -28,7 +27,20 @@ __author__ = 'David Terrett'
 
 
 class HeartbeatListener(threading.Thread):
-    """Heartbeat listener."""
+    """This class listens to messages from slaves (not tasks).
+
+    Slave messages are sent from 'slave/bin/main'
+    The content of the slave message is the slave state global variable.
+
+    This is (currently) set by the _HeartbeatPoller in the slave/task_control.py
+
+    The message sent from the slave must be of the form name:state
+
+    The slave states being sent are allowed to be 'busy' or 'idle'
+
+    a new slave/task_control can be written to handle different messages from
+    tasks. The task control used it set in the slave_map.json.
+    """
 
     def __init__(self, sm):
         """Constructor.
@@ -65,6 +77,12 @@ class HeartbeatListener(threading.Thread):
                 state = msg[1]
                 status = config.slave_status[name]
 
+                # Ensure RPyC connection is established
+                # once the slave is running
+                # (i.e. after the first heartbeat has been received).
+                status['task_controller'].connect(status['address'],
+                                                  status['rpc_port'])
+
                 # Reset counters of slaves that we get a message from
                 status['timeout counter'] = (
                        config.slave_config[status['type']]['timeout'])
@@ -75,8 +93,11 @@ class HeartbeatListener(threading.Thread):
                     status['state'].post_event(['busy heartbeat'])
                 elif state == 'idle':
                     status['state'].post_event(['idle heartbeat'])
+                else:
+                    logger.error('Invalid state received from slave: {}'.
+                                 format(state))
 
-                # Check for more messages
+                # Check for more messages.
                 msg = self._listener.listen()
 
             # Check for timed out slaves

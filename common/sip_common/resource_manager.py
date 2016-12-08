@@ -64,6 +64,8 @@ class ResourceManager:
         if resource_type == 'tcp_port':
             return self._allocate_tcp_port(self._task_dict[task_name],
                                            task_name)
+        elif resource_type == 'sip_root':
+            return self._host_props[self._task_dict[task_name]]['sip_root']
         else:
             raise RuntimeError('Resource type "' + resource_type +
                                '" not recognised')
@@ -165,7 +167,7 @@ class ResourceManager:
                 raise RuntimeError(
                         'specified host does not have the required properties')
         else:
- 
+
             # Look for a suitable host that doesn't isn't allocated to a task
             # yet. Any suitable hosts that do have a task allocated are added
             # to a backup list in case there are none to be found.

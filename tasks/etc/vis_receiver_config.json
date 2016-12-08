@@ -1,10 +1,4 @@
 {
-  "observation":
-  {
-    "num_stations": 512,
-    "start_frequency_hz": 100e6,
-    "channel_width_hz": 5e3
-  },
   "output":
   {
     "max_times_per_file": 4
