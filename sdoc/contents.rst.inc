@@ -9,6 +9,7 @@ Users Guide
     introduction
     installation
     quickstart
+    changelog
 
 API Reference
 -------------
@@ -18,14 +19,3 @@ API Reference
 
     api/sip
 
-
-Additional notes
-----------------
-
-.. toctree::
-    :maxdepth: 2
-
-    design
-    styleguide
-    changelog
-    license

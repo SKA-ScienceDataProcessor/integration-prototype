@@ -15,7 +15,7 @@ module is callable as a result of the ``__main__.py`` script.
 
 .. module:: emulators.csp_visibility_sender.heap_streamer
 
-..  autoclass:: HeapStreamer
+..  autoclass:: emulators.csp_visibility_sender.heap_streamer.HeapStreamer
     :members:
 
     ..  automethod:: __init__

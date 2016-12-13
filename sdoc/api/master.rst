@@ -3,7 +3,8 @@
 Master Controller
 =================
 
-**Source code:** :source:`master/sip_master`
+- Module: :mod:`sip.master`
+- Source code: :source:`master/sip_master`
 
 This module defines functions and classes which implement the SIP Master
 Controller. The Master Controller is a component of the SDP Local Monitor and
@@ -22,6 +23,8 @@ Control (LMC) sub-system and performs the following tasks:
 
 Running the Master Controller
 -----------------------------
+
+TODO(BM) Introduction ....
 
 .. _master.main:
 
@@ -60,6 +63,8 @@ of which is shown in the RpcService class documentation below.
 
 The Master Controller State Machine
 -----------------------------------
+
+TODO(BM) Introduction ....
 
 .. _master.master_states:
 
@@ -166,6 +171,8 @@ Master Contoller state machine in response to the *shutdown* action.
 
 Controlling slaves
 ------------------
+
+TODO(BM) Introduction ....
 
 :mod:`slave_control`
 ^^^^^^^^^^^^^^^^^^^^

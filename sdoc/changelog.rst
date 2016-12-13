@@ -3,6 +3,14 @@
 SIP Changelog
 =============
 
+Version 0.2.0
+-------------
+- This version is associated with the Dec/Jan 2016-2017 sprint.
+- Added:
+  - xxx
+- Updated:
+  - xxx
+
 Version 0.1.0
 -------------
 - This version is associated with the Oct/Nov 2016 SDP sprint
@@ -17,5 +25,4 @@ Version 0.1.0
     - Task control interface of the Master Controller and Slave controller.
     - Improve PEP-8 compliance.
     - Updated Sphinx documentation
-
 
