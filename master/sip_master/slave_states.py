@@ -27,39 +27,40 @@ class Idle(State):
 class Loading(State):
     """Slave loading state."""
     def __init__(self, sm):
-        logger.info('{0} state loading'.format(sm._name))
+        logger.info('{} (type {}) state loading'.format(sm._name, sm._type))
 
 
 class Busy(State):
     """Slave busy state."""
     def __init__(self, sm):
-        logger.info('{0} state online'.format(sm._name))
+        logger.info('{} (type {}) state online'.format(sm._name, sm._type))
 
 
 class Finished(State):
     """Slave finished state."""
     def __init__(self, sm):
-        logger.info('{0} state finished'.format(sm._name))
+        logger.info('{} (type {}) state finished'.format(sm._name, sm._type))
 
 
 class Missing(State):
     """Slave missing state."""
     def __init__(self, sm):
-        logger.info('{0} state timed-out'.format(sm._name))
+        logger.info('{} (type {}) state timed-out'.format(sm._name, sm._type))
 
 
 class SlaveControllerSM(StateMachine):
     """Slave Controller state machine class."""
-
-    def __init__(self, name):
+    def __init__(self, name, type, task_controller):
         super(SlaveControllerSM, self).__init__(self.state_table, Starting)
         self._name = name
+        self._type = type
+        self._task_controller = task_controller
 
     def LoadTask(self, event):
-        type = config.slave_status[self._name]['type']
-        task_control.load(self._name, config.slave_config[type], 
-                config.slave_status[self._name])
-        pass
+        self._task_controller.start(self._name,
+                                    config.slave_config[self._type],
+                                    config.slave_status[self._name])
+        self.post_event(['load sent'])
 
     state_table = {
         'Starting': {

@@ -1,95 +1,229 @@
-import subprocess
-import time
-import threading
+# -*- coding: utf-8 -*-
+"""This module defines the interface used to control a SIP task.
 
-from sip_common import heartbeat
-from sip_common import heartbeat_task
-from sip_common import logger
+This module also contains an implementation to start a task as a subprocess
+and poll to check when it has finished, or reached a timeout.
+
+To implement new task controllers, inherit the base class TaskControl and
+implement the start() and stop() methods.
+"""
+import subprocess
+import threading
+import time
+
+from sip_common import heartbeat_task, logger
 from sip_slave import config
 
-""" This module defines the load and unload functions for controlling an
-'internal' SIP task.
 
-An internal task sends heartbeat messages to its controller.
-"""
+class TaskControl:
+    """Base class to define the slave task control interface."""
+
+    def __init__(self):
+        """Constructor."""
+        self.settings = None
+
+    def start(self, task, settings):
+        """Start (load) the task
+
+        Args:
+            task: Task description (name or path?)
+            settings: Settings dictionary for the task control object.
+        """
+        raise RuntimeError("Implement TaskControl.start()!")
+
+    def stop(self):
+        """Stop (unload) the task."""
+        raise RuntimeError("Implement TaskControl.stop()!")
+
+    def set_slave_state_idle(self):
+        """Update the slave state (global) to idle.
+
+        The slave state is then sent to the master controller HeartbeatListener
+        by the slave controller.
+        """
+        config.state = 'idle'
+
+    def set_slave_state_busy(self):
+        """Update the slave state (global) to busy.
+
+        The slave state is then sent to the master controller HeartbeatListener
+        by the slave controller.
+        """
+        config.state = 'busy'
 
 
-def load(task):
-    """ load the task
+class TaskControlProcessPoller(TaskControl):
+    """Task controller for the visibility receiver.
 
-    Some sort of task monitoring process should also be started. For
-    'internal' tasks this means checking that the task has is sending
-    heartbeat messages
+    Uses subprocess.Popen() to start the task and polls the process to check
+    if it has finished, or a certain amount of time has passed.
     """
-    _state_task = 'off'
-    _state_task_prev = 'off'
+    def __init__(self):
+        TaskControl.__init__(self)
+        self._poller = None
+        self.name = ''
+        self.subproc = None
 
-    # Extract the port number
-    port = int(task[1])
+    def start(self, task, settings):
+        """Starts the task and the task poller thread.
 
-    # Start a task
-    logger.info('Starting task {}'.format(task[0]))
-    config.subproc = subprocess.Popen(task)
+        Args:
+            task (string list): Path to the task and its command line arguments.
+            settings (dict): Settings dictionary for the task control object.
+        """
+        # Start a task
+        self.name = task[0]
+        self.settings = settings
+        logger.info('Starting task {}'.format(self.name))
+        self.subproc = subprocess.Popen(task)
 
-    # Create a heartbeat listener to listen for a task
-    timeout_msec = 1000
-    heartbeat_comp_listener = heartbeat_task.Listener(timeout_msec)
-    heartbeat_comp_listener.connect('localhost', port)
-    config.poller = _HeartbeatPoller(heartbeat_comp_listener)
-    config.poller_run = True
-    config.poller.start()
+        # Create and start a thread which checks if the task is still running
+        # or timed out.
+        self._poller = self.TaskPoller(self)
+        self._poller.start()
+
+    def stop(self):
+        """Stops (kills) the task."""
+        logger.info('unloading task {}'.format(self.name))
+
+        # Kill the sub-process and the polling thread.
+        self._poller.stop_thread()
+        self.subproc.kill()
+
+        # Reset state
+        self.set_slave_state_idle()
+
+    class TaskPoller(threading.Thread):
+        """Checks task is still running and has not exceeded a timeout."""
+        def __init__(self, task_controller):
+            threading.Thread.__init__(self)
+            self._task_controller = task_controller
+            self._done = threading.Event()
+
+        def stop_thread(self):
+            self._done.set()
+
+        def run(self):
+            """Thread run method."""
+            self._task_controller.set_slave_state_busy()
+            name = self._task_controller.name
+            timeout = self._task_controller.settings['timeout']
+            total_time = 0
+            while (self._task_controller.subproc.poll() is None
+                    and not self._done.is_set()):
+                time.sleep(1)
+                total_time += 1
+                # TODO(BM) interaction with slave time-out in HeartbeatListener?
+                if timeout is not None and total_time > timeout:
+                    logger.warn("Task {} timed out".format(name))
+                    break
+
+            # TODO(FD) Check we're OK to kill the process here.
+            # Possible interaction with master controller UnConfigure.
+            self._task_controller.stop()
 
 
-def unload(task):
-    """ Unload the task
+class TaskControlExample(TaskControl):
+    """Task controller which works with the example tasks.
+
+    - Example tasks: tasks/task.py, exec_eng.py
+    - Uses subproccess.Popen() to start the task.
+    - Checks for states (state1, state2, and busy) from the task and updates
+      the slave state (global) based on these to idle or busy.
     """
-    logger.info('unloading task {}'.format(task[0]))
+    def __init__(self):
+        TaskControl.__init__(self)
+        self._poller = None
+        self.name = ''
+        self._subproc = None
 
-    # Stop the heartbeat poller
-    config.poller_run = False
+    def start(self, task, settings):
+        """load the task
 
-    # Kill the sub-process
-    config.subproc.kill()
+        Some sort of task monitoring process should also be started. For
+        'internal' tasks this means checking that the task is sending
+        heartbeat messages.
 
-    # Reset state
-    config.state = 'idle'
+        Args:
+            task (string list): Path to the task and its command line arguments.
+            settings (dict): Settings dictionary for the task control object.
+        """
+        self.name = task[0]
+        _state_task = 'off'
+        _state_task_prev = 'off'
 
+        # Extract the port number
+        port = int(task[1])
 
-def _get_state(msg):
-    """ extracts the state from the heartbeat message
-    """
-    tokens = msg.split(" ")
-    if len(tokens) < 4 :
-        tokens = [' ', ' ', ' ', 'off', ' ', ' ']
-    return tokens[3]	
+        # Create a heartbeat listener to listen for a task
+        timeout_msec = 1000
+        heartbeat_comp_listener = heartbeat_task.Listener(timeout_msec)
+        heartbeat_comp_listener.connect('localhost', port)
+        self._poller = self._HeartbeatPoller(self, heartbeat_comp_listener)
+        self._poller.start()
 
+        # Start a task
+        logger.info('Starting task {}'.format(task[0]))
+        self._subproc = subprocess.Popen(task)
 
-class _HeartbeatPoller(threading.Thread):
-    """ Polls for heartbeat messages from the task
-    """
-    def __init__(self, heartbeat_comp_listener):
-        self._state_task_prev = ''
-        self._heartbeat_comp_listener = heartbeat_comp_listener
-        super(_HeartbeatPoller, self).__init__(daemon=True)
+    def stop(self):
+        """Unload the task."""
+        logger.info('unloading task {}'.format(self.name))
 
-    def run(self):
-        while config.poller_run:
+        # Kill the sub-process and the polling thread.
+        self._poller.stop_thread()
+        self._subproc.kill()
 
-            # Listen to the task's heartbeat
-            comp_msg = self._heartbeat_comp_listener.listen()
+        # Reset state
+        self.set_slave_state_idle()
 
-            # Extract a task's state
-            state_task = _get_state(comp_msg)
+    class _HeartbeatPoller(threading.Thread):
+        """Polls for heartbeat messages from the task
 
-            # If the task state changes log it
-            if state_task != self._state_task_prev :
-                 logger.info(comp_msg)
-                 self._state_task_prev = state_task		
+        When it get the message starting, state1, or state2 sets the slave state
+        to busy, otherwise set it to off.
+        """
+        def __init__(self, task_controller, heartbeat_comp_listener):
+            """Constructor."""
+            threading.Thread.__init__(self)
+            self._task_controller = task_controller
+            self._state_task_prev = ''
+            self._heartbeat_comp_listener = heartbeat_comp_listener
+            self._done = threading.Event()
 
-            # Update the controller state
-            if state_task == 'starting' or state_task == 'state1' or (
-                    state_task == 'state2'):
-                config.state = 'busy'
-            else:
-                config.state = state_task
-            time.sleep(1)
+        def stop_thread(self):
+            self._done.set()
+
+        def run(self):
+            """Thread run method."""
+            while not self._done.is_set():
+
+                # Listen to the task's heartbeat
+                comp_msg = self._heartbeat_comp_listener.listen()
+
+                # Extract a task's state
+                state_task = self._get_state(comp_msg)
+
+                # If the task state changes log it
+                if state_task != self._state_task_prev:
+                    logger.info(comp_msg)
+                    self._state_task_prev = state_task
+
+                # Update the controller state
+                if state_task == 'starting' or state_task == 'state1' or \
+                        state_task == 'state2':
+                    self._task_controller.set_slave_state_busy()
+                else:
+                    config.state = state_task
+                time.sleep(1)
+
+            # Set to idle before exiting.
+            self._task_controller.set_slave_state_idle()
+
+        @staticmethod
+        def _get_state(msg):
+            """Extracts the state from the heartbeat message"""
+            tokens = msg.split(" ")
+            if len(tokens) < 4:
+                tokens = [' ', ' ', ' ', 'off', ' ', ' ']
+            return tokens[3]
