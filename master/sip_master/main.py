@@ -15,9 +15,6 @@ The master controller implements a simple state machine (see
 `state machine uml`_).
 
 .. _state machine uml: https://goo.gl/Xyri5Q
-
-.. codeauthor:: David Terrett,
-                Brian McIlwrath
 """
 import json
 import threading
@@ -35,6 +32,10 @@ from sip_master.rpc_service import RpcService
 
 def main(config_file, resources_file):
     """Master controller main program.
+
+    Args:
+        config_file (str): JSON slave configuration file.
+        resources_file (str): JSON resources file.
     """
 
     __author__ = 'David Terrett + Brian McIlwrath'

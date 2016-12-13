@@ -7,15 +7,14 @@ python -m unittest emulators.csp_visibility_sender.test.test
 or to run just 1 test:
 python -m unittest emulators.csp_visibility_sender.test.test.Test1.test_get_config_r
 """
-from __future__ import (absolute_import, division, print_function,
-                        unicode_literals)
 import unittest
 from emulators.csp_visibility_sender.heap_streamer import HeapStreamer
 import logging
 import sys
 import numpy as np
 
-class TestHeapSimulator(object):
+
+class TestHeapSimulator:
 
     def __init__(self, config, log):
         self.config = config
@@ -89,9 +88,9 @@ class Test1(unittest.TestCase):
         streamer = HeapStreamer(config, frame_shape, log)
 
         # Check
-        self.assertEqual(len(streamer.streams), 1)
-        self.assertEqual(len(streamer.streams[0][1].items()), 8)
-        self.assertEqual(streamer.streams[0][1]['complex_visibility'].shape,
+        self.assertEqual(len(streamer._streams), 1)
+        self.assertEqual(len(streamer._streams[0][1].items()), 8)
+        self.assertEqual(streamer._streams[0][1]['complex_visibility'].shape,
                          frame_shape)
 
         sim = TestHeapSimulator(streamer, log)

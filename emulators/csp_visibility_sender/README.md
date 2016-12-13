@@ -111,14 +111,12 @@ An example of the `sender_node` group is as follows:
       {
         "host": "127.0.0.1",
         "port": 8001,
-        "threads": 1,
-        "rate": 0
+        "threads": 1
       },
       {
         "host": "127.0.0.1",
         "port": 8002,
-        "threads": 1,
-        "rate": 0
+        "threads": 1
       }
     ]
   }
@@ -133,9 +131,6 @@ keys:
   - `host` the host (IP) to send data to
   - `port` the port to send data to
   - `threads` the number of threads used to send the SPEAD heaps
-  - `rate` Rate in bytes per second used that can be used to limit transmission
-   speed. A value of `0` indicates no rate limiting.
-
 
 ### References
 1. [ICD documents](https://confluence.ska-sdp.org/pages/viewpage.action?pageId=145653762)

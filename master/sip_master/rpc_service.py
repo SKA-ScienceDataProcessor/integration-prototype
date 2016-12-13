@@ -11,17 +11,14 @@ __author__ = 'Brian McIlwrath'
 class RpcService(rpyc.Service):
     """Master Controller RPC control interface.
 
-    This is an rpyc service where the commands starting with 'exposed_'
-    are available to the client - less the 'exposed_' text
+    This is an rpyc service where the commands starting with ``exposed_``
+    are available to the client - less the ``exposed_`` text
 
-    Example client code:
-    ::
-        conn=rpyc.connect('localhost',port=12345)
+    **Example client code**::
+
+        import rpyc
+        conn = rpyc.connect(host='localhost', port=12345)
         result = conn.root.offline()
-
-    A (tpd) command returning a value with client arguments
-    ::
-        retval=conn.root.tpd_command(arg1,arg2,arg3)
     """
     def on_connect(self):
         """Called when connecting to the RPC service."""

@@ -1,15 +1,39 @@
 # -*- coding: utf-8 -*-
-"""Module to provide simulation of visibility data."""
-from __future__ import (absolute_import, division, print_function,
-                        unicode_literals)
+"""Module for simulation of visibility data.
+
+This module makes use of the HeapStreamer class to send the visibility data.
+"""
 from emulators.csp_visibility_sender.heap_streamer import HeapStreamer
 import numpy as np
+from abc import ABCMeta, abstractmethod
 
 
-class Simulator(object):
-    """Simulation class used to stream SPEAD heaps"""
+class AbstractSimulator(metaclass=ABCMeta):
+    """Simulator base class."""
+
+    @abstractmethod
+    def simulate_heaps(self, streamer: HeapStreamer):
+        """Simulate and send a stream of SPEAD Heaps"""
+        return
+
+
+class SimpleSimulator(AbstractSimulator):
+    """Very simple simulation class used to stream SPEAD heaps.
+
+    SPEAD heaps contain simple patterns.
+    """
 
     def __init__(self, config, log):
+        """
+        Creates and initialises the visibility simulator.
+
+        Args:
+            config (dict): Dictionary of settings
+            log (logging.Logger): Python logging object
+        """
+
+        AbstractSimulator.__init__(self, config, log)
+
         _obs = config['observation']
         self.log = log
         self.config = config
@@ -27,8 +51,13 @@ class Simulator(object):
         self.log.debug('Number of baselines = {}'.format(self.num_baselines))
 
     def simulate_heaps(self, streamer: HeapStreamer):
-        """Simulate and send a stream of heaps."""
-        num_streams = len(streamer.streams)
+        """Simulate and send a stream of heaps using the specified
+        HeapStreamer.
+
+        Args:
+            streamer (HeapStreamer): SPEAD heap streamer class.
+        """
+        num_streams = len(streamer._streams)
         assert(num_streams == self.num_streams)
 
         self.log.info('Starting simulation...')
@@ -44,21 +73,21 @@ class Simulator(object):
         for t in range(self.num_times):
             self.log.debug('== Time {:03d}/{:03d} =='.format(t + 1,
                                                              self.num_times))
-            streamer.payload['timestamp_utc'] = [(t, t + 3)]
+            streamer._payload['timestamp_utc'] = [(t, t + 3)]
 
             # Loop over heap stream. a heap stream contains 1 or more channels.
             for j in range(num_streams):
                 c0 = self.sender_start_channel + j * self.stream_num_channels
                 c1 = c0 + self.stream_num_channels
-                streamer.payload['channel_baseline_count'] = \
+                streamer._payload['channel_baseline_count'] = \
                     [(self.stream_num_channels, 0)]
-                streamer.payload['channel_baseline_id'] = [(c0, 0)]
+                streamer._payload['channel_baseline_id'] = [(c0, 0)]
                 vis_data = np.ones(self.frame_shape, dtype='c8')
                 self.log.debug('>> Channels = {} <<'.format(range(c0, c1)))
                 for c in range(c0, c1):
                     vis_data[:, :, c, :, :].real = t
                     vis_data[:, :, c, :, :].imag = c
-                streamer.payload['complex_visibility'] = vis_data
+                streamer._payload['complex_visibility'] = vis_data
                 streamer.send_heap(heap_index=t, stream_id=j)
 
         streamer.end()

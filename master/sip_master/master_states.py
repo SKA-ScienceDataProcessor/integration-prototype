@@ -125,4 +125,4 @@ class MasterControllerSM(StateMachine):
             'online':           (0, None, None),
             'shutdown':         (0, None, None)
         }
-}
+    }

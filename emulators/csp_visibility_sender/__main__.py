@@ -1,17 +1,22 @@
 # -*- coding: utf-8 -*-
 """Module main to stream SPEAD visibility data."""
-from __future__ import (absolute_import, division, print_function,
-                        unicode_literals)
 import sys
 import logging
 import argparse
 import simplejson as json
 from emulators.csp_visibility_sender.heap_streamer import HeapStreamer
-from emulators.csp_visibility_sender.simulator import Simulator
+from emulators.csp_visibility_sender.simulator import SimpleSimulator
 
 
 def _init_log(level=logging.DEBUG):
-    """Initialise the logging object."""
+    """Initialise the logging object.
+
+    Args:
+        level (int): Logging level.
+
+    Returns:
+        Logger: Python logging object.
+    """
     log = logging.getLogger(__file__)
     log.setLevel(level)
     ch = logging.StreamHandler(sys.stdout)
@@ -40,7 +45,7 @@ def _parse_command_line():
 def main(config, log):
     """Main script function"""
     # Create simulation object, and start streaming SPEAD heaps
-    sim = Simulator(config, log)
+    sim = SimpleSimulator(config, log)
     sim.simulate_heaps(HeapStreamer(config, sim.frame_shape, log))
 
 if __name__ == '__main__':
