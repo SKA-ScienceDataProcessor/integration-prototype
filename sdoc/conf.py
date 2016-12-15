@@ -286,3 +286,4 @@ texinfo_documents = [
 # If true, do not generate a @detailmenu in the "Top" node's menu.
 #texinfo_no_detailmenu = False
 
+autodoc_mock_imports = ['spead2', 'spead2.recv', 'spead2.send']
