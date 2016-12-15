@@ -3,6 +3,9 @@
 Slave Controller
 ================
 
+- Module: :mod:`sip.slave`
+- Source code: :source:`slave/sip_slave`
+
 TODO(BM) Introduction
 
 

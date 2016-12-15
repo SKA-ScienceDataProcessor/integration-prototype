@@ -18,5 +18,7 @@ according to the functionality they provide.
 
     master
     slave
+    tasks
+    processor_software
     common
     emulators

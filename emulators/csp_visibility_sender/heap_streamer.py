@@ -177,7 +177,6 @@ class HeapStreamer:
     @staticmethod
     def _get_config_r(settings, key, default=None):
         """Read a configuration value from a settings dictionary"""
-        # FIXME(BM) just use dict.get()?
         value = default
         if len(key) == 1:
             if key[0] in settings:

@@ -2,6 +2,20 @@
 Common functions
 ================
 
+- Module: :mod:`sip.common`
+- Source code: :source:`common/sip_common`
+
+This module defines a number of common functions used throughout the SIP
+library. This includes
+
+- :ref:`Logging <common.logging>`
+- :ref:`Heartbeat message functions <common.heartbeat>`
+- :ref:`A state machine base class <common.state_machine>`
+- :ref:`A resource manager <common.resource_manager>`
+
+
+.. _common.logging:
+
 Logging
 -------
 
@@ -9,6 +23,8 @@ Logging
     :members:
     :show-inheritance:
 
+
+.. _common.heartbeat:
 
 Heartbeat messages
 ------------------

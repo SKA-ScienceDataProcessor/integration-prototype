@@ -7,9 +7,9 @@ Version 0.2.0
 -------------
 - This version is associated with the Dec/Jan 2016-2017 sprint.
 - Added:
-  - xxx
+  - TODO(BM)
 - Updated:
-  - xxx
+  - TODO(BM)
 
 Version 0.1.0
 -------------

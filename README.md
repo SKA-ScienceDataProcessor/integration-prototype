@@ -1,5 +1,7 @@
-# integration-prototype
-SDP Integration Prototype
+[![Documentation Status](https://readthedocs.org/projects/integration-prototype/badge/?version=latest)](http://integration-prototype.readthedocs.io/en/latest/?badge=latest)
+
+# SDP Integration Prototype
+
 
 ## Requirements
 * Docker
