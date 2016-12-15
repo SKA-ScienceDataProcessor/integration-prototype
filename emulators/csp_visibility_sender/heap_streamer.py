@@ -64,14 +64,6 @@ class HeapStreamer:
         to initialise the payload. This is a tuple of dimensions defined in the
         ICD as:
 
-        .. math::
-
-            (N_{\mathrm{sub-arrays}}, N_{\mathrm{beams}}, N_{\mathrm{channels}},
-            N_{\mathrm{baselines}}, N_{\mathrm{polarisations}})
-
-        Where it is expected that: :math:`N_{\mathrm{sub-arrays}} \equiv 1`,
-        :math:`N_{\mathrm{beams}} \equiv 1`, and
-        :math:`N_{\mathrm{polarisations}} \equiv 4`
 
         Args:
             config (dict): Dictionary of settings (see above).
