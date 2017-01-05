@@ -21,6 +21,7 @@ import threading
 import subprocess
 import os
 import time
+import redis
 
 from sip_common.resource_manager import ResourceManager
 from sip_common import logger as log
@@ -64,8 +65,19 @@ def main(config_file, resources_file):
     config.logserver = subprocess.Popen(
             'common/sip_common/logging_server.py', shell=False)
 
-    # Wait until it initializes
+    # Start redis-server as a subprocess
+    rserver = subprocess.Popen('redis-server', stdout=subprocess.PIPE)
+
+    # Wait until it initializes (both)
     time.sleep(2)
+
+    # Create Key-Value pair with sip_root for redis
+    r = redis.StrictRedis()
+    r.set("sip_root", _resources['localhost']['sip_root'])
+
+    # Create KV pair with spark_home (set in ~/.bashrc - to replace with json)
+    sparkHomeDir = os.environ.get('SPARK_HOME')
+    r.set("spark_home", sparkHomeDir)
 
     # Create the slave config array from the configuration (a JSON string)
     with open(config_file) as f:
@@ -95,6 +107,11 @@ def main(config_file, resources_file):
             if event[0] == 'state':
                 print('Current state: ', config.state_machine.current_state())
                 continue
+            if event[0] == 'shutdown':
+                # Stopping redis-server with redis-cli (instead of just killing it)
+                print("Stopping redis-server... ")
+                command = 'redis-cli -p 6379 shutdown'
+                rcli = subprocess.Popen(command.split(), shell=False)
             result = config.state_machine.post_event(event)
             if result == 'rejected':
                 print('not allowed in current state')

@@ -14,6 +14,7 @@ import sys
 import os
 import json
 import subprocess
+import redis
 
 import signal
 import time
@@ -55,11 +56,15 @@ def run():
 	process_sender = heartbeat_task.Sender(process_name, port)
 
 # Spark driver
-	sparkHomeDir = os.environ.get('SPARK_HOME')
+
+	r = redis.StrictRedis()
+	sparkHomeDir = r.get("spark_home").decode("ascii")
+#	sparkHomeDir = os.environ.get('SPARK_HOME')
 	sparkSubmit = os.path.join(sparkHomeDir, 'bin/spark-submit')
 
 # Get sipRoot
-	sipRoot = str(os.environ.get('SIP_ROOT'))
+	sipRoot = r.get("sip_root").decode("ascii") + "/"
+#	sipRoot = str(os.environ.get('SIP_ROOT'))
 
 # Read parameters from json file
 	with open(sipRoot + 'tasks/spark_config.json') as data_file:    
