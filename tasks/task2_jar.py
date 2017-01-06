@@ -98,7 +98,7 @@ def run():
 		# Check spark status
 		sparkStatus = str(urlopen(url).read()).find(idleString)
 		if(sparkStatus == -1):
-			_state = 'working'
+			_state = 'busy'
 		else:
 			_state = 'idle'						
 

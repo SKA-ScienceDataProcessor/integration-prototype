@@ -15,6 +15,7 @@ import os
 import signal
 import time
 import datetime
+import redis
 
 
 sys.path.append(os.path.join(os.path.dirname(__file__),'..', 'common'))
@@ -23,9 +24,15 @@ from sip_common import heartbeat_task
 
 
 # Spark environment #########
+r = redis.StrictRedis()
+sparkHomeDir = r.get("spark_home").decode("ascii")
+sparkPython = os.path.join(sparkHomeDir, 'python')
+sparkPy4j   = os.path.join(sparkHomeDir, 'python/lib/py4j-0.10.3-src.zip')
+sys.path.append(sparkPython)
+sys.path.append(sparkPy4j)
 
-sys.path.append('/home/vlad/software.x32/spark-bin/python')
-sys.path.append('/home/vlad/software.x32/spark-bin/python/lib/py4j-0.10.3-src.zip')
+#sys.path.append('/home/vlad/software.x32/spark-bin/python')
+#sys.path.append('/home/vlad/software.x32/spark-bin/python/lib/py4j-0.10.3-src.zip')
 
 os.environ['PYSPARK_PYTHON'] = 'python3'
 
