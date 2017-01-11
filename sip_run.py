@@ -86,7 +86,7 @@ class SipRunner(object):
         commands = [
             dict(command='get_current_state', alias='st'),
             dict(command='online', alias='on'),
-            dict(command='capability', alias='cap'),
+            dict(command='capability', args='[name] [type]', alias='cap'),
             dict(command='offline', alias='off'),
             dict(command='shutdown', alias='s'),
             dict(command='exit', alias='x', local=True)
@@ -104,9 +104,13 @@ class SipRunner(object):
             print('Allowed commands:')
             for i, cmd in enumerate(commands):
                 _alias = ''
+                _args = ''
                 if 'alias' in cmd and cmd['alias'] is not None:
                     _alias = '({})'.format(cmd['alias'])
-                print('  {}. {} {}'.format(i, cmd['command'], _alias))
+                if 'args' in cmd and cmd['args'] is not None:
+                    _args = '{}'.format(cmd['args'])
+
+                print('  {}. {} {} {}'.format(i, cmd['command'], _args, _alias))
 
         # While responding to command line input.
         while True:
