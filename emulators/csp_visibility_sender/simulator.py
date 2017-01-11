@@ -14,7 +14,7 @@ class AbstractSimulator(metaclass=ABCMeta):
     @abstractmethod
     def simulate_heaps(self, streamer: HeapStreamer):
         """Simulate and send a stream of SPEAD Heaps"""
-        return
+        pass
 
 
 class SimpleSimulator(AbstractSimulator):
@@ -31,8 +31,6 @@ class SimpleSimulator(AbstractSimulator):
             config (dict): Dictionary of settings
             log (logging.Logger): Python logging object
         """
-
-        AbstractSimulator.__init__(self, config, log)
 
         _obs = config['observation']
         self.log = log
