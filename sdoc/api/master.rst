@@ -21,8 +21,8 @@ Control (LMC) sub-system and performs the following tasks:
   see :ref:`Slave state machine classes <master.slave_states>`
 
 
-Running the Master Controller
------------------------------
+Master Controller main
+----------------------
 
 TODO(BM) Introduction ....
 
