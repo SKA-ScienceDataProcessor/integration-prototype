@@ -9,26 +9,23 @@
     :license: Python license.
 """
 
-import re
 import codecs
+import re
 from os import path
-from time import asctime
 from pprint import pformat
-from docutils.io import StringOutput
-from docutils.utils import new_document
+from time import asctime
 
 from docutils import nodes, utils
-
+from docutils.io import StringOutput
+from docutils.utils import new_document
 from sphinx import addnodes
 from sphinx.builders import Builder
-from sphinx.util.nodes import split_explicit_title
-from sphinx.util.compat import Directive
-from sphinx.writers.html import HTMLTranslator
-from sphinx.writers.text import TextWriter
-from sphinx.writers.latex import LaTeXTranslator
 from sphinx.domains.python import PyModulelevel, PyClassmember
-
-# Support for checking for suspicious markup
+from sphinx.util.compat import Directive
+from sphinx.util.nodes import split_explicit_title
+from sphinx.writers.html import HTMLTranslator
+from sphinx.writers.latex import LaTeXTranslator
+from sphinx.writers.text import TextWriter
 
 import suspicious
 

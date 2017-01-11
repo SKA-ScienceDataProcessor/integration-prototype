@@ -1,5 +1,6 @@
 :orphan:
 
+========================================
 Welcome to the SDP Integration Prototype
 ========================================
 
@@ -7,9 +8,15 @@ Welcome to the SDP Integration Prototype
 
 Welcome! This is the documentation for version |release| of the SDP
 Integration Prototype (SIP). This documentation is intended to be used
-alongside the documentation on the SIP Confluence.
+alongside the documentation on the SKA SDP Confluence pages
+(available to SDP Consortium members).
 
-.. include:: contents.rst.inc
+The documentation here is divided into several parts. It is recommended that
+you start with :ref:`Installation` guide followed by the :ref:`Quickstart`
+guide. For a more detailed description of the internals of the SIP code,
+refer to the :ref:`API` pages.
+
+.. include:: contents.inc.rst
 
 
 

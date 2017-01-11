@@ -1,9 +1,10 @@
-.. _page-intro:
+.. _About:
 
-Introduction
-============
+=====
+About
+=====
 
-The SDP Integration Prototype (SIP) is an end-to-end prototype of the SDP code,
+The SDP Integration Prototype (SIP) is an end-to-end prototype of the SKA SDP,
 developed with the following goals.
 
 * Testing of SDP interfaces (both internal and external).
@@ -15,6 +16,4 @@ developed with the following goals.
 The SIP code consists of a Python library and number of python scripts which
 provide modules for the major SIP components and emulators for SDP interfaces.
 
-For more information, please refer to the `SDP SIP Confluence pages.
-<https://confluence.ska-sdp.org/display/SIP/SDP+Integration+Prototype+Home>`_
 
