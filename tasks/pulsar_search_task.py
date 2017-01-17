@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 """Pulsar search receiver task module.
 """
+__author__ = 'Nijin Thykkathu'
 
 import os
 import signal
@@ -13,8 +14,9 @@ sys.path.append(os.path.join(os.path.dirname(__file__), '..', 'common'))
 sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
 
 
-from processor_software.vis_receiver import VisReceiver
-from sip_common import logger as log
+from processor_software.pulsar_search import PrsRun
+#from sip_common import logger as log
+
 
 # This is for testing purpose
 def _sig_handler(signum, frame):
@@ -30,8 +32,9 @@ def main():
     with open(sys.argv[1]) as f:
         config = json.load(f)
 
-    # Create streams and receive SPEAD data.
-    receiver = VisReceiver(config, log)
+    #log.info("I am the task %%%%%%%%%%%%%%%%")
+    # Create streams and receive SPEAD data. - CHANGE THIS
+    receiver = PrsRun()
     receiver.run()
 
 
