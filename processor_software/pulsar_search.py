@@ -1,12 +1,4 @@
 # -*- coding: utf-8 -*-
-"""Module to provide pulsar search receiver function.
-
-This currently consists of the PulsarSearch class which starts
-ftp sever and read file using steam protocol and
-write to .data and .json file
-"""
-__author__ = 'Nijin Thykkathu'
-
 import io
 import json
 import os
@@ -16,6 +8,13 @@ from pyftpdlib.authorizers import DummyAuthorizer
 from pyftpdlib.filesystems import AbstractedFS
 from pyftpdlib.handlers import FTPHandler
 from pyftpdlib.servers import FTPServer
+
+"""Module to provide pulsar search receiver function.
+This currently consists of the PrsReceiver, PrsFileSystem and
+PrsReceiverStart class which starts ftp sever and write to
+.data and .json file
+"""
+__author__ = 'Nijin Thykkathu'
 
 
 class PrsReceiver(io.BytesIO):
@@ -68,14 +67,15 @@ class PrsReceiver(io.BytesIO):
 
             # Parse the JSON so that we can get the size of the data array
             meta = json.loads(json_string)
-            n_channels = meta['data']['n_channels']
-            n_sub_integrations = meta['data']['n_sub_integrations']
+            n_channels = meta['datacube']['n_channels']
+            n_sub_integrations = meta['datacube']['n_sub_integrations']
 
             # Save the JSON to a file
             f = open('{0}_{1}_{2}.json'.format( \
                 meta['metadata']['observation_id'],
                 meta['metadata']['beam_id'],
                 meta['metadata']['name']), 'w')
+
             f.write(json.dumps(meta))
             f.close()
 
@@ -100,7 +100,11 @@ class PrsFileSystem(AbstractedFS):
         return self._buffer
 
 
-class PrsRun:
+class PrsStart:
+    def __init__(self, config):
+        # Initialise class variables.
+        self._config = config
+
     def run(self):
         print("Starting FTP Server")
         sys.stdout.flush()
@@ -109,7 +113,8 @@ class PrsRun:
 
         # Define a new user having full r/w permissions and a read-only
         # anonymous user
-        authorizer.add_user('user', '12345', '.', perm='elradfmwM')
+        authorizer.add_user(self._config['login']['user'], self._config['login']['psswd'], '.',
+                            perm=self._config['login']['perm'])
         authorizer.add_anonymous(os.getcwd())
 
         # Instantiate FTP handler class
@@ -121,7 +126,7 @@ class PrsRun:
         handler.banner = "SKA SDP pulsar search interface."
 
         # Instantiate FTP server class and listen on 0.0.0.0:7878
-        address = ('', 7878)
+        address = (self._config['address']['listen'], self._config['address']['port'])
         server = FTPServer(address, handler)
         print("FTP Server Started")
         sys.stdout.flush()
