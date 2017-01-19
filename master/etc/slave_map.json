@@ -50,5 +50,18 @@
             "tasks/vis_receiver_task.py",
             "#{sip_root}/tasks/etc/vis_receiver_config.json"
             ]
+        },
+    "pulsar_search": {
+        "online": 0,
+        "timeout": 10,
+        "launch_policy": "ssh",
+        "task_control_module": {
+            "name": "TaskControlProcessPoller",
+            "timeout": 30.0
+        },
+        "task": [
+            "tasks/pulsar_search_task.py",
+            "#{sip_root}/tasks/etc/pulsar_receiver_config.json"
+            ]
         }
 }
