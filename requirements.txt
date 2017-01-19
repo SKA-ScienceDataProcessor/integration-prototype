@@ -9,4 +9,5 @@ spead2>=1.2.1
 zmq==0.0.0
 Sphinx==1.5.1
 sphinx-rtd-theme>=0.1.9
+pyftpdlib>=1.4.0
 
