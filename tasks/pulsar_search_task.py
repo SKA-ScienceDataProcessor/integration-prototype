@@ -1,24 +1,19 @@
 #!/usr/bin/python3
 # -*- coding: utf-8 -*-
-"""Pulsar search receiver task module.
-"""
-__author__ = 'Nijin Thykkathu'
-
 import os
 import signal
 import sys
 
 import simplejson as json
+from processor_software.pulsar_search import PrsStart
 
-sys.path.append(os.path.join(os.path.dirname(__file__), '..', 'common'))
-sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
+"""Pulsar search receiver task module.
+
+Implements C.1.2.1.2 from the product tree.
+"""
+__author__ = 'Nijin Thykkathu'
 
 
-from processor_software.pulsar_search import PrsRun
-#from sip_common import logger as log
-
-
-# This is for testing purpose
 def _sig_handler(signum, frame):
     sys.exit(0)
 
@@ -32,9 +27,8 @@ def main():
     with open(sys.argv[1]) as f:
         config = json.load(f)
 
-    #log.info("I am the task %%%%%%%%%%%%%%%%")
-    # Create streams and receive SPEAD data. - CHANGE THIS
-    receiver = PrsRun()
+    # Starts the FTP Server
+    receiver = PrsStart(config)
     receiver.run()
 
 
