@@ -133,3 +133,18 @@ The following command will start the emulator:
 an example config file can be found in the ``emulators/csp_visibility/etc``
 folder.
 
+CSP pulsar emulator
+^^^^^^^^^^^^^^^^^^^^^^^
+
+The CSP pulsar emulator sends test pulsar dat through FTP protocol using stream
+mode to the SIP.
+
+The following command will start the emulator:
+
+.. code:: bash
+
+    python3 -m emulators.csp_pulsar_sender -v [config_file]
+
+config file can be found in the ``emulators/csp_pulsar_sender/etc``
+folder.
+
