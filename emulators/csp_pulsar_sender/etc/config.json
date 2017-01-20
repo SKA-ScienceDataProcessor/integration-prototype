@@ -1,0 +1,12 @@
+{
+  "metadata": {
+    "name": "candidate one",
+    "observation_id": 1,
+    "beam_id": 1
+  },
+
+  "datacube": {
+    "n_channels": 1000,
+    "n_sub_integrations": 1000
+  }
+}
