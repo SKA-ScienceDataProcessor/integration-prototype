@@ -3,9 +3,13 @@
 import os
 import signal
 import sys
-
 import simplejson as json
+
+sys.path.append(os.path.join(os.path.dirname(__file__), '..', 'common'))
+sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
+
 from processor_software.pulsar_search import PrsStart
+from common.sip_common import logger as log
 
 """Pulsar search receiver task module.
 
@@ -27,8 +31,9 @@ def main():
     with open(sys.argv[1]) as f:
         config = json.load(f)
 
-    # Starts the FTP Server
-    receiver = PrsStart(config)
+    # Starts the pulsar search ftp server
+    log.info('Pulsar Search Starting')
+    receiver = PrsStart(config, log)
     receiver.run()
 
 

@@ -101,13 +101,16 @@ class PrsFileSystem(AbstractedFS):
 
 
 class PrsStart:
-    def __init__(self, config):
+    def __init__(self, config, log):
         # Initialise class variables.
         self._config = config
+        self._log = log
+        log.info('Pulsar Search Interface Initialisation')
 
     def run(self):
-        print("Starting FTP Server")
+        print('Starting Search Pulsar Interface')
         sys.stdout.flush()
+        self._log.info('Starting Pulsar Search Interface')
         # Instantiate a dummy authorizer for managing 'virtual' users
         authorizer = DummyAuthorizer()
 
@@ -128,7 +131,7 @@ class PrsStart:
         # Instantiate FTP server class and listen on 0.0.0.0:7878
         address = (self._config['address']['listen'], self._config['address']['port'])
         server = FTPServer(address, handler)
-        print("FTP Server Started")
+        print('Pulsar Search Interface Started')
         sys.stdout.flush()
 
         # set a limit for connections
