@@ -5,7 +5,8 @@ from ftplib import FTP
 """Module to send pulsar data, FTP client.
 
 The pulsar data is sent using stream mode.
-Data is sent as a continuous stream, stream, relieving FTP from doing any processing
+Data is sent as a continuous stream, stream, relieving FTP from
+doing any processing
 
 This module makes use of the PrsSender class to send the pulsar data.
 

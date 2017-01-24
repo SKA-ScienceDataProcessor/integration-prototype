@@ -47,7 +47,8 @@ class PrsReceiver(io.BytesIO):
                     json_string += self.read(1).decode()
                     continue
 
-                # If we are inside quotes we just need to detect a closing quote
+                # If we are inside quotes we just need to detect a
+                # closing quote
                 if c == '"':
                     if quoted:
                         quoted = False
