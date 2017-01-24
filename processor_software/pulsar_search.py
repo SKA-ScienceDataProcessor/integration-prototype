@@ -2,7 +2,6 @@
 import io
 import json
 import os
-import sys
 
 from pyftpdlib.authorizers import DummyAuthorizer
 from pyftpdlib.filesystems import AbstractedFS
@@ -10,14 +9,17 @@ from pyftpdlib.handlers import FTPHandler
 from pyftpdlib.servers import FTPServer
 
 """Module to provide pulsar search receiver function.
+
 This currently consists of the PrsReceiver, PrsFileSystem and
 PrsReceiverStart class which starts ftp sever and write to
-.data and .json file
+.data and .json file.
 """
 __author__ = 'Nijin Thykkathu'
 
 
 class PrsReceiver(io.BytesIO):
+    """Receives Pulsar Search data."""
+
     def __init__(self):
         self.name = 'pulsar timing buffer'
 
@@ -48,9 +50,9 @@ class PrsReceiver(io.BytesIO):
                 # If we are inside quotes we just need to detect a closing quote
                 if c == '"':
                     if quoted:
-                        quoted == False
+                        quoted = False
                     else:
-                        quoted == True
+                        quoted = True
 
                 # Otherwise we count the braces
                 if c == '{':
@@ -71,7 +73,7 @@ class PrsReceiver(io.BytesIO):
             n_sub_integrations = meta['datacube']['n_sub_integrations']
 
             # Save the JSON to a file
-            f = open('{0}_{1}_{2}.json'.format( \
+            f = open('{0}_{1}_{2}.json'.format(
                 meta['metadata']['observation_id'],
                 meta['metadata']['beam_id'],
                 meta['metadata']['name']), 'w')
@@ -83,7 +85,7 @@ class PrsReceiver(io.BytesIO):
             data = self.read(n_channels * n_sub_integrations)
 
             # Write it to a file
-            f = open('{0}_{1}_{2}.data'.format( \
+            f = open('{0}_{1}_{2}.data'.format(
                 meta['metadata']['observation_id'],
                 meta['metadata']['beam_id'],
                 meta['metadata']['name']), 'wb')
@@ -92,6 +94,7 @@ class PrsReceiver(io.BytesIO):
 
 
 class PrsFileSystem(AbstractedFS):
+    """Class to interact with pulsar search file system"""
     def __init__(self, root, cmd_channel):
         super(PrsFileSystem, self).__init__(root, cmd_channel)
 
@@ -101,22 +104,34 @@ class PrsFileSystem(AbstractedFS):
 
 
 class PrsStart:
+
     def __init__(self, config, log):
+        """Constructor.
+
+        The supplied configuration dictionary must contain all parameters
+        needed to define new user
+
+        See pulsar_receiver_config.json for an example.
+
+        Args:
+            config (dict): Dictionary containing JSON configuration file.
+            log: Logger.
+        """
         # Initialise class variables.
         self._config = config
         self._log = log
         log.info('Pulsar Search Interface Initialisation')
 
     def run(self):
-        print('Starting Search Pulsar Interface')
-        sys.stdout.flush()
+        """Start the FTP Server for pulsar search."""
         self._log.info('Starting Pulsar Search Interface')
         # Instantiate a dummy authorizer for managing 'virtual' users
         authorizer = DummyAuthorizer()
 
         # Define a new user having full r/w permissions and a read-only
         # anonymous user
-        authorizer.add_user(self._config['login']['user'], self._config['login']['psswd'], '.',
+        authorizer.add_user(self._config['login']['user'],
+                            self._config['login']['psswd'], '.',
                             perm=self._config['login']['perm'])
         authorizer.add_anonymous(os.getcwd())
 
@@ -129,10 +144,9 @@ class PrsStart:
         handler.banner = "SKA SDP pulsar search interface."
 
         # Instantiate FTP server class and listen on 0.0.0.0:7878
-        address = (self._config['address']['listen'], self._config['address']['port'])
+        address = (self._config['address']['listen'],
+                   self._config['address']['port'])
         server = FTPServer(address, handler)
-        print('Pulsar Search Interface Started')
-        sys.stdout.flush()
 
         # set a limit for connections
         server.max_cons = 256

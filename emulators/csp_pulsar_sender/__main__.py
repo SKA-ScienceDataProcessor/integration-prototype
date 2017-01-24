@@ -41,20 +41,30 @@ def _init_log(level=logging.DEBUG):
     log.addHandler(ch)
     return log
 
-if __name__ == '__main__':
+
+def main():
+    """Main script function"""
     # Create simulation object, and start streaming SPEAD heaps
     sender = PrsSender()
+
     # Parse command line arguments
     args = parse_command_line()
+
     # Initialise logging.
     _log = _init_log(level=logging.DEBUG if args.verbose else logging.INFO)
+
     # Load configuration.
     _log.info('Loading config: {}'.format(args.config_file.name))
     _config = json.load(args.config_file)
     if args.print_settings:
         _log.debug('Settings:\n {}'.format(json.dumps(_config, indent=4,
                                                       sort_keys=True)))
-    sender.send(_config, 1, 1)
+    sender.send(_config, _log, 1, 1)
+
+
+if __name__ == '__main__':
+    main()
+
 
 
 

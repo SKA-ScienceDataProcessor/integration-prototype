@@ -9,7 +9,7 @@ sys.path.append(os.path.join(os.path.dirname(__file__), '..', 'common'))
 sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
 
 from processor_software.pulsar_search import PrsStart
-from common.sip_common import logger as log
+from sip_common import logger as log
 
 """Pulsar search receiver task module.
 
@@ -27,15 +27,12 @@ def main():
     # Install handler to respond to SIGTERM
     signal.signal(signal.SIGTERM, _sig_handler)
 
-    # FIXME(FD) Get configuration data - it should not happen like this.
     with open(sys.argv[1]) as f:
         config = json.load(f)
 
     # Starts the pulsar search ftp server
-    log.info('Pulsar Search Starting')
     receiver = PrsStart(config, log)
     receiver.run()
-
 
 if __name__ == '__main__':
     main()
