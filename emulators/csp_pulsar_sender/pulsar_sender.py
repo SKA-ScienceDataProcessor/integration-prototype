@@ -1,7 +1,4 @@
 # -*- coding: utf-8 -*-
-import json
-from ftplib import FTP
-
 """Module to send pulsar data, FTP client.
 
 The pulsar data is sent using stream mode.
@@ -11,10 +8,14 @@ doing any processing
 This module makes use of the PrsSender class to send the pulsar data.
 
 """
+import json
+
+from ftplib import FTP
+
 __author__ = 'Nijin Thykkathu'
 
 
-class PrsSender:
+class PulsarSender:
     def __init__(self):
         """Creates and initialises the ftp client"""
         self._host = 'localhost'
@@ -42,7 +43,10 @@ class PrsSender:
         socket = self._ftp.transfercmd('STOR {0}_{1}'.format(obs_id, beam_id))
         socket.send(json.dumps(config).encode())
         socket.send(bytearray(1000 * 1000))
-        config['metadata']['name'] = 'candidate two'
+
+        # Overwrites the metadata name in the config dict
+        # and re-sends the data to the receiver.
+        config['metadata']['name'] = 'candidate_two'
         socket.send(json.dumps(config).encode())
         socket.send(bytearray(1000 * 1000))
         socket.close()

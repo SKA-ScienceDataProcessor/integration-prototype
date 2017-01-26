@@ -1,11 +1,11 @@
 {
   "metadata": {
-    "name": "candidate one",
+    "name": "candidate_one",
     "observation_id": 1,
     "beam_id": 1
   },
 
-  "datacube": {
+  "data_cube": {
     "n_channels": 1000,
     "n_sub_integrations": 1000
   }

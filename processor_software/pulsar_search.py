@@ -1,4 +1,10 @@
 # -*- coding: utf-8 -*-
+"""Module to provide pulsar search receiver function.
+
+This currently consists of the PulsarReceiver, PulsarFileSystem and
+PulsarStart class which starts ftp sever and write to
+.data and .json file.
+"""
 import io
 import json
 import os
@@ -8,16 +14,10 @@ from pyftpdlib.filesystems import AbstractedFS
 from pyftpdlib.handlers import FTPHandler
 from pyftpdlib.servers import FTPServer
 
-"""Module to provide pulsar search receiver function.
-
-This currently consists of the PrsReceiver, PrsFileSystem and
-PrsReceiverStart class which starts ftp sever and write to
-.data and .json file.
-"""
 __author__ = 'Nijin Thykkathu'
 
 
-class PrsReceiver(io.BytesIO):
+class PulsarReceiver(io.BytesIO):
     """Receives Pulsar Search data."""
 
     def __init__(self):
@@ -70,8 +70,8 @@ class PrsReceiver(io.BytesIO):
 
             # Parse the JSON so that we can get the size of the data array
             meta = json.loads(json_string)
-            n_channels = meta['datacube']['n_channels']
-            n_sub_integrations = meta['datacube']['n_sub_integrations']
+            n_channels = meta['data_cube']['n_channels']
+            n_sub_integrations = meta['data_cube']['n_sub_integrations']
 
             # Save the JSON to a file
             f = open('{0}_{1}_{2}.json'.format(
@@ -94,17 +94,18 @@ class PrsReceiver(io.BytesIO):
             f.close()
 
 
-class PrsFileSystem(AbstractedFS):
+class PulsarFileSystem(AbstractedFS):
     """Class to interact with pulsar search file system"""
+
     def __init__(self, root, cmd_channel):
-        super(PrsFileSystem, self).__init__(root, cmd_channel)
+        super(PulsarFileSystem, self).__init__(root, cmd_channel)
 
     def open(self, filename, mode):
-        self._buffer = PrsReceiver()
+        self._buffer = PulsarReceiver()
         return self._buffer
 
 
-class PrsStart:
+class PulsarStart:
 
     def __init__(self, config, log):
         """Constructor.
@@ -139,7 +140,7 @@ class PrsStart:
         # Instantiate FTP handler class
         handler = FTPHandler
         handler.authorizer = authorizer
-        handler.abstracted_fs = PrsFileSystem
+        handler.abstracted_fs = PulsarFileSystem
 
         # Define a customized banner (string returned when client connects)
         handler.banner = "SKA SDP pulsar search interface."

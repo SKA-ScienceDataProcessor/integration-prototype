@@ -53,7 +53,6 @@ class VisReceiver:
         """
         # ms = {}
         self._log.info('Waiting to receive...')
-        self._log.info("I am here i amd i wasnt to")
         for stream in self._streams:
             item_group = spead2.ItemGroup()
 

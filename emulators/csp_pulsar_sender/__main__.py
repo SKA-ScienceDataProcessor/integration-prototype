@@ -1,12 +1,12 @@
 # -*- coding: utf-8 -*-
+"""Module main to stream pulsar data."""
 import sys
 import logging
 import argparse
 import simplejson as json
 
-from emulators.csp_pulsar_sender.pulsar_sender import PrsSender
+from emulators.csp_pulsar_sender.pulsar_sender import PulsarSender
 
-"""Module main to stream pulsar data."""
 __author__ = 'Nijin Thykkathu'
 
 
@@ -45,7 +45,7 @@ def _init_log(level=logging.DEBUG):
 def main():
     """Main script function"""
     # Create simulation object, and start streaming SPEAD heaps
-    sender = PrsSender()
+    sender = PulsarSender()
 
     # Parse command line arguments
     args = parse_command_line()
