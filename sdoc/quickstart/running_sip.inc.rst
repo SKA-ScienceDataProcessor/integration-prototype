@@ -97,6 +97,20 @@ and will time out after a number of seconds if no data is received as
 configured by the ``timeout`` task_control_module setting in its
 settings group in the ``slave_map.json`` file.
 
+pulsar_search
+^^^^^^^^^^^
+
+This is an Capability task which ingests pulsar data using FTP.
+It is started with the command:
+
+.. code:: bash
+
+    cap [name] pulsar_search
+
+Timeout is configured by the ``timeout`` task_control_module setting in its
+settings group in the ``slave_map.json`` file. If no data is received, it will
+timeout after a number of seconds.
+
 Shutting down the Master Controller
 -----------------------------------
 
@@ -131,5 +145,20 @@ The following command will start the emulator:
     python3 -m emulators.csp_visibility_sender -v [config_file]
 
 an example config file can be found in the ``emulators/csp_visibility/etc``
+folder.
+
+CSP pulsar emulator
+^^^^^^^^^^^^^^^^^^^^^^^
+
+The CSP pulsar emulator sends test pulsar dat through FTP protocol using stream
+mode to the SIP.
+
+The following command will start the emulator:
+
+.. code:: bash
+
+    python3 -m emulators.csp_pulsar_sender -v [config_file]
+
+config file can be found in the ``emulators/csp_pulsar_sender/etc``
 folder.
 

@@ -11,6 +11,7 @@
 * pyroute2
 * rpyc
 * zmq
+* pyftpdlib
 
 ## Notes
 * pyroute2 is Linux only (https://github.com/svinota/pyroute2/issues/261)
