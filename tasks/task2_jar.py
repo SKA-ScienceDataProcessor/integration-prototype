@@ -21,6 +21,7 @@ import time
 import datetime
 import zmq
 from urllib.request import urlopen
+import urllib
 
 sys.path.append(os.path.join(os.path.dirname(__file__),'..', 'common'))
 
@@ -34,11 +35,11 @@ _state = 'standby'
 def _sig_handler(signum, frame):
 	sys.exit(0)
 
-# Spark url
-url="http://localhost:8080"
-
 # The string in html indicating no running spark applications
 idleString = '0 <a href="#running-app">Running</a>'
+
+# Define API for status request, "http" or "rest"
+checkType = "rest"
 
 def run():
 
@@ -50,9 +51,9 @@ def run():
 # Define a process name to be sent to the socket
 	process_name = 'PROCESS2'
 
-    # Install handler to respond to SIGTERM
+# Install handler to respond to SIGTERM
 	signal.signal(signal.SIGTERM, _sig_handler)
-	# Create process sender	
+# Create process sender	
 	process_sender = heartbeat_task.Sender(process_name, port)
 
 # Spark driver
@@ -76,6 +77,18 @@ def run():
 		options += x + ' ' + data["parameters"][x] + ' '		
 	print(options)
 
+# Get spark host name
+	sparkHost = data["parameters"]['--master']
+# Remove leading "spark://" and trailing ":7077" (assuming the parameter --master is in the form of spark://hostname.domain:XXXX)
+	sparkHost = sparkHost[8:-5] 
+
+	if(checkType == "rest"):
+# Spark REST IP url
+		url= "http://" + sparkHost + ":4040/api/v1/applications"
+	else:
+# Spark HTTP url
+		url="http://" + sparkHost + ":8080"
+
 # Get jar name
 	jarDir  = data["pipeline"]["jarPath"]
 	jarName = data["pipeline"]["jarName"] 
@@ -95,12 +108,29 @@ def run():
 		st = datetime.datetime.fromtimestamp(ts).strftime(
                         '%Y-%m-%d %H:%M:%S')
 
-		# Check spark status
-		sparkStatus = str(urlopen(url).read()).find(idleString)
-		if(sparkStatus == -1):
-			_state = 'busy'
+		if(checkType == "rest"):
+		# Check spark status (REST API version)
+			try:
+		# If spark application is running, read it's status
+				response = urlopen(url)
+				dataREST = json.loads(str(response.read().decode('utf-8')))
+				_state = 'busy'
+				appID = dataREST[0]['id']
+				print("Task2_jar: Status = busy, app id is ", appID)
+		# If spark application is not running, have an error when trying to query URL
+			except urllib.error.URLError as err:
+				appID = "None"
+				_state = 'idle'						
+				print("Task2_jar: ERROR: Can not open url ", url, " ", err, " app id is ", appID)
+				print("Task2_jar: Status = idle")
 		else:
-			_state = 'idle'						
+
+		# Check spark status (HTTP version) - search for idleString showing no application is running
+			sparkStatus = str(urlopen(url).read()).find(idleString)
+			if(sparkStatus == -1):
+				_state = 'busy'
+			else:
+				_state = 'idle'						
 
 		# Add current state to the heartbeat sequence
 		st += ' State: '+_state + ': Component: '
