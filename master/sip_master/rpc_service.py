@@ -1,11 +1,10 @@
 # -*- coding: utf-8 -*-
 """Master controller rpyc server."""
-import rpyc
-from sip_common import logger
-from sip_master import config
-
-
 __author__ = 'Brian McIlwrath'
+
+import rpyc
+from sip_common.logging_api import log
+from sip_master import config
 
 
 class RpcService(rpyc.Service):
@@ -22,11 +21,11 @@ class RpcService(rpyc.Service):
     """
     def on_connect(self):
         """Called when connecting to the RPC service."""
-        logger.info(" master controller client controller connected")
+        log.info(" master controller client controller connected")
 
     def on_disconnect(self):
         """Called when disconnecting from the RPC service."""
-        logger.info("master controller client controller disconnected")
+        log.info("master controller client controller disconnected")
 
     def exposed_online(self, callback=None):
         """Exposed online method.

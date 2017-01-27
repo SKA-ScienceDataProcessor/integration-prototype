@@ -19,10 +19,62 @@ library. This includes
 Logging
 -------
 
-.. automodule:: sip_common.logger
+SIP provides a number of logging modules for publishing and subscribing to
+python logging messages.
+
+Publishing of log messages is provided by :mod:`logging_api` and
+:mod:`logging_handlers` modules, and aggregation of log messages in a
+logging server is provided by the :mod:`logging_aggregator` module.
+
+The :mod:`logging_server` script provides a main function which is be used as
+a Logging server service for aggregating logging messages from the rest of the
+SIP modules.
+
+
+Logging API module
+^^^^^^^^^^^^^^^^^^
+This module provides an implementation of a Python logging class specialised
+to be used by SIP modules for publishing log messages.
+
+**Basic Usage:**
+
+.. code-block:: python
+
+    from sip_common.logging_api import log
+    log.info('my info message')
+
+This functionality is implemented by overriding a default Python
+``logging.Logger`` object and ``logging.LogRecord`` and attaching a specialsed
+``logging.Handler`` defined in the :mod:`logging_handlers` module.
+
+.. autoclass:: sip_common.logging_api.SipLogger
     :members:
     :show-inheritance:
 
+.. autoclass:: sip_common.logging_api.SipLogRecord
+    :members:
+    :show-inheritance:
+
+Logging Handlers
+^^^^^^^^^^^^^^^^
+
+.. automodule:: sip_common.logging_handlers
+    :members:
+    :show-inheritance:
+
+Logging Aggregator
+^^^^^^^^^^^^^^^^^^
+
+.. automodule:: sip_common.logging_aggregator
+    :members:
+    :show-inheritance:
+
+Logging Aggregator (Server) Service application
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+.. automodule:: sip_common.logging_server
+    :members:
+    :show-inheritance:
 
 .. _common.heartbeat:
 

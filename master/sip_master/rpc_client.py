@@ -1,8 +1,9 @@
-import rpyc
-import sys
-
+# coding: utf-8
 """Simple rpc client for sending commands to the SIP."""
+
 __author__ = 'David Terrett'
+
+import rpyc
 
 connection_ = None
 

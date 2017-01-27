@@ -1,6 +1,4 @@
-from collections import deque
-import threading
-
+# coding: utf-8
 """State machine framework.
 
 This module defines a simple state machine framework. It supports entry,
@@ -31,6 +29,10 @@ indicating whether the event was accepted ('ok'), rejected or ignored.
 
 The get_graph method creates a pygraphvis representation of the state machine.
 """
+
+from collections import deque
+import threading
+from sip_common.logging_api import log
 
 # pygraphviz is only needed for the method that creates a graphviz
 # representation of the state machine. This in not needed to use the state
@@ -155,6 +157,7 @@ class StateMachine:
         If called recursively (i.e. from an action routine) the event is
         just placed on the back of the event queue.
         """
+        # log.debug('Posting event to state machine, {}'.format(event))
         if self._lock.acquire(blocking=False):
             result = self._state_machine.send(event)
             self._lock.release()

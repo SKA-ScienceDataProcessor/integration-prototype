@@ -9,7 +9,7 @@ import re
 
 import rpyc
 
-from sip_common import logger
+from sip_common.logging_api import log
 from sip_common.resource_manager import ResourceManager
 from sip_master import config
 
@@ -55,7 +55,7 @@ class SlaveTaskControllerRPyC(SlaveTaskController):
     def shutdown(self):
         """Command the slave controller to shut down."""
         if self._conn is None:
-            logger.fatal("Need to connect to RPyC first!")
+            log.fatal("Need to connect to RPyC first!")
             return
         self._conn.root.shutdown()
 
@@ -70,6 +70,7 @@ class SlaveTaskControllerRPyC(SlaveTaskController):
         # Scan the task parameter list for entries with values starting with
         # a # character, or contained in a hash followed by curly brackets
         # (ie. #{...}), and replace with an allocated resource.
+        log.debug('Starting task {}'.format(name))
         task_cfg = cfg['task']
         for i, value_str in enumerate(task_cfg):
             task_cfg[i] = self._set_resource(value_str, name, config.resource)
@@ -83,14 +84,14 @@ class SlaveTaskControllerRPyC(SlaveTaskController):
 
         # Send the slave the command to load the task
         if self._conn is None:
-            logger.fatal("Need to connect to RPyC first!")
+            log.fatal("Need to connect to RPyC first!")
             return
         self._conn.root.load(task_cfg, cfg['task_control_module'])
 
     def stop(self):
         """Command the slave controller to unload the task."""
         if self._conn is None:
-            logger.fatal("Need to connect to RPyC first!")
+            log.fatal("Need to connect to RPyC first!")
             return
         self._conn.root.unload()
 

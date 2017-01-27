@@ -11,7 +11,8 @@ import subprocess
 import threading
 import time
 
-from sip_common import heartbeat_task, logger
+from sip_common import heartbeat_task
+from sip_common.logging_api import log
 from sip_slave import config
 
 
@@ -74,7 +75,7 @@ class TaskControlProcessPoller(TaskControl):
         # Start a task
         self.name = task[0]
         self.settings = settings
-        logger.info('Starting task {}'.format(self.name))
+        log.info('Starting task {}'.format(self.name))
         self.subproc = subprocess.Popen(task)
 
         # Create and start a thread which checks if the task is still running
@@ -84,7 +85,7 @@ class TaskControlProcessPoller(TaskControl):
 
     def stop(self):
         """Stops (kills) the task."""
-        logger.info('unloading task {}'.format(self.name))
+        log.info('unloading task {}'.format(self.name))
 
         # Kill the sub-process and the polling thread.
         self._poller.stop_thread()
@@ -115,7 +116,7 @@ class TaskControlProcessPoller(TaskControl):
                 total_time += 1
                 # TODO(BM) interaction with slave time-out in HeartbeatListener?
                 if timeout is not None and total_time > timeout:
-                    logger.warn("Task {} timed out".format(name))
+                    log.warn("Task {} timed out".format(name))
                     break
 
             # TODO(FD) Check we're OK to kill the process here.
@@ -163,12 +164,12 @@ class TaskControlExample(TaskControl):
         self._poller.start()
 
         # Start a task
-        logger.info('Starting task {}'.format(task[0]))
+        log.info('Starting task {}'.format(task[0]))
         self._subproc = subprocess.Popen(task)
 
     def stop(self):
         """Unload the task."""
-        logger.info('unloading task {}'.format(self.name))
+        log.info('unloading task {}'.format(self.name))
 
         # Kill the sub-process and the polling thread.
         self._poller.stop_thread()
@@ -206,7 +207,7 @@ class TaskControlExample(TaskControl):
 
                 # If the task state changes log it
                 if state_task != self._state_task_prev:
-                    logger.info(comp_msg)
+                    log.info('Slave task heartbeat message: ''{}'''.format(comp_msg))
                     self._state_task_prev = state_task
 
                 # Update the controller state

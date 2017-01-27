@@ -3,12 +3,15 @@
 
 Run with:
     python3 -m unittest common.test_zmq_pub_sub
+
+.. moduleauthor:: Benjamin Mort <benjamin.mort@oerc.ox.ac.uk>
 """
-import unittest
-import time
-import zmq
 import sys
 import threading
+import time
+import unittest
+
+import zmq
 
 
 def recv_messages(zmq_subscriber, timeout_count, message_count):
@@ -51,7 +54,7 @@ class TestMode1(unittest.TestCase):
         """Set up subscriber in a thread."""
         cls.sub_host = 'localhost'
         cls.sub_port = 6666
-        cls.send_count = 5000
+        cls.send_count = 100
 
         context = zmq.Context()
         cls.sub = context.socket(zmq.SUB)
@@ -61,8 +64,9 @@ class TestMode1(unittest.TestCase):
             print(e)
         cls.sub.setsockopt_string(zmq.SUBSCRIBE, '')
         cls.sub_context = context
+        time.sleep(0.1)
 
-        def watcher(zmq_subscriber, message_count, timeout=500):
+        def watcher(zmq_subscriber, message_count, timeout=5000):
             """Thread run method to monitor subscription socket"""
             receive_count = recv_messages(zmq_subscriber, timeout,
                                           message_count)
@@ -88,10 +92,7 @@ class TestMode1(unittest.TestCase):
             pub.bind('tcp://*:{}'.format(self.sub_port))
         except zmq.ZMQError as e:
             print(e)
-
-        # Need to sleep here?
-        # http://zguide.zeromq.org/page%3aall#Getting-the-Message-Out
-        time.sleep(1e-2)
+        time.sleep(0.1)
 
         send_count = self.send_count
         for i in range(send_count):
@@ -118,7 +119,7 @@ class TestMode2(unittest.TestCase):
         """Set up subscriber in a thread."""
         cls.sub_host = 'localhost'
         cls.sub_port = 6666
-        cls.send_count = 5000
+        cls.send_count = 100
 
         # Create subscriber socket.
         context = zmq.Context()
@@ -130,8 +131,9 @@ class TestMode2(unittest.TestCase):
         subscriber.setsockopt_string(zmq.SUBSCRIBE, '')
         cls.sub = subscriber
         cls.sub_context = context
+        time.sleep(0.1)
 
-        def watcher(zmq_subscriber, message_count, timeout=500):
+        def watcher(zmq_subscriber, message_count, timeout=5000):
             """Thread run method to monitor subscription socket"""
             receive_count = recv_messages(zmq_subscriber, timeout,
                                           message_count)
@@ -158,7 +160,7 @@ class TestMode2(unittest.TestCase):
             pub.connect(_address)
         except zmq.ZMQError as e:
             print('ERROR:', e)
-        time.sleep(1e-2)
+        time.sleep(0.1)
 
         send_count = self.send_count
         for i in range(send_count):

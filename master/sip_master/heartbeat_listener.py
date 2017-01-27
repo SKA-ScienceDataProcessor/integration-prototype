@@ -1,13 +1,4 @@
-import rpyc
-import threading
-import time
-
-from sip_common import heartbeat, logger
-
-from sip_master import config
-from sip_master import slave_control
-from sip_master import task_control
-
+# coding: utf-8
 """Heartbeat listener.
 
 A HeartbeatListener runs in a separate thread and once a second looks for
@@ -24,6 +15,13 @@ degraded or unavailable and an appropriate event posted.
 """
 
 __author__ = 'David Terrett'
+
+import threading
+import time
+
+from sip_common import heartbeat
+from sip_common.logging_api import log
+from sip_master import config
 
 
 class HeartbeatListener(threading.Thread):
@@ -53,6 +51,8 @@ class HeartbeatListener(threading.Thread):
 
     def connect(self, host, port):
         """Connect to a sender."""
+        log.info('Connecting heartbeat listener to sender {}:{}'.
+                 format(host, port))
         self._listener.connect(host, port)
 
     def run(self):
@@ -63,6 +63,7 @@ class HeartbeatListener(threading.Thread):
         a message from. If any slaves then have a count of zero we log a
         message and change the state to 'dead'.
         """
+        log.debug('Starting Heartbeat listener.')
         while True:
 
             # Decrement timeout counters
@@ -75,6 +76,7 @@ class HeartbeatListener(threading.Thread):
             while msg != '':
                 name = msg[0]
                 state = msg[1]
+                log.debug('name = {}, state = {}'.format(name, state))
                 status = config.slave_status[name]
 
                 # Ensure RPyC connection is established
@@ -92,10 +94,11 @@ class HeartbeatListener(threading.Thread):
                 if state == 'busy':
                     status['state'].post_event(['busy heartbeat'])
                 elif state == 'idle':
+                    log.info('idle heartbeat from {}'.format(name))
                     status['state'].post_event(['idle heartbeat'])
                 else:
-                    logger.error('Invalid state received from slave: {}'.
-                                 format(state))
+                    log.error('Invalid state received from slave: {}'.
+                              format(state))
 
                 # Check for more messages.
                 msg = self._listener.listen()

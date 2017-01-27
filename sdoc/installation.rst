@@ -162,7 +162,7 @@ server with::
     Upper address:  192.168.56.254
 
 In order to bring up the host-only network interface, once logged into the VM,
-edit ``/etc/network/interfaces and add the following lines::
+edit ``/etc/network/interfaces`` and add the following lines::
 
     auto enp0s8
     iface enp0s8 net dhcp
