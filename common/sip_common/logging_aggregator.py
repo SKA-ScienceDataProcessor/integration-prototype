@@ -84,9 +84,9 @@ class LogAggregator(threading.Thread):
                     record = logging.makeLogRecord(dict_values)
                     log.handle(record)
                 except json.decoder.JSONDecodeError:
-                    print('ERROR: Unable to decode log JSON log record:')
+                    print('ERROR: Unable to convert JSON log record:')
                     print('-' * 60)
-                    print('{}'.format(str_values))
+                    print('{}'.format(values))
                     print('-' * 60)
                     raise
             except zmq.ZMQError as e:
