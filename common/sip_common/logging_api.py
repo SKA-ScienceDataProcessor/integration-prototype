@@ -17,7 +17,6 @@ import datetime
 import getpass
 import logging
 import logging.handlers
-import os
 import socket
 
 
@@ -70,7 +69,7 @@ class SipLogger(logging.getLoggerClass()):
     def makeRecord(self, name, level, pathname, lineno, msg, args, exc_info,
                    func=None, extra=None, sinfo=None):
         """Factory method for creating logging records. Overrides the Logger
-         makeRecord method to make the custom SIP Logging record.
+         makeRecord() method to make the custom SIP Logging record.
 
         Args:
             name: The name of the logger.
@@ -91,7 +90,8 @@ class SipLogger(logging.getLoggerClass()):
         Returns:
             logging.LogRecord object
         """
-        record = SipLogRecord(name, level, pathname, lineno, msg, args, exc_info, func)
+        record = SipLogRecord(name, level, pathname, lineno, msg, args,
+                              exc_info, func)
         if extra:
             for key in extra:
                 if (key in ['message', 'asctime']) or (key in record.__dict__):

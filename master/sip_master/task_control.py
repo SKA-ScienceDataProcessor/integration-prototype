@@ -70,7 +70,7 @@ class SlaveTaskControllerRPyC(SlaveTaskController):
         # Scan the task parameter list for entries with values starting with
         # a # character, or contained in a hash followed by curly brackets
         # (ie. #{...}), and replace with an allocated resource.
-        log.debug('Starting task {}'.format(name))
+        log.debug('[SlaveTaskControllerRPyC] Starting task {}'.format(name))
         task_cfg = cfg['task']
         for i, value_str in enumerate(task_cfg):
             task_cfg[i] = self._set_resource(value_str, name, config.resource)

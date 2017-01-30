@@ -75,7 +75,7 @@ class TaskControlProcessPoller(TaskControl):
         # Start a task
         self.name = task[0]
         self.settings = settings
-        log.info('Starting task {}'.format(self.name))
+        log.info('[TaskControllProcessPoller] Starting task {}'.format(self.name))
         self.subproc = subprocess.Popen(task)
 
         # Create and start a thread which checks if the task is still running
@@ -164,7 +164,7 @@ class TaskControlExample(TaskControl):
         self._poller.start()
 
         # Start a task
-        log.info('Starting task {}'.format(task[0]))
+        log.info('[TaskControlExample] Starting task {}'.format(task[0]))
         self._subproc = subprocess.Popen(task)
 
     def stop(self):
