@@ -34,7 +34,6 @@ class ZmqLogFormatter(logging.Formatter):
         Returns:
             string, JSON formatted SIP Log record.
         """
-        data = record._raw.copy()
         return json.dumps(record._raw.copy(), sort_keys=True)
 
 
@@ -108,6 +107,8 @@ class ZmqLogHandler(logging.Handler):
         b_level = self._to_bytes(record.levelname)
         b_chan = b':'.join([b_level, b_chan])
         b_msg = self._to_bytes(self.format(record))
+        print('')
+        print('** emit():', b_msg)
         self.zmq_publisher.send_multipart([b_chan, b_msg])
 
 
@@ -137,6 +138,8 @@ class StdoutLogFormatter(logging.Formatter):
             record.levelname,
             _msg
         )
+        # if '_raw' in record.__dict__:
+        #     print(json.dumps(record._raw, indent=2))
         return _line
 
 

@@ -75,6 +75,7 @@ class LogAggregator(threading.Thread):
         while not self._stop_requested.is_set():
             try:
                 topic, values = self._subscriber.recv_multipart(zmq.NOBLOCK)
+                print('>> recv:', values)
                 assert type(values) == bytes, \
                     ('ERROR: Invalid message type received. {}'
                      .format(type(values)))
