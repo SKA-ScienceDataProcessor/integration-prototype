@@ -112,16 +112,15 @@ def _start_docker_slave(name, type, cfg, status):
     task_control_module = cfg['task_control_module']['name']
     logger_address = netifaces.ifaddresses(
                 'docker0')[netifaces.AF_INET][0]['addr']
-    container_id = client.create_container(
-                image=image,
-                command=['/home/sdp/integration-prototype/slave/bin/slave',
-                        name,
-                        str(heartbeat_port),
-                        str(rpc_port),
-                        logger_address,
-                        task_control_module,
-                        ]
-                   )['Id']
+    _cmd = ['/home/sdp/integration-prototype/slave/bin/slave',
+            name,
+            str(heartbeat_port),
+            str(rpc_port),
+            logger_address,
+            task_control_module,
+            ]
+    log.debug('Docker command = {}'.format(_cmd))
+    container_id = client.create_container(image=image, command=_cmd)['Id']
 
     # Start it
     client.start(container_id)

@@ -18,6 +18,7 @@ import getpass
 import logging
 import logging.handlers
 import socket
+import os
 
 
 class SipLogRecord(logging.LogRecord):
@@ -104,6 +105,5 @@ class SipLogger(logging.getLoggerClass()):
 # Create Logger for use with SIP modules.
 from .logging_handlers import ZmqLogHandler
 log = SipLogger('sip.log')
-# host = os.environ['SIP_HOSTNAME']
-host = '127.0.0.1'  # TODO(BM) Needs to be obtained from Resource Discovery.
+host = os.environ['SIP_HOSTNAME']
 log.addHandler(ZmqLogHandler.to('all', host=host, level='DEBUG'))
