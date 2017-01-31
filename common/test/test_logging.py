@@ -15,6 +15,7 @@ import unittest
 # FIXME(BM) Horrible hack which will be fixed by SIP code restructuring.
 sys.path.append('common')
 sys.path.append(os.path.join('common', 'sip_common'))
+os.environ['SIP_HOSTNAME'] = os.uname()[1]
 
 from common.sip_common import logging_aggregator
 from common.sip_common import logging_api
@@ -37,8 +38,6 @@ class TestLogging(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
-
-
         """Set up a Log aggregator to receive messages via ZMQ"""
         cls.sub_thread = logging_aggregator.LogAggregator()
         cls.sub_thread.start()
