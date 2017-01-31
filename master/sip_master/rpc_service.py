@@ -21,7 +21,7 @@ class RpcService(rpyc.Service):
     """
     def on_connect(self):
         """Called when connecting to the RPC service."""
-        log.info(" master controller client controller connected")
+        log.info("master controller client controller connected")
 
     def on_disconnect(self):
         """Called when disconnecting from the RPC service."""

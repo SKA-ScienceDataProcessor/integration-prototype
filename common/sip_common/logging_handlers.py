@@ -107,8 +107,6 @@ class ZmqLogHandler(logging.Handler):
         b_level = self._to_bytes(record.levelname)
         b_chan = b':'.join([b_level, b_chan])
         b_msg = self._to_bytes(self.format(record))
-        print('')
-        print('** emit():', b_msg)
         self.zmq_publisher.send_multipart([b_chan, b_msg])
 
 
@@ -130,10 +128,11 @@ class StdoutLogFormatter(logging.Formatter):
          Returns:
              string, the formatted log message to be displayed.
          """
-        _origin = '{}:{}:{}'.format(record.module, record.funcName,
-                                    record.lineno)
+        _origin = '{}:{}:{}'.format(record.module,
+                                                     record.funcName,
+                                                     record.lineno)
         _msg = record.getMessage()
-        _line = '-| {:35.35s} |{:1.1s}| {}'.format(
+        _line = '-| {:38s} |{:1.1s}| {}'.format(
             _origin,
             record.levelname,
             _msg

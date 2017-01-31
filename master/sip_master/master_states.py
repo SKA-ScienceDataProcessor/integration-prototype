@@ -67,7 +67,6 @@ class MasterControllerSM(StateMachine):
         t = Configure()
         t.start()
         t.join()
-        log.info('Online?')
 
     def cap(self, event, *args):
         """ Action routine that starts a capability."""

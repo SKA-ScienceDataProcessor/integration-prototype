@@ -75,20 +75,13 @@ class LogAggregator(threading.Thread):
         while not self._stop_requested.is_set():
             try:
                 topic, values = self._subscriber.recv_multipart(zmq.NOBLOCK)
-                print('>> recv:', values)
-                assert type(values) == bytes, \
-                    ('ERROR: Invalid message type received. {}'
-                     .format(type(values)))
                 str_values = values.decode('utf-8')
                 try:
                     dict_values = json.loads(str_values)
                     record = logging.makeLogRecord(dict_values)
                     log.handle(record)
                 except json.decoder.JSONDecodeError:
-                    print('ERROR: Unable to convert JSON log record:')
-                    print('-' * 60)
-                    print('{}'.format(values))
-                    print('-' * 60)
+                    print('ERROR: Unable to convert JSON log record.')
                     raise
             except zmq.ZMQError as e:
                 if e.errno == zmq.EAGAIN:
