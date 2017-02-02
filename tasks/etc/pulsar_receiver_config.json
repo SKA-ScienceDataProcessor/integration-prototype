@@ -1,0 +1,13 @@
+{
+  "login":
+  {
+    "user": "user",
+    "psswd": 12345,
+    "perm": "elradfmwM"
+  },
+  "address":
+  {
+    "listen": "",
+    "port": 7878
+  }
+}
