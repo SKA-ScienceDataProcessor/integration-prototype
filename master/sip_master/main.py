@@ -23,7 +23,7 @@ import os
 import time
 
 from sip_common.resource_manager import ResourceManager
-from sip_common import logger as log
+from sip_common.logging_api import log
 from sip_master.master_states import MasterControllerSM
 from sip_master.master_states import Standby
 from sip_master.heartbeat_listener import HeartbeatListener
@@ -62,10 +62,10 @@ def main(config_file, resources_file):
 
     # Start logging server as a subprocess
     config.logserver = subprocess.Popen(
-            'common/sip_common/logging_server.py', shell=False)
+        ['python3', 'common/sip_common/logging_server.py'], shell=False)
 
     # Wait until it initializes
-    time.sleep(2)
+    time.sleep(1.0)
 
     # Create the slave config array from the configuration (a JSON string)
     with open(config_file) as f:
@@ -81,26 +81,30 @@ def main(config_file, resources_file):
     # This starts the rpyc 'ThreadedServer' - this creates a new
     # thread for each connection on the given port
     from rpyc.utils.server import ThreadedServer
-    server = ThreadedServer(RpcService,port=12345)
+    server = ThreadedServer(RpcService, port=12345)
     t = threading.Thread(target=server.start)
     t.setDaemon(True)
     t.start()
 
     # For testing we can also post events typed on the terminal
     while True:
-
         # Read from the terminal and process the event
-        event = input('?').split()
+        event = input('** Enter command:\n').split()
         if event:
             if event[0] == 'state':
-                print('Current state: ', config.state_machine.current_state())
+                log.info('CLI: Current state: {}'.
+                         format(config.state_machine.current_state()))
                 continue
+            log.info('CLI: !!! Posting event ==> {}'.format(event[0]))
             result = config.state_machine.post_event(event)
             if result == 'rejected':
-                print('not allowed in current state')
-            if result == 'ignored':
-                print('command ignored')
+                log.warn('CLI: not allowed in current state')
+            elif result == 'ignored':
+                log.warn('CLI: command ignored: {}'.format(event[0]))
             else:
                 # Print what our state we are now in.
-                print('master controller state:',
-                      config.state_machine.current_state())
+                log.info('CLI: master controller state: {}'.format(
+                         config.state_machine.current_state()))
+        # else:
+        #     print('** Allowed commands: online, offline, shutdown, '
+        #           'cap [name] [task]')

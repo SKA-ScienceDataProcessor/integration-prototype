@@ -1,61 +1,59 @@
-import sys
-
-from sip_common import logger
-from sip_common.state_machine import StateMachine
-from sip_common.state_machine import State
-from sip_common.state_machine import _End
-
-from sip_master.capability import Capability
-from sip_master.configure import Configure
-from sip_master.un_configure import UnConfigure
-from sip_master.shutdown import Shutdown
-
+# coding: utf-8
 """The master controller states and actions.
 
 The master controller implements a simple state machine. It only
 has 4 states; "standby", "configuring", "available" and "unconfiguring"
-and 5 events; "online", "offline", "shutdown, "cap", "all services", 
-"some services" and "no tasks".  "cap", "online", "offline" and 
+and 5 events; "online", "offline", "shutdown, "cap", "all services",
+"some services" and "no tasks".  "cap", "online", "offline" and
 "shutdown are external and the others are generated internally.
 """
 
 __author__ = 'David Terrett'
 
+from sip_common.logging_api import log
+from sip_common.state_machine import State
+from sip_common.state_machine import StateMachine
+from sip_common.state_machine import _End
+from sip_master.capability import Capability
+from sip_master.configure import Configure
+from sip_master.shutdown import Shutdown
+from sip_master.un_configure import UnConfigure
+
 
 class Standby(State):
     """Standby state."""
     def __init__(self, sm):
-        logger.info('state->standby')
+        log.info('state->standby')
 
 
 class Configuring(State):
     """Configuring state."""
     def __init__(self, sm):
-        logger.info('state->configuring')
+        log.info('state->configuring')
 
 
 class UnConfiguring(State):
     """Unconfiguring state."""
     def __init__(self, sm):
-        logger.info('state->unconfiguring')
+        log.info('state->unconfiguring')
 
 
 class Available(State):
     """Available state."""
     def __init__(self, sm):
-        logger.info('state->available')
+        log.info('state->available')
 
 
 class Degraded(State):
     """Degraded state."""
     def __init__(self, sm):
-        logger.info('state->degraded')
+        log.info('state->degraded')
 
 
 class Unavailable(State):
     """Unavailable state."""
     def __init__(self, sm):
-        logger.info('state->unavailable')
+        log.info('state->unavailable')
 
 
 class MasterControllerSM(StateMachine):
@@ -66,7 +64,9 @@ class MasterControllerSM(StateMachine):
         """Action routine that starts configuring the controller."""
 
         # Start a configure thread
-        Configure().start()
+        t = Configure()
+        t.start()
+        t.join()
 
     def cap(self, event, *args):
         """ Action routine that starts a capability."""

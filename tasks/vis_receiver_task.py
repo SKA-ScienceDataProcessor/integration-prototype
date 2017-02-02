@@ -15,7 +15,7 @@ sys.path.append(os.path.join(os.path.dirname(__file__), '..', 'common'))
 sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
 
 from processor_software.vis_receiver import VisReceiver
-from sip_common import logger as log
+from sip_common.logging_api import log
 
 
 def _sig_handler(signum, frame):

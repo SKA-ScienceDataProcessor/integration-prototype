@@ -4,7 +4,7 @@ import threading
 import time
 
 from sip_common import heartbeat
-from sip_common import logger
+from sip_common.logging_api import log
 from sip_slave import config
 
 """ Skeleton slave controller
@@ -26,7 +26,7 @@ def main(name, heartbeat_port, server_port, task_control_module):
                               the task load and unload functions from.
     """
 
-    logger.info('Slave controller "{}" starting'.format(name))
+    log.info('Slave controller "{}" starting'.format(name))
 
     # Define the modules that the task load and unload functions will be
     # loaded from

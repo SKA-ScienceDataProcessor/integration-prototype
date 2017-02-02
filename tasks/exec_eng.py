@@ -22,7 +22,7 @@ the current state and its name
 sys.path.append(os.path.join(os.path.dirname(__file__),'..', 'common'))
 
 from sip_common import heartbeat_task
-from sip_common import logger
+from sip_common.logging_api import log
 
 _context = zmq.Context()
 
@@ -61,11 +61,11 @@ def run():
 
         # Change the state w.r.t. the time
         if time.time() - start_time > run_time + 10.0:
-            logger.info('exec engine has finished')
+            log.info('exec engine has finished')
             _state = 'finished'
         elif time.time() - start_time > 10.0 :
             if _state == 'starting':
-                logger.info('exec engine now busy')
+                log.info('exec engine now busy')
             _state = 'busy'
 
         # Add current state to the heartbeat sequence

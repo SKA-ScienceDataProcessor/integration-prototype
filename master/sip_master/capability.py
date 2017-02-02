@@ -1,11 +1,11 @@
-import threading
-
-from sip_common import logger
-from sip_master import config
-from sip_master import slave_control
-
+# coding: utf-8
 """A thread class that is run when a capability is started."""
+
 __author__ = 'David Terrett'
+
+import threading
+from sip_common.logging_api import log
+from sip_master import slave_control
 
 
 class Capability(threading.Thread):
@@ -21,9 +21,9 @@ class Capability(threading.Thread):
 
     def run(self):
         """Thread run routine."""
-        logger.info('starting capability {} with name {}'.format(
+        log.info('starting capability {} with name {}'.format(
             self._args[1], self._args[0]))
         try:
             slave_control.start(self._args[0], self._args[1])
         except RuntimeError as err:
-            logger.error('Failed to start capability: {}'.format(err))
+            log.error('Failed to start capability: {}'.format(err))

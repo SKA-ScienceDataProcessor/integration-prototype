@@ -1,0 +1,21 @@
+sudo: required
+
+language: python
+
+services:
+  - docker
+
+before_install:
+  - sudo apt-get -qq update
+  - sudo apt-get install -y python3-pip
+  - sudo apt-get install -y libboost-python-dev
+  - sudo apt-get install -y libboost-program-options-dev
+  - sudo apt-get install -y libboost-system-dev
+  - pip3 install -r requirements.txt
+  - docker build -f slave/Dockerfile -t slave_controller .
+
+script:
+- python3 -m unittest common.test.test_zmq_pub_sub
+- python3 -m unittest common.test.test_logging
+
+

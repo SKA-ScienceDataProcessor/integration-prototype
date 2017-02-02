@@ -4,6 +4,7 @@ import zmq
 __author__ = 'David Terrett'
 
 _context = zmq.Context()
+from sip_common.logging_api import log
 
 
 class Sender:
@@ -49,7 +50,10 @@ class Listener:
             :param host: sender host name
             :param port: TCP port to connect to
         """
-        self._socket.connect('tcp://' + host + ':' + str(port))
+        try:
+            self._socket.connect('tcp://' + host + ':' + str(port))
+        except zmq.ZMQError as e:
+            log.error(e)
 
     def listen(self):
         """Listens for heartbeat messages.

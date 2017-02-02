@@ -26,6 +26,7 @@ sys.path.insert(0, os.path.abspath('../'))
 sys.path.insert(0, os.path.abspath('../master/'))
 sys.path.insert(0, os.path.abspath('../slave/'))
 sys.path.insert(0, os.path.abspath('../common/'))
+sys.path.insert(0, os.path.abspath('../common/sip_common'))
 sys.path.insert(0, os.path.abspath('_static/extensions/'))
 
 import sip
@@ -33,7 +34,8 @@ import sip
 # -- General configuration ------------------------------------------------
 
 # Tell Sphinx to use moc objects for the following modules.
-autodoc_mock_imports = ['spead2', 'spead2.recv', 'spead2.send']
+autodoc_mock_imports = ['spead2', 'spead2.recv', 'spead2.send', 'docker',
+                        'pyroute2']
 
 # Set the SIP_HOSTNAME (currently needed to buid the documentation)
 os.environ['SIP_HOSTNAME'] = os.uname()[1]

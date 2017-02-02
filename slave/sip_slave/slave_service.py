@@ -7,7 +7,7 @@ import time
 
 import rpyc
 
-from sip_common import logger
+from sip_common.logging_api import log
 from sip_slave import config
 
 
@@ -53,7 +53,7 @@ class _Shutdown(threading.Thread):
         super(_Shutdown, self).__init__()
 
     def run(self):
-        logger.info('slave exiting')
+        log.info('slave exiting')
 
         # Give time for the rpc to return
         time.sleep(1)
