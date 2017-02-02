@@ -14,7 +14,7 @@ sys.path.append(os.path.join(os.path.dirname(__file__), '..', 'common'))
 sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
 
 from processor_software.pulsar_search import PulsarStart
-from sip_common import logger as log
+from sip_common.logging_api import log
 
 __author__ = 'Nijin Thykkathu'
 
