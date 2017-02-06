@@ -94,8 +94,9 @@ class HeartbeatListener(threading.Thread):
                 if state == 'busy':
                     status['state'].post_event(['busy heartbeat'])
                 elif state == 'idle':
-                    log.info('idle heartbeat from {}'.format(name))
                     status['state'].post_event(['idle heartbeat'])
+                elif state == 'error':
+                    status['state'].post_event(['error heartbeat'])
                 else:
                     log.error('Invalid state received from slave: {}'.
                               format(state))

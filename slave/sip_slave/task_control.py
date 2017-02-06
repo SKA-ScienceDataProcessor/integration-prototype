@@ -52,6 +52,14 @@ class TaskControl:
         """
         config.state = 'busy'
 
+    def set_slave_state_error(self):
+        """Update the slave state (global) to error.
+
+        The slave state is then sent to the master controller HeartbeatListener
+        by the slave controller.
+        """
+        config.state = 'error'
+
 
 class TaskControlProcessPoller(TaskControl):
     """Task controller for the visibility receiver.
@@ -157,7 +165,7 @@ class TaskControlExample(TaskControl):
         port = int(task[1])
 
         # Create a heartbeat listener to listen for a task
-        timeout_msec = 1000
+        timeout_msec = 10000
         heartbeat_comp_listener = heartbeat_task.Listener(timeout_msec)
         heartbeat_comp_listener.connect('localhost', port)
         self._poller = self._HeartbeatPoller(self, heartbeat_comp_listener)
@@ -181,8 +189,7 @@ class TaskControlExample(TaskControl):
     class _HeartbeatPoller(threading.Thread):
         """Polls for heartbeat messages from the task
 
-        When it get the message starting, state1, or state2 sets the slave state
-        to busy, otherwise set it to off.
+        When it gets a message it sets the state to busy.
         """
         def __init__(self, task_controller, heartbeat_comp_listener):
             """Constructor."""
@@ -199,24 +206,28 @@ class TaskControlExample(TaskControl):
             """Thread run method."""
             while not self._done.is_set():
 
-                # Listen to the task's heartbeat
+                # Listen to the task's heartbeat - this will wait for up
+                # to 10 seconds for a message
                 comp_msg = self._heartbeat_comp_listener.listen()
 
-                # Extract a task's state
-                state_task = self._get_state(comp_msg)
-
-                # If the task state changes log it
-                if state_task != self._state_task_prev:
-                    log.info('Slave task heartbeat message: ''{}'''.format(comp_msg))
-                    self._state_task_prev = state_task
-
-                # Update the controller state
-                if state_task == 'starting' or state_task == 'state1' or \
-                        state_task == 'state2':
-                    self._task_controller.set_slave_state_busy()
+                # If we don't get a message log a timeout
+                if comp_msg == '':
+                    log.info('Slave task heartbeat message: ''{}'''. \
+                            format(comp_msg))
+                    self._task_controller.set_slave_state_error()
                 else:
-                    config.state = state_task
-                time.sleep(1)
+
+                    # Extract a task's state
+                    state_task = self._get_state(comp_msg)
+
+                    # If the task state changes log it
+                    if state_task != self._state_task_prev:
+                        log.info('Slave task heartbeat message: ''{}'''. \
+                                format(comp_msg))
+                        self._state_task_prev = state_task
+
+                    # Update the controller state
+                    self._task_controller.set_slave_state_busy()
 
             # Set to idle before exiting.
             self._task_controller.set_slave_state_idle()
@@ -226,5 +237,5 @@ class TaskControlExample(TaskControl):
             """Extracts the state from the heartbeat message"""
             tokens = msg.split(" ")
             if len(tokens) < 4:
-                tokens = [' ', ' ', ' ', 'off', ' ', ' ']
+                tokens = [' ', ' ', ' ', '', ' ', ' ']
             return tokens[3]
