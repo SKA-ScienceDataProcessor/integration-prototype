@@ -6,13 +6,16 @@ Current modules:
 - Master Controller RPC interface.
 - CSP visibility emulator
 """
+# Raise and exception if the interpreter isn't Python 3
+import sys
+if sys.version_info.major < 3:
+    raise RuntimeError('Please use Python V3')
+
 import argparse
 import logging
-import sys
 import simplejson as json
 import os
 import rpyc
-
 
 class SipRunner(object):
     """Class to run SIP modules.
