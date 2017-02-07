@@ -137,8 +137,8 @@ class TaskControlExample(TaskControl):
 
     - Example tasks: tasks/task.py, exec_eng.py
     - Uses subproccess.Popen() to start the task.
-    - Checks for states (state1, state2, and busy) from the task and updates
-      the slave state (global) based on these to idle or busy.
+    - Checks for states (state1, state2, busy and finished) from the task and 
+      updates the slave state (global) based on these to idle or busy.
     """
     def __init__(self):
         TaskControl.__init__(self)
@@ -210,16 +210,19 @@ class TaskControlExample(TaskControl):
                 # to 10 seconds for a message
                 comp_msg = self._heartbeat_comp_listener.listen()
 
-                # If we don't get a message log a timeout
+                # An empty message means the listener timed out
                 if comp_msg == '':
-                    log.info('Slave task heartbeat message: ''{}'''. \
-                            format(comp_msg))
-                    self._task_controller.set_slave_state_error()
-                else:
+
+                    # If the slave isn't in the finished state log the
+                    # timeout and put the controller state to error
+                    if state_task != 'finished':
+                        log.info('Slave task heartbeat timeout')
+                        self._task_controller.set_slave_state_error()
+                else: 
 
                     # Extract a task's state
                     state_task = self._get_state(comp_msg)
-
+ 
                     # If the task state changes log it
                     if state_task != self._state_task_prev:
                         log.info('Slave task heartbeat message: ''{}'''. \
@@ -227,7 +230,10 @@ class TaskControlExample(TaskControl):
                         self._state_task_prev = state_task
 
                     # Update the controller state
-                    self._task_controller.set_slave_state_busy()
+                    if state_task != 'finished':
+                        self._task_controller.set_slave_state_busy()
+                    else:
+                        self._task_controller.set_slave_state_idle()
 
             # Set to idle before exiting.
             self._task_controller.set_slave_state_idle()
