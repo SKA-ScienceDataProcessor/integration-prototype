@@ -13,8 +13,7 @@
         [
           "stdout_handler",
           "file_handler_all"
-        ],
-        "propagate": false
+        ]
     }
   },
 
