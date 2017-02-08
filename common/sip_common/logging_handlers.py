@@ -15,7 +15,6 @@ Example:
 """
 import logging
 import logging.handlers
-import sys
 import time
 
 import simplejson as json
@@ -108,49 +107,5 @@ class ZmqLogHandler(logging.Handler):
         b_chan = b':'.join([b_level, b_chan])
         b_msg = self._to_bytes(self.format(record))
         self.zmq_publisher.send_multipart([b_chan, b_msg])
-
-
-class StdoutLogFormatter(logging.Formatter):
-    """Formats stdout log messages."""
-
-    def format(self, record: logging.LogRecord):
-        """Implements the logging.Formatter.format() method which converts
-         a logging.LogRecord object into the message to be displayed. The
-         attached logging handler will display this message to the output
-         specified by the handler.
-
-         This is used with a logging.StreamHandler which writes messages to
-         stdout from the LogAggregator class.
-
-         Args:
-             record (logging.LogRecord): logging record object.
-
-         Returns:
-             string, the formatted log message to be displayed.
-         """
-        _origin = '{}:{}:{}'.format(record.module,
-                                                     record.funcName,
-                                                     record.lineno)
-        _msg = record.getMessage()
-        _line = '-| {:38s} |{:1.1s}| {}'.format(
-            _origin,
-            record.levelname,
-            _msg
-        )
-        # if '_raw' in record.__dict__:
-        #     print(json.dumps(record._raw, indent=2))
-        return _line
-
-
-class StdoutLogHandler(logging.StreamHandler):
-    """Publishes messages to stdout"""
-
-    def __init__(self):
-        """Constructor.
-
-        Initialises the handler to log messages to stdout and sets the log
-        formatter."""
-        logging.StreamHandler.__init__(self, stream=sys.stdout)
-        self.formatter = StdoutLogFormatter()
 
 

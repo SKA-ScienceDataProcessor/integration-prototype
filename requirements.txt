@@ -6,7 +6,7 @@ pyzmq>=16.0.0
 rpyc==3.3.0
 simplejson==3.10.0
 spead2>=1.2.1
-zmq==0.0.0
+pyzmq==16.0.2
 Sphinx==1.5.1
 sphinx-rtd-theme>=0.1.9
 pyftpdlib>=1.4.0

@@ -1,0 +1,97 @@
+{
+  "__see__": "https://docs.python.org/3.5/library/logging.config.html",
+
+  "version": 1,
+  "disable_existing_loggers": false,
+
+  "formatters":
+  {
+    "stdout_format":
+    {
+      "format": "-| %(origin)-40s [%(levelname)-1.1s] %(message)s"
+    },
+    "file_format":
+    {
+      "format": "%(time)s %(origin)-40s %(hostname)-12s %(username)-5s %(levelname)-8s %(name)-12s %(message)s"
+    }
+  },
+
+  "filters":
+  {
+    "origin_filter_1":
+    {
+      "()": "logging_aggregator.OriginFilter",
+      "origin":
+      [
+        "heartbeat_listener",
+        "task_control.start"
+      ],
+      "exclude": true
+    },
+    "origin_filter_2":
+    {
+      "()": "logging_aggregator.OriginFilter",
+      "origin":
+      [
+        "slave_states.__init__"
+      ],
+      "exclude": false
+    },
+    "message_filter_1":
+    {
+      "()": "logging_aggregator.MessageFilter",
+      "messages":
+      [
+        "Slave task heartbeat message:"
+      ],
+      "exclude": true
+    },
+    "message_filter_2":
+    {
+      "()": "logging_aggregator.MessageFilter",
+      "messages":
+      [
+        "CLI"
+      ],
+      "exclude": false
+    }
+  },
+
+  "handlers":
+  {
+    "stdout_handler":
+    {
+      "class": "logging.StreamHandler",
+      "level": "DEBUG",
+      "formatter": "stdout_format",
+      "stream": "ext://sys.stdout",
+      "filters": [
+        "origin_filter_1",
+        "message_filter_1"
+      ]
+    },
+    "file_handler_all":
+    {
+      "class": "logging.FileHandler",
+      "level": "DEBUG",
+      "formatter": "file_format",
+      "filename": "all.log",
+      "mode": "w"
+    }
+  },
+
+  "loggers":
+  {
+    "sip.logging_aggregator":
+    {
+        "level": "DEBUG",
+        "handlers":
+        [
+          "stdout_handler",
+          "file_handler_all"
+        ],
+        "propagate": false
+    }
+  }
+
+}
