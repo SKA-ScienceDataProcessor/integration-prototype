@@ -18,8 +18,6 @@ import os
 
 import zmq
 
-from logging_handlers import StdoutLogFormatter
-
 
 class OriginFilter(logging.Filter):
     """Origin Filter.
