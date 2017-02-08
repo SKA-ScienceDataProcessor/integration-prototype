@@ -12,10 +12,10 @@ import json
 import logging
 import logging.config
 import logging.handlers
-import threading
-import json
 import os
+import threading
 
+import numpy as np
 import zmq
 
 
@@ -71,7 +71,6 @@ class MessageFilter(logging.Filter):
             if _filter in record.getMessage():
                 return False if self.exclude else True
         return True if self.exclude else False
-
 
 
 class LogAggregator(threading.Thread):
@@ -133,6 +132,10 @@ class LogAggregator(threading.Thread):
         a python logging interface.
         """
         log = logging.getLogger('sip.logging_aggregator')
+        fail_count = 0
+        fail_count_limit = 100
+        # Exponential relaxation of timeout in event loop.
+        timeout = np.logspace(-6, -2, fail_count_limit)
         while not self._stop_requested.is_set():
             try:
                 topic, values = self._subscriber.recv_multipart(zmq.NOBLOCK)
@@ -141,14 +144,17 @@ class LogAggregator(threading.Thread):
                     dict_values = json.loads(str_values)
                     record = logging.makeLogRecord(dict_values)
                     log.handle(record)
+                    fail_count = 0
                 except json.decoder.JSONDecodeError:
                     print('ERROR: Unable to convert JSON log record.')
                     raise
             except zmq.ZMQError as e:
                 if e.errno == zmq.EAGAIN:
-                    pass
+                    fail_count += 1
                 else:
                     raise  # Re-raise the exception
-            # Note: the value of the timeout might have to be reviewed
-            # if it blocks the CPU too much.
-            self._stop_requested.wait(timeout=1e-6)
+            if fail_count < fail_count_limit:
+                _timeout = timeout[fail_count]
+            else:
+                _timeout = timeout[-1]
+            self._stop_requested.wait(_timeout)
