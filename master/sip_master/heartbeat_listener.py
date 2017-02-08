@@ -47,6 +47,7 @@ class HeartbeatListener(threading.Thread):
         are no messages to retrieve.
         """
         self._listener = heartbeat.Listener(0)
+        self._sm = sm
         super(HeartbeatListener, self).__init__(daemon = True)
 
     def connect(self, host, port):
@@ -140,8 +141,8 @@ class HeartbeatListener(threading.Thread):
 
         # Post an event to the MC state machine
         if tasks_running == 0:
-            config.state_machine.post_event(['no tasks'])
+            self._sm.post_event(['no tasks'])
         if services_running == number_of_services:
-            config.state_machine.post_event(['all services'])
+            self._sm.post_event(['all services'])
         elif services_running > 0:
-            config.state_machine.post_event(['some services'])
+            self._sm.post_event(['some services'])
