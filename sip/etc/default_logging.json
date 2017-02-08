@@ -4,6 +4,43 @@
   "version": 1,
   "disable_existing_loggers": false,
 
+  "loggers":
+  {
+    "sip.logging_aggregator":
+    {
+        "level": "DEBUG",
+        "handlers":
+        [
+          "stdout_handler",
+          "file_handler_all"
+        ],
+        "propagate": false
+    }
+  },
+
+  "handlers":
+  {
+    "stdout_handler":
+    {
+      "class": "logging.StreamHandler",
+      "level": "DEBUG",
+      "formatter": "stdout_format",
+      "stream": "ext://sys.stdout",
+      "filters": [
+        "origin_filter_1",
+        "message_filter_1"
+      ]
+    },
+    "file_handler_all":
+    {
+      "class": "logging.FileHandler",
+      "level": "DEBUG",
+      "formatter": "file_format",
+      "filename": "all.log",
+      "mode": "w"
+    }
+  },
+
   "formatters":
   {
     "stdout_format":
@@ -55,43 +92,5 @@
       ],
       "exclude": false
     }
-  },
-
-  "handlers":
-  {
-    "stdout_handler":
-    {
-      "class": "logging.StreamHandler",
-      "level": "DEBUG",
-      "formatter": "stdout_format",
-      "stream": "ext://sys.stdout",
-      "filters": [
-        "origin_filter_1",
-        "message_filter_1"
-      ]
-    },
-    "file_handler_all":
-    {
-      "class": "logging.FileHandler",
-      "level": "DEBUG",
-      "formatter": "file_format",
-      "filename": "all.log",
-      "mode": "w"
-    }
-  },
-
-  "loggers":
-  {
-    "sip.logging_aggregator":
-    {
-        "level": "DEBUG",
-        "handlers":
-        [
-          "stdout_handler",
-          "file_handler_all"
-        ],
-        "propagate": false
-    }
   }
-
 }
