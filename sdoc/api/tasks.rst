@@ -16,7 +16,7 @@ Visibility Receiver
 Pulsar Search Receiver
 ----------------------
 
-.. automodule:: tasks.vis_receiver_task
+.. automodule:: tasks.pulsar_search_task
 
 
 Example Tasks
