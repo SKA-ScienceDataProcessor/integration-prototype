@@ -6,12 +6,13 @@ Current modules:
 - Master Controller RPC interface.
 - CSP visibility emulator
 """
+import os
+import sys
+
 import argparse
 import logging
-import sys
-import simplejson as json
-import os
 import rpyc
+import simplejson as json
 
 
 class SipRunner(object):
@@ -51,7 +52,7 @@ class SipRunner(object):
         os.environ['SIP_HOSTNAME'] = os.uname()[1]
         sys.path.append(os.path.join(os.path.dirname(__file__), 'common'))
         sys.path.append(os.path.join(os.path.dirname(__file__), 'master'))
-        from master.sip_master.main import main as master_main
+        from sip.master import main as master_main
         resources = os.path.join('master', 'etc', 'resources.json')
         slave_map = os.path.join('master', 'etc', 'slave_map.json')
         master_main(slave_map, resources)
@@ -167,11 +168,11 @@ class SipRunner(object):
 
     def run_csp_vis_sender(self):
         """Run the visibility (SPEAD) data emulator / sender"""
-        import emulators.csp_visibility_sender.__main__
+        import sip.emulators.csp_visibility_sender.__main__
         if self.args.config is not None:
             self._log.info('Loading config: {}'.format(self.args.config.name))
             config = json.load(self.args.config)
-            emulators.csp_visibility_sender.__main__.main(config, self._log)
+            sip.emulators.csp_visibility_sender.__main__.main(config, self._log)
         else:
             print('ERROR: Unable to run {}, configuration required.'
                   .format(self.args.module))
