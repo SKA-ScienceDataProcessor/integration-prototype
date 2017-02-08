@@ -49,12 +49,6 @@ class TestLogging(unittest.TestCase):
         while cls.sub_thread.isAlive():
             cls.sub_thread.join(timeout=1e-6)
 
-    def test_stdout(self):
-        l = logging_api.SipLogger('sip.logging.test1', level='DEBUG')
-        l.addHandler(logging_handlers.StdoutLogHandler())
-        for i in range(5):
-            l.critical('eeek {}'.format(i))
-
     def test_zmq(self):
         l = logging_api.SipLogger('sip.logging.test2', level='DEBUG')
         l.addHandler(logging_handlers.ZmqLogHandler.to('test:test2'))

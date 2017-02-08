@@ -56,10 +56,11 @@ class SipLogRecord(logging.LogRecord):
         # Note: Can also access the following variables via the formatter as:
         #   %(hostname)s
         #   %(username)s
+        #   %(origin)s
         #   %(time)s
-        #   %(_raw)s
         self.hostname = socket.gethostname()
         self.username = getpass.getuser()
+        self.origin = '{}.{}:{}'.format(self.module, self.funcName, self.lineno)
         self.time = datetime.datetime.utcnow().isoformat()
         self._raw = self.__dict__.copy()
 
