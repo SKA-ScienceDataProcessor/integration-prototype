@@ -21,7 +21,7 @@ import datetime
 import zmq
 from urllib.request import urlopen
 
-sys.path.append(os.path.join(os.path.dirname(__file__),'..', 'common'))
+sys.path.append(os.path.join(os.path.dirname(__file__),'..', '..'))
 
 from sip.common import heartbeat_task
 

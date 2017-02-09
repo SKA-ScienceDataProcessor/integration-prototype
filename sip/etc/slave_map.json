@@ -44,11 +44,11 @@
         "launch_policy": "ssh",
         "task_control_module": {
             "name": "TaskControlProcessPoller",
-            "timeout": 10.0
+            "timeout": 30.0
         },
         "task": [
             "sip/tasks/vis_receiver_task.py",
-            "#{sip_root}/etc/vis_receiver_config.json"
+            "#{sip_root}/sip/etc/vis_receiver_config.json"
             ]
         },
     "pulsar_search": {
@@ -61,7 +61,7 @@
         },
         "task": [
             "sip/tasks/pulsar_search_task.py",
-            "#{sip_root}/etc/pulsar_receiver_config.json"
+            "#{sip_root}/sip/etc/pulsar_receiver_config.json"
             ]
         }
 }

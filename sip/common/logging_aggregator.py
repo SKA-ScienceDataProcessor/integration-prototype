@@ -8,8 +8,6 @@ messages.
 
 .. moduleauthor:: Benjamin Mort <benjamin.mort@oerc.ox.ac.uk>
 """
-import os
-
 import json
 import logging
 import logging.config
