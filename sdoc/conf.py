@@ -37,6 +37,7 @@ import sip
 autodoc_mock_imports = ['spead2',
                         'spead2.recv',
                         'spead2.send',
+                        'netifaces',
                         'docker',
                         'pyroute2',
                         'pyftpdlib',

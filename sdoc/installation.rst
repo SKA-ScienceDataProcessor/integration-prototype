@@ -202,13 +202,13 @@ UDP Socket Buffer Size
 
 The default UDP socket buffer size on Ubuntu 16.04 Server is only 208 kiB,
 and this will result in dropped packets when streaming data using SPEAD.
-To change it to 32 MiB, add these lines to /etc/sysctl.conf:
+To change it to 32 MiB, add these lines to ``/etc/sysctl.conf``::
 
-net.core.rmem_max = 33554432
-net.core.rmem_default = 8388608
+    net.core.rmem_max = 33554432
+    net.core.rmem_default = 8388608
 
 Reboot the virtual machine and check that the change was applied by
-inspecting /proc/sys/net/core/rmem_max
+inspecting ``/proc/sys/net/core/rmem_max``
 
 Oxford SKA Nodes
 ================
