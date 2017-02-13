@@ -98,7 +98,7 @@ configured by the ``timeout`` task_control_module setting in its
 settings group in the ``slave_map.json`` file.
 
 pulsar_search
-^^^^^^^^^^^
+^^^^^^^^^^^^^
 
 This is an Capability task which ingests pulsar data using FTP.
 It is started with the command:
@@ -148,7 +148,7 @@ an example config file can be found in the ``emulators/csp_visibility/etc``
 folder.
 
 CSP pulsar emulator
-^^^^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^
 
 The CSP pulsar emulator sends test pulsar dat through FTP protocol using stream
 mode to the SIP.

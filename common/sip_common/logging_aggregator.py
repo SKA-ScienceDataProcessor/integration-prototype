@@ -10,11 +10,67 @@ messages.
 """
 import json
 import logging
+import logging.config
 import logging.handlers
+import os
 import threading
 
+import numpy as np
 import zmq
-from logging_handlers import StdoutLogHandler
+
+
+class OriginFilter(logging.Filter):
+    """Origin Filter.
+
+    Filters LogRecord origins according to a minimal match with the pattern:
+        module.function:lineno
+
+    The filter is either inclusive or exclusive according to the parameter
+    exclude passed to the constructor.
+    """
+
+    def __init__(self, origin=None, exclude=True):
+        """
+        Constructor.
+
+        Args:
+            origin (list): List of origin strings to match against.
+            exclude (bool): If true, exclude messages from the specified origins
+                            If false, include messages from the specified origins
+        """
+        self.origin = origin
+        if isinstance(self.origin, str):
+            self.origin = list([self.origin])
+        self.exclude = exclude
+
+    def filter(self, record: logging.LogRecord):
+        """Filter log messages."""
+        if self.origin is None:
+            return True
+        for _filter in self.origin:
+            if record.origin.startswith(_filter):
+                return False if self.exclude else True
+        return True if self.exclude else False
+
+
+class MessageFilter(logging.Filter):
+    """Message filter"""
+
+    def __init__(self, messages=None, exclude=True):
+        """."""
+        self.message_filter = messages
+        if isinstance(self.message_filter, str):
+            self.message_filter = list([self.message_filter])
+        self.exclude = exclude
+
+    def filter(self, record: logging.LogRecord):
+        """."""
+        if self.message_filter is None:
+            return True
+        for _filter in self.message_filter:
+            if _filter in record.getMessage():
+                return False if self.exclude else True
+        return True if self.exclude else False
 
 
 class LogAggregator(threading.Thread):
@@ -58,6 +114,13 @@ class LogAggregator(threading.Thread):
         subscriber.setsockopt_string(zmq.SUBSCRIBE, '')
         self._subscriber = subscriber
 
+        # Construct and configure logger object.
+        config_file = os.path.join('sip', 'etc', 'default_logging.json')
+        print('Loading logging configuration: {}.'.format(config_file))
+        with open(config_file) as f:
+            _config = json.load(f)
+        logging.config.dictConfig(_config)
+
     def stop(self):
         """Stop the thread."""
         self._stop_requested.set()
@@ -68,10 +131,11 @@ class LogAggregator(threading.Thread):
         Receives log messages from connected publishers and logs them via
         a python logging interface.
         """
-        log = logging.getLogger('sip.logging')
-        log.setLevel('DEBUG')
-        log.addHandler(StdoutLogHandler())
-
+        log = logging.getLogger('sip.logging_aggregator')
+        fail_count = 0
+        fail_count_limit = 100
+        # Exponential relaxation of timeout in event loop.
+        timeout = np.logspace(-6, -2, fail_count_limit)
         while not self._stop_requested.is_set():
             try:
                 topic, values = self._subscriber.recv_multipart(zmq.NOBLOCK)
@@ -80,14 +144,17 @@ class LogAggregator(threading.Thread):
                     dict_values = json.loads(str_values)
                     record = logging.makeLogRecord(dict_values)
                     log.handle(record)
+                    fail_count = 0
                 except json.decoder.JSONDecodeError:
                     print('ERROR: Unable to convert JSON log record.')
                     raise
             except zmq.ZMQError as e:
                 if e.errno == zmq.EAGAIN:
-                    pass
+                    fail_count += 1
                 else:
                     raise  # Re-raise the exception
-            # Note: the value of the timeout might have to be reviewed
-            # if it blocks the CPU too much.
-            self._stop_requested.wait(timeout=1e-6)
+            if fail_count < fail_count_limit:
+                _timeout = timeout[fail_count]
+            else:
+                _timeout = timeout[-1]
+            self._stop_requested.wait(_timeout)
