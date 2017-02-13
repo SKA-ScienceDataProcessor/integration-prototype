@@ -1,21 +1,22 @@
-from docker import Client
+# coding: utf-8
+"""Functions for starting and stopping slave controllers."""
+
+__author__ = 'David Terrett'
+
 import logging
 import netifaces
 import os
+import socket
+import sys
+
+from docker import Client
 from plumbum import SshMachine
 from pyroute2 import IPRoute
-import rpyc
-import socket
-import time
 
-from sip_common import logger
-
+from sip_common.logging_api import log
 from sip_master import config
 from sip_master import task_control
 from sip_master.slave_states import SlaveControllerSM
-
-"""Functions for starting and stopping slave controllers."""
-__author__ = 'David Terrett'
 
 
 def _find_route_to_logger(host):
@@ -35,9 +36,12 @@ def start(name, type):
     if type not in config.slave_config:
         raise RuntimeError('"{}" is not a known task type'.format(type))
 
+    log.info('Starting slave (name={}, type={})'.format(name, type))
+
     # Create an entry in the slave status dictionary if one doesn't already
     # exist
     if name not in config.slave_status:
+        log.info('Creating new slave, name={}'.format(name))
         task_controller = task_control.SlaveTaskControllerRPyC()
         config.slave_status[name] = {
                 'type': type,
@@ -66,11 +70,12 @@ def start(name, type):
                     'Error starting "{}": {} is not a known slave launch '
                     'policy'.format(name, slave_config['launch_policy']))
 
+        log.debug('Started slave! (name={}, type={})'.format(name, type))
         # Initialise the task status
         slave_status['timeout counter'] = slave_config['timeout']
 
-        # Connect the heartbeat listener to the address it is sending heartbeats
-        # to.
+        # Connect the (MC?) heartbeat listener to the address it is
+        # sending heartbeats to.
         config.heartbeat_listener.connect(slave_status['address'],
                                           slave_status['heartbeat_port'])
 
@@ -89,7 +94,11 @@ def _start_docker_slave(name, type, cfg, status):
     NB This only works on localhost
     """
     # Improve logging soon!
-    logging.getLogger('requests').setLevel(logging.DEBUG)
+    req_log = logging.getLogger('requests')
+    req_log.setLevel(logging.WARN)
+    req_log.addHandler(logging.StreamHandler(sys.stdout))
+
+    log.info('Starting Docker slave (name={}, type={})'.format(name, type))
 
     # Create a Docker client
     client = Client(version='1.21', base_url=cfg['engine_url'])
@@ -103,16 +112,15 @@ def _start_docker_slave(name, type, cfg, status):
     task_control_module = cfg['task_control_module']['name']
     logger_address = netifaces.ifaddresses(
                 'docker0')[netifaces.AF_INET][0]['addr']
-    container_id = client.create_container(
-                image=image,
-                command=['/home/sdp/integration-prototype/slave/bin/slave',
-                        name,
-                        str(heartbeat_port),
-                        str(rpc_port),
-                        logger_address,
-                        task_control_module,
-                        ]
-                   )['Id']
+    _cmd = ['/home/sdp/integration-prototype/slave/bin/slave',
+            name,
+            str(heartbeat_port),
+            str(rpc_port),
+            logger_address,
+            task_control_module,
+            ]
+    log.debug('Docker command = {}'.format(_cmd))
+    container_id = client.create_container(image=image, command=_cmd)['Id']
 
     # Start it
     client.start(container_id)
@@ -127,14 +135,18 @@ def _start_docker_slave(name, type, cfg, status):
     status['rpc_port'] = rpc_port
     status['heartbeat_port'] = heartbeat_port
     status['sip_root'] = '/home/sdp/integration-prototype'
-    logger.info('"{}" (type {}) started in container {} at {}'.format(
+    log.info('"{}" (type {}) started in container {} at {}'.format(
             name, type, container_id, ip_address))
 
 
 def _start_ssh_slave(name, type, cfg, status):
     """Starts a slave controller that is a SSH client."""
-    # Improve logging setup!!!
-    logging.getLogger('plumbum').setLevel(logging.DEBUG)
+    # FIXME(BM) need to look into how capture plumbum messages.
+    pb_log = logging.getLogger('plumbum')
+    pb_log.setLevel(logging.INFO)
+    pb_log.addHandler(logging.StreamHandler(sys.stdout))
+
+    log.info('Starting SSH slave (name={}, type={})'.format(name, type))
 
     # Find a host that supports ssh
     host = config.resource.allocate_host(name, {'launch_protocol': 'ssh'}, {})
@@ -152,16 +164,20 @@ def _start_ssh_slave(name, type, cfg, status):
     # Get the address of the logger (as seen from the remote host)
     logger_address = _find_route_to_logger(host)
 
+    log.debug('Getting SSH slave interface.')
     ssh_host = SshMachine(host)
     try:
         py3 = ssh_host['python3']
     except:
-        logger.fatal('python3 not available on machine {}'.format(ssh_host))
-    logger.info('python3 is available at {}'.format(py3.executable))
+        log.fatal('Python3 not available on machine {}'.format(ssh_host))
+
+    log.info('Python3 is available on {} at {}'.format(ssh_host,
+                                                       py3.executable))
 
     # Construct the command line to start the slave
     cmd = py3[os.path.join(sip_root, 'slave/bin/slave')] \
           [name][heartbeat_port][rpc_port][logger_address][task_control_module]
+    log.debug('SSH command = {}'.format(cmd))
     ssh_host.daemonic_popen(cmd, stdout='{}_sip.output'.format(name))
 
     # Fill in the status dictionary
@@ -169,7 +185,7 @@ def _start_ssh_slave(name, type, cfg, status):
     status['rpc_port'] = rpc_port
     status['heartbeat_port'] = heartbeat_port
     status['sip_root'] = sip_root
-    logger.info('{} (type {}) started on {}'.format(name, type, host))
+    log.info('{} (type {}) started on {}'.format(name, type, host))
 
 
 def stop(name, status):

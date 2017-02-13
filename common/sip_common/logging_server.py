@@ -1,54 +1,47 @@
-#!/usr/bin/env python3
+# coding: utf-8
+"""Logging aggregator service script.
 
-import logging, logging.handlers
-import os
-import socket
-import zmq
+Receives messages from other SIP modules via ZMQ. This service is currently
+started by the Master Controller main() (master/sip_master/main.py).
 
-"""Logging server.
+Notes:
+    - Needs configuration for SUB port, currently using the default
+      TCP logging port.
+    - Needs a REST / RPC (and CLI) API allowing configuring of
+      filters and handlers.
 
-An example of logging server which uses ZeroMQ module, based on
-http://nullege.com/codes/show/src@p@y@pyzmq-14.2.0@examples@logger@zmqlogger.py/17/zmq.log.handlers.PUBHandler
-using the publish-subscribe pattern, PUB/SUB.
-
-The host name is taken from SIP_HOSTNAME environment variable,
-host IP (required by subscriber bind method) is determined by
-socket.gethostbyname() method.
-
-The value of logging.handlers.DEFAULT_TCP_LOGGING_PORT is 9020 .
-
-The server listens to the port logging.handlers.DEFAULT_TCP_LOGGING_PORT
-where the different modules send their logs, and redirects them to stdout .
-
+.. moduleauthor:: Benjamin Mort <benjamin.mort@oerc.ox.ac.uk>
 """
+import multiprocessing
+import os
+import signal
+import sys
 
-__author__ = 'Vlad Stolyarov'
-
-sip_hostname = os.environ['SIP_HOSTNAME'] = os.uname()[1]
-print('Hostname is %s' % sip_hostname)
-sip_address = socket.gethostbyname(sip_hostname)
-port = logging.handlers.DEFAULT_TCP_LOGGING_PORT
+from logging_aggregator import LogAggregator
 
 
-def sub_logger(p, level=logging.DEBUG):
-    ctx = zmq.Context()
-    sub = ctx.socket(zmq.SUB)
-    sub.bind('tcp://*:%i' % (p))
-    sub.setsockopt_string(zmq.SUBSCRIBE, '')
+def signal_handler(signum, frame):
+    """signal handler.
 
-    logging.basicConfig(level=level)
+    Args:
+        signum: The signal number received.
+        frame: The current stack frame.
+    """
+    print('Logging Aggregator (pid: {}) received SIGINT.'.
+          format(multiprocessing.current_process().pid))
+    sys.exit(0)
 
-    while True:
-        level, message = sub.recv_multipart()
-        if message.endswith(str.encode("\n")):
-            # trim trailing newline, which will get appended again
-            message = message[:-1]
-        log = getattr(logging, level.lower().decode("utf-8"))
-        log(message.decode("utf-8"))
 
-# start the log watcher
-try:
-    sub_logger(port)
-except KeyboardInterrupt:
-    pass
+def main():
+    """Create and start the log aggregator"""
+    signal.signal(signal.SIGINT, signal_handler)
+    print('Starting Logging Aggregator service (pid: {}).'.format(os.getpid()))
+    log = LogAggregator()
+    log.daemon = True
+    log.start()
+    log.join()
+    print('Terminating Logging Aggregator service (pid: {}).'.
+          format(os.getpid()))
 
+if __name__ == '__main__':
+    main()

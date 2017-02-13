@@ -1,21 +1,22 @@
 #!/usr/bin/python3
 # -*- coding: utf-8 -*-
-"""Visibility receiver task module.
+"""Pulsar search receiver task module.
 
-Implements C.1.2.1.4 from the product tree.
+Implements C.1.2.1.2 from the product tree.
 """
 
 import os
 import signal
 import sys
-
 import simplejson as json
 
 sys.path.append(os.path.join(os.path.dirname(__file__), '..', 'common'))
 sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
 
-from processor_software.vis_receiver import VisReceiver
+from processor_software.pulsar_search import PulsarStart
 from sip_common.logging_api import log
+
+__author__ = 'Nijin Thykkathu'
 
 
 def _sig_handler(signum, frame):
@@ -27,15 +28,12 @@ def main():
     # Install handler to respond to SIGTERM
     signal.signal(signal.SIGTERM, _sig_handler)
 
-    # FIXME(FD) Get configuration data - it should not happen like this.
     with open(sys.argv[1]) as f:
         config = json.load(f)
 
-    # Create streams and receive SPEAD data.
-    receiver = VisReceiver(config, log)
+    # Starts the pulsar search ftp server
+    receiver = PulsarStart(config, log)
     receiver.run()
-
 
 if __name__ == '__main__':
     main()
-

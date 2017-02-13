@@ -1,17 +1,17 @@
-from docker import Client
-import rpyc
+# coding: utf-8
+"""Functions executed when the master controller is shut down."""
+
+__author__ = 'David Terrett'
+
 import os
 import signal
 import threading
 import time
 
-from sip_common import logger
+from sip_common.logging_api import log
 
 from sip_master import config
 from sip_master import slave_control
-
-"""Functions executed when the master controller is shut down."""
-__author__ = 'David Terrett'
 
 
 class Shutdown(threading.Thread):
@@ -22,7 +22,7 @@ class Shutdown(threading.Thread):
 
     def run(self):
         """Thread run routine."""
-        logger.info('starting shutdown')
+        log.info('starting shutdown')
 
         # Shut down any slaves that are still running
         for slave, status in config.slave_status.items():
@@ -30,10 +30,11 @@ class Shutdown(threading.Thread):
                 slave_control.stop(slave, status)
 
         # Shut down the log server
-        print('Terminating logserver, pid ', config.logserver.pid)
-        os.kill(config.logserver.pid, signal.SIGTERM)
+        log.info('Terminating logserver, pid ', config.logserver.pid)
+        config.logserver.send_signal(signal.SIGINT)
+        # os.kill(config.logserver.pid, signal.SIGTERM)
 
-        logger.info('shutdown done')
+        print('Shutdown complete. Goodbye!')
 
         # Give the rpc service a chance to send a reply
         time.sleep(1)

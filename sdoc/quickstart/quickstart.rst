@@ -14,6 +14,7 @@ please refer to the :ref:`Installation` page.
 
     components.inc.rst
     running_sip.inc.rst
+    logging.rst
     developer_notes.inc.rst
 
 
