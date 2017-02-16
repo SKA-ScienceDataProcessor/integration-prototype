@@ -48,6 +48,12 @@ class Missing(State):
         log.info('{} (type {}) state timed-out'.format(sm._name, sm._type))
 
 
+class Error(State):
+    """Slave error state."""
+    def __init__(self, sm):
+        log.info('{} (type {}) state error'.format(sm._name, sm._type))
+
+
 class SlaveControllerSM(StateMachine):
     """Slave Controller state machine class."""
     def __init__(self, name, type, task_controller):
@@ -68,6 +74,7 @@ class SlaveControllerSM(StateMachine):
         'Starting': {
             'idle heartbeat':   (1, Idle, LoadTask),
             'busy heartbeat':   (1, Busy, None),
+            'error heartbeat':  (1, Error, None),
             'stop sent':        (1, _End, None)
         },
         'Idle': {
@@ -80,14 +87,21 @@ class SlaveControllerSM(StateMachine):
             'busy heartbeat':   (1, Busy, None),
             'idle heartbeat':   (1, Idle, None),
             'no heartbeat':     (1, Missing, None),
+            'error heartbeat':  (1, Error, None),
             'stop sent':        (1, _End, None)
         },
         'Busy': {
             'idle heartbeat':   (1, Idle, None),
             'no heartbeat':     (1, Missing, None),
+            'error heartbeat':  (1, Error, None),
             'stop sent':        (1, _End, None)
         },
         'Missing': {
+            'idle heartbeat':   (1, Idle, LoadTask),
+            'busy heartbeat':   (1, Busy, None),
+            'stop sent':        (1, _End, None)
+        },
+        'Error': {
             'idle heartbeat':   (1, Idle, LoadTask),
             'busy heartbeat':   (1, Busy, None),
             'stop sent':        (1, _End, None)

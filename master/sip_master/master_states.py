@@ -84,7 +84,6 @@ class MasterControllerSM(StateMachine):
 
     state_table = {
         'Standby': {
-            'all services':     (1, Available, None),
             'offline':          (0, None, None),
             'online':           (1, Configuring, online),
             'shutdown':         (1, _End, shutdown)
@@ -96,7 +95,6 @@ class MasterControllerSM(StateMachine):
             'shutdown':         (0, None, None)
         },
         'Available': {
-            'no tasks':         (1, Standby, None),
             'some services':    (1, Unavailable, None),
             'offline':          (1, UnConfiguring, offline),
             'online':           (0, None, None),
@@ -105,7 +103,6 @@ class MasterControllerSM(StateMachine):
             'degrade':          (1, Degraded, None)
         },
         'Degraded': {
-            'no tasks':         (1, Standby, None),
             'some services':    (1, Unavailable, None),
             'all services':     (1, Available, None),
             'offline':          (1, UnConfiguring, offline),
@@ -113,7 +110,6 @@ class MasterControllerSM(StateMachine):
             'shutdown':         (0, None, None)
         },
         'Unavailable': {
-            'no tasks':         (1, Standby, None),
             'all services':     (1, Available, None),
             'offline':          (1, UnConfiguring, offline),
             'online':           (0, None, None),

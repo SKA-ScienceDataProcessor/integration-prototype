@@ -47,6 +47,7 @@ class HeartbeatListener(threading.Thread):
         are no messages to retrieve.
         """
         self._listener = heartbeat.Listener(0)
+        self._sm = sm
         super(HeartbeatListener, self).__init__(daemon = True)
 
     def connect(self, host, port):
@@ -94,8 +95,9 @@ class HeartbeatListener(threading.Thread):
                 if state == 'busy':
                     status['state'].post_event(['busy heartbeat'])
                 elif state == 'idle':
-                    log.info('idle heartbeat from {}'.format(name))
                     status['state'].post_event(['idle heartbeat'])
+                elif state == 'error':
+                    status['state'].post_event(['error heartbeat'])
                 else:
                     log.error('Invalid state received from slave: {}'.
                               format(state))
@@ -139,8 +141,8 @@ class HeartbeatListener(threading.Thread):
 
         # Post an event to the MC state machine
         if tasks_running == 0:
-            config.state_machine.post_event(['no tasks'])
-        elif services_running == number_of_services:
-            config.state_machine.post_event(['all services'])
-        else:
-            config.state_machine.post_event(['some services'])
+            self._sm.post_event(['no tasks'])
+        if services_running == number_of_services:
+            self._sm.post_event(['all services'])
+        elif services_running > 0:
+            self._sm.post_event(['some services'])

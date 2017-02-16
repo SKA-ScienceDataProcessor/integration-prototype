@@ -22,10 +22,11 @@ class Configure(threading.Thread):
         log.info('Starting configuration.')
 
         # Go through the slave map and start all the tasks that are marked
-        # as being required for the system to be online
+        # as being required for the system to be online. For these tasks
+        # we use the same string for both the task name and type as, by
+        # definition there is only one task of each type.
         for task, cfg in config.slave_config.items():
             if cfg.get('online', False):
-                # FIXME(BM) should this be task, name?
                 slave_control.start(task, task)
 
         log.info('Configuration thread exiting.')
