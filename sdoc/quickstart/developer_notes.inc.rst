@@ -32,14 +32,14 @@ creating a tutorial task.
 
 The most basic steps required to add a new task are as follows.
 
-1. Create an executable task script in the ``tasks`` folder.
-2. Add configuration to the ``master/etc/slave_map.json`` task. This
+1. Create an executable task script in the ``sip/tasks`` folder.
+2. Add configuration to the ``sip/etc/slave_map.json`` task. This
    configuration file registers the task with the Master Controller and
    associates it with a slave type and slave task control module.
 
 Depending on the type of task it may be required to add a new slave
 task control module class. The task control modules, which are defined in
-``slave/sip_slave/task_control.py``, set the policy for how a slave runs the
+``sip/slave/task_control.py``, set the policy for how a slave runs the
 task.
 
 More development work will be needed to define new slave types.

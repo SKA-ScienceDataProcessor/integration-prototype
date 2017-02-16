@@ -13,15 +13,15 @@ and associated data descriptions, and a ``Simulator`` class which
 generates visibility data and sends it using the ``HeapStreamer``. This
 module is callable as a result of the ``__main__.py`` script.
 
-.. module:: emulators.csp_visibility_sender.heap_streamer
+.. module:: sip.emulators.csp_visibility_sender.heap_streamer
 
-..  autoclass:: emulators.csp_visibility_sender.heap_streamer.HeapStreamer
+..  autoclass:: sip.emulators.csp_visibility_sender.heap_streamer.HeapStreamer
     :members:
 
     ..  automethod:: __init__
 
 
-.. module:: emulators.csp_visibility_sender.simulator
+.. module:: sip.emulators.csp_visibility_sender.simulator
 
 ..  autoclass:: AbstractSimulator
     :members:

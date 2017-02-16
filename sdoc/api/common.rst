@@ -3,7 +3,7 @@ Common functions
 ================
 
 - Module: :mod:`sip.common`
-- Source code: :source:`common/sip_common`
+- Source code: :source:`sip/common`
 
 This module defines a number of common functions used throughout the SIP
 library. This includes
@@ -40,39 +40,39 @@ to be used by SIP modules for publishing log messages.
 
 .. code-block:: python
 
-    from sip_common.logging_api import log
+    from sip.common.logging_api import log
     log.info('my info message')
 
 This functionality is implemented by overriding a default Python
 ``logging.Logger`` object and ``logging.LogRecord`` and attaching a specialsed
 ``logging.Handler`` defined in the :mod:`logging_handlers` module.
 
-.. autoclass:: sip_common.logging_api.SipLogger
+.. autoclass:: sip.common.logging_api.SipLogger
     :members:
     :show-inheritance:
 
-.. autoclass:: sip_common.logging_api.SipLogRecord
+.. autoclass:: sip.common.logging_api.SipLogRecord
     :members:
     :show-inheritance:
 
 Logging Handlers
 ^^^^^^^^^^^^^^^^
 
-.. automodule:: sip_common.logging_handlers
+.. automodule:: sip.common.logging_handlers
     :members:
     :show-inheritance:
 
 Logging Aggregator
 ^^^^^^^^^^^^^^^^^^
 
-.. automodule:: sip_common.logging_aggregator
+.. automodule:: sip.common.logging_aggregator
     :members:
     :show-inheritance:
 
 Logging Aggregator (Server) Service application
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-.. automodule:: sip_common.logging_server
+.. automodule:: sip.common.logging_server
     :members:
     :show-inheritance:
 
@@ -86,17 +86,17 @@ Slave Heartbeats
 
 The sender class does ...
 
-.. autoclass:: sip_common.heartbeat.Sender
+.. autoclass:: sip.common.heartbeat.Sender
     :members:
 
 
-.. autoclass:: sip_common.heartbeat.Listener
+.. autoclass:: sip.common.heartbeat.Listener
     :members:
 
 Task Heartbeats
 ^^^^^^^^^^^^^^^
 
-.. automodule:: sip_common.heartbeat_task
+.. automodule:: sip.common.heartbeat_task
     :members:
     :show-inheritance:
 
@@ -105,7 +105,7 @@ Task Heartbeats
 State Machines
 --------------
 
-.. automodule:: sip_common.state_machine
+.. automodule:: sip.common.state_machine
     :members:
     :show-inheritance:
 
@@ -114,6 +114,6 @@ State Machines
 
 Resource Manager
 ----------------
-.. automodule:: common.sip_common.resource_manager
+.. automodule:: sip.common.resource_manager
     :members:
     :show-inheritance:
