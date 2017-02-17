@@ -10,6 +10,7 @@ implement the start() and stop() methods.
 import subprocess
 import threading
 import time
+import os
 
 from sip.common import heartbeat_task
 from sip.common.logging_api import log
@@ -81,7 +82,7 @@ class TaskControlProcessPoller(TaskControl):
             settings (dict): Settings dictionary for the task control object.
         """
         # Start a task
-        self.name = task[0]
+        self.name = os.path.normpath(task[0])
         self.settings = settings
         log.info('[TaskControllProcessPoller] Starting task {}'.format(self.name))
         self.subproc = subprocess.Popen(task)
@@ -137,7 +138,7 @@ class TaskControlExample(TaskControl):
 
     - Example tasks: tasks/task.py, exec_eng.py
     - Uses subproccess.Popen() to start the task.
-    - Checks for states (state1, state2, busy and finished) from the task and 
+    - Checks for states (state1, state2, busy and finished) from the task and
       updates the slave state (global) based on these to idle or busy.
     """
     def __init__(self):
@@ -157,7 +158,7 @@ class TaskControlExample(TaskControl):
             task (string list): Path to the task and its command line arguments.
             settings (dict): Settings dictionary for the task control object.
         """
-        self.name = task[0]
+        self.name = os.path.normpath(task[0])
         _state_task = 'off'
         _state_task_prev = 'off'
 
@@ -218,11 +219,11 @@ class TaskControlExample(TaskControl):
                     if state_task != 'finished':
                         log.info('Slave task heartbeat timeout')
                         self._task_controller.set_slave_state_error()
-                else: 
+                else:
 
                     # Extract a task's state
                     state_task = self._get_state(comp_msg)
- 
+
                     # If the task state changes log it
                     if state_task != self._state_task_prev:
                         log.info('Slave task heartbeat message: ''{}'''. \

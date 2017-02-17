@@ -38,18 +38,20 @@ from sip.master.rpc_service import RpcService
 
 __author__ = 'David Terrett + Brian McIlwrath'
 
-config_file = os.path.join(
-    os.path.dirname(__file__), '..', 'etc', 'slave_map.json')
-resources_file = os.path.join(
-    os.path.dirname(__file__), '..', 'etc', 'resources.json')
+sip_root = os.path.join(os.path.dirname(__file__), '..')
+config_file = os.path.join(sip_root, 'etc', 'slave_map.json')
+resources_file = os.path.join(sip_root, 'etc', 'resources.json')
 
 # Create the resource manager
 with open(resources_file) as f:
     _resources = json.load(f)
     # If using localhost, and sip root is set to #cwd replace it.
-    if 'localhost' in _resources and \
-                    _resources['localhost']['sip_root'] == '#cwd':
-        _resources['localhost']['sip_root'] = os.getcwd()
+    # if 'localhost' in _resources and \
+    #                 _resources['localhost']['sip_root'] == '#cwd':
+    #     _resources['localhost']['sip_root'] = os.getcwd()
+    # FIXME(FD) Check this is an acceptable change.
+    if 'localhost' in _resources:
+        _resources['localhost']['sip_root'] = sip_root
     print('Resource table:')
     for i, resource in enumerate(_resources):
         print('[{:03d}] {}'.format(i, resource))
@@ -64,7 +66,7 @@ config.resource.allocate_host(
 
 # Start logging server as a subprocess (without a shell).
 config.logserver = subprocess.Popen(
-    ['python3', os.path.join('sip', 'common', 'logging_server.py')])
+    ['python3', os.path.join(sip_root, 'common', 'logging_server.py')])
 
 # Wait until it initializes
 time.sleep(1.0)

@@ -31,6 +31,7 @@ def main():
         config = json.load(f)
 
     # Create streams and receive SPEAD data.
+    os.chdir(os.path.expanduser('~'))
     receiver = VisReceiver(config, log)
     receiver.run()
 

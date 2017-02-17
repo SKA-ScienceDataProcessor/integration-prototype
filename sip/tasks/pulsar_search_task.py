@@ -32,6 +32,7 @@ def main():
         config = json.load(f)
 
     # Starts the pulsar search ftp server
+    os.chdir(os.path.expanduser('~'))
     receiver = PulsarStart(config, log)
     receiver.run()
 

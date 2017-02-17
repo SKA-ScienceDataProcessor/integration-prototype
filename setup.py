@@ -1,13 +1,10 @@
 #!/usr/bin/env python
 from numpy import get_include
-from os.path import join, dirname
+import os
 import platform
-try:
-    from setuptools import setup, Extension
-    from setuptools.command.build_ext import build_ext
-except ImportError:
-    from distutils.core import setup, Extension
-    from distutils.command.build_ext import build_ext
+from setuptools import setup, find_packages, Extension
+from setuptools.command.build_ext import build_ext
+from setuptools.command.install import install
 
 # Define the extension modules to build.
 modules = [
@@ -41,10 +38,25 @@ class BuildExt(build_ext):
         build_ext.build_extension(self, ext)
 
 
+class Install(install):
+    """Class used to install SIP. Inherits install."""
+
+    def run(self):
+        """Overridden method. Runs the installation."""
+        install.run(self)  # Call the base class method.
+
+        # Make sure all Python tasks are executable.
+        for file_path in self.get_outputs():
+            if 'tasks' in file_path and '.py' in file_path:
+                st = os.stat(file_path)
+                os.chmod(file_path, st.st_mode | 73)
+
+
 def get_sip_version():
     """Get the version of SIP from the version file."""
     globals_ = {}
-    with open(join(dirname(__file__), 'sip', '_version.py')) as f:
+    with open(os.path.join(
+            os.path.dirname(__file__), 'sip', '_version.py')) as f:
         code = f.read()
     exec(code, globals_)
     return globals_['__version__']
@@ -54,14 +66,14 @@ def get_sip_version():
 extensions = []
 for m in modules:
     extensions.append(Extension(
-        'sip.ext.' + m[0], sources=[join('sip', 'ext', 'src', m[1])],
+        'sip.ext.' + m[0], sources=[os.path.join('sip', 'ext', 'src', m[1])],
         language='c'))
 setup(
     name='sip',
     version=get_sip_version(),
     description='SDP Integration Prototype',
-    packages=['sip', 'sip.common', 'sip.emulators', 'sip.ext', 'sip.master',
-              'sip.processor_software', 'sip.slave', 'sip.tasks'],
+    packages=find_packages(),
+    package_data={'': ['*.json']},
     ext_modules=extensions,
     classifiers=[
             'Development Status :: 3 - Alpha',
@@ -77,5 +89,5 @@ setup(
     license='Apache',
     install_requires=['numpy'],
     setup_requires=['numpy'],
-    cmdclass={'build_ext': BuildExt}
+    cmdclass={'build_ext': BuildExt, 'install': Install}
     )

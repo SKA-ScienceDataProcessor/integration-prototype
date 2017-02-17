@@ -80,7 +80,8 @@ class SlaveTaskControllerRPyC(SlaveTaskController):
 
         # Update the task executable (the first element of the list) to an
         # absolute path
-        task_cfg[0] = os.path.join(status['sip_root'], task_cfg[0])
+        # sip_root = os.path.join(os.path.dirname(__file__), '..', '..')
+        # task_cfg[0] = os.path.join(sip_root, task_cfg[0])
 
         # Send the slave the command to load the task
         if self._conn is None:

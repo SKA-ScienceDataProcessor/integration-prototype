@@ -9,7 +9,7 @@
         },
         "docker_image": "slave_controller",
         "task": [
-            "sip/tasks/task.py",
+            "#{sip_root}/tasks/task.py",
             "#tcp_port"
             ]
         },
@@ -21,7 +21,7 @@
             "name": "TaskControlExample"
         },
         "task": [
-            "sip/tasks/task.py",
+            "#{sip_root}/tasks/task.py",
             "#tcp_port"
             ]
         },
@@ -33,7 +33,7 @@
             "name": "TaskControlExample"
         },
         "task": [
-            "sip/tasks/exec_eng.py",
+            "#{sip_root}/tasks/exec_eng.py",
             "#tcp_port",
             "30"
             ]
@@ -47,8 +47,8 @@
             "timeout": 30.0
         },
         "task": [
-            "sip/tasks/vis_receiver_task.py",
-            "#{sip_root}/sip/etc/vis_receiver_config.json"
+            "#{sip_root}/tasks/vis_receiver_task.py",
+            "#{sip_root}/etc/vis_receiver_config.json"
             ]
         },
     "pulsar_search": {
@@ -60,8 +60,8 @@
             "timeout": 30.0
         },
         "task": [
-            "sip/tasks/pulsar_search_task.py",
-            "#{sip_root}/sip/etc/pulsar_receiver_config.json"
+            "#{sip_root}/tasks/pulsar_search_task.py",
+            "#{sip_root}/etc/pulsar_receiver_config.json"
             ]
         }
 }

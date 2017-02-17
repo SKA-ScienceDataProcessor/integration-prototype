@@ -7,6 +7,7 @@ import time
 import signal
 import time
 import datetime
+import numpy
 
 """ Skeleton process to be started by slave
 
@@ -20,6 +21,7 @@ the current state and its name
 
 sys.path.append(os.path.join(os.path.dirname(__file__),'..', '..'))
 from sip.common import heartbeat_task
+from sip.ext.test_lib import TestObject
 
 _context = zmq.Context()
 
@@ -48,11 +50,18 @@ def run():
     # Create process sender
     process_sender = heartbeat_task.Sender(process_name, port)
     while True:
-
         # Create a timestamp
         ts = time.time()
         st = datetime.datetime.fromtimestamp(ts).strftime(
                         '%Y-%m-%d %H:%M:%S')
+
+        # Call a C function.
+        test_object = TestObject(2.0, 3.0)
+        a = numpy.arange(10.0)
+        b = numpy.arange(10.0) + 0.1
+        c = test_object.add_arrays(a, b)
+        print(c)
+        sys.stdout.flush()
 
         # Change the state w.r.t. the time
         if int(time.time())%10 < 5 :

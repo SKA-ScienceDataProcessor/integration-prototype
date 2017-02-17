@@ -175,11 +175,12 @@ def _start_ssh_slave(name, type, cfg, status):
                                                        py3.executable))
 
     # Construct the command line to start the slave
-    with ssh_host.cwd(sip_root):
-        cmd = py3['-m']['sip.slave'] \
-              [name][heartbeat_port][rpc_port][logger_address][task_control_module]
-        log.debug('SSH command = {}'.format(cmd))
-        ssh_host.daemonic_popen(cmd, stdout='{}_sip.output'.format(name))
+    home_dir = os.path.expanduser('~')
+    output_file = os.path.join(home_dir, '{}_sip.output'.format(name))
+    cmd = py3['-m']['sip.slave'] \
+          [name][heartbeat_port][rpc_port][logger_address][task_control_module]
+    log.debug('SSH command = {}'.format(cmd))
+    ssh_host.daemonic_popen(cmd, cwd=sip_root, stdout=output_file)
 
     # Fill in the status dictionary
     status['address'] = host

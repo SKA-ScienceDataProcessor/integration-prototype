@@ -115,7 +115,9 @@ class LogAggregator(threading.Thread):
         self._subscriber = subscriber
 
         # Construct and configure logger object.
-        config_file = os.path.join('sip', 'etc', 'default_logging.json')
+        location = os.path.dirname(__file__)
+        config_file = os.path.join(location, '..', 'etc', 'default_logging.json')
+        config_file = os.path.normpath(config_file)
         print('Loading logging configuration: {}.'.format(config_file))
         with open(config_file) as f:
             _config = json.load(f)
