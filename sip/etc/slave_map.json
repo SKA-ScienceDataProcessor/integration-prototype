@@ -9,7 +9,7 @@
         },
         "docker_image": "slave_controller",
         "task": [
-            "#{sip_root}/tasks/task.py",
+            "sip/tasks/task.py",
             "#tcp_port"
             ]
         },

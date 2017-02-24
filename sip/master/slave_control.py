@@ -153,6 +153,8 @@ def _start_ssh_slave(name, type, cfg, status):
 
     # Get the root of the SIP installation on that host
     sip_root = config.resource.sip_root(host)
+    sip_root = os.path.normpath(os.path.join(sip_root, '..'))
+    log.debug('SSH SIP root: {}'.format(sip_root))
 
     # Allocate ports for heatbeat and the RPC interface
     heartbeat_port = config.resource.allocate_resource(name, "tcp_port")

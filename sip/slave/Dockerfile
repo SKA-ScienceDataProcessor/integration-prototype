@@ -13,6 +13,7 @@ USER root
 RUN apt-get -y update && apt-get -y install python3 python3-pip
 RUN python3 -m pip install zmq
 RUN python3 -m pip install rpyc
+RUN python3 -m pip install numpy
 RUN python3 -m pip install simplejson
 
 # Create non-privileged user

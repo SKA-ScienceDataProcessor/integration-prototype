@@ -2,7 +2,7 @@
 """Tests of SIP logging API.
 
 Run with:
-    python3 -m unittest common.test.test_logging
+    python3 -m unittest sip.common.test.test_logging
 
 .. moduleauthor:: Benjamin Mort <benjamin.mort@oerc.ox.ac.uk>
 """
@@ -13,9 +13,6 @@ import time
 import logging.handlers
 import unittest
 
-# FIXME(BM) Horrible hack which will be fixed by SIP code restructuring.
-sys.path.append('common')
-sys.path.append(os.path.join('common', 'sip_common'))
 os.environ['SIP_HOSTNAME'] = os.uname()[1]
 
 from sip.common import logging_aggregator
