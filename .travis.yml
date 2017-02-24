@@ -15,7 +15,7 @@ before_install:
   - docker build -f sip/slave/Dockerfile -t slave_controller .
 
 script:
-- python3 -m unittest common.test.test_zmq_pub_sub
-- python3 -m unittest common.test.test_logging
+- python3 -m unittest sip.common.test.test_zmq_pub_sub
+- python3 -m unittest sip.common.test.test_logging
 
 
