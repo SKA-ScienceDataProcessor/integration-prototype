@@ -1,21 +1,26 @@
 import unittest
 
-from sip_common.state_machine import State
-from sip_common.state_machine import StateMachine
+from sip.common.state_machine import State
+from sip.common.state_machine import StateMachine
 
 trace = []
+
 
 class Offline(State):
     def __init__(self, sm):
         trace.append("entering offline")
+
     def exit(self):
         trace.append("exiting offline")
+
 
 class Online(State):
     def __init__(self, sm):
         trace.append("entering online")
+
     def exit(self):
         trace.append("exiting online")
+
 
 class TestSM(StateMachine):
     def __init__(self):
@@ -35,7 +40,8 @@ class TestSM(StateMachine):
             'stop' : (1, Offline, action_offline),
         }
 }
-    
+
+
 class StateMachineTest(unittest.TestCase):
     def setUp(self):
         self.sm = TestSM()

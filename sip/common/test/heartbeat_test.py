@@ -1,10 +1,16 @@
-from multiprocessing import Process
 import subprocess
 import time
 import unittest
 import os
+import sys
 
-from sip_common.heartbeat import Listener
+# Export environment variable SIP_HOSTNAME
+# This is needed before the other SIP imports.
+os.environ['SIP_HOSTNAME'] = os.uname()[1]
+
+sys.path.append(os.path.dirname(os.path.dirname(__file__)))
+from sip.common.heartbeat import Listener
+
 
 class HeartbeatTest(unittest.TestCase):
     def setUp(self):
