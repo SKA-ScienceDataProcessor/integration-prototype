@@ -118,7 +118,7 @@ Controller. This should be built with the following command
 
 .. code:: bash
 
-    docker build -f slave/Dockerfile -t slave_controller .
+    docker build -f sip/slave/Dockerfile -t slave_controller .
 
 which needs to be run from the top level of the SIP code directory.
 
@@ -209,8 +209,3 @@ To change it to 32 MiB, add these lines to ``/etc/sysctl.conf``::
 
 Reboot the virtual machine and check that the change was applied by
 inspecting ``/proc/sys/net/core/rmem_max``
-
-Oxford SKA Nodes
-================
-
-TODO...

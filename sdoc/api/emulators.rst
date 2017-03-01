@@ -3,7 +3,7 @@ Emulators
 =========
 
 - Module: :mod:`sip.emulators`
-- Source code: :source:`emulators/sip_emulators`
+- Source code: :source:`sip/emulators/sip_emulators`
 
 
 Emulators provide the ability to generate synthetic data from various

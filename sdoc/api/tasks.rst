@@ -3,7 +3,7 @@ Tasks
 =====
 
 - Module: :mod:`sip.tasks`
-- Source code: :source:`tasks/`
+- Source code: :source:`sip/tasks/`
 
 TODO(BM) Introduction ...
 
@@ -11,12 +11,12 @@ TODO(BM) Introduction ...
 Visibility Receiver
 -------------------
 
-.. automodule:: tasks.vis_receiver_task
+.. automodule:: sip.tasks.vis_receiver_task
 
 Pulsar Search Receiver
 ----------------------
 
-.. automodule:: tasks.pulsar_search_task
+.. automodule:: sip.tasks.pulsar_search_task
 
 
 Example Tasks
