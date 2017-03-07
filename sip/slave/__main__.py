@@ -12,7 +12,7 @@ import threading
 import time
 from rpyc.utils.server import ThreadedServer
 
-sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..'))
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..'))
 from sip.slave import config
 
 
