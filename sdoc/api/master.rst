@@ -4,7 +4,7 @@ Master Controller
 =================
 
 - Module: :mod:`sip.master`
-- Source code: :source:`master/sip_master`
+- Source code: :source:`sip/master`
 
 This module defines functions and classes which implement the SIP Master
 Controller. The Master Controller is a component of the SDP Local Monitor and
@@ -34,12 +34,10 @@ TODO(BM) Introduction ....
 The Master Controller module defines a ``main()`` function which is used
 to create the Master Controller application.
 
-.. autofunction:: master.sip_master.main.main
-
 The current version of the SIP code makes use of this function to create
-an application (:source:`master/bin/master`) which is configured to point at
-the slave configuration file (:source:`master/etc/slave_map.json`) and
-resource configuration file (:source:`master/etc/resources.json`) included in
+an application (:source:`sip/master/__main__.py`) which is configured to point at
+the slave configuration file (:source:`sip/etc/slave_map.json`) and
+resource configuration file (:source:`sip/etc/resources.json`) included in
 in the SIP GitHub repository.
 
 
@@ -55,7 +53,7 @@ connected to in order to issue remote commands. In order to connect to this
 interface an ``rpyc`` client must be constructed, an example
 of which is shown in the RpcService class documentation below.
 
-.. autoclass:: master.sip_master.rpc_service.RpcService
+.. autoclass:: sip.master.rpc_service.RpcService
     :members:
     :private-members:
     :show-inheritance:
@@ -86,7 +84,7 @@ The state machine machine class define in this module, implements a
 :ref:`StateMachine <common.state_machine>` class which
 defines the action methods associated with these states.
 
-.. autoclass:: master.sip_master.master_states.MasterControllerSM
+.. autoclass:: sip.master.master_states.MasterControllerSM
     :members:
     :show-inheritance:
 
@@ -111,7 +109,7 @@ be accepted (1) or rejected(0), the second entry gives the destination
 state, and the third entry gives the name of the transition action method.
 If an event is not in the table, it is ignored.
 
-.. literalinclude:: ../../master/sip_master/master_states.py
+.. literalinclude:: ../../sip/master/master_states.py
     :language: python
     :linenos:
     :lines: 85-
@@ -123,9 +121,9 @@ If an event is not in the table, it is ignored.
 ^^^^^^^^^^^^^^^^
 
 This module defines the **Configure** class which is a thread run by the
-Master Contoller state machine in response to the *online* action.
+Master Controller state machine in response to the *online* action.
 
-.. autoclass:: master.sip_master.configure.Configure
+.. autoclass:: sip.master.configure.Configure
     :members:
     :show-inheritance:
 
@@ -138,7 +136,7 @@ Master Contoller state machine in response to the *online* action.
 This module defines the **Capability** class which is a thread run by the
 Master Contoller state machine in response to the *cap* action.
 
-.. autoclass:: master.sip_master.capability.Capability
+.. autoclass:: sip.master.capability.Capability
     :members:
     :show-inheritance:
 
@@ -151,7 +149,7 @@ Master Contoller state machine in response to the *cap* action.
 This module defines the **UnConfigure** class which is a thread run by the
 Master Contoller state machine in response to the *offline* action.
 
-.. autoclass:: master.sip_master.un_configure.UnConfigure
+.. autoclass:: sip.master.un_configure.UnConfigure
     :members:
     :show-inheritance:
 
@@ -164,7 +162,7 @@ Master Contoller state machine in response to the *offline* action.
 This module defines the **Shutdown** class which is a thread run by the
 Master Contoller state machine in response to the *shutdown* action.
 
-.. autoclass:: master.sip_master.shutdown.Shutdown
+.. autoclass:: sip.master.shutdown.Shutdown
     :members:
     :show-inheritance:
 
@@ -179,7 +177,7 @@ TODO(BM) Introduction ....
 
 .. _master.slave_control:
 
-.. automodule:: master.sip_master.slave_control
+.. automodule:: sip.master.slave_control
     :members:
     :show-inheritance:
 
@@ -188,7 +186,7 @@ TODO(BM) Introduction ....
 :mod:`heartbeat_listener`
 ^^^^^^^^^^^^^^^^^^^^^^^^^
 
-.. automodule:: master.sip_master.heartbeat_listener
+.. automodule:: sip.master.heartbeat_listener
     :members:
     :show-inheritance:
 
@@ -197,7 +195,7 @@ TODO(BM) Introduction ....
 :mod:`task_control`
 ^^^^^^^^^^^^^^^^^^^
 
-.. automodule:: master.sip_master.task_control
+.. automodule:: sip.master.task_control
     :members:
     :show-inheritance:
 
@@ -206,6 +204,6 @@ TODO(BM) Introduction ....
 :mod:`slave_states`
 ^^^^^^^^^^^^^^^^^^^
 
-.. automodule:: master.sip_master.slave_states
+.. automodule:: sip.master.slave_states
     :members:
     :show-inheritance:

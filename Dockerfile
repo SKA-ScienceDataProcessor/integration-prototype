@@ -21,8 +21,4 @@ RUN adduser --disabled-password -gecos 'unprivileged user' sdp
 WORKDIR /home/sdp
 
 # Copy the SIP
-COPY common/ common/
-COPY master/ master/
-COPY slave/ slave/
-COPY tasks/ tasks/
 COPY sip/ sip/

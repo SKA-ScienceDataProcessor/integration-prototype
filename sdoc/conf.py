@@ -23,10 +23,9 @@ import sphinx_rtd_theme
 
 sys.path.insert(0, os.path.abspath('.'))
 sys.path.insert(0, os.path.abspath('../'))
-sys.path.insert(0, os.path.abspath('../master/'))
-sys.path.insert(0, os.path.abspath('../slave/'))
-sys.path.insert(0, os.path.abspath('../common/'))
-sys.path.insert(0, os.path.abspath('../common/sip_common'))
+sys.path.insert(0, os.path.abspath('../sip/master/'))
+sys.path.insert(0, os.path.abspath('../sip/slave/'))
+sys.path.insert(0, os.path.abspath('../sip/common/'))
 sys.path.insert(0, os.path.abspath('_static/extensions/'))
 
 import sip

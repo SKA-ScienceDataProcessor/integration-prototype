@@ -2,20 +2,20 @@
 """Script to that can be used to run SIP modules.
 
 Current modules:
-- Master Controller
 - Master Controller RPC interface.
 - CSP visibility emulator
 """
-# Raise and exception if the interpreter isn't Python 3
+import argparse
+import logging
 import sys
+
+import rpyc
+import simplejson as json
+
+# Raise an exception if the interpreter isn't Python 3
 if sys.version_info.major < 3:
     raise RuntimeError('Please use Python V3')
 
-import argparse
-import logging
-import simplejson as json
-import os
-import rpyc
 
 class SipRunner(object):
     """Class to run SIP modules.
@@ -46,18 +46,6 @@ class SipRunner(object):
 
         # Run the specified module.
         self._dispatch(self.args.module)
-
-    @staticmethod
-    def run_master():
-        """Run the master controller."""
-        print('Running master...')
-        os.environ['SIP_HOSTNAME'] = os.uname()[1]
-        sys.path.append(os.path.join(os.path.dirname(__file__), 'common'))
-        sys.path.append(os.path.join(os.path.dirname(__file__), 'master'))
-        from master.sip_master.main import main as master_main
-        resources = os.path.join('master', 'etc', 'resources.json')
-        slave_map = os.path.join('master', 'etc', 'slave_map.json')
-        master_main(slave_map, resources)
 
     def run_master_rpc(self):
         """Method to talk to the RPC interface to the master controller."""
@@ -170,11 +158,11 @@ class SipRunner(object):
 
     def run_csp_vis_sender(self):
         """Run the visibility (SPEAD) data emulator / sender"""
-        import emulators.csp_visibility_sender.__main__
+        import sip.emulators.csp_visibility_sender.__main__
         if self.args.config is not None:
             self._log.info('Loading config: {}'.format(self.args.config.name))
             config = json.load(self.args.config)
-            emulators.csp_visibility_sender.__main__.main(config, self._log)
+            sip.emulators.csp_visibility_sender.__main__.main(config, self._log)
         else:
             print('ERROR: Unable to run {}, configuration required.'
                   .format(self.args.module))

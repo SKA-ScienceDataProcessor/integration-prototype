@@ -9,15 +9,9 @@ is achieved by running the command:
 
 .. code:: bash
 
-    python3 master/bin/master
+    python3 -m sip.master
 
-or using the ``sip_run.py`` script and the command:
-
-.. code:: bash
-
-    python3 sip_run.py master
-
-from the top level of the SIP code directory.
+from the top level of the SIP repository.
 
 Once the Master Controller starts, it presents two interfaces, a command line
 interface (CLI) and a Python RPC interface.
@@ -56,7 +50,7 @@ With the Master Controller in the ``Standby`` state, issuing the ``online``
 command to the CLI or RPC interfaces will put it into the ``Configuring``
 state where all of the required online service tasks are started. Service
 tasks are defined by a ``"online": true`` setting in their JSON configuration
-in the ``master/etc/slave_map.json`` file. The service tasks currently
+in the ``sip/etc/slave_map.json`` file. The service tasks currently
 start as either SSH or Docker slaves according to their specified
 ``launch_policy`` setting in ``slave_map.json``.
 
@@ -78,8 +72,8 @@ called upon to perform a specific role. Capabilities are started by issuing a
     cap [name] [type]
 
 * ``type`` is used to specify the slave configuration for the capability
-  and refers to the configuration group in the ``slave_map.json`` (found in the
-  ``master/etc`` folder) file.
+  and refers to the configuration group in the ``slave_map.json`` file
+  (found in the ``sip/etc`` folder).
 * ``name`` is used to give the capability a unique name which is used
   when monitoring its status.
 
@@ -142,23 +136,21 @@ The following command will start the emulator:
 
 .. code:: bash
 
-    python3 -m emulators.csp_visibility_sender -v [config_file]
+    python3 -m sip.emulators.csp_visibility_sender -v [config_file]
 
-an example config file can be found in the ``emulators/csp_visibility/etc``
-folder.
+an example config file can be found in the ``sip/etc`` folder.
 
 CSP pulsar emulator
 ^^^^^^^^^^^^^^^^^^^
 
-The CSP pulsar emulator sends test pulsar dat through FTP protocol using stream
+The CSP pulsar emulator sends test pulsar data through FTP protocol using stream
 mode to the SIP.
 
 The following command will start the emulator:
 
 .. code:: bash
 
-    python3 -m emulators.csp_pulsar_sender -v [config_file]
+    python3 -m sip.emulators.csp_pulsar_sender -v [config_file]
 
-config file can be found in the ``emulators/csp_pulsar_sender/etc``
-folder.
+an example config file can be found in the ``sip/etc`` folder.
 
