@@ -9,11 +9,12 @@ import os
 import socket
 import sys
 
-from docker import Client
+from docker import APIClient as Client
 from plumbum import SshMachine
 from pyroute2 import IPRoute
 
 from sip_common.logging_api import log
+from sip_common.docker_paas import DockerPaas as Paas
 from sip_master import config
 from sip_master import task_control
 from sip_master.slave_states import SlaveControllerSM
@@ -78,6 +79,9 @@ def start(name, type):
         # sending heartbeats to.
         config.heartbeat_listener.connect(slave_status['address'],
                                           slave_status['heartbeat_port'])
+        log.debug('Connected to {}:{} for heartbeats'.format(
+                    slave_status['address'],
+                    slave_status['heartbeat_port']))
 
         # RPyC connected when the first heartbeat is received
         # (in heartbeat_listener.py).
@@ -107,36 +111,32 @@ def _start_docker_slave(name, type, cfg, status):
     host = config.resource.allocate_host(name,
             {'launch_protocol': 'docker'}, {})
     image = cfg['docker_image']
-    heartbeat_port = config.resource.allocate_resource(name, "tcp_port")
     rpc_port = config.resource.allocate_resource(name, "tcp_port")
+
+    # Kludge alert - set the heartbeat port to the rpc_port + 100
+    heartbeat_port = rpc_port + 100
     task_control_module = cfg['task_control_module']['name']
-    logger_address = netifaces.ifaddresses(
-                'docker0')[netifaces.AF_INET][0]['addr']
-    _cmd = ['/home/sdp/integration-prototype/slave/bin/slave',
+    _cmd = ['slave/bin/slave',
             name,
             str(heartbeat_port),
             str(rpc_port),
-            logger_address,
+            '0',
             task_control_module,
             ]
-    log.debug('Docker command = {}'.format(_cmd))
-    container_id = client.create_container(image=image, command=_cmd)['Id']
 
     # Start it
-    client.start(container_id)
+    paas = Paas()
+    descriptor = paas.run_service(name, 'sip', rpc_port, _cmd)
 
     # Fill in the docker specific entries in the status dictionary
-    info = client.inspect_container(container_id)
-    ip_address = info['NetworkSettings']['IPAddress']
-    status['address'] = ip_address
-    status['container_id'] = container_id
+    status['address'] = descriptor.hostname
+    status['container_id'] = descriptor.ident
 
     # Fill in the generic entries
     status['rpc_port'] = rpc_port
     status['heartbeat_port'] = heartbeat_port
     status['sip_root'] = '/home/sdp/integration-prototype'
-    log.info('"{}" (type {}) started in container {} at {}'.format(
-            name, type, container_id, ip_address))
+    log.info('"{}" (type {}) started'.format(name, type))
 
 
 def _start_ssh_slave(name, type, cfg, status):
@@ -204,11 +204,7 @@ def stop(name, status):
 def _stop_docker_slave(name, status):
     """Stops a docker based slave controller."""
 
-    # Create a Docker client
-    base_url = config.slave_config[status['type']]['engine_url']
-    client = Client(version='1.21', base_url=base_url)
-
-    # Stop the container and remove the container
-    client.stop(status['container_id'])
-    client.remove_container(status['container_id'])
+    paas = Paas()
+    descriptor = paas.find_task(name)
+    descriptor.delete()
 

@@ -50,6 +50,7 @@ class SlaveTaskControllerRPyC(SlaveTaskController):
     def connect(self, address, port):
         """Establishes an RPyC connection if it is not already."""
         if self._conn is None:
+            log.debug('Connecting to {}:{}'.format(address, port))
             self._conn = rpyc.connect(address, port)
 
     def shutdown(self):
@@ -80,7 +81,7 @@ class SlaveTaskControllerRPyC(SlaveTaskController):
 
         # Update the task executable (the first element of the list) to an
         # absolute path
-        task_cfg[0] = os.path.join(status['sip_root'], task_cfg[0])
+        #task_cfg[0] = os.path.join(status['sip_root'], task_cfg[0])
 
         # Send the slave the command to load the task
         if self._conn is None:

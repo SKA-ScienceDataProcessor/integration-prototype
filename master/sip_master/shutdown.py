@@ -30,9 +30,8 @@ class Shutdown(threading.Thread):
                 slave_control.stop(slave, status)
 
         # Shut down the log server
-        log.info('Terminating logserver, pid ', config.logserver.pid)
-        config.logserver.send_signal(signal.SIGINT)
-        # os.kill(config.logserver.pid, signal.SIGTERM)
+        log.info('Terminating logserver {}'.format(config.logserver.ident))
+        config.logserver.delete()
 
         print('Shutdown complete. Goodbye!')
 

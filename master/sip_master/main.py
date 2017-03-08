@@ -21,14 +21,11 @@ import threading
 import subprocess
 import os
 import time
+import logging.handlers
 
 from sip_common.resource_manager import ResourceManager
-from sip_common.logging_api import log
-from sip_master.master_states import MasterControllerSM
-from sip_master.master_states import Standby
-from sip_master.heartbeat_listener import HeartbeatListener
+from sip_common.docker_paas import DockerPaas
 from sip_master import config
-from sip_master.rpc_service import RpcService
 
 __author__ = 'David Terrett + Brian McIlwrath'
 
@@ -61,8 +58,16 @@ def main(config_file, resources_file):
             {'host': 'localhost'}, {})
 
     # Start logging server as a subprocess
-    config.logserver = subprocess.Popen(
-        ['python3', 'common/sip_common/logging_server.py'], shell=False)
+    paas = DockerPaas()
+    config.logserver = paas.run_service('logging_server', 'sip',
+        logging.handlers.DEFAULT_TCP_LOGGING_PORT,
+        ['python3', 'common/sip_common/logging_server.py'])
+
+    from sip_common.logging_api import log
+    from sip_master.master_states import MasterControllerSM
+    from sip_master.master_states import Standby
+    from sip_master.heartbeat_listener import HeartbeatListener
+    from sip_master.rpc_service import RpcService
 
     # Wait until it initializes
     time.sleep(1.0)

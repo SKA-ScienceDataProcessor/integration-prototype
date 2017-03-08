@@ -20,6 +20,8 @@ import logging.handlers
 import socket
 import os
 
+from sip_common.docker_paas import DockerPaas as Paas
+
 
 class SipLogRecord(logging.LogRecord):
     """SIP Log record class.
@@ -106,5 +108,11 @@ class SipLogger(logging.getLoggerClass()):
 # Create Logger for use with SIP modules.
 from .logging_handlers import ZmqLogHandler
 log = SipLogger('sip.log')
-host = os.environ['SIP_HOSTNAME']
+
+# Find the logging_server service
+paas = Paas()
+service = paas.find_task('logging_server')
+host = service.hostname
+
+# Create the handler
 log.addHandler(ZmqLogHandler.to('all', host=host, level='DEBUG'))

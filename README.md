@@ -3,11 +3,14 @@
 
 # SDP Integration Prototype
 
+This is an experimental Docker Swarm version. See confluence pages for more
+information
+
 
 ## Requirements
 * Docker
 * Python 3.4 or later
-* DockerPy
+* DockerPy 2.1 or later
 * netifaces
 * pyroute2
 * rpyc
