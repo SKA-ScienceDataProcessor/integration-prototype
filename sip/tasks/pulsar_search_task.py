@@ -11,7 +11,7 @@ import sys
 import signal
 import simplejson as json
 
-sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..'))
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..'))
 
 from sip.processor_software.pulsar_search import PulsarStart
 from sip.common.logging_api import log

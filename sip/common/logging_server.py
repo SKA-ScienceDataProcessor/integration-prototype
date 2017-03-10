@@ -17,7 +17,7 @@ import os
 import signal
 import sys
 
-sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..'))
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..'))
 from sip.common.logging_aggregator import LogAggregator
 
 
