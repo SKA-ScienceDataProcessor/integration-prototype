@@ -60,6 +60,9 @@ class TestLogging(unittest.TestCase):
         while cls.sub_thread.isAlive():
             cls.sub_thread.join(timeout=1e-6)
 
+        # Restore default stdout
+        sys.stdout = sys.__stdout__
+
     def test_zmq(self):
 
         self.l.info('Formatted info message: {}'.format('how are you?'))
