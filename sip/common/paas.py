@@ -53,6 +53,8 @@ class TaskStatus(Enum):
     RUNNING = 1
     EXITED = 2
     ERROR = 3
+    UNKNOWN = 4
+    STARTING = 5
 
 class TaskDescriptor:
     """ Task descriptor

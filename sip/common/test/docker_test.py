@@ -22,36 +22,44 @@ class TestDocker(unittest.TestCase):
     def testTask(self):
         """ Test normal execution of task
         """
+        print('testTask')
         s = Paas()
 
         # Start the task
         t = s.run_task('test_task', 'test_image', 
-                ['python3', '/home/sdp/test_task.py', '3', '0'])
+                ['python3', '/home/sdp/test_task.py', '15', '0'])
+        time.sleep(1)
+        self.assertEqual(t.status(), TaskStatus.STARTING)
     
         # It should be running
+        time.sleep(10)
         self.assertEqual(t.status(), TaskStatus.RUNNING)
 
         # Wait for it to end and it should be ended
-        time.sleep(5)
-        #self.assertEqual(t.status(), TaskStatus.EXITED)
+        time.sleep(20)
+        self.assertEqual(t.status(), TaskStatus.EXITED)
 
         # Stop the task 
         t.delete()
+        time.sleep(10)
 
     def testService(self):
         """ Test normal execution of service
         """
+        print('testService')
         s = Paas()
 
         # Start the task
         t = s.run_service('test_service', 'test_image', 9999,
                 ['python3', '/home/sdp/test_service.py', '9999'])
     
-        # It should be running
-        self.assertEqual(t.status(), TaskStatus.RUNNING)
+        # It should be starting
+        time.sleep(1)
+        self.assertEqual(t.status(), TaskStatus.STARTING)
 
         # Wait 10 seconds for it to start (yes really!)
         time.sleep(10)
+        self.assertEqual(t.status(), TaskStatus.RUNNING)
 
         # Check that we can talk to it
         (hostname, port) = t.location()
@@ -60,29 +68,34 @@ class TestDocker(unittest.TestCase):
 
         # Stop the task 
         t.delete()
+        time.sleep(5)
+        self.assertEqual(t.status(), TaskStatus.UNKNOWN)
+        time.sleep(5)
 
-    def xtestStop(self):
+    def testStop(self):
         """ Test of stopping a task
         """
         s = Paas()
-        t = s.run_task('test_stop', 'python3', 
-                ['python3', '/home/spd/test_task.py', '3', '0'])
-        time.sleep(1)
+        t = s.run_task('test_stop', 'test_image', 
+                ['python3', '/home/sdp/test_task.py', '30', '0'])
+        time.sleep(10)
     
         self.assertEqual(t.status(), TaskStatus.RUNNING)
         t.delete()
-        self.assertEqual(t.status(), TaskStatus.EXITED)
+        time.sleep(5)
+        self.assertEqual(t.status(), TaskStatus.UNKNOWN)
 
-    def xtestEndInError(self):
+    def testEndInError(self):
         """ Test of task that exits with an error status
         """
         s = Paas()
-        t = s.run_task('test', 'python3', ['python3', 'test_task.py', '0', '1'])
-        time.sleep(1)
+        t = s.run_task('test_stop', 'test_image', 
+                ['python3', '/home/sdp/test_task.py', '3', '1'])
+        time.sleep(10)
         self.assertEqual(t.status(), TaskStatus.ERROR)
         t.delete()
     
-    def testDuplicateService(self):
+    def TestDuplicateService(self):
         """ Test trying to start a service twice with the same name
         """
         s = Paas()
@@ -98,20 +111,36 @@ class TestDocker(unittest.TestCase):
 
         t1.delete()
     
+    def testDuplicateService(self):
+        """ Test trying to start a task twice with the same name
+        """
+        s = Paas()
+
+        # Start the service
+        t1 = s.run_service('test_service', 'test_image', 9999,
+                ['python3', '/home/sdp/test_service.py', '9999'])
+    
+        # Try another
+        t2 = s.run_service('test_service', 'test_image', 9999,
+                ['python3', '/home/sdp/test_service.py', '9999'])
+
+        self.assertEqual(t1.ident, t2.ident)
+        t2.delete()
+    
     def testDuplicateTask(self):
         """ Test trying to start a task twice with the same name
         """
         s = Paas()
 
         # Start the task
-        t1 = s.run_task('test_dup', 'python3', 
-                ['python3', 'test_task.py', '0', '0'])
-
+        t1 = s.run_service('test_service', 'test_image', 9999,
+                ['python3', '/home/sdp/test_service.py', '9999'])
+    
         # Try another
-        t2 = s.run_task('test_dup', 'python3', 
-                    ['python3', 'test_task.py', '0', '0'])
+        t2 = s.run_service('test_service', 'test_image', 9999,
+                ['python3', '/home/sdp/test_service.py', '9999'])
 
-        self.assertNotEqual(t1.ident, t2.ident)
+        self.assertEqual(t1.ident, t2.ident)
         t2.delete()
 
     def testFind(self):
