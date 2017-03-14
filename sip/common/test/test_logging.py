@@ -7,7 +7,6 @@ Run with:
 .. moduleauthor:: Benjamin Mort <benjamin.mort@oerc.ox.ac.uk>
 """
 import os
-import sys
 import time
 
 from io import StringIO
@@ -38,30 +37,29 @@ class TestLogging(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
-        """Redirect stdout for analysis"""
-        cls.stdout = StringIO()
-        sys.stdout = cls.stdout
+        """Redirect log output for analysis"""
+        cls.log_output = StringIO()
+        output_handler = logging.StreamHandler(cls.log_output)
+
         """Set up a Log aggregator to receive messages via ZMQ"""
         cls.sub_thread = logging_aggregator.LogAggregator()
         cls.sub_thread.start()
 
         """Set up logger"""
         cls.l = logging_api.SipLogger('sip.logging.test2', level='DEBUG')
+        cls.l.addHandler(output_handler)
         cls.l.addHandler(logging_handlers.ZmqLogHandler.to('test:test2'))
-        #l.addFilter(logging_aggregator.MessageFilter('Filtered'))
         time.sleep(1e-2)  # This sleep is needed otherwise messages are lost
+
         # filter out log init message
-        cls.stdout.seek(0)
-        cls.stdout.truncate()
+        cls.log_output.seek(0)
+        cls.log_output.truncate()
 
     @classmethod
     def tearDownClass(cls):
         cls.sub_thread.stop()
         while cls.sub_thread.isAlive():
             cls.sub_thread.join(timeout=1e-6)
-
-        # Restore default stdout
-        sys.stdout = sys.__stdout__
 
     def test_zmq(self):
 
@@ -72,10 +70,10 @@ class TestLogging(unittest.TestCase):
         # Wait for messages to be received.
         time.sleep(0.1)
 
-        self.stdout.seek(0)
-        output = self.stdout.readlines()
-        self.stdout.seek(0)
-        self.stdout.truncate()
+        self.log_output.seek(0)
+        output = self.log_output.readlines()
+        self.log_output.seek(0)
+        self.log_output.truncate()
 
         self.assertEqual(2, len(output))
         self.assertTrue("Formatted info message: how are you?" in output[0])
@@ -93,10 +91,10 @@ class TestLogging(unittest.TestCase):
         self.l.debug('Filtered debug messages should now be shown')
         time.sleep(0.1)
 
-        self.stdout.seek(0)
-        output = self.stdout.readlines()
-        self.stdout.seek(0)
-        self.stdout.truncate()
+        self.log_output.seek(0)
+        output = self.log_output.readlines()
+        self.log_output.seek(0)
+        self.log_output.truncate()
 
         self.assertEqual(2, len(output))
         self.assertTrue("Filtered info messages should now be shown" in output[0])
@@ -116,10 +114,10 @@ class TestLogging(unittest.TestCase):
         time.sleep(0.1)
         self.l.removeFilter(filterObj)
        
-        self.stdout.seek(0)
-        output = self.stdout.readlines()
-        self.stdout.seek(0)
-        self.stdout.truncate()
+        self.log_output.seek(0)
+        output = self.log_output.readlines()
+        self.log_output.seek(0)
+        self.log_output.truncate()
 
         self.assertEqual(1, len(output))
         self.assertTrue("This info message should be printed" in output[0])
