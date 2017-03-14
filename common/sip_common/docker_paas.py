@@ -27,7 +27,7 @@ class DockerPaas(Paas):
         # Create a docker client
         self._client = docker.APIClient( base_url=docker_url)
 
-    def run_service(self, name, task, port, cmd_args):
+    def run_service(self, name, task, port, cmd_args, restart=True):
         """ Run a task as a service.
         """
 
@@ -42,11 +42,19 @@ class DockerPaas(Paas):
             mount = docker.types.Mount('/var/run/docker.sock', 
                     '/var/run/docker.sock', type='bind')
 
+            # Define the restart policy
+            if restart:
+                condition = 'any'
+            else:
+                condition = 'none'
+            restart_policy = docker.types.RestartPolicy(condition=condition)
+
             # Define the container
             container_spec = docker.types.ContainerSpec(image=task, 
                     command=cmd_args[0], args=cmd_args[1:], mounts=[mount])
             task_template = docker.types.TaskTemplate(
-                    container_spec=container_spec)
+                    container_spec=container_spec,
+                    restart_policy=restart_policy)
 
             # Create an endpoint for the port the service will run on.
             #
@@ -87,7 +95,7 @@ class DockerPaas(Paas):
         # Start the task 
         # Kudlge alert - we need to specify some port so that the kudge
         # for the heartbeat port works.
-        descriptor = self.run_service(name, task, 1000, cmd_args)
+        descriptor = self.run_service(name, task, 1000, cmd_args, restart=False)
 
         return descriptor
 
@@ -165,5 +173,17 @@ class DockerTaskDescriptor(TaskDescriptor):
     def status(self):
         """ Return the task status
         """
-        s = self._client.inspect_service(self.name)
-        return TaskStatus.RUNNING
+        try:
+            state = self._client.inspect_task(self.name)['Status']['State']
+        except:
+            return TaskStatus.UNKNOWN
+        if state == 'new':
+            return TaskStatus.STARTING
+        if state == 'preparing':
+            return TaskStatus.STARTING
+        if state == 'running':
+            return TaskStatus.RUNNING
+        if state == 'complete':
+            return TaskStatus.EXITED
+        if state == 'failed':
+            return TaskStatus.ERROR
