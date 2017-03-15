@@ -9,7 +9,6 @@ from setuptools.command.test import test
 
 import unittest
 import xmlrunner
-import sys
 
 # Define the extension modules to build.
 modules = [
