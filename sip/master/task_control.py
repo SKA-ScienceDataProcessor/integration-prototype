@@ -75,9 +75,6 @@ class SlaveTaskControllerRPyC(SlaveTaskController):
         task_cfg = cfg['task']
         for i, value_str in enumerate(task_cfg):
             task_cfg[i] = self._set_resource(value_str, name, config.resource)
-            # if v[0] == '#':
-            #     task_cfg[i] = str(
-            #         config.resource.allocate_resource(name, v[1:]))
 
         # Send the slave the command to load the task
         if self._conn is None:

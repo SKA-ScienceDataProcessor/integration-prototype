@@ -23,6 +23,7 @@ import threading
 import subprocess
 import os
 import time
+import logging.handlers
 from rpyc.utils.server import ThreadedServer
 
 # Export environment variable SIP_HOSTNAME
@@ -30,11 +31,8 @@ from rpyc.utils.server import ThreadedServer
 os.environ['SIP_HOSTNAME'] = os.uname()[1]
 
 from sip.common.resource_manager import ResourceManager
-from sip.common.logging_api import log
-from sip.master.master_states import MasterControllerSM
-from sip.master.heartbeat_listener import HeartbeatListener
+from sip.common.docker_paas import DockerPaas as Paas
 from sip.master import config
-from sip.master.rpc_service import RpcService
 
 __author__ = 'David Terrett + Brian McIlwrath'
 
@@ -58,9 +56,6 @@ with open(resources_file) as f:
         for key, value in _resources[resource].items():
             print('  - {} {}'.format(key, value))
     config.resource = ResourceManager(_resources)
-
-    config.resource.allocate_host(
-            "Master Controller", {'host': 'localhost'}, {})
 
 # Start logging server
     paas = Paas()

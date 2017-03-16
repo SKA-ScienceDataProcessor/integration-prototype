@@ -17,7 +17,7 @@ import socket
 import subprocess
 
 import abc
-from sip_common.paas import Paas, TaskDescriptor, TaskStatus
+from sip.common.paas import Paas, TaskDescriptor, TaskStatus
 
 class PopenPaas(Paas):
 

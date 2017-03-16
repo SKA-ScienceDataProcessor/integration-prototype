@@ -20,8 +20,7 @@ import logging.handlers
 import socket
 import os
 
-from sip_common.docker_paas import DockerPaas as Paas
-
+from sip.common.docker_paas import DockerPaas as Paas
 
 class SipLogRecord(logging.LogRecord):
     """SIP Log record class.

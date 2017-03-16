@@ -23,7 +23,7 @@
         },
         "docker_image": "sip",
         "task": [
-            "#{sip_root}/tasks/task.py",
+            "sip/tasks/task.py",
             "1000"
             ]
         },
@@ -37,7 +37,7 @@
         },
         "docker_image": "sip",
         "task": [
-            "#{sip_root}/tasks/exec_eng.py",
+            "sip/tasks/exec_eng.py",
             "1000",
             "30"
             ]

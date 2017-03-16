@@ -13,12 +13,11 @@ from docker import APIClient as Client
 from plumbum import SshMachine
 from pyroute2 import IPRoute
 
-from sip_common.logging_api import log
-from sip_common.docker_paas import DockerPaas as Paas
-from sip_master import config
-from sip_master import task_control
-from sip_master.slave_states import SlaveControllerSM
-
+from sip.common.logging_api import log
+from sip.common.docker_paas import DockerPaas as Paas
+from sip.master import config
+from sip.master import task_control
+from sip.master.slave_states import SlaveControllerSM
 
 def _find_route_to_logger(host):
     """Figures out what the IP address of the logger is on 'host'."""
@@ -119,7 +118,7 @@ def _start_docker_slave(name, type, cfg, status):
             str(heartbeat_port),
             str(rpc_port),
             '0',
-            task_control_module
+            task_control_module,
             ]
 
     # Start it

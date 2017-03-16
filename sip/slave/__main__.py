@@ -13,8 +13,10 @@ import time
 from rpyc.utils.server import ThreadedServer
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..'))
-from sip.slave import config
 
+from sip.common.logging_api import log
+from sip.common import heartbeat
+from sip.slave import config
 
 def _sig_handler(signum, frame):
     sys.exit(0)
@@ -37,9 +39,6 @@ def slave_main():
     # Install handler to respond to SIGTERM
     signal.signal(signal.SIGTERM, _sig_handler)
 
-    # Define SIP_HOSTNAME
-    os.environ['SIP_HOSTNAME'] = logging_address
-    from sip.common.logging_api import log
     log.info('Slave controller "{}" starting'.format(name))
 
     # Define the module that the task load and unload functions will be
@@ -47,7 +46,6 @@ def slave_main():
     config.task_control_module = task_control_module
 
     # Create a heartbeat sender to MC
-    from sip.common import heartbeat
     heartbeat_sender = heartbeat.Sender(name, heartbeat_port)
 
     # Create and start the RPC server

@@ -12,7 +12,7 @@ import os
 import time
 
 import abc
-from sip_common.paas import Paas, TaskDescriptor, TaskStatus
+from sip.common.paas import Paas, TaskDescriptor, TaskStatus
 
 _nextport = 10000
 

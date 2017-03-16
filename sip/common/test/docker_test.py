@@ -9,8 +9,8 @@ import time
 import unittest
 import warnings
 
-from sip_common.docker_paas import DockerPaas as Paas
-from sip_common.paas import TaskStatus
+from sip.common.docker_paas import DockerPaas as Paas
+from sip.common.paas import TaskStatus
 
 class TestDocker(unittest.TestCase):
 
