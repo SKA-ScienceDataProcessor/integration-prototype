@@ -12,6 +12,7 @@ __author__ = 'David Terrett'
 
 from sip.common.logging_api import log
 from sip.common.state_machine import State
+from sip.common.state_machine import TimedState
 from sip.common.state_machine import StateMachine
 from sip.common.state_machine import _End
 from sip.master.capability import Capability
@@ -26,15 +27,17 @@ class Standby(State):
         log.info('state->standby')
 
 
-class Configuring(State):
+class Configuring(TimedState):
     """Configuring state."""
     def __init__(self, sm):
+        TimedState.__init__(self, sm, 30, ["configure_timeout"])
         log.info('state->configuring')
 
 
-class UnConfiguring(State):
+class UnConfiguring(TimedState):
     """Unconfiguring state."""
     def __init__(self, sm):
+        TimedState.__init__(self, sm, 30, ["unconfigure_timeout"])
         log.info('state->unconfiguring')
 
 
@@ -90,6 +93,7 @@ class MasterControllerSM(StateMachine):
         },
         'Configuring': {
             'all services':     (1, Available, None),
+            'configure_timeout':(1, Unavailable, None),
             'offline':          (1, UnConfiguring, offline),
             'online':           (0, None, None),
             'shutdown':         (0, None, None)
@@ -117,6 +121,7 @@ class MasterControllerSM(StateMachine):
         },
         'UnConfiguring': {
             'no tasks':         (1, Standby, None),
+            'unconfigure_timeout':(1, Standby, None),
             'offline':          (0, None, None),
             'online':           (0, None, None),
             'shutdown':         (0, None, None)
