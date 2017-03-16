@@ -9,4 +9,4 @@ spead2>=1.2.1
 Sphinx==1.5.1
 sphinx-rtd-theme>=0.1.9
 pyftpdlib>=1.4.0
-
+unittest-xml-reporting>=2.1.0

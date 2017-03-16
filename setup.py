@@ -5,6 +5,10 @@ import platform
 from setuptools import setup, find_packages, Extension
 from setuptools.command.build_ext import build_ext
 from setuptools.command.install import install
+from setuptools.command.test import test
+
+import unittest
+import xmlrunner
 
 # Define the extension modules to build.
 modules = [
@@ -52,6 +56,34 @@ class Install(install):
                 os.chmod(file_path, st.st_mode | 73)
 
 
+class Test(test):
+    """SIP Test suite class.
+    Runs either default test runner (outputs to console) or generates
+    JUNIT-compatible XML report for Jenkins when run with `-r xmlrunner`.
+    Inherits test."""
+
+    def finalize_options(self):
+        if not self.test_runner == None and self.test_runner.lower() == 'xmlrunner':
+            self.outfile = open('test_reports.xml', 'wb')
+            self.test_runner = xmlrunner.XMLTestRunner(output=self.outfile,failfast=False,buffer=True)
+        else:
+            # Silently default to TextTestRunner
+            self.test_runner = unittest.TextTestRunner()
+            self.outfile = None
+
+
+    def discover_tests(self):
+        """Greedy unittest discovery for all tests"""
+        loader = unittest.TestLoader()
+        self.test_suite = loader.discover('sip', pattern='*test*.py')
+
+    def run(self):
+        self.discover_tests()
+        self.test_runner.run(self.test_suite)
+        if self.outfile:
+            self.outfile.close()
+
+
 def get_sip_version():
     """Get the version of SIP from the version file."""
     globals_ = {}
@@ -89,5 +121,6 @@ setup(
     license='Apache',
     install_requires=['numpy'],
     setup_requires=['numpy'],
-    cmdclass={'build_ext': BuildExt, 'install': Install}
+    tests_require=['unittest-xml-reporting'],
+    cmdclass={'build_ext': BuildExt, 'install': Install, 'test':Test}
     )
