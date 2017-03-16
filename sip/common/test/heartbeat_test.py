@@ -10,8 +10,9 @@ import logging.handlers
 # This is needed before the other SIP imports.
 os.environ['SIP_HOSTNAME'] = os.uname()[1]
 
-sys.path.append(os.path.dirname(os.path.dirname(__file__)))
+sys.path.insert(0, os.path.dirname(os.path.dirname(__file__)))
 from sip.common.docker_paas import DockerPaas as Paas
+from sip.common.heartbeat import Listener
 
 class HeartbeatTest(unittest.TestCase):
     def setUp(self):
