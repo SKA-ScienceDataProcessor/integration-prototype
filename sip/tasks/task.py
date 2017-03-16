@@ -21,7 +21,6 @@ the current state and its name
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__),'..', '..'))
 from sip.common import heartbeat_task
-from sip.common.logging_api import log
 from sip.ext.test_lib import TestObject
 
 _context = zmq.Context()
