@@ -130,8 +130,9 @@ def _start_docker_slave(name, type, cfg, status):
     status['container_id'] = descriptor.ident
 
     # Fill in the generic entries
-    status['rpc_port'] = descriptor.ports[rpc_port]
-    status['heartbeat_port'] = descriptor.ports[heartbeat_port]
+    (host, ports) = descriptor.location()
+    status['rpc_port'] = ports[rpc_port]
+    status['heartbeat_port'] = ports[heartbeat_port]
     status['sip_root'] = '/home/sdp/integration-prototype'
     log.info('"{}" (type {}) started'.format(name, type))
 

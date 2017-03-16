@@ -80,11 +80,15 @@ class DockerPaas(Paas):
 
             # Set the host name and port in the task descriptor
             descriptor.hostname = self._get_hostname(name)
-            descriptor.ports = {}
+            descriptor._target_ports = {}
+            descriptor._published_ports = {}
             if 'Ports' in info['Spec']['EndpointSpec']:
                 endpoint = info['Spec']['EndpointSpec']['Ports']
                 for p in endpoint:
-                    descriptor.ports[p['TargetPort']] = p['PublishedPort']
+                    descriptor._target_ports[p['TargetPort']] = \
+                            p['TargetPort']
+                    descriptor._published_ports[p['TargetPort']] = \
+                            p['PublishedPort']
 
             # Set the ident
             descriptor.ident = service['ID']
@@ -139,10 +143,13 @@ class DockerPaas(Paas):
                 descriptor.ident = task['ID']
                 if 'Ports' in task['Endpoint']:
                     descriptor.hostname = self._get_hostname(name)
-                    descriptor.ports = {}
+                    descriptor._target_ports = {}
+                    descriptor._published_ports = {}
                     endpoint = task['Endpoint']['Ports']
                     for p in endpoint:
-                        descriptor.ports[p['TargetPort']] = \
+                        descriptor._target_ports[p['TargetPort']] = \
+                                p['TargetPort']
+                        descriptor._published_ports[p['TargetPort']] = \
                                 p['PublishedPort']
 
                 # Mark the service as not terminated
@@ -186,6 +193,17 @@ class DockerTaskDescriptor(TaskDescriptor):
         # Set the state to deleted
         self._terminated = True
         return
+
+    def location(self):
+        """ Returns the host and ports of the service of task
+        
+        The answer depends on whether we are running inside or outside of
+        the Docker swarm
+        """
+        if os.path.exists("docker_swarm"):
+            return self.hostname, self._target_ports
+        else:
+            return self.hostname, self._published_ports
 
     def status(self):
         """ Return the task status
