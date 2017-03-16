@@ -66,6 +66,23 @@ class State:
         pass
 
 
+class TimedState(State):
+    """ State with timeout
+
+        TimedState objects post an event after some period of time.
+    """
+    def __init__(self, sm, timeout, event):
+        """ Constructor
+        """
+
+        # Create and start a timeout object
+        self._t = threading.Timer(timeout, sm.post_event, [event])
+        self._t.start()
+
+    def exit(self):
+        self._t.cancel()
+
+
 class _End(State):
     """Pseudo end state.
 
