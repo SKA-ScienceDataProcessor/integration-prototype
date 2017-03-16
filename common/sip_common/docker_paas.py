@@ -9,9 +9,12 @@ import json
 import socket
 import re
 import os
+import time
 
 import abc
 from sip_common.paas import Paas, TaskDescriptor, TaskStatus
+
+_nextport = 10000
 
 class DockerPaas(Paas):
 
@@ -27,7 +30,7 @@ class DockerPaas(Paas):
         # Create a docker client
         self._client = docker.APIClient( base_url=docker_url)
 
-    def run_service(self, name, task, port, cmd_args, restart=True):
+    def run_service(self, name, task, ports, cmd_args, restart=True):
         """ Run a task as a service.
         """
 
@@ -56,20 +59,32 @@ class DockerPaas(Paas):
                     container_spec=container_spec,
                     restart_policy=restart_policy)
 
-            # Create an endpoint for the port the service will run on.
+            # Create an endpoints for the ports the services run on.
             #
-            # (the second port at port+100 is a temporary kludge for
-            # the heartbeat which we will be getting rid of)
-            endpoint_spec = docker.types.EndpointSpec(ports={
-                port: port, port+100: port+100})
+            endpoints = {}
+            global _nextport
+            for p in ports:
+                endpoints[_nextport] = p
+                _nextport = _nextport + 1
+            endpoint_spec = docker.types.EndpointSpec(ports=endpoints)
 
             # Create the service
             service = self._client.create_service(task_template, name=name, 
                     endpoint_spec=endpoint_spec, networks=['sip'])
 
+            # Inspect the service
+            info = self._client.inspect_service(service['ID'])
+            while info['Spec'] == {}:
+                time.sleep(1)
+                info = self._client.inspect_service(service['ID'])
+
             # Set the host name and port in the task descriptor
             descriptor.hostname = self._get_hostname(name)
-            descriptor.port = port
+            descriptor.ports = {}
+            if 'Ports' in info['Spec']['EndpointSpec']:
+                endpoint = info['Spec']['EndpointSpec']['Ports']
+                for p in endpoint:
+                    descriptor.ports[p['TargetPort']] = p['PublishedPort']
 
             # Set the ident
             descriptor.ident = service['ID']
@@ -79,7 +94,7 @@ class DockerPaas(Paas):
 
         return descriptor
 
-    def run_task(self, name, task, cmd_args):
+    def run_task(self, name, task, ports, cmd_args):
         """ Run a task
         """
 
@@ -93,9 +108,8 @@ class DockerPaas(Paas):
             pass
 
         # Start the task 
-        # Kudlge alert - we need to specify some port so that the kudge
-        # for the heartbeat port works.
-        descriptor = self.run_service(name, task, 1000, cmd_args, restart=False)
+        descriptor = self.run_service(name, task, ports, cmd_args, 
+                restart=False)
 
         return descriptor
 
@@ -123,10 +137,13 @@ class DockerPaas(Paas):
 
                 # Set the ident and host and port number (if there is one)
                 descriptor.ident = task['ID']
-                if 'Endpoint' in task:
+                if 'Ports' in task['Endpoint']:
                     descriptor.hostname = self._get_hostname(name)
-                    descriptor.port = \
-                            task['Endpoint']['Ports'][0]['PublishedPort']
+                    descriptor.ports = {}
+                    endpoint = task['Endpoint']['Ports']
+                    for p in endpoint:
+                        descriptor.ports[p['TargetPort']] = \
+                                p['PublishedPort']
 
                 # Mark the service as not terminated
                 descriptor._terminated = False

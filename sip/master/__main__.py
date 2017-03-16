@@ -59,14 +59,20 @@ with open(resources_file) as f:
             print('  - {} {}'.format(key, value))
     config.resource = ResourceManager(_resources)
 
-# "Allocate" localhost for the master controller so that we can
-# allocate it resources.
-config.resource.allocate_host(
-    "Master Controller", {'host': 'localhost'}, {})
+    config.resource.allocate_host(
+            "Master Controller", {'host': 'localhost'}, {})
 
-# Start logging server as a subprocess (without a shell).
-config.logserver = subprocess.Popen(
-    ['python3', os.path.join(sip_root, 'common', 'logging_server.py')])
+# Start logging server
+    paas = Paas()
+    config.logserver = paas.run_service('logging_server', 'sip',
+        [logging.handlers.DEFAULT_TCP_LOGGING_PORT],
+        ['python3', 'sip/common/logging_server.py'])
+
+    from sip.common.logging_api import log
+    from sip.master.master_states import MasterControllerSM
+    from sip.master.master_states import Standby
+    from sip.master.heartbeat_listener import HeartbeatListener
+    from sip.master.rpc_service import RpcService
 
 # Wait until it initializes
 time.sleep(1.0)

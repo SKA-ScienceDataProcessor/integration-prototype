@@ -10,7 +10,7 @@
         "docker_image": "sip",
         "task": [
             "sip/tasks/task.py",
-            "#tcp_port"
+            "1000"
             ]
         },
     "QA": {
@@ -24,7 +24,7 @@
         "docker_image": "sip",
         "task": [
             "#{sip_root}/tasks/task.py",
-            "#tcp_port"
+            "1000"
             ]
         },
     "ingest": {
@@ -38,7 +38,7 @@
         "docker_image": "sip",
         "task": [
             "#{sip_root}/tasks/exec_eng.py",
-            "#tcp_port",
+            "1000",
             "30"
             ]
         },
