@@ -16,23 +16,24 @@ class Paas(metaclass=abc.ABCMeta):
     """
 
     @abc.abstractmethod
-    def run_task(self, name, task, args):
+    def run_task(self, name, task, ports, args):
         """  Run a task.
         
         Args:
             name (string): Task name. Any string but must be unique.
             task (string): Task to run (e.g. executable image)
+            ports (int): TCP ports used by the task
             args (list): Command line to run the task.
         """
 
     @abc.abstractmethod
-    def run_service(self, name, task, port, args):
+    def run_service(self, name, task, ports, args):
         """  Run a task as a service.
         
         Args:
             name (string): Task name. Any string but must be unique.
             task (string): Task to run (e.g. executable image)
-            port (int): TCP port of the service
+            ports (int): TCP ports used by the service
             args (list): Command line to run task task.
         """
         pass
@@ -66,7 +67,8 @@ class TaskDescriptor:
 
         task (string): The task name
         hostname (string): The name of the host the task is running on.
-        port (int): The port that the service is exposed on
+        ports (dict): A dictionary that maps from the ports the service
+                      exposes to ports on hostname
         ident (string): Some sort of unique identifier
 
     If the task is not a service the port will be zero.   
@@ -79,7 +81,7 @@ class TaskDescriptor:
         """
         self.name = name
         self.hostname = None
-        self.port = None
+        self.ports = {}
         self.ident = None
 
     @abc.abstractmethod
@@ -103,9 +105,9 @@ class TaskDescriptor:
     def location(self):
         """ Get the location of a task or service
 
-        The default implementation just returns the hostname and port
+        The default implementation just returns the hostname and ports
         stored in the descripter object. Other implementations may do
         something more dynamic.
         """
-        return self.hostname, self.port
+        return self.hostname, self.ports
 

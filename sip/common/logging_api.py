@@ -113,6 +113,7 @@ log = SipLogger('sip.log')
 paas = Paas()
 service = paas.find_task('logging_server')
 host = service.hostname
+port = service.ports[logging.handlers.DEFAULT_TCP_LOGGING_PORT]
 
 # Create the handler
-log.addHandler(ZmqLogHandler.to('all', host=host, level='DEBUG'))
+log.addHandler(ZmqLogHandler.to('all', host=host, port=port, level='DEBUG'))

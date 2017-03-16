@@ -106,14 +106,12 @@ def _start_docker_slave(name, type, cfg, status):
     # Create a Docker client
     client = Client(version='1.21', base_url=cfg['engine_url'])
 
-    # Create a container and store its id in the properties array
-    host = config.resource.allocate_host(name,
-            {'launch_protocol': 'docker'}, {})
+    # Create a service. The paas takes care of the host and ports so
+    # we can use any ports we like in the container and they will get
+    # mapped to free ports on the host.
     image = cfg['docker_image']
-    rpc_port = config.resource.allocate_resource(name, "tcp_port")
-
-    # Kludge alert - set the heartbeat port to the rpc_port + 100
-    heartbeat_port = rpc_port + 100
+    rpc_port = 6666
+    heartbeat_port = 6667
     task_control_module = cfg['task_control_module']['name']
     _cmd = ['python3', '-m', 'sip.slave',
             name,
@@ -125,15 +123,15 @@ def _start_docker_slave(name, type, cfg, status):
 
     # Start it
     paas = Paas()
-    descriptor = paas.run_service(name, 'sip', rpc_port, _cmd)
+    descriptor = paas.run_service(name, 'sip', [rpc_port, heartbeat_port], _cmd)
 
     # Fill in the docker specific entries in the status dictionary
     status['address'] = descriptor.hostname
     status['container_id'] = descriptor.ident
 
     # Fill in the generic entries
-    status['rpc_port'] = rpc_port
-    status['heartbeat_port'] = heartbeat_port
+    status['rpc_port'] = descriptor.ports[rpc_port]
+    status['heartbeat_port'] = descriptor.ports[heartbeat_port]
     status['sip_root'] = '/home/sdp/integration-prototype'
     log.info('"{}" (type {}) started'.format(name, type))
 
@@ -198,7 +196,7 @@ def stop(name, status):
         _stop_docker_slave(name, status)
 
     # Release the resources allocated to this task.
-    config.resource.release_host(name)
+    #config.resource.release_host(name)
 
     # Send the stop sent event to the state machine
     status['state'].post_event(['stop sent'])

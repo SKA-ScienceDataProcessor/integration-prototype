@@ -65,7 +65,7 @@ with open(resources_file) as f:
 # Start logging server
     paas = Paas()
     config.logserver = paas.run_service('logging_server', 'sip',
-        logging.handlers.DEFAULT_TCP_LOGGING_PORT,
+        [logging.handlers.DEFAULT_TCP_LOGGING_PORT],
         ['python3', 'sip/common/logging_server.py'])
 
     from sip.common.logging_api import log
