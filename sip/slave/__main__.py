@@ -25,7 +25,6 @@ def _sig_handler(signum, frame):
 def slave_main():
     # Parse command line arguments:
     # - name: The name of the slave as known to the master controller.
-    # - heartbeat_port: The TCP port to send heartbeat messages to.
     # - server_port: The TCP port of the command server to bind to.
     # - logging_address: Address of the log server.
     # - task_control_module: The name of the module (in sip.slave) to use
@@ -33,8 +32,7 @@ def slave_main():
     task_control_module = sys.argv[-1]
     logging_address = sys.argv[-2]
     server_port = int(sys.argv[-3])
-    heartbeat_port = int(sys.argv[-4])
-    name = sys.argv[-5]
+    name = sys.argv[-4]
 
     # Install handler to respond to SIGTERM
     signal.signal(signal.SIGTERM, _sig_handler)
@@ -45,9 +43,6 @@ def slave_main():
     # loaded from
     config.task_control_module = task_control_module
 
-    # Create a heartbeat sender to MC
-    heartbeat_sender = heartbeat.Sender(name, heartbeat_port)
-
     # Create and start the RPC server
     from sip.slave.slave_service import SlaveService
     server = ThreadedServer(SlaveService,port=server_port)
@@ -55,9 +50,8 @@ def slave_main():
     t.setDaemon(True)
     t.start()
 
-    # Send heartbeats
+    # Wait forever
     while True:
-        heartbeat_sender.send(config.state)
         time.sleep(1)
 
 if __name__ == '__main__':

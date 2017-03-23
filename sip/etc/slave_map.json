@@ -10,7 +10,7 @@
         "docker_image": "sip",
         "task": [
             "sip/tasks/task.py",
-            "1000"
+            "2000"
             ]
         },
     "QA": {
@@ -24,7 +24,7 @@
         "docker_image": "sip",
         "task": [
             "sip/tasks/task.py",
-            "1000"
+            "2000"
             ]
         },
     "ingest": {

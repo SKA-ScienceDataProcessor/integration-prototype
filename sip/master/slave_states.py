@@ -4,45 +4,41 @@
 This defines the state machines used to track the state of slave controllers.
 """
 
+import time
+
 from sip.common.logging_api import log
 from sip.common.state_machine import State
 from sip.common.state_machine import StateMachine
 from sip.common.state_machine import _End
+from sip.common.paas import TaskStatus
 from sip.master import config
 
+
+class Init(State):
+    """Slave init state."""
+    def __init__(self, sm):
+        pass
 
 class Starting(State):
     """Slave starting state."""
     def __init__(self, sm):
+        log.info('{} (type {}) state started'.format(sm._name, sm._type))
         pass
 
 
-class Idle(State):
-    """Slave idle state."""
+class Running(State):
+    """Slave running state."""
     def __init__(self, sm):
-        log.info('Slave {}  (type {}) idle'.format(sm._name, sm._type))
-        pass
+        log.info('{} (type {}) state running'.format(sm._name, sm._type))
 
 
-class Loading(State):
-    """Slave loading state."""
+class Exited(State):
+    """Slave exited state."""
     def __init__(self, sm):
-        log.info('{} (type {}) state loading'.format(sm._name, sm._type))
+        log.info('{} (type {}) state exited'.format(sm._name, sm._type))
 
 
-class Busy(State):
-    """Slave busy state."""
-    def __init__(self, sm):
-        log.info('{} (type {}) state online'.format(sm._name, sm._type))
-
-
-class Finished(State):
-    """Slave finished state."""
-    def __init__(self, sm):
-        log.info('{} (type {}) state finished'.format(sm._name, sm._type))
-
-
-class Missing(State):
+class Unknown(State):
     """Slave missing state."""
     def __init__(self, sm):
         log.info('{} (type {}) state timed-out'.format(sm._name, sm._type))
@@ -57,7 +53,7 @@ class Error(State):
 class SlaveControllerSM(StateMachine):
     """Slave Controller state machine class."""
     def __init__(self, name, type, task_controller):
-        super(SlaveControllerSM, self).__init__(self.state_table, Starting)
+        super(SlaveControllerSM, self).__init__(self.state_table, Init)
         self._name = name
         self._type = type
         self._task_controller = task_controller
@@ -65,45 +61,46 @@ class SlaveControllerSM(StateMachine):
     def LoadTask(self, event):
         log.info('Loading slave task. type={}, name={}'.format(self._type,
                                                                self._name))
+
+        # Connect to the slave controller
+        time.sleep(1)
+        self._task_controller.connect(\
+                config.slave_status[self._name]['address'],
+                config.slave_status[self._name]['rpc_port'])
+
+        # Start the task
         self._task_controller.start(self._name,
                                     config.slave_config[self._type],
                                     config.slave_status[self._name])
-        self.post_event(['load sent'])
-
     state_table = {
-        'Starting': {
-            'idle heartbeat':   (1, Idle, LoadTask),
-            'busy heartbeat':   (1, Busy, None),
-            'error heartbeat':  (1, Error, None),
-            'stop sent':        (1, _End, None)
-        },
-        'Idle': {
-            'busy heartbeat':   (1, Busy, None),
-            'load sent':        (1, Loading, None),
-            'no heartbeat':     (1, Missing, None),
-            'stop sent':        (1, _End, None)
-        },
-        'Loading': {
-            'busy heartbeat':   (1, Busy, None),
-            'idle heartbeat':   (1, Idle, None),
-            'no heartbeat':     (1, Missing, None),
-            'error heartbeat':  (1, Error, None),
-            'stop sent':        (1, _End, None)
-        },
-        'Busy': {
-            'idle heartbeat':   (1, Idle, None),
-            'no heartbeat':     (1, Missing, None),
-            'error heartbeat':  (1, Error, None),
-            'stop sent':        (1, _End, None)
-        },
-        'Missing': {
-            'idle heartbeat':   (1, Idle, LoadTask),
-            'busy heartbeat':   (1, Busy, None),
-            'stop sent':        (1, _End, None)
-        },
         'Error': {
-            'idle heartbeat':   (1, Idle, LoadTask),
-            'busy heartbeat':   (1, Busy, None),
-            'stop sent':        (1, _End, None)
+            TaskStatus.EXITED:   (1, Exited, None),
+            TaskStatus.STARTING: (1, Starting, None)
+        },
+        'Exited': {
+            TaskStatus.ERROR:    (1, Error, None),
+            TaskStatus.RUNNING : (1, Running, LoadTask),
+            TaskStatus.STARTING: (1, Starting, None),
+            TaskStatus.UNKNOWN:  (1, Unknown, None)
+        },
+        'Init': {
+            TaskStatus.ERROR:    (1, Error, None),
+            TaskStatus.STARTING: (1, Starting, None)
+        },
+        'Running': {
+            TaskStatus.ERROR:     (1, Error, None),
+            TaskStatus.EXITED:    (1, Error, None),
+            TaskStatus.STARTING:  (1, Error, None), 
+            TaskStatus.UNKNOWN:   (1, Unknown, None)
+        },
+        'Starting': {
+            TaskStatus.ERROR:    (1, Error, None),
+            TaskStatus.EXITED:   (1, Error, None),
+            TaskStatus.RUNNING:  (1, Running, LoadTask),
+            TaskStatus.UNKNOWN:  (1, Unknown, None)
+        },
+        'Unknown': {
+            TaskStatus.EXITED:   (1, Exited, None),
+            TaskStatus.STARTING: (1, Starting, None)
         }
 }

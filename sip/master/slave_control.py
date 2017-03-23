@@ -47,18 +47,21 @@ def start(name, type):
                 'type': type,
                 'task_controller': task_controller,
                 'state': SlaveControllerSM(name, type, task_controller),
+                'descriptor': None,
                 'timeout counter': 0}
 
     # Check that the slave isn't already running
     slave_status = config.slave_status[name]  # Shallow copy (i.e. reference)
     slave_config = config.slave_config[type]  # Shallow copy (i.e. reference)
     current_state = slave_status['state'].current_state()
-    if current_state == 'loading' or current_state == 'busy':
+    log.debug('State of slave {} is {}'.format(name, current_state))
+    if current_state == 'Starting' or current_state == 'Running':
         raise RuntimeError('Error starting {}: task is already {}'.format(
                 name, current_state))
 
     # Start a slave if it isn't already running
-    if current_state == '_End' or current_state == 'Starting':
+    if current_state == 'Exited' or current_state == 'Init' or (
+            current_state == 'Unknown'):
 
         # Start the slave
         if slave_config['launch_policy'] == 'docker':
@@ -71,19 +74,6 @@ def start(name, type):
                     'policy'.format(name, slave_config['launch_policy']))
 
         log.debug('Started slave! (name={}, type={})'.format(name, type))
-        # Initialise the task status
-        slave_status['timeout counter'] = slave_config['timeout']
-
-        # Connect the (MC?) heartbeat listener to the address it is
-        # sending heartbeats to.
-        config.heartbeat_listener.connect(slave_status['address'],
-                                          slave_status['heartbeat_port'])
-        log.debug('Connected to {}:{} for heartbeats'.format(
-                    slave_status['address'],
-                    slave_status['heartbeat_port']))
-
-        # RPyC connected when the first heartbeat is received
-        # (in heartbeat_listener.py).
     else:
         # Otherwise a slave was running (but no task) so we can just instruct
         # the slave to start the task.
@@ -111,11 +101,9 @@ def _start_docker_slave(name, type, cfg, status):
     # mapped to free ports on the host.
     image = cfg['docker_image']
     rpc_port = 6666
-    heartbeat_port = 6667
     task_control_module = cfg['task_control_module']['name']
     _cmd = ['python3', '-m', 'sip.slave',
             name,
-            str(heartbeat_port),
             str(rpc_port),
             '0',
             task_control_module,
@@ -123,16 +111,16 @@ def _start_docker_slave(name, type, cfg, status):
 
     # Start it
     paas = Paas()
-    descriptor = paas.run_service(name, 'sip', [rpc_port, heartbeat_port], _cmd)
+    descriptor = paas.run_service(name, 'sip', [rpc_port], _cmd)
 
     # Fill in the docker specific entries in the status dictionary
+    status['descriptor'] = descriptor
     status['address'] = descriptor.hostname
     status['container_id'] = descriptor.ident
 
     # Fill in the generic entries
     (host, ports) = descriptor.location()
     status['rpc_port'] = ports[rpc_port]
-    status['heartbeat_port'] = ports[heartbeat_port]
     status['sip_root'] = '/home/sdp/integration-prototype'
     log.info('"{}" (type {}) started'.format(name, type))
 
@@ -154,8 +142,7 @@ def _start_ssh_slave(name, type, cfg, status):
     sip_root = os.path.normpath(os.path.join(sip_root, '..'))
     log.debug('SSH SIP root: {}'.format(sip_root))
 
-    # Allocate ports for heatbeat and the RPC interface
-    heartbeat_port = config.resource.allocate_resource(name, "tcp_port")
+    # Allocate ports for the RPC interface
     rpc_port = config.resource.allocate_resource(name, "tcp_port")
 
     # Get the task control module to use for this task
@@ -192,20 +179,15 @@ def _start_ssh_slave(name, type, cfg, status):
 
 def stop(name, status):
     """Stops a slave controller."""
+    log.info('stopping task {}'.format(name))
     status['task_controller'].shutdown()
     if config.slave_config[status['type']]['launch_policy'] == 'docker':
         _stop_docker_slave(name, status)
 
-    # Release the resources allocated to this task.
-    #config.resource.release_host(name)
-
-    # Send the stop sent event to the state machine
-    status['state'].post_event(['stop sent'])
-
-
 def _stop_docker_slave(name, status):
     """Stops a docker based slave controller."""
 
+    log.info('stopping slave controller {}'.format(name))
     paas = Paas()
     descriptor = paas.find_task(name)
     descriptor.delete()

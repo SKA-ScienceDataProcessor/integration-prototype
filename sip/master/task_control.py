@@ -48,13 +48,13 @@ class SlaveTaskControllerRPyC(SlaveTaskController):
         self._conn = None
 
     def connect(self, address, port):
-        """Establishes an RPyC connection if it is not already."""
-        if self._conn is None:
-            log.debug('Connecting to {}:{}'.format(address, port))
-            self._conn = rpyc.connect(address, port)
+        """Establishes an RPyC connection."""
+        log.debug('Connecting to {}:{}'.format(address, port))
+        self._conn = rpyc.connect(address, port)
 
     def shutdown(self):
         """Command the slave controller to shut down."""
+        log.debug('shutting down task')
         if self._conn is None:
             log.fatal("Need to connect to RPyC first!")
             return
