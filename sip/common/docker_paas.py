@@ -14,8 +14,6 @@ import time
 import abc
 from sip.common.paas import Paas, TaskDescriptor, TaskStatus
 
-_nextport = 10000
-
 class DockerPaas(Paas):
 
     def __init__(self, docker_url='unix:///var/run/docker.sock'):
@@ -61,11 +59,25 @@ class DockerPaas(Paas):
 
             # Create an endpoints for the ports the services run on.
             #
+            # There is (I think) a bug in docker=py which means that
+            # we can't get docker to do the port allocation for us.
             endpoints = {}
-            global _nextport
-            for p in ports:
-                endpoints[_nextport] = p
-                _nextport = _nextport + 1
+            for target_port in ports:
+
+                # Bind to a free port
+                s = socket.socket()
+                s.bind(('', 0))
+
+                # Get the allocated port name
+                published_port = s.getsockname()[1]
+
+                # Release the port (there is now a race if any other
+                # processes are binding to ports but it will do for now)
+                s.close()
+
+                # Add the port to the endpoint spec
+                
+                endpoints[published_port] = target_port
             endpoint_spec = docker.types.EndpointSpec(ports=endpoints)
 
             # Create the service
