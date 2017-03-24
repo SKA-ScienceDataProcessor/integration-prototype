@@ -64,7 +64,7 @@ def run():
         sys.stdout.flush()
 
         # Change the state w.r.t. the time
-        if int(time.time())%10 < 5 :
+        if int(time.time())%100 < 50 :
 
             # Doing something
             _state = 'state1'

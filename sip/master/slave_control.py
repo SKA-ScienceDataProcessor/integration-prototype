@@ -93,9 +93,6 @@ def _start_docker_slave(name, type, cfg, status):
 
     log.info('Starting Docker slave (name={}, type={})'.format(name, type))
 
-    # Create a Docker client
-    client = Client(version='1.21', base_url=cfg['engine_url'])
-
     # Create a service. The paas takes care of the host and ports so
     # we can use any ports we like in the container and they will get
     # mapped to free ports on the host.
