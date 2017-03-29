@@ -28,16 +28,13 @@ Other stuff in the entry contains the info need to start the slave.
 slave_status = {}
 """Slave status.
 
-This dictionary records the state and other dynamic information about the
-slaves. It includes:
-- the slave type; an index into the slave map.
-- the slave's state as reported by (or the absence of) heatbeat messages
-- the state the slave ought to be in
-- the previous state of the slave
-- timeout counter: The number of missed heartbeats left to go. 
+This dictionary the state and other information about the slaves that is
+only known at run time.. 
 
-The polling loop decrements the timout counter each time it runs and if 
-it goes to zero the slave is declared to be timed-out. Each time a  
-heartbeat message is received the counter is reset to the value of  
-'timeout' from the config dictionary. 
+It includes:
+- "type": the slave type; an index into the slave map.
+- "task_controller": The SlaveTaskController object that can send commands
+to the slave
+- "state": The state machine that shadows the state of the slave controller
+- "descriptor": The PAAS descriptor for the slave controller service.
 """ 
