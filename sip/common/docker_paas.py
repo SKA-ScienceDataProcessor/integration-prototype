@@ -26,7 +26,7 @@ class DockerPaas(Paas):
         """
 
         # Create a docker client
-        self._client = docker.APIClient( base_url=docker_url)
+        self._client = docker.APIClient( base_url=docker_url, version='auto')
 
     def run_service(self, name, task, ports, cmd_args, restart=True):
         """ Run a task as a service.
