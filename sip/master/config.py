@@ -4,7 +4,6 @@ This file defines the master control global data.
 """
 
 state_machine = None
-heartbeat_listener = None
 logserver = None
 
 resource = None

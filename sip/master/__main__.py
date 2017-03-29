@@ -66,7 +66,7 @@ with open(resources_file) as f:
     from sip.common.logging_api import log
     from sip.master.master_states import MasterControllerSM
     from sip.master.master_states import Standby
-    from sip.master.heartbeat_listener import HeartbeatListener
+    from sip.master.slave_poller import SlavePoller
     from sip.master.rpc_service import RpcService
 
 # Wait until it initializes
@@ -79,9 +79,8 @@ with open(config_file) as f:
 # Create the master controller state machine
 config.state_machine = MasterControllerSM()
 
-# Create and start the global heartbeat listener
-config.heartbeat_listener = HeartbeatListener(config.state_machine)
-config.heartbeat_listener.start()
+# Create and start the slave poller
+SlavePoller(config.state_machine).start()
 
 # This starts the rpyc 'ThreadedServer' - this creates a new
 # thread for each connection on the given port

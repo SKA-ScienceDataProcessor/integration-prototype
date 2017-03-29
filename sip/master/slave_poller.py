@@ -1,13 +1,8 @@
 # coding: utf-8
-"""Heartbeat listener.
+"""Slave poller.
 
-A HeartbeatListener runs in a separate thread and once a second looks for
-heartbeat messages sent by slave controllers. If a message is received from
-a slave, that slave's timeout counter is reset. The counter for all the other
-slaves is decremented and if any have reached zero the slave is marked as
-dead in the global slave map and an error message logged.
-
-If a slave state goes from starting to idle it is sent a load command.
+A SlavePoller runs in a separate thread and once a second looks at the
+status of all the slave controllers using the Paas service.
 
 The states of states of all the slaves is then checked against a list of
 those that need to be running for the system to be considered available,
@@ -19,12 +14,11 @@ __author__ = 'David Terrett'
 import threading
 import time
 
-from sip.common import heartbeat
 from sip.common.logging_api import log
 from sip.master import config
 
 
-class HeartbeatListener(threading.Thread):
+class SlavePoller(threading.Thread):
     """This class checks on the state of slaves
     """
 
@@ -32,7 +26,7 @@ class HeartbeatListener(threading.Thread):
         """Constructor.
         """
         self._sm = sm
-        super(HeartbeatListener, self).__init__(daemon = True)
+        super(SlavePoller, self).__init__(daemon = True)
 
     def run(self):
         """
