@@ -4,29 +4,18 @@
 __author__ = 'David Terrett'
 
 import logging
-import netifaces
 import os
 import socket
 import sys
 
 from docker import APIClient as Client
 from plumbum import SshMachine
-from pyroute2 import IPRoute
 
 from sip.common.logging_api import log
 from sip.common.docker_paas import DockerPaas as Paas
 from sip.master import config
 from sip.master import task_control
 from sip.master.slave_states import SlaveControllerSM
-
-def _find_route_to_logger(host):
-    """Figures out what the IP address of the logger is on 'host'."""
-    addr = socket.gethostbyname(host)
-    ip = IPRoute()
-    r = ip.get_routes(dst=addr, family=socket.AF_INET)
-    for x in r[0]['attrs']:
-        if x[0] == 'RTA_PREFSRC':
-            return x[1]
 
 
 def start(name, type):

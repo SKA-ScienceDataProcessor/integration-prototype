@@ -11,13 +11,8 @@ information
 * Docker
 * Python 3.4 or later
 * DockerPy 2.1 or later
-* netifaces
-* pyroute2
 * rpyc
 * zmq
 * pyftpdlib
-
-## Notes
-* pyroute2 is Linux only (https://github.com/svinota/pyroute2/issues/261)
 
 
