@@ -65,7 +65,7 @@ class SlaveControllerSM(StateMachine):
         # Connect to the slave controller
         time.sleep(1)
         self._task_controller.connect(\
-                config.slave_status[self._name]['address'],
+                config.slave_status[self._name]['descriptor'].hostname,
                 config.slave_status[self._name]['rpc_port'])
 
         # Start the task

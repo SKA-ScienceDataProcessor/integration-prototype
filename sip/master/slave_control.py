@@ -9,7 +9,6 @@ import socket
 import sys
 
 from docker import APIClient as Client
-from plumbum import SshMachine
 
 from sip.common.logging_api import log
 from sip.common.docker_paas import DockerPaas as Paas
@@ -36,8 +35,7 @@ def start(name, type):
                 'type': type,
                 'task_controller': task_controller,
                 'state': SlaveControllerSM(name, type, task_controller),
-                'descriptor': None,
-                'timeout counter': 0}
+                'descriptor': None}
 
     # Check that the slave isn't already running
     slave_status = config.slave_status[name]  # Shallow copy (i.e. reference)
@@ -97,15 +95,12 @@ def _start_docker_slave(name, type, cfg, status):
     paas = Paas()
     descriptor = paas.run_service(name, 'sip', [rpc_port], _cmd)
 
-    # Fill in the docker specific entries in the status dictionary
-    status['descriptor'] = descriptor
-    status['address'] = descriptor.hostname
-    status['container_id'] = descriptor.ident
-
-    # Fill in the generic entries
+    # Fill in the generic entries in the status dictionary
     (host, ports) = descriptor.location()
     status['rpc_port'] = ports[rpc_port]
     status['sip_root'] = '/home/sdp/integration-prototype'
+    status['descriptor'] = descriptor
+
     log.info('"{}" (type {}) started'.format(name, type))
 
 
