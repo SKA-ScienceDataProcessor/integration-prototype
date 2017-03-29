@@ -45,11 +45,12 @@
     "vis_receive": {
         "online": 0,
         "timeout": 10,
-        "launch_policy": "ssh",
+        "launch_policy": "docker",
         "task_control_module": {
             "name": "TaskControlProcessPoller",
             "timeout": 30.0
         },
+        "docker_image": "sip",
         "task": [
             "#{sip_root}/tasks/vis_receiver_task.py",
             "#{sip_root}/etc/vis_receiver_config.json"
@@ -58,11 +59,12 @@
     "pulsar_search": {
         "online": 0,
         "timeout": 10,
-        "launch_policy": "ssh",
+        "launch_policy": "docker",
         "task_control_module": {
             "name": "TaskControlProcessPoller",
             "timeout": 30.0
         },
+        "docker_image": "sip",
         "task": [
             "#{sip_root}/tasks/pulsar_search_task.py",
             "#{sip_root}/etc/pulsar_receiver_config.json"

@@ -66,8 +66,6 @@ def start(name, type):
         # Start the slave
         if slave_config['launch_policy'] == 'docker':
             _start_docker_slave(name, type, slave_config, slave_status)
-        elif slave_config['launch_policy'] == 'ssh':
-            _start_ssh_slave(name, type, slave_config, slave_status)
         else:
             raise RuntimeError(
                     'Error starting "{}": {} is not a known slave launch '
@@ -120,58 +118,6 @@ def _start_docker_slave(name, type, cfg, status):
     status['rpc_port'] = ports[rpc_port]
     status['sip_root'] = '/home/sdp/integration-prototype'
     log.info('"{}" (type {}) started'.format(name, type))
-
-
-def _start_ssh_slave(name, type, cfg, status):
-    """Starts a slave controller that is a SSH client."""
-    # FIXME(BM) need to look into how capture plumbum messages.
-    pb_log = logging.getLogger('plumbum')
-    pb_log.setLevel(logging.INFO)
-    pb_log.addHandler(logging.StreamHandler(sys.stdout))
-
-    log.info('Starting SSH slave (name={}, type={})'.format(name, type))
-
-    # Find a host that supports ssh
-    host = config.resource.allocate_host(name, {'launch_protocol': 'ssh'}, {})
-
-    # Get the root of the SIP installation on that host
-    sip_root = config.resource.sip_root(host)
-    sip_root = os.path.normpath(os.path.join(sip_root, '..'))
-    log.debug('SSH SIP root: {}'.format(sip_root))
-
-    # Allocate ports for the RPC interface
-    rpc_port = config.resource.allocate_resource(name, "tcp_port")
-
-    # Get the task control module to use for this task
-    task_control_module = cfg['task_control_module']['name']
-
-    # Get the address of the logger (as seen from the remote host)
-    logger_address = _find_route_to_logger(host)
-
-    log.debug('Getting SSH slave interface.')
-    ssh_host = SshMachine(host)
-    try:
-        py3 = ssh_host['python3']
-    except:
-        log.fatal('Python3 not available on machine {}'.format(ssh_host))
-
-    log.info('Python3 is available on {} at {}'.format(ssh_host,
-                                                       py3.executable))
-
-    # Construct the command line to start the slave
-    home_dir = os.path.expanduser('~')
-    output_file = os.path.join(home_dir, '{}_sip.output'.format(name))
-    cmd = py3['-m']['sip.slave'] \
-          [name][heartbeat_port][rpc_port][logger_address][task_control_module]
-    log.debug('SSH command = {}'.format(cmd))
-    ssh_host.daemonic_popen(cmd, cwd=sip_root, stdout=output_file)
-
-    # Fill in the status dictionary
-    status['address'] = host
-    status['rpc_port'] = rpc_port
-    status['heartbeat_port'] = heartbeat_port
-    status['sip_root'] = sip_root
-    log.info('{} (type {}) started on {}'.format(name, type, host))
 
 
 def stop(name, status):
