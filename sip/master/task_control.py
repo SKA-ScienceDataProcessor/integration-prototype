@@ -47,17 +47,22 @@ class SlaveTaskControllerRPyC(SlaveTaskController):
         SlaveTaskController.__init__(self)
         self._conn = None
 
-    def connect(self, address, port):
-        """Establishes an RPyC connection."""
-        log.debug('Connecting to {}:{}'.format(address, port))
-        self._conn = rpyc.connect(address, port)
+    def connect(self, address=None, port=None):
+        """Establishes an RPyC connection if needed."""
+        if address:
+            self._address = address
+        if port:
+            self._port = port
+        try: 
+            self._conn.ping()
+        except:
+            log.debug('Connecting to {}:{}'.format(self._address, self._port))
+            self._conn = rpyc.connect(self._address, self._port)
 
     def shutdown(self):
         """Command the slave controller to shut down."""
         log.debug('shutting down task')
-        if self._conn is None:
-            log.fatal("Need to connect to RPyC first!")
-            return
+        self.connect()
         self._conn.root.shutdown()
 
     def start(self, name, cfg, status):
@@ -77,16 +82,12 @@ class SlaveTaskControllerRPyC(SlaveTaskController):
             task_cfg[i] = self._set_resource(value_str, name, config.resource)
 
         # Send the slave the command to load the task
-        if self._conn is None:
-            log.fatal("Need to connect to RPyC first!")
-            return
+        self.connect()
         self._conn.root.load(task_cfg, cfg['task_control_module'])
 
     def stop(self):
         """Command the slave controller to unload the task."""
-        if self._conn is None:
-            log.fatal("Need to connect to RPyC first!")
-            return
+        self.connect()
         self._conn.root.unload()
 
     @staticmethod

@@ -52,11 +52,12 @@ class Error(State):
 
 class SlaveControllerSM(StateMachine):
     """Slave Controller state machine class."""
-    def __init__(self, name, type, task_controller):
-        super(SlaveControllerSM, self).__init__(self.state_table, Init)
+    def __init__(self, name, type, task_controller, init=Init):
         self._name = name
         self._type = type
         self._task_controller = task_controller
+
+        super(SlaveControllerSM, self).__init__(self.state_table, init)
 
     def LoadTask(self, event):
         log.info('Loading slave task. type={}, name={}'.format(self._type,

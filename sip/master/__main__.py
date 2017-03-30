@@ -68,6 +68,7 @@ with open(resources_file) as f:
     from sip.master.master_states import Standby
     from sip.master.slave_poller import SlavePoller
     from sip.master.rpc_service import RpcService
+    from sip.master.reconnect import reconnect
 
 # Wait until it initializes
 time.sleep(1.0)
@@ -88,6 +89,9 @@ server = ThreadedServer(RpcService, port=12345)
 t = threading.Thread(target=server.start)
 t.setDaemon(True)
 t.start()
+
+# Attempt to connect to exiting services
+reconnect(paas)
 
 # For testing we can also post events typed on the terminal
 while True:

@@ -9,11 +9,16 @@ import socket
 import sys
 
 from sip.common.logging_api import log
+from sip.common.paas import TaskStatus
 from sip.common.docker_paas import DockerPaas as Paas
 from sip.master import config
 from sip.master import task_control
+from sip.master import slave_states
 from sip.master.slave_states import SlaveControllerSM
 
+# This is the port used by the slave for its RPC interface. It is mapped to
+# some ephemeral port on the local host by Docker.
+rpc_port_ = 6666
 
 def start(name, type):
     """Starts a slave controller."""
@@ -80,22 +85,20 @@ def _start_docker_slave(name, type, cfg, status):
     # we can use any ports we like in the container and they will get
     # mapped to free ports on the host.
     image = cfg['docker_image']
-    rpc_port = 6666
     task_control_module = cfg['task_control_module']['name']
     _cmd = ['python3', '-m', 'sip.slave',
             name,
-            str(rpc_port),
-            '0',
+            str(rpc_port_),
             task_control_module,
             ]
 
     # Start it
     paas = Paas()
-    descriptor = paas.run_service(name, 'sip', [rpc_port], _cmd)
+    descriptor = paas.run_service(name, 'sip', [rpc_port_], _cmd)
 
     # Fill in the generic entries in the status dictionary
     (host, ports) = descriptor.location()
-    status['rpc_port'] = ports[rpc_port]
+    status['rpc_port'] = ports[rpc_port_]
     status['sip_root'] = '/home/sdp/integration-prototype'
     status['descriptor'] = descriptor
 
@@ -116,4 +119,43 @@ def _stop_docker_slave(name, status):
     paas = Paas()
     descriptor = paas.find_task(name)
     descriptor.delete()
+
+def reconnect(name, descriptor):
+    """ Reconnects to an existing slave service
+
+    This rebuild the internal data structure in order to re-establish
+    the connection to a slave that is already running. This makes it
+    possible to to restart the master controller.
+    """
+    config.slave_status[name] = {'type': name}
+
+    # Get a descriptor for the service
+    config.slave_status[name]['descriptor'] = descriptor
+
+    # Create and connect a task controller for it
+    task_controller = task_control.SlaveTaskControllerRPyC()
+    config.slave_status[name]['task_controller'] = task_controller
+    (hostname, ports) = descriptor.location()
+    task_controller.connect(hostname, ports[rpc_port_])
+
+    # Create a state machine for it with an intial state corresponding to
+    # the state of the slave.
+    service_state = config.slave_status[name]['descriptor'].status()
+    if service_state == TaskStatus.RUNNING:
+        sm = SlaveControllerSM(name, name, task_controller,
+                init=slave_states.Running)
+    elif service_state == TaskStatus.EXITED:
+        sm = SlaveControllerSM(name, name, task_controller,
+                init=slave_states.Exited)
+    elif service_state == TaskStatus.ERROR:
+        sm = SlaveControllerSM(name, name, task_controller,
+                init=slave_states.Error)
+    elif service_state == TaskStatus.UNKNOWN:
+        sm = SlaveControllerSM(name, name, task_controller,
+                init=slave_states.Unknown)
+    elif service_state == TaskStatus.STARTING:
+        sm = SlaveControllerSM(name, name, task_controller,
+                init=slave_states.Starting)
+
+    config.slave_status[name]['state'] = sm
 
