@@ -138,6 +138,12 @@ def reconnect(name, descriptor):
     (hostname, ports) = descriptor.location()
     task_controller.connect(hostname, ports[rpc_port_])
 
+    # Probe the state of the slave controller and if it is "idle"
+    # send it a command to start the slave task
+    if task_controller.status() == 'idle':
+        task_controller.start(name, config.slave_config[name],
+                                    config.slave_status[name])
+
     # Create a state machine for it with an intial state corresponding to
     # the state of the slave.
     service_state = config.slave_status[name]['descriptor'].status()

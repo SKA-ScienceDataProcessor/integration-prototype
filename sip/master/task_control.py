@@ -85,6 +85,11 @@ class SlaveTaskControllerRPyC(SlaveTaskController):
         self.connect()
         self._conn.root.load(task_cfg, cfg['task_control_module'])
 
+    def status(self):
+        """Return the status of the slave controller."""
+        self.connect()
+        return self._conn.root.get_state()
+
     def stop(self):
         """Command the slave controller to unload the task."""
         self.connect()
