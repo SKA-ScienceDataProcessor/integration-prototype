@@ -1,19 +1,22 @@
 # -*- coding: utf-8 -*-
-"""Script to that can be used to run SIP modules.
+"""Test full execution through master controller
 
-Current modules:
-- Master Controller RPC interface.
-- CSP visibility emulator
+(Ab)uses unittest framework for auto-discovered integration.
+
+Based on sip_run.py
 """
+
 import subprocess
 import rpyc
 import time
 import select
 
+import unittest
+
 DEBUG = False
 
 
-class TestSipRunner():
+class TestSipRunner(unittest.TestCase):
     """Class to run SIP modules.
 
     Modules are registered into this class by defining a 'run_{module}' method.
@@ -172,11 +175,6 @@ class TestSipRunner():
 
 
 if __name__ == '__main__':
-
-
-    #master = subprocess.run(args=['/usr/bin/python', '-m', 'sip.master'])
-
-
     runner = TestSipRunner()
     runner.test_master_rpc()
     runner.shutdown_master()

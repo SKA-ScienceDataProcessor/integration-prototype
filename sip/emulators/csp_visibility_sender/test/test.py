@@ -8,11 +8,16 @@ or to run just 1 test:
 python -m unittest emulators.csp_visibility_sender.test.test.Test1.test_get_config_r
 """
 import unittest
-from emulators.csp_visibility_sender.heap_streamer import HeapStreamer
+
 import logging
+import os
 import sys
 import numpy as np
 
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..', '..',
+    '..'))
+
+from sip.emulators.csp_visibility_sender.heap_streamer import HeapStreamer
 
 class TestHeapSimulator:
 
@@ -21,7 +26,7 @@ class TestHeapSimulator:
         self.log = log
 
     def send_heaps(self, streamer: HeapStreamer):
-        print(streamer.__dict__)
+        print(streamer.__dict__, file=sys.stderr)
         streamer.start()
         num_times = self.config['observation']['time']['num_times']
         #num_streams = len(self.config['sender_node']['streams'])
@@ -36,7 +41,8 @@ class TestHeapSimulator:
                 streamer.send_heap(heap_index=i, stream_id=j)
 
         streamer.end()
-        print(streamer.__dict__)
+
+        print(streamer.__dict__, file=sys.stderr)
         streamer.log_stats()
 
 
@@ -98,7 +104,7 @@ class Test1(unittest.TestCase):
 
         sim = TestHeapSimulator(config, log)
         #sim.sim_blocks(config['observation']['time']['num_times'])
-        print(sim.send_heaps(streamer))
+        sim.send_heaps(streamer)
 
 
 if __name__ == '__main__':
