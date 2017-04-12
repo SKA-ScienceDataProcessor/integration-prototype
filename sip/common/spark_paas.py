@@ -3,11 +3,13 @@
 .. moduleauthor:: Arjen Tamerus <at748@cam.ac.uk>
 """
 
-from sip.common.paas import PaaS, TaskDescriptor, TaskStatus
+import pyspark
+
+from sip.common.paas import Paas, TaskDescriptor, TaskStatus
 
 class SparkPaas(Paas):
-    def __init__(self):
-        pass
+    def __init__(self, master_url):
+        self._master = 
 
     def run_task(self, name, task, ports, args):
         pass
