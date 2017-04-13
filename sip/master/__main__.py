@@ -29,6 +29,7 @@ from rpyc.utils.server import ThreadedServer
 # This is needed before the other SIP imports.
 os.environ['SIP_HOSTNAME'] = os.uname()[1]
 
+print('Argument list: ',str(sys.argv))
 from sip.common.resource_manager import ResourceManager
 from sip.common.logging_api import log
 from sip.master.master_states import MasterControllerSM
@@ -90,7 +91,7 @@ t.setDaemon(True)
 t.start()
 
 # For testing we can also post events typed on the terminal
-while True:
+while sys.argv[1] != 'notty':
     # Read from the terminal and process the event
     event = input('** Enter command:\n').split()
     if event:
@@ -111,3 +112,35 @@ while True:
     # else:
     #     print('** Allowed commands: online, offline, shutdown, '
     #           'cap [name] [task]')
+if sys.argv[1] == 'notty':
+# Taken from http://stackoverflow.com/questions/1603109/how-to-make-a-python-script-run-like-a-service-or-daemon-in-linux  
+   try:
+      pid = os.fork()
+      if pid > 0:
+      # exit first parent
+         sys.exit(0)
+   except OSError as e:
+      sys.stderr.write("fork #1 failed: %d (%s)\n" % (e.errno, e.strerror))
+      sys.exit(1)
+
+     # decouple from parent environment
+   os.chdir("/")
+   os.setsid()
+   os.umask(0)
+
+   # do second fork
+   try:
+      pid = os.fork()
+      if pid > 0:
+         # exit from second parent
+         sys.exit(0)
+   except OSError as e:
+      sys.stderr.write("fork #2 failed: %d (%s)\n" % (e.errno, e.strerror))
+      sys.exit(1)
+
+   # redirect standard file descriptors
+   sys.stdout.flush()
+   sys.stderr.flush()
+
+   t.join()
+   print("Passed join()...do not understand this!!!")
