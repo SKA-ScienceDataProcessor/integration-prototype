@@ -27,6 +27,17 @@
             "2000"
             ]
         },
+    "pipeline": {
+        "online": 0,
+        "timeout": 10,
+        "launch_policy": "spark",
+        "task_control_module": {
+            "name": "TaskControlProcessPoller",
+						"timeout": 30.0
+        },
+        "task": [
+            ]
+        },
     "ingest": {
         "online": 0,
         "timeout": 10,

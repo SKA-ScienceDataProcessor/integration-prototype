@@ -36,7 +36,7 @@ class SlavePoller(threading.Thread):
 
             # Scan all the tasks in the status dictionary and update
             # the state machines
-            for name, status in config.slave_status.items():
+            for name, status in list(config.slave_status.items()):
                 if  status['descriptor']:
                     state = status['descriptor'].status()
                     status['state'].post_event([state])

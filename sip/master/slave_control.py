@@ -11,6 +11,7 @@ import sys
 from sip.common.logging_api import log
 from sip.common.paas import TaskStatus
 from sip.common.docker_paas import DockerPaas as Paas
+from sip.common.spark_paas import SparkPaaS
 from sip.master import config
 from sip.master import task_control
 from sip.master import slave_states
@@ -56,6 +57,8 @@ def start(name, type):
         # Start the slave
         if slave_config['launch_policy'] == 'docker':
             _start_docker_slave(name, type, slave_config, slave_status)
+        elif slave_config['launch_policy'] == 'spark':
+            _start_spark_slave(name, type, slave_config, slave_status)
         else:
             raise RuntimeError(
                     'Error starting "{}": {} is not a known slave launch '
@@ -104,6 +107,33 @@ def _start_docker_slave(name, type, cfg, status):
 
     log.info('"{}" (type {}) started'.format(name, type))
 
+def _start_spark_slave(name, type, cfg, status):
+    """Starts a slave controller that is a Docker container.
+
+    NB This only works on localhost
+    """
+    # Improve logging soon!
+    req_log = logging.getLogger('requests')
+    req_log.setLevel(logging.WARN)
+    req_log.addHandler(logging.StreamHandler(sys.stdout))
+
+    log.info('Starting Spark slave (name={}, type={})'.format(name, type))
+
+    # Start it
+    #if name == 'wootwoot':
+    paas = SparkPaaS()
+    descriptor = paas.run_service(name, 'sip', None, None)
+    #else:
+    #    descriptor = None
+
+    # Fill in the generic entries in the status dictionary
+    #(host, ports) = descriptor.location()
+    status['rpc_port'] = None
+    status['sip_root'] = None
+    status['descriptor'] = descriptor
+
+    log.info('"{}" (type {}) started'.format(name, type))
+
 
 def stop(name, status):
     """Stops a slave controller."""
@@ -111,12 +141,22 @@ def stop(name, status):
     status['task_controller'].shutdown()
     if config.slave_config[status['type']]['launch_policy'] == 'docker':
         _stop_docker_slave(name, status)
+    if config.slave_config[status['type']]['launch_policy'] == 'spark':
+        _stop_spark_slave(name, status)
 
 def _stop_docker_slave(name, status):
     """Stops a docker based slave controller."""
 
     log.info('stopping slave controller {}'.format(name))
     paas = Paas()
+    descriptor = paas.find_task(name)
+    descriptor.delete()
+
+def _stop_spark_slave(name, status):
+    """Stops a docker based slave controller."""
+
+    log.info('stopping slave controller {}'.format(name))
+    paas = SparkPaaS()
     descriptor = paas.find_task(name)
     descriptor.delete()
 
