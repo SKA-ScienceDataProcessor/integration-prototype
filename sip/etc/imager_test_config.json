@@ -1,0 +1,14 @@
+{
+  "precision": "single",
+  "combine": true,
+  "output_file": "test_image_FFT_uniform_combined.fits",
+  "output_file_": "test_image_Wproj_uniform_combined.fits",
+  "imager": {
+    "algorithm": "FFT",
+    "algorithm_": "W-projection",
+    "fov_deg": 2.0,
+    "size": 256,
+    "weighting_": "Natural",
+    "weighting": "Uniform"
+  }
+}

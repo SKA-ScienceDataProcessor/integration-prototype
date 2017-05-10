@@ -4,7 +4,7 @@
 This pipeline makes dirty images from all Measurement Sets in a specified
 directory, the name of which is given on the command line.
 
-Usage: spark-submit spark_imager_test.py <dir>
+Usage: spark-submit spark_imager_test.py <settings_file> <dir> [partitions]
 
 Each Measurement Set is processed on a different Spark cluster node, so there
 should be enough input Measurement Sets to parallelize the work effectively.
@@ -19,10 +19,10 @@ Spark Broadcast variable, before using it to make a second pass of the
 data for the actual gridding.
 
 The pipeline can be configured to make a separate dirty image from each
-Measurement Set, or to combine the visibility data from all input files
-into one dirty image. In the latter case, the visibility grids from each
-Spark node are combined into a single grid, and the image is then finalised
-by the driver program.
+Measurement Set, or to combine the visibility data from all of them into
+one dirty image. In the latter case, the visibility grids from each node are
+combined into a single grid, and the image is then finalised by
+the driver program.
 """
 
 from __future__ import print_function, division
@@ -37,6 +37,7 @@ from astropy.io import fits
 import numpy
 import oskar
 import pyspark
+import simplejson as json
 
 
 def node_run(input_file, coords_only, bc_settings, bc_grid_weights):
@@ -85,7 +86,7 @@ def node_run(input_file, coords_only, bc_settings, bc_grid_weights):
         imager.coords_only = False
 
         # Return weights grid and required number of W-planes as RDD element.
-        return (grid_weights, imager.num_w_planes)
+        return grid_weights, imager.num_w_planes
 
     # Allocate a local visibility grid on the node.
     grid_data = numpy.zeros([grid_size, grid_size],
@@ -103,7 +104,7 @@ def node_run(input_file, coords_only, bc_settings, bc_grid_weights):
 
         # Return grid as RDD element.
         log.info('Returning gridded visibilities to RDD')
-        return (grid_data, grid_norm)
+        return grid_data, grid_norm
     else:
         # If necessary, generate a local weights grid.
         if imager.weighting == 'Uniform':
@@ -128,15 +129,18 @@ def node_run(input_file, coords_only, bc_settings, bc_grid_weights):
 def process_input_data(ms, imager, grid_data, grid_weights):
     """Reads visibility data from a Measurement Set.
 
-    The visibility grid and/or weights grid are updated accordingly.
+    The visibility grid or weights grid is updated accordingly.
 
     Visibility data are read from disk in blocks of size num_baselines.
 
     Args:
-        ms (oskar.MeasurementSet):      Handle to opened Measurement Set.
-        imager (oskar.Imager):          Handle to configured imager.
-        grid_data (numpy.ndarray):      Visibility grid to populate.
-        grid_weights (numpy.ndarray):   Weights grid to populate or read from.
+        ms (oskar.MeasurementSet):         Handle to opened Measurement Set.
+        imager (oskar.Imager):             Handle to configured imager.
+        grid_data (numpy.ndarray or None): Visibility grid to populate.
+        grid_weights (numpy.ndarray):      Weights grid to populate or read.
+
+    Returns:
+        grid_norm (float):                 Grid normalisation.
     """
     # Get data from the input Measurement Set.
     grid_norm = 0.
@@ -192,7 +196,7 @@ def save_image(imager, grid_data, grid_norm, output_file):
         grid_norm (float):              Grid normalisation to apply.
         output_file (str):              Name of output FITS file to write.
     """
-    # Make the image (take the FFT and normalise).
+    # Make the image (take the FFT, normalise, and apply grid correction).
     imager.finalise_plane(grid_data, grid_norm)
     grid_data = numpy.real(grid_data)
 
@@ -216,10 +220,15 @@ def reduce_sequences(object_a, object_b):
     def is_seq(obj):
         """Returns true if the object passed is a sequence."""
         return hasattr(obj, "__getitem__") or hasattr(obj, "__iter__")
-    if is_seq(object_a) and is_seq(object_b):
+    if object_a is None or object_b is None:
+        return None
+    elif is_seq(object_a) and is_seq(object_b):
         reduced = []
         for element_a, element_b in zip(object_a, object_b):
-            reduced.append(element_a + element_b)
+            if element_a is not None and element_b is not None:
+                reduced.append(element_a + element_b)
+            else:
+                reduced.append(None)
         return reduced
     else:
         return object_a + object_b
@@ -228,49 +237,32 @@ def reduce_sequences(object_a, object_b):
 def main():
     """Runs test imaging pipeline using Spark."""
     # Check command line arguments.
-    if len(sys.argv) < 2:
-        raise RuntimeError('Usage: spark-submit spark_imager_test.py <dir>')
+    if len(sys.argv) < 3:
+        raise RuntimeError(
+            'Usage: spark-submit spark_imager_test.py <settings_file> <dir> '
+            '[partitions]')
 
     # Create log object.
     log = logging.getLogger('pyspark')
     log.setLevel(logging.INFO)
     log.addHandler(logging.StreamHandler(sys.stdout))
 
+    # Load pipeline settings.
+    with open(sys.argv[1]) as f:
+        settings = json.load(f)
+
     # Get a list of input Measurement Sets to process.
-    data_dir = str(sys.argv[1])
+    data_dir = str(sys.argv[2])
     inputs = glob(join(data_dir, '*.ms')) + glob(join(data_dir, '*.MS'))
     inputs = filter(None, inputs)
     log.info('Found input Measurement Sets: %s', ', '.join(inputs))
-
-    # Pipeline settings dictionary.
-    settings = {
-        # Numerical precision with which to perform the imaging.
-        'precision': 'single',
-
-        # Pipeline mode: generate combined or separate images from input files.
-        'combine': True,
-
-        # Output file if 'combine' is true.
-        'output_file': 'test_image_FFT_uniform_combined.fits',
-        # 'output_file': 'test_image_Wproj_uniform_combined.fits',
-
-        # Imager settings.
-        'imager': {
-            'algorithm': 'FFT',
-            # 'algorithm': 'W-projection',
-            'fov_deg': 2.0,
-            'size': 256,
-            # 'weighting': 'Natural',
-            'weighting': 'Uniform',
-        }
-    }
 
     # Get a Spark context.
     context = pyspark.SparkContext(appName="spark_imager_test")
 
     # Create the Spark RDD containing the input filenames,
     # suitably parallelized.
-    partitions = int(sys.argv[2]) if len(sys.argv) > 2 else 2
+    partitions = int(sys.argv[3]) if len(sys.argv) > 3 else 2
     rdd = context.parallelize(inputs, partitions)
 
     # Define Spark broadcast variables.
