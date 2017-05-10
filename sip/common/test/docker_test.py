@@ -27,8 +27,6 @@ class TestDocker(unittest.TestCase):
         # Start the task
         t = paas.run_task('test_task', 'sip', [],
                 ['python3', 'sip/common/test/test_task.py', '15', '0'])
-        time.sleep(1)
-        self.assertEqual(t.status(), TaskStatus.STARTING)
     
         # It should be running
         time.sleep(10)
@@ -49,10 +47,6 @@ class TestDocker(unittest.TestCase):
         t = paas.run_service('test_service', 'sip', [9999],
                 ['python3', 'sip/common/test/test_service.py', '9999'])
     
-        # It should be starting
-        time.sleep(1)
-        self.assertEqual(t.status(), TaskStatus.STARTING)
-
         # Wait 10 seconds for it to start (yes really!)
         time.sleep(10)
         self.assertEqual(t.status(), TaskStatus.RUNNING)
