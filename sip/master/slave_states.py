@@ -41,7 +41,7 @@ class Exited(State):
 class Unknown(State):
     """Slave missing state."""
     def __init__(self, sm):
-        log.info('{} (type {}) state timed-out'.format(sm._name, sm._type))
+        log.info('{} (type {}) state unknown'.format(sm._name, sm._type))
 
 
 class Error(State):
@@ -64,10 +64,9 @@ class SlaveControllerSM(StateMachine):
                                                                self._name))
 
         # Connect to the slave controller
-        time.sleep(1)
-        self._task_controller.connect(\
-                config.slave_status[self._name]['descriptor'].hostname,
-                config.slave_status[self._name]['rpc_port'])
+        time.sleep(2)
+        (host, ports) = config.slave_status[self._name]['descriptor'].location()
+        self._task_controller.connect(host, ports[6666])
 
         # Start the task
         self._task_controller.start(self._name,
@@ -76,6 +75,7 @@ class SlaveControllerSM(StateMachine):
     state_table = {
         'Error': {
             TaskStatus.EXITED:   (1, Exited, None),
+            TaskStatus.RUNNING : (1, Running, LoadTask),
             TaskStatus.STARTING: (1, Starting, None)
         },
         'Exited': {
@@ -86,7 +86,8 @@ class SlaveControllerSM(StateMachine):
         },
         'Init': {
             TaskStatus.ERROR:    (1, Error, None),
-            TaskStatus.STARTING: (1, Starting, None)
+            TaskStatus.STARTING: (1, Starting, None),
+            TaskStatus.RUNNING : (1, Running, LoadTask)
         },
         'Running': {
             TaskStatus.ERROR:     (1, Error, None),
@@ -102,6 +103,7 @@ class SlaveControllerSM(StateMachine):
         },
         'Unknown': {
             TaskStatus.EXITED:   (1, Exited, None),
+            TaskStatus.RUNNING : (1, Running, LoadTask),
             TaskStatus.STARTING: (1, Starting, None)
         }
 }

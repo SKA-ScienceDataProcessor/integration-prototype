@@ -63,12 +63,10 @@ class TaskDescriptor:
     A task descriptor is an object that enables a client to interact
     with a task; inquiring its status and properties and deleting it.
 
-    Four properties are defined by default:
+    Three properties are defined by default:
 
         task (string): The task name
         hostname (string): The name of the host the task is running on.
-        ports (dict): A dictionary that maps from the ports the service
-                      exposes to ports on hostname
         ident (string): Some sort of unique identifier
 
     If the task is not a service the port will be zero.   
@@ -81,7 +79,6 @@ class TaskDescriptor:
         """
         self.name = name
         self.hostname = None
-        self.ports = {}
         self.ident = None
 
     @abc.abstractmethod
@@ -102,12 +99,11 @@ class TaskDescriptor:
         """
         pass
 
+    @abc.abstractmethod
     def location(self):
         """ Get the location of a task or service
 
-        The default implementation just returns the hostname and ports
-        stored in the descripter object. Other implementations may do
-        something more dynamic.
+        Returns the host name and a dictionary containing the mapping
+        of the ports the service is running on to ports on the host
         """
-        return self.hostname, self.ports
-
+        pass

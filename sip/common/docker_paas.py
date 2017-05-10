@@ -16,32 +16,28 @@ from sip.common.paas import Paas, TaskDescriptor, TaskStatus
 
 class DockerPaas(Paas):
 
-    def __init__(self, docker_url='unix:///var/run/docker.sock'):
+    def __init__(self):
         """ Constructor
-
-        Args:
-            docker_url (string): URL of the docker engine
 
         The docker engine must be a manager of a swarm.
         """
 
         # Create a docker client
-        self._client = docker.APIClient( base_url=docker_url, version='auto')
+        self._client = docker.from_env();
 
     def run_service(self, name, task, ports, cmd_args, restart=True):
         """ Run a task as a service.
         """
 
-        # Create new task descriptor
-        descriptor = self._new_task_descriptor(name)
+        # Try to get a descriptor for this service
+        descriptor = self.find_task(name)
 
         # If the service isn't already running start the task as a service
-        if descriptor._terminated:
+        if descriptor is None:
 
-            # Bind the docker socket so that the container can talk to the
+            # Define a mount so that the container can talk to the
             # docker engine.
-            mount = docker.types.Mount('/var/run/docker.sock', 
-                    '/var/run/docker.sock', type='bind')
+            mount = ['/var/run/docker.sock:/var/run/docker.sock:rw']
 
             # Define the restart policy
             if restart:
@@ -49,13 +45,6 @@ class DockerPaas(Paas):
             else:
                 condition = 'none'
             restart_policy = docker.types.RestartPolicy(condition=condition)
-
-            # Define the container
-            container_spec = docker.types.ContainerSpec(image=task, 
-                    command=cmd_args[0], args=cmd_args[1:], mounts=[mount])
-            task_template = docker.types.TaskTemplate(
-                    container_spec=container_spec,
-                    restart_policy=restart_policy)
 
             # Create an endpoints for the ports the services run on.
             #
@@ -81,47 +70,31 @@ class DockerPaas(Paas):
             endpoint_spec = docker.types.EndpointSpec(ports=endpoints)
 
             # Create the service
-            service = self._client.create_service(task_template, name=name, 
-                    endpoint_spec=endpoint_spec, networks=['sip'])
+            service = self._client.services.create(image=task, 
+                    command=cmd_args[0], args=cmd_args[1:],
+                    endpoint_spec=endpoint_spec, name=name,
+                    networks=['sip'], mounts=mount,
+                    restart_policy=restart_policy);
 
-            # Inspect the service
-            info = self._client.inspect_service(service['ID'])
-            while info['Spec'] == {}:
-                time.sleep(1)
-                info = self._client.inspect_service(service['ID'])
-
-            # Set the host name and port in the task descriptor
-            descriptor.hostname = self._get_hostname(name)
-            descriptor._target_ports = {}
-            descriptor._published_ports = {}
-            if 'Ports' in info['Spec']['EndpointSpec']:
-                endpoint = info['Spec']['EndpointSpec']['Ports']
-                for p in endpoint:
-                    descriptor._target_ports[p['TargetPort']] = \
-                            p['TargetPort']
-                    descriptor._published_ports[p['TargetPort']] = \
-                            p['PublishedPort']
-
-            # Set the ident
-            descriptor.ident = service['ID']
-
-            # Mark the service as not terminated
-            descriptor._terminated = False
+            # Create a new descriptor now that the service is running. We
+            # need to sleep to give docker time to configure the new service
+            # and show up in the list of services.
+            time.sleep(2)
+            descriptor = DockerTaskDescriptor(name)
 
         return descriptor
 
     def run_task(self, name, task, ports, cmd_args):
         """ Run a task
+
+        A task is the same as a service except that it is not restarted
+        if it exits.
         """
 
-        # Create new task descriptor
-        descriptor = self._new_task_descriptor(name)
-
         # Get rid of any existing service with the same name
-        try:
-            self._client.remove_service(name)
-        except:
-            pass
+        d = self.find_task(name)
+        if d is not None:
+            d.delete()
 
         # Start the task 
         descriptor = self.run_service(name, task, ports, cmd_args, 
@@ -132,45 +105,9 @@ class DockerPaas(Paas):
     def find_task(self, name):
         """ Find a task or service
         """
-        descriptor = self._new_task_descriptor(name)
-        if descriptor._terminated:
+        descriptor = DockerTaskDescriptor(name)
+        if len(descriptor._service) == 0:
             return None
-        return descriptor
-
-    def _new_task_descriptor(self, name):
-        """ Create a task descriptor 
-
-        Args 
-            name (string): task name
-        """
-
-        # Create new descriptor
-        descriptor = DockerTaskDescriptor(name, self._client)
-
-        # Search for an existing service
-        for task in self._client.services():
-            if task['Spec']['Name'] == name:
-
-                # Set the ident and host and port number (if there is one)
-                descriptor.ident = task['ID']
-                if 'Ports' in task['Endpoint']:
-                    descriptor.hostname = self._get_hostname(name)
-                    descriptor._target_ports = {}
-                    descriptor._published_ports = {}
-                    endpoint = task['Endpoint']['Ports']
-                    for p in endpoint:
-                        descriptor._target_ports[p['TargetPort']] = \
-                                p['TargetPort']
-                        descriptor._published_ports[p['TargetPort']] = \
-                                p['PublishedPort']
-
-                # Mark the service as not terminated
-                descriptor._terminated = False
-
-                # Return the descriptor
-                return descriptor
-
-        # return the empty descriptor
         return descriptor
 
     def _get_hostname(self, name):
@@ -189,28 +126,48 @@ class DockerPaas(Paas):
         return 'localhost'
 
 class DockerTaskDescriptor(TaskDescriptor):
-    def __init__(self, name, client):
+    def __init__(self, name):
         super(DockerTaskDescriptor, self).__init__(name)
-        self._client = client
         self._proc = 0
-        self._terminated = True
+        self._service = []
+
+        # Search for an existing service with this name
+        paas = DockerPaas();
+        self._service = paas._client.services.list(filters={'name':name})
+        if len(self._service) > 0:
+
+            # Get the ident
+            self.ident = self._service[0].id
+
+            # Get host and port number(if there are any)
+            self.hostname = paas._get_hostname(name)
+            attrs = self._service[0].attrs
+            if 'Ports' in attrs['Endpoint']:
+                self._target_ports = {}
+                self._published_ports = {}
+                ports = attrs['Endpoint']['Ports']
+                for p in ports:
+                    self._target_ports[p['TargetPort']] = p['TargetPort']
+                    self._published_ports[p['TargetPort']] = \
+                                p['PublishedPort']
 
     def delete(self):
         """ Kill the task
         """
 
-        # Terminate the task
-        self._client.remove_service(self.name)
+        # Remove the service
+        self._service[0].remove()
+        self._service = []
 
-        # Set the state to deleted
-        self._terminated = True
         return
 
     def location(self):
-        """ Returns the host and ports of the service of task
+        """ Returns the host and ports of the service or task
         
         The answer depends on whether we are running inside or outside of
-        the Docker swarm
+        the Docker swarm. If we are a container running inside the swarm
+        the ports are the target ports whereas if we are outside the swarm
+        we want the publiched port
         """
         if os.path.exists("docker_swarm"):
             return self.hostname, self._target_ports
@@ -220,9 +177,15 @@ class DockerTaskDescriptor(TaskDescriptor):
     def status(self):
         """ Return the task status
         """
-        try:
-            state = self._client.inspect_task(self.name)['Status']['State']
-        except:
+        if len(self._service) > 0:
+
+            # Get the status of the last task to be started
+            state = self._service[0].tasks()[-1]['Status']['State']
+        else:
+            state = 'unknown'
+
+        # Return the corresponding TaskStatus value.
+        if state == 'unknown':
             return TaskStatus.UNKNOWN
         if state == 'new':
             return TaskStatus.STARTING

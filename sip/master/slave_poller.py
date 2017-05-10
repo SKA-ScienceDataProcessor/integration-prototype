@@ -11,6 +11,7 @@ degraded or unavailable and an appropriate event posted.
 
 __author__ = 'David Terrett'
 
+import copy
 import threading
 import time
 
@@ -36,7 +37,7 @@ class SlavePoller(threading.Thread):
 
             # Scan all the tasks in the status dictionary and update
             # the state machines
-            for name, status in config.slave_status.items():
+            for name, status in copy.copy(config.slave_status).items():
                 if  status['descriptor']:
                     state = status['descriptor'].status()
                     status['state'].post_event([state])
