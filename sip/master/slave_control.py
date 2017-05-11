@@ -62,11 +62,7 @@ def start(name, type):
                     'policy'.format(name, slave_config['launch_policy']))
 
         log.debug('Started slave! (name={}, type={})'.format(name, type))
-    else:
-        # Otherwise a slave was running (but no task) so we can just instruct
-        # the slave to start the task.
-        slave_status['task_controller'].start(name, slave_config, slave_status)
-        slave_status['state'].post_event(['load sent'])
+    slave_status['restart'] = True
 
 
 def _start_docker_slave(name, type, cfg, status):
@@ -95,6 +91,13 @@ def _start_docker_slave(name, type, cfg, status):
     # Start it
     paas = Paas()
     descriptor = paas.run_service(name, 'sip', [rpc_port_], _cmd)
+
+    # Attempt to connect the controller
+    try:
+        (hostname, ports) = descriptor.location()
+        status['task_controller'].connect(hostname, ports[rpc_port_])
+    except:
+        pass
 
     # Fill in the generic entries in the status dictionary
     status['sip_root'] = '/home/sdp/integration-prototype'
@@ -136,18 +139,19 @@ def reconnect(name, descriptor):
     (hostname, ports) = descriptor.location()
     task_controller.connect(hostname, ports[rpc_port_])
 
-    # Probe the state of the slave controller and if it is "idle"
-    # send it a command to start the slave task
-    if task_controller.status() == 'idle':
-        task_controller.start(name, config.slave_config[name],
-                                    config.slave_status[name])
+    # Create the restart flag
+    config.slave_status[name]['restart'] = True
 
     # Create a state machine for it with an intial state corresponding to
     # the state of the slave.
     service_state = config.slave_status[name]['descriptor'].status()
     if service_state == TaskStatus.RUNNING:
+
+        # Assuming that a RUNNING service is busy. If it isn't it will
+        # get restarted when the state machine transitions to Ruuning_idle
+        # as a result of the event from the slave poller.
         sm = SlaveControllerSM(name, name, task_controller,
-                init=slave_states.Running)
+                init=slave_states.Running_busy)
     elif service_state == TaskStatus.EXITED:
         sm = SlaveControllerSM(name, name, task_controller,
                 init=slave_states.Exited)

@@ -16,7 +16,9 @@ import threading
 import time
 
 from sip.common.logging_api import log
+from sip.common.paas import TaskStatus
 from sip.master import config
+from sip.master.slave_states import SlaveStatus
 
 
 class SlavePoller(threading.Thread):
@@ -38,8 +40,38 @@ class SlavePoller(threading.Thread):
             # Scan all the tasks in the status dictionary and update
             # the state machines
             for name, status in copy.copy(config.slave_status).items():
+
+                # If there is a PAAS descriptor for this task
                 if  status['descriptor']:
+
+                    # Get the status from the PAAS
                     state = status['descriptor'].status()
+
+                    # If the state is "running" inquire the slave status
+                    # via the slave controller RPC interface.
+                    if state == TaskStatus.RUNNING:
+                    
+                        # Test whether we can connect to the RPC service
+                        controller = status['task_controller']
+                        try:
+                            controller.connect()
+
+                            # Connection is alive so get the slave status
+                            state = controller.status()
+
+                            # Convert to state machine event
+                            if state == 'idle':
+                                state = SlaveStatus.idle
+                            elif state == 'busy':
+                                state = SlaveStatus.busy
+                            elif state == 'error':
+                                state = SlaveStatus.error
+                        except:
+
+                            # Slave contoller is not listening
+                            state = SlaveStatus.noConnection
+
+                    # Post the event to the slave state machine 
                     status['state'].post_event([state])
 
             # Evaluate the state of the system
@@ -61,13 +93,14 @@ class SlavePoller(threading.Thread):
                 number_of_services += 1
                 if task in config.slave_status and (
                         config.slave_status[task]['state'].current_state()) == \
-                        'Running':
+                        'Running_busy':
                     services_running += 1
 
         # Count the number of running tasks
         tasks_running = 0
         for task, status in config.slave_status.items():
-            if config.slave_status[task]['state'].current_state() == 'Running':
+            if config.slave_status[task]['state'].current_state() == \
+                        'Running_busy':
                 tasks_running += 1
 
         # Post an event to the MC state machine
