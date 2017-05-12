@@ -6,7 +6,7 @@ __author__ = 'David Terrett'
 import threading
 
 from sip.common.logging_api import log
-from sip.master import config
+from sip.master.config import slave_status_dict
 
 
 class UnConfigure(threading.Thread):
@@ -20,7 +20,7 @@ class UnConfigure(threading.Thread):
     def run(self):
         """Thread run routine."""
         log.info('starting unconfiguration')
-        for slave, status in config.slave_status.items():
+        for slave, status in slave_status_dict().items():
             if status['state'].current_state() == 'Running_busy':
                 log.info('stopping {}'.format(slave))
                 status['task_controller'].stop()

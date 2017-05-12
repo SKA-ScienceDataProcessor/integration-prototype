@@ -156,7 +156,8 @@ class DockerTaskDescriptor(TaskDescriptor):
         """
 
         # Remove the service
-        self._service[0].remove()
+        if len(self._service):
+            self._service[0].remove()
         self._service = []
 
         return
@@ -178,6 +179,9 @@ class DockerTaskDescriptor(TaskDescriptor):
         """ Return the task status
         """
         if len(self._service) > 0:
+
+            # Reload the service attributes from the docker engine
+            self._service[0].reload()
 
             # Get the status of the last task to be started
             state = self._service[0].tasks()[-1]['Status']['State']

@@ -11,7 +11,9 @@ import sys
 from sip.common.logging_api import log
 from sip.common.paas import TaskStatus
 from sip.common.docker_paas import DockerPaas as Paas
-from sip.master import config
+from sip.master.config import create_slave_status
+from sip.master.config import slave_status
+from sip.master.config import slave_config
 from sip.master import task_control
 from sip.master import slave_states
 from sip.master.slave_states import SlaveControllerSM
@@ -23,27 +25,20 @@ rpc_port_ = 6666
 def start(name, type):
     """Starts a slave controller."""
 
-    # Check that the type exists
-    if type not in config.slave_config:
-        raise RuntimeError('"{}" is not a known task type'.format(type))
-
     log.info('Starting slave (name={}, type={})'.format(name, type))
 
     # Create an entry in the slave status dictionary if one doesn't already
     # exist
-    if name not in config.slave_status:
-        log.info('Creating new slave, name={}'.format(name))
-        task_controller = task_control.SlaveTaskControllerRPyC()
-        config.slave_status[name] = {
-                'type': type,
-                'task_controller': task_controller,
-                'state': SlaveControllerSM(name, type, task_controller),
-                'descriptor': None}
+    log.info('Creating new slave, name={}'.format(name))
+    task_controller = task_control.SlaveTaskControllerRPyC()
+    state_machine = SlaveControllerSM(name, type, task_controller)
+    create_slave_status(name, type, task_controller,
+            state_machine)
 
     # Check that the slave isn't already running
-    slave_status = config.slave_status[name]  # Shallow copy (i.e. reference)
-    slave_config = config.slave_config[type]  # Shallow copy (i.e. reference)
-    current_state = slave_status['state'].current_state()
+    status = slave_status(name)
+    config = slave_config(name)
+    current_state = status['state'].current_state()
     log.debug('State of slave {} is {}'.format(name, current_state))
     if current_state == 'Starting' or current_state == 'Running':
         raise RuntimeError('Error starting {}: task is already {}'.format(
@@ -54,15 +49,15 @@ def start(name, type):
             current_state == 'Unknown'):
 
         # Start the slave
-        if slave_config['launch_policy'] == 'docker':
-            _start_docker_slave(name, type, slave_config, slave_status)
+        if config['launch_policy'] == 'docker':
+            _start_docker_slave(name, type, config, status)
         else:
             raise RuntimeError(
                     'Error starting "{}": {} is not a known slave launch '
-                    'policy'.format(name, slave_config['launch_policy']))
+                    'policy'.format(name, config['launch_policy']))
 
         log.debug('Started slave! (name={}, type={})'.format(name, type))
-    slave_status['restart'] = True
+    status['restart'] = True
 
 
 def _start_docker_slave(name, type, cfg, status):
@@ -110,7 +105,7 @@ def stop(name, status):
     """Stops a slave controller."""
     log.info('stopping task {}'.format(name))
     status['task_controller'].shutdown()
-    if config.slave_config[status['type']]['launch_policy'] == 'docker':
+    if slave_config(name)['launch_policy'] == 'docker':
         _stop_docker_slave(name, status)
 
 def _stop_docker_slave(name, status):
@@ -128,23 +123,14 @@ def reconnect(name, descriptor):
     the connection to a slave that is already running. This makes it
     possible to to restart the master controller.
     """
-    config.slave_status[name] = {'type': name}
-
-    # Get a descriptor for the service
-    config.slave_status[name]['descriptor'] = descriptor
-
-    # Create and connect a task controller for it
+    # Create a task controller for it
     task_controller = task_control.SlaveTaskControllerRPyC()
-    config.slave_status[name]['task_controller'] = task_controller
     (hostname, ports) = descriptor.location()
     task_controller.connect(hostname, ports[rpc_port_])
 
-    # Create the restart flag
-    config.slave_status[name]['restart'] = True
-
     # Create a state machine for it with an intial state corresponding to
     # the state of the slave.
-    service_state = config.slave_status[name]['descriptor'].status()
+    service_state = descriptor.status()
     if service_state == TaskStatus.RUNNING:
 
         # Assuming that a RUNNING service is busy. If it isn't it will
@@ -165,5 +151,12 @@ def reconnect(name, descriptor):
         sm = SlaveControllerSM(name, name, task_controller,
                 init=slave_states.Starting)
 
-    config.slave_status[name]['state'] = sm
+    # Create a config status
+    create_slave_status(name, name, task_controller, sm)
+    status = slave_status(name)
 
+    # Set the restart flag
+    status['restart'] = True
+
+    # Set a descriptor for the service
+    status['descriptor'] = descriptor

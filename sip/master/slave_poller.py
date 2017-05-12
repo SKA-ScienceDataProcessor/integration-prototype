@@ -17,7 +17,8 @@ import time
 
 from sip.common.logging_api import log
 from sip.common.paas import TaskStatus
-from sip.master import config
+from sip.master.config import slave_status_dict
+from sip.master.config import slave_config_dict
 from sip.master.slave_states import SlaveStatus
 
 
@@ -39,37 +40,43 @@ class SlavePoller(threading.Thread):
 
             # Scan all the tasks in the status dictionary and update
             # the state machines
-            for name, status in copy.copy(config.slave_status).items():
+            for name, status in copy.copy(slave_status_dict()).items():
 
                 # If there is a PAAS descriptor for this task
                 if  status['descriptor']:
 
-                    # Get the status from the PAAS
-                    state = status['descriptor'].status()
+                    # Get the status from the PAAS. This could fail if
+                    # the task was deleted after we copied the status
+                    # dictionary
+                    state = TaskStatus.UNKNOWN
+                    try:
+                        state = status['descriptor'].status()
 
-                    # If the state is "running" inquire the slave status
-                    # via the slave controller RPC interface.
-                    if state == TaskStatus.RUNNING:
+                        # If the state is "running" inquire the slave status
+                        # via the slave controller RPC interface.
+                        if state == TaskStatus.RUNNING:
                     
-                        # Test whether we can connect to the RPC service
-                        controller = status['task_controller']
-                        try:
-                            controller.connect()
+                            # Test whether we can connect to the RPC service
+                            controller = status['task_controller']
+                            try:
+                                controller.connect()
 
-                            # Connection is alive so get the slave status
-                            state = controller.status()
+                                # Connection is alive so get the slave status
+                                state = controller.status()
 
-                            # Convert to state machine event
-                            if state == 'idle':
-                                state = SlaveStatus.idle
-                            elif state == 'busy':
-                                state = SlaveStatus.busy
-                            elif state == 'error':
-                                state = SlaveStatus.error
-                        except:
+                                # Convert to state machine event
+                                if state == 'idle':
+                                    state = SlaveStatus.idle
+                                elif state == 'busy':
+                                    state = SlaveStatus.busy
+                                elif state == 'error':
+                                    state = SlaveStatus.error
+                            except:
 
-                            # Slave contoller is not listening
-                            state = SlaveStatus.noConnection
+                                # Slave contoller is not listening
+                                state = SlaveStatus.noConnection
+                    except:
+                        pass
 
                     # Post the event to the slave state machine 
                     status['state'].post_event([state])
@@ -88,18 +95,18 @@ class SlavePoller(threading.Thread):
         # Count the number of services
         number_of_services = 0
         services_running = 0
-        for task, cfg in config.slave_config.items():
-            if cfg.get('online', False):
+        for task, config in slave_config_dict().items():
+            if config['online']:
                 number_of_services += 1
-                if task in config.slave_status and (
-                        config.slave_status[task]['state'].current_state()) == \
-                        'Running_busy':
+                if task in slave_status_dict() and (
+                        slave_status_dict()[task]['state'].\
+                        current_state()) == 'Running_busy':
                     services_running += 1
 
         # Count the number of running tasks
         tasks_running = 0
-        for task, status in config.slave_status.items():
-            if config.slave_status[task]['state'].current_state() == \
+        for task, status in slave_status_dict().items():
+            if slave_status_dict()[task]['state'].current_state() == \
                         'Running_busy':
                 tasks_running += 1
 

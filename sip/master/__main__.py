@@ -75,13 +75,13 @@ time.sleep(1.0)
 
 # Create the slave config array from the configuration (a JSON string)
 with open(config_file) as f:
-    config.slave_config = json.load(f)
+    config._slave_config_dict = json.load(f)
 
 # Create the master controller state machine
-config.state_machine = MasterControllerSM()
+config.master_controller_state_machine = MasterControllerSM()
 
 # Create and start the slave poller
-SlavePoller(config.state_machine).start()
+SlavePoller(config.master_controller_state_machine).start()
 
 # This starts the rpyc 'ThreadedServer' - this creates a new
 # thread for each connection on the given port
@@ -94,16 +94,17 @@ t.start()
 reconnect(paas)
 
 # For testing we can also post events typed on the terminal
+sm = config.master_controller_state_machine
 while True:
     # Read from the terminal and process the event
     event = input('** Enter command:\n').split()
     if event:
         if event[0] == 'state':
             log.info('CLI: Current state: {}'.
-                     format(config.state_machine.current_state()))
+                     format(sm.current_state()))
             continue
         log.info('CLI: !!! Posting event ==> {}'.format(event[0]))
-        result = config.state_machine.post_event(event)
+        result = sm.post_event(event)
         if result == 'rejected':
             log.warn('CLI: not allowed in current state')
         elif result == 'ignored':
@@ -111,7 +112,7 @@ while True:
         else:
             # Print what state we are now in.
             log.info('CLI: master controller state: {}'.format(
-                config.state_machine.current_state()))
+                sm.current_state()))
     # else:
     #     print('** Allowed commands: online, offline, shutdown, '
     #           'cap [name] [task]')

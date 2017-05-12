@@ -13,7 +13,8 @@ from sip.common.state_machine import State
 from sip.common.state_machine import StateMachine
 from sip.common.state_machine import _End
 from sip.common.paas import TaskStatus
-from sip.master import config
+from sip.master.config import slave_status
+from sip.master.config import slave_config
 
 class SlaveStatus(Enum):
     noConnection = 0
@@ -49,13 +50,12 @@ class Running_idle(State):
                 sm._type))
 
         # If the restart flag is set, command the slave to restart the task.
-        if config.slave_status[sm._name]['restart']:
+        if slave_status(sm._name)['restart']:
             sm.LoadTask()
 
             # If this isn't an "online" task turn off restart
-            t = config.slave_status[sm._name]['type']
-            if not config.slave_config[t]['online']:
-                config.slave_status[sm._name]['restart'] = False
+            if not slave_config(sm._name)['online']:
+                slave_status(sm._name)['restart'] = False
 
 
 class Running_busy(State):
@@ -104,7 +104,7 @@ class SlaveControllerSM(StateMachine):
                 format(self._type, self._name))
         try:
             (host, ports) = \
-                config.slave_status[self._name]['descriptor'].location()
+                slave_status(self._name)['descriptor'].location()
             self._task_controller.connect(host, ports[6666])
         except:
             pass
@@ -114,9 +114,8 @@ class SlaveControllerSM(StateMachine):
                                                                self._name))
 
         # Start the task
-        self._task_controller.start(self._name,
-                                    config.slave_config[self._type],
-                                    config.slave_status[self._name])
+        self._task_controller.start(self._name, slave_config(self._name),
+                                    slave_status(self._name))
 
 
     # Define a default table which just moves the state machine to the

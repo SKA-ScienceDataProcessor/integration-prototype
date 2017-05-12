@@ -6,7 +6,8 @@ __author__ = 'David Terrett'
 import threading
 
 from sip.common.logging_api import log
-from sip.master import config, slave_control
+from sip.master.config import slave_config_dict
+from sip.master import slave_control
 
 
 class Configure(threading.Thread):
@@ -24,8 +25,8 @@ class Configure(threading.Thread):
         # as being required for the system to be online. For these tasks
         # we use the same string for both the task name and type as, by
         # definition there is only one task of each type.
-        for task, cfg in config.slave_config.items():
-            if cfg.get('online', False):
+        for task, config in slave_config_dict().items():
+            if config.get('online', False):
                 slave_control.start(task, task)
 
         log.info('Configuration thread exiting.')
