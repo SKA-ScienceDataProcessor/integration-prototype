@@ -12,8 +12,10 @@ def reconnect(paas):
     for name, config in slave_config_dict().items():
         if config['online']:
 
-            # Get a descriptor for the service
-            descriptor = paas.find_task(name)
-            if descriptor:
+            # Try to get a descriptor for the service
+            try:
+                descriptor = paas.find_task(name)
                 log.info('Attempting to reconnect to {}'.format(name))
                 slave_control.reconnect(name, descriptor)
+            except:
+                pass

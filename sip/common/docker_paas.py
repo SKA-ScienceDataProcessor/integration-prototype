@@ -30,10 +30,11 @@ class DockerPaas(Paas):
         """
 
         # Try to get a descriptor for this service
-        descriptor = self.find_task(name)
+        try:
+            descriptor = self.find_task(name)
+        except:
 
-        # If the service isn't already running start the task as a service
-        if descriptor is None:
+            # If the service isn't already running start the task as a service
 
             # Define a mount so that the container can talk to the
             # docker engine.
@@ -45,18 +46,18 @@ class DockerPaas(Paas):
             else:
                 condition = 'none'
             restart_policy = docker.types.RestartPolicy(condition=condition)
-
+ 
             # Create an endpoints for the ports the services run on.
             #
             # There is (I think) a bug in docker=py which means that
             # we can't get docker to do the port allocation for us.
             endpoints = {}
             for target_port in ports:
-
+ 
                 # Bind to a free port
                 s = socket.socket()
                 s.bind(('', 0))
-
+ 
                 # Get the allocated port name
                 published_port = s.getsockname()[1]
 
@@ -65,7 +66,7 @@ class DockerPaas(Paas):
                 s.close()
 
                 # Add the port to the endpoint spec
-                
+            
                 endpoints[published_port] = target_port
             endpoint_spec = docker.types.EndpointSpec(ports=endpoints)
 
@@ -74,14 +75,13 @@ class DockerPaas(Paas):
                     command=cmd_args[0], args=cmd_args[1:],
                     endpoint_spec=endpoint_spec, name=name,
                     networks=['sip'], mounts=mount,
-                    restart_policy=restart_policy);
+                        restart_policy=restart_policy);
 
             # Create a new descriptor now that the service is running. We
             # need to sleep to give docker time to configure the new service
             # and show up in the list of services.
             time.sleep(2)
             descriptor = DockerTaskDescriptor(name)
-
         return descriptor
 
     def run_task(self, name, task, ports, cmd_args):
@@ -92,9 +92,11 @@ class DockerPaas(Paas):
         """
 
         # Get rid of any existing service with the same name
-        d = self.find_task(name)
-        if d is not None:
+        try:
+            d = self.find_task(name)
             d.delete()
+        except:
+            pass
 
         # Start the task 
         descriptor = self.run_service(name, task, ports, cmd_args, 
@@ -106,8 +108,6 @@ class DockerPaas(Paas):
         """ Find a task or service
         """
         descriptor = DockerTaskDescriptor(name)
-        if len(descriptor._service) == 0:
-            return None
         return descriptor
 
     def _get_hostname(self, name):
@@ -130,26 +130,34 @@ class DockerTaskDescriptor(TaskDescriptor):
         super(DockerTaskDescriptor, self).__init__(name)
         self._proc = 0
         self._service = []
+        self._target_ports = None
+        self._published_ports = None
 
-        # Search for an existing service with this name
+        # See if we are a manager node
         paas = DockerPaas();
-        self._service = paas._client.services.list(filters={'name':name})
-        if len(self._service) > 0:
+        info = paas._client.info()
+        if info['Swarm']['ControlAvailable']:
 
-            # Get the ident
-            self.ident = self._service[0].id
+            # Search for an existing service with this name
+            self._service = paas._client.services.list(filters={'name':name})
+            if len(self._service) > 0:
 
-            # Get host and port number(if there are any)
-            self.hostname = paas._get_hostname(name)
-            attrs = self._service[0].attrs
-            if 'Ports' in attrs['Endpoint']:
-                self._target_ports = {}
-                self._published_ports = {}
-                ports = attrs['Endpoint']['Ports']
-                for p in ports:
-                    self._target_ports[p['TargetPort']] = p['TargetPort']
-                    self._published_ports[p['TargetPort']] = \
-                                p['PublishedPort']
+                # Get the ident
+                self.ident = self._service[0].id
+
+                # Get host and port number(if there are any)
+                self.hostname = paas._get_hostname(name)
+                attrs = self._service[0].attrs
+                if 'Ports' in attrs['Endpoint']:
+                    self._target_ports = {}
+                    self._published_ports = {}
+                    ports = attrs['Endpoint']['Ports']
+                    for p in ports:
+                        self._target_ports[p['TargetPort']] = p['TargetPort']
+                        self._published_ports[p['TargetPort']] = \
+                                    p['PublishedPort']
+            else:
+                raise RuntimeError('task "{}" not found'.format(name))
 
     def delete(self):
         """ Kill the task
@@ -162,18 +170,18 @@ class DockerTaskDescriptor(TaskDescriptor):
 
         return
 
-    def location(self):
+    def location(self, port):
         """ Returns the host and ports of the service or task
         
         The answer depends on whether we are running inside or outside of
         the Docker swarm. If we are a container running inside the swarm
         the ports are the target ports whereas if we are outside the swarm
-        we want the publiched port
+        we want the published port
         """
         if os.path.exists("docker_swarm"):
-            return self.hostname, self._target_ports
+            return self.hostname, port
         else:
-            return self.hostname, self._published_ports
+            return self.hostname, self._published_ports[port]
 
     def status(self):
         """ Return the task status

@@ -89,8 +89,8 @@ def _start_docker_slave(name, type, cfg, status):
 
     # Attempt to connect the controller
     try:
-        (hostname, ports) = descriptor.location()
-        status['task_controller'].connect(hostname, ports[rpc_port_])
+        (hostname, port) = descriptor.location(rpc_port_)
+        status['task_controller'].connect(hostname, port)
     except:
         pass
 
@@ -125,8 +125,8 @@ def reconnect(name, descriptor):
     """
     # Create a task controller for it
     task_controller = task_control.SlaveTaskControllerRPyC()
-    (hostname, ports) = descriptor.location()
-    task_controller.connect(hostname, ports[rpc_port_])
+    (hostname, port) = descriptor.location(rpc_port_)
+    task_controller.connect(hostname, port)
 
     # Create a state machine for it with an intial state corresponding to
     # the state of the slave.

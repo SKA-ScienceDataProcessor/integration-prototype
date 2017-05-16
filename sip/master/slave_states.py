@@ -103,9 +103,9 @@ class SlaveControllerSM(StateMachine):
         log.info('Attempting to connect to slave task. type={}, name={}'. \
                 format(self._type, self._name))
         try:
-            (host, ports) = \
-                slave_status(self._name)['descriptor'].location()
-            self._task_controller.connect(host, ports[6666])
+            (host, port) = \
+                slave_status(self._name)['descriptor'].location(6666)
+            self._task_controller.connect(host, port)
         except:
             pass
 
