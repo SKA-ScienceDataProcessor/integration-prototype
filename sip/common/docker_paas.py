@@ -186,15 +186,22 @@ class DockerTaskDescriptor(TaskDescriptor):
     def status(self):
         """ Return the task status
         """
+        state = 'unknown'
         if len(self._service) > 0:
 
             # Reload the service attributes from the docker engine
             self._service[0].reload()
 
-            # Get the status of the last task to be started
-            state = self._service[0].tasks()[-1]['Status']['State']
-        else:
-            state = 'unknown'
+            # Look at the status of all the tasks in this service
+            # looking for the "best"
+            for task in self._service[0].tasks():
+
+                # Don't know who to do this really - for the moment just see
+                # if there is one running.
+                s = task['Status']['State']
+                if s == 'running':
+                    state = s
+                    break
 
         # Return the corresponding TaskStatus value.
         if state == 'unknown':
