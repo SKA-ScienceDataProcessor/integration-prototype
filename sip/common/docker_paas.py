@@ -18,21 +18,28 @@ class DockerPaas(Paas):
 
     def __init__(self):
         """ Constructor
-
-        The docker engine must be a manager of a swarm.
         """
 
         # Create a docker client
         self._client = docker.from_env();
 
+        # Store a flag to show whether we are on a manager node or a 
+        # worker.
+        self._manager = self._client.info()['Swarm']['ControlAvailable']
+
     def run_service(self, name, task, ports, cmd_args, restart=True):
         """ Run a task as a service.
+
+        Only manager nodes can create a service
         """
+        # Raise an exception if we are not a manager
+        if not self._manager:
+            raise RuntimeError(\
+                'Services can only be run on swarm manager nodes')
 
         # Try to get a descriptor for this service
-        try:
-            descriptor = self.find_task(name)
-        except:
+        descriptor = self.find_task(name)
+        if not descriptor:
 
             # If the service isn't already running start the task as a service
 
@@ -89,14 +96,18 @@ class DockerPaas(Paas):
 
         A task is the same as a service except that it is not restarted
         if it exits.
+
+        Only manager nodes can create a service
         """
+        # Raise an exception if we are not a manager
+        if not self._manager:
+            raise RuntimeError(\
+                'Services can only be run on swarm manager nodes')
 
         # Get rid of any existing service with the same name
-        try:
-            d = self.find_task(name)
+        d = self.find_task(name)
+        if d:
             d.delete()
-        except:
-            pass
 
         # Start the task 
         descriptor = self.run_service(name, task, ports, cmd_args, 
@@ -106,9 +117,16 @@ class DockerPaas(Paas):
 
     def find_task(self, name):
         """ Find a task or service
+
+        Returns a TaskDescriptor for the task or None if the task
+        doesn't exist. Note that on a worker node there is no check on
+        whether the task really exists and the descriptor may not point
+        to real task.
         """
-        descriptor = DockerTaskDescriptor(name)
-        return descriptor
+        try:
+            return DockerTaskDescriptor(name)
+        except:
+            return None
 
     def _get_hostname(self, name):
         """ Returns the host name of the machine we are running on.
@@ -129,14 +147,11 @@ class DockerTaskDescriptor(TaskDescriptor):
     def __init__(self, name):
         super(DockerTaskDescriptor, self).__init__(name)
         self._proc = 0
-        self._service = []
-        self._target_ports = None
-        self._published_ports = None
 
         # See if we are a manager node
         paas = DockerPaas();
-        info = paas._client.info()
-        if info['Swarm']['ControlAvailable']:
+        self._manager = paas._manager
+        if self._manager:
 
             # Search for an existing service with this name
             self._service = paas._client.services.list(filters={'name':name})
@@ -161,7 +176,14 @@ class DockerTaskDescriptor(TaskDescriptor):
 
     def delete(self):
         """ Kill the task
+
+        Only manager nodes can delete a service
         """
+
+        # Raise an exception if we are not a manager
+        if not self._manager:
+            raise RuntimeError(\
+                'Services can only be deleted on swarm manager nodes')
 
         # Remove the service
         if len(self._service):

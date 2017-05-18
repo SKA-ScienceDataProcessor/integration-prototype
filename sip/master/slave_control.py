@@ -114,7 +114,10 @@ def _stop_docker_slave(name, status):
     log.info('stopping slave controller {}'.format(name))
     paas = Paas()
     descriptor = paas.find_task(name)
-    descriptor.delete()
+    if descriptor:
+        descriptor.delete()
+    else:
+        log.info('task {} not found'.format(name))
 
 def reconnect(name, descriptor):
     """ Reconnects to an existing slave service
