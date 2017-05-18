@@ -263,6 +263,22 @@ class DockerTaskDescriptor(TaskDescriptor):
                 if s == 'running':
                     state = s
                     break
+                if s == 'exited':
+                    state = s
+                    break
+                if s == 'new':
+                    state = s
+                    break
+                if s == 'preparing':
+                    state = s
+                    break
+                if s == 'complete':
+                    state = s
+                    break
+                if s == 'error':
+                    if state == 'unknown':
+                        state = s
+                    break
 
         # Return the corresponding TaskStatus value.
         if state == 'unknown':
