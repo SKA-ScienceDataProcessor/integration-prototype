@@ -31,6 +31,15 @@ class DockerPaas(Paas):
         """ Run a task as a service.
 
         Only manager nodes can create a service
+
+        Args:
+            name: Task name. Any string but must be unique.
+            task: Task to run (e.g. the name of an executable image).
+            ports: A list of TCP ports (int) used by the task.
+            args: A list of command line argument for the task.
+
+        Returns:
+            DockerTaskDescriptor for the task,
         """
         # Raise an exception if we are not a manager
         if not self._manager:
@@ -98,6 +107,15 @@ class DockerPaas(Paas):
         if it exits.
 
         Only manager nodes can create a service
+
+        Args:
+            name: Task name. Any string but must be unique.
+            task: Task to run (e.g. the name of an executable image).
+            ports: A list of TCP ports (int) used by the task.
+            args: A list of command line argument for the task.
+
+        Returns:
+            DockerTaskDescriptor for the task,
         """
         # Raise an exception if we are not a manager
         if not self._manager:
@@ -145,6 +163,10 @@ class DockerPaas(Paas):
 
 class DockerTaskDescriptor(TaskDescriptor):
     def __init__(self, name):
+        """
+        Args:
+            name: Task name
+        """
         super(DockerTaskDescriptor, self).__init__(name)
         self._proc = 0
 
@@ -161,7 +183,7 @@ class DockerTaskDescriptor(TaskDescriptor):
                 self.ident = self._service[0].id
 
                 # Get host and port number(if there are any)
-                self.hostname = paas._get_hostname(name)
+                self._hostname = paas._get_hostname(name)
                 attrs = self._service[0].attrs
                 if 'Ports' in attrs['Endpoint']:
                     self._target_ports = {}
@@ -173,6 +195,12 @@ class DockerTaskDescriptor(TaskDescriptor):
                                     p['PublishedPort']
             else:
                 raise RuntimeError('task "{}" not found'.format(name))
+        else:
+
+            # If we are not a manager the best we can do is assume that the
+            # service is running and the network is mapping the service
+            # name to the correct host.
+            self._hostname = None
 
     def delete(self):
         """ Kill the task
@@ -193,20 +221,31 @@ class DockerTaskDescriptor(TaskDescriptor):
         return
 
     def location(self, port):
-        """ Returns the host and ports of the service or task
+        """ Get the location of a task or service
+
+        Args:
+            port: The port the service runs on.
+
+        Returns: 
+            The host name and port for connecting to the service.
         
         The answer depends on whether we are running inside or outside of
         the Docker swarm. If we are a container running inside the swarm
-        the ports are the target ports whereas if we are outside the swarm
-        we want the published port
+        the ports are the target ports and the host name is the same as
+        the name of the service and the port is the same. If we are outside 
+        the swarm the host is the manager node that we are running on and
+        the port is the published port the port was mapped to.
         """
         if os.path.exists("docker_swarm"):
-            return self.hostname, port
+            return self._hostname, port
         else:
-            return self.hostname, self._published_ports[port]
+            return self._hostname, self._published_ports[port]
 
     def status(self):
         """ Return the task status
+
+        Returns:
+            The task status as a TaskStatus enum.
         """
         state = 'unknown'
         if len(self._service) > 0:
@@ -238,3 +277,5 @@ class DockerTaskDescriptor(TaskDescriptor):
             return TaskStatus.EXITED
         if state == 'failed':
             return TaskStatus.ERROR
+
+        pass
