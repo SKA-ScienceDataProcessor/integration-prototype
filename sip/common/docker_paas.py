@@ -200,7 +200,7 @@ class DockerTaskDescriptor(TaskDescriptor):
             # If we are not a manager the best we can do is assume that the
             # service is running and the network is mapping the service
             # name to the correct host.
-            self._hostname = None
+            self._hostname = name
 
     def delete(self):
         """ Kill the task
@@ -237,7 +237,7 @@ class DockerTaskDescriptor(TaskDescriptor):
         the port is the published port the port was mapped to.
         """
         if os.path.exists("docker_swarm"):
-            return self._hostname, port
+            return self.name, port
         else:
             return self._hostname, self._published_ports[port]
 
