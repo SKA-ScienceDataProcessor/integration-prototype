@@ -4,7 +4,8 @@ __author__ = 'Brian McIlwrath'
 
 import rpyc
 from sip.common.logging_api import log
-from sip.master.config import master_controller_state_machine as sm
+#from sip.master.config import master_controller_state_machine as sm
+from sip.master import config
 
 
 class RpcService(rpyc.Service):
@@ -30,7 +31,7 @@ class RpcService(rpyc.Service):
     def exposed_online(self, callback=None):
         """Exposed online method.
         Sends the :code:`online` command to the Master Controller state machine."""
-        return sm.post_event(['online'])
+        return config.master_controller_state_machine.post_event(['online'])
 
     def exposed_capability(self, name, type, callback=None):
         """Exposed capability method.
@@ -40,18 +41,18 @@ class RpcService(rpyc.Service):
             name (str): The name of the capability.
             type (str): The type of the capability.
         """
-        return sm.post_event(['cap', name, type])
+        return config.master_controller_state_machine.post_event(['cap', name, type])
 
     def exposed_offline(self,callback=None):
         """Exposed capability method.
         Sends the :code:`cap` command to the Master Controller state machine."""
-        return sm.post_event(['offline'])
+        return config.master_controller_state_machine.post_event(['offline'])
 
     def exposed_shutdown(self,callback=None):
         """Exposed shutdown method.
         Sends the :code:`shutdown` command to the Master Controller state
         machine."""
-        return sm.post_event(['shutdown'])
+        return config.master_controller_state_machine.post_event(['shutdown'])
 
     def exposed_get_current_state(self):
         """Exposed get_current_state method.
@@ -60,5 +61,5 @@ class RpcService(rpyc.Service):
         Returns:
             str: Master Controller state
         """
-        return sm.current_state()
+        return config.master_controller_state_machine.current_state()
 
