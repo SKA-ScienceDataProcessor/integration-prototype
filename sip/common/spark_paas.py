@@ -54,7 +54,7 @@ class SparkPaaS(Paas):
         td = SparkTaskDescriptor(name, self.spark_master) # Or however it's done. Look at docker_paas
         self.tasks[name] = td
 
-        cmd = self.task_to_command(task) # TODO
+        cmd = self.task_to_command(args) # TODO
         app = subprocess.Popen(cmd, stdout=subprocess.DEVNULL,
                 stderr=subprocess.PIPE, shell=True) # can we do without shell?
 
@@ -64,6 +64,7 @@ class SparkPaaS(Paas):
 
         while application_id is None:
             line = str(app.stderr.readline(), 'utf-8')
+            #print(line)
             if len(line) is 0:
                 #TODO cleanup correctly
                 break
@@ -98,14 +99,29 @@ class SparkPaaS(Paas):
         return td
 
     def task_to_command(self, task):
-        args = '--conf spark.eventLog.enabled=true --conf spark.eventLog.dir=file:///tmp/spark-events --executor-memory 2g --driver-memory 2g --total-executor-cores 2'
+        #if task is None:
+        #    args = '--conf spark.eventLog.enabled=true --conf spark.eventLog.dir=file:///tmp/spark-events --executor-memory 2g --driver-memory 2g --total-executor-cores 2'
+        #    cmd = 'spark-submit --master {protocol}://{host}:{port} {arguments} {jarpath}/{jarfile}'.format(
+        #            protocol=self.spark_master['protocol'],
+        #            host=self.spark_master['url'],
+        #            port=self.spark_master['port'],
+        #            arguments=args,
+        #            jarpath='/usr/local/bin',
+        #            jarfile='sdp-pipeline_2.10-1.0.jar'
+        #        )
+
+        #    #print(cmd)
+        #    return cmd
+
+        #print(task)
+
         cmd = 'spark-submit --master {protocol}://{host}:{port} {arguments} {jarpath}/{jarfile}'.format(
                 protocol=self.spark_master['protocol'],
                 host=self.spark_master['url'],
                 port=self.spark_master['port'],
-                arguments=args,
-                jarpath='/usr/local/bin',
-                jarfile='sdp-pipeline_2.10-1.0.jar'
+                arguments=task['spark_args'],
+                jarpath=task['jarpath'],
+                jarfile=task['jarfile']
             )
 
         #print(cmd)
@@ -146,6 +162,7 @@ class SparkTaskDescriptor(TaskDescriptor):
         # TODO send kill command(if necessary), verify, return?
         status = self.status()
         if status is not TaskStatus.EXITED:
+            print("Killing {}".format(self.application_id))
             self.kill()
 
     def kill(self):

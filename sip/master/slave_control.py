@@ -32,14 +32,23 @@ def start(name, type):
 
     # Create an entry in the slave status dictionary if one doesn't already
     # exist
+    print("-- start --")
+    print(name)
+    print(config.slave_status)
     if name not in config.slave_status:
         log.info('Creating new slave, name={}'.format(name))
-        task_controller = task_control.SlaveTaskControllerRPyC()
+        if type == 'pipeline':
+            print("type is {}".format(type))
+            task_controller = task_control.SlaveTaskControllerSpark()
+        else:
+            task_controller = task_control.SlaveTaskControllerRPyC()
         config.slave_status[name] = {
                 'type': type,
                 'task_controller': task_controller,
                 'state': SlaveControllerSM(name, type, task_controller),
                 'descriptor': None}
+    print("-- after --")
+    print(config.slave_status)
 
     # Check that the slave isn't already running
     slave_status = config.slave_status[name]  # Shallow copy (i.e. reference)
@@ -108,28 +117,34 @@ def _start_docker_slave(name, type, cfg, status):
     log.info('"{}" (type {}) started'.format(name, type))
 
 def _start_spark_slave(name, type, cfg, status):
-    """Starts a slave controller that is a Docker container.
+    """Starts a Spark slave.
 
-    NB This only works on localhost
     """
     # Improve logging soon!
     req_log = logging.getLogger('requests')
     req_log.setLevel(logging.WARN)
     req_log.addHandler(logging.StreamHandler(sys.stdout))
 
+    print(cfg)
+
     log.info('Starting Spark slave (name={}, type={})'.format(name, type))
 
     # Start it
     #if name == 'wootwoot':
+    if 'task' in cfg.keys():
+        task = cfg['task']
+    else:
+        task = None
+
     paas = SparkPaaS()
-    descriptor = paas.run_service(name, 'sip', None, None)
+    descriptor = paas.run_service(name, 'sip', None, task)
     #else:
     #    descriptor = None
 
     # Fill in the generic entries in the status dictionary
     #(host, ports) = descriptor.location()
-    status['rpc_port'] = None
-    status['sip_root'] = None
+    status['master_url'] = '127.0.0.1'
+    status['master_port'] = '8080'
     status['descriptor'] = descriptor
 
     log.info('"{}" (type {}) started'.format(name, type))
@@ -149,8 +164,8 @@ def _stop_docker_slave(name, status):
 
     log.info('stopping slave controller {}'.format(name))
     paas = Paas()
-    descriptor = paas.find_task(name)
-    descriptor.delete()
+    paas.delete_task(name)
+    #descriptor.delete()
 
 def _stop_spark_slave(name, status):
     """Stops a docker based slave controller."""

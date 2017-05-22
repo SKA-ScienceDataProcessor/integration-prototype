@@ -13,6 +13,8 @@ from sip.common.logging_api import log
 from sip.common.resource_manager import ResourceManager
 from sip.master import config
 
+from sip.common.paas import TaskStatus
+
 
 class SlaveTaskController:
     """Base class to define the slave task controller interface.
@@ -39,6 +41,37 @@ class SlaveTaskController:
     def stop(self):
         """Command the slave controller to unload the task."""
         raise RuntimeError("Implement TaskController.stop().")
+
+
+class SlaveTaskControllerSpark(SlaveTaskController):
+    def __init__(self):
+        SlaveTaskController.__init__(self)
+        self.descriptor = None
+        print("INITING SlaveTaskControllerSpark")
+
+    def connect(self, descriptor):
+        print("descriptor: {}".format(descriptor))
+        if descriptor:
+            self.descriptor = descriptor
+
+    def status(self):
+        # TODO should probably not use/return TaskStatus enum item
+        print("STATUS REQUEST!")
+        if self.descriptor:
+            return self.descriptor.status()
+
+        return TaskStatus.UNKNOWN
+
+    def shutdown(self):
+        pass
+        #print("shutting down")
+        #print(self.descriptor)
+        #if self.descriptor:
+        #    ###STARTDEBUG
+        #    state = self.descriptor.status()
+        #    print(state)
+        #    ###ENDDEBUG
+        #    self.descriptor.delete()
 
 
 class SlaveTaskControllerRPyC(SlaveTaskController):
