@@ -10,8 +10,10 @@ import time
 
 from sip.common.logging_api import log
 
+from sip.master.config import slave_status_dict
 from sip.master import config
 from sip.master import slave_control
+from sip.master.slave_states import TaskStatus
 
 
 class Shutdown(threading.Thread):
@@ -25,8 +27,9 @@ class Shutdown(threading.Thread):
         log.info('starting shutdown')
 
         # Shut down any slaves that are still running
-        for slave, status in config.slave_status.items():
+        for slave, status in slave_status_dict().items():
             state = status['state'].current_state()
+            print(state)
             if state != 'Exited' and state != 'Unknown':
                 slave_control.stop(slave, status)
 

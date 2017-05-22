@@ -1,6 +1,6 @@
 {
     "localhost": {
         "sip_root": "#cwd",
-        "launch_protocol": ["ssh", "docker", "spark"]
+        "launch_protocol": ["docker", "spark"]
     }
 }

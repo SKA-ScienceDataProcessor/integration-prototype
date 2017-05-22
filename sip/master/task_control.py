@@ -11,7 +11,7 @@ import rpyc
 
 from sip.common.logging_api import log
 from sip.common.resource_manager import ResourceManager
-from sip.master import config
+from sip.master.config import resource
 
 from sip.common.paas import TaskStatus
 
@@ -112,7 +112,7 @@ class SlaveTaskControllerRPyC(SlaveTaskController):
         log.debug('[SlaveTaskControllerRPyC] Starting task {}'.format(name))
         task_cfg = cfg['task']
         for i, value_str in enumerate(task_cfg):
-            task_cfg[i] = self._set_resource(value_str, name, config.resource)
+            task_cfg[i] = self._set_resource(value_str, name, resource)
 
         # Send the slave the command to load the task
         self.connect()

@@ -12,7 +12,24 @@ import abc
 from enum import Enum
 
 class Paas(metaclass=abc.ABCMeta):
-    """ Paas interface
+    """ Platform as a service interface
+
+    The Paas interface distiguished between two sorts of task; ones
+    which are expected to run until shut down explictily (called services)
+    and those which are expected to exit themselves after completing some
+    task (called tasks). 
+
+    The PAAS is expected to restart services if they fail but not tasks.
+
+    Once created, a task or service is controlled with an object called
+    a TaskDescriptor which is either created either when the service or
+    task is created or the find_task method which searches for an already
+    running task or service.
+
+    Services typically listen on one or more IP ports where the port numbers
+    are defined as part of the interface. The task descriptor's location
+    method translates a service port number into the host name and actual port
+    that should be used to access the service.
     """
 
     @abc.abstractmethod
@@ -20,10 +37,13 @@ class Paas(metaclass=abc.ABCMeta):
         """  Run a task.
         
         Args:
-            name (string): Task name. Any string but must be unique.
-            task (string): Task to run (e.g. executable image)
-            ports (int): TCP ports used by the task
-            args (list): Command line to run the task.
+            name: Task name. Any string but must be unique.
+            task: Task to run (e.g. the name of an executable image).
+            ports: A list of TCP ports (int) used by the task.
+            args: A list of command line argument for the task.
+
+        Returns:
+            TaskDescriptor for the task,
         """
 
     @abc.abstractmethod
@@ -31,10 +51,13 @@ class Paas(metaclass=abc.ABCMeta):
         """  Run a task as a service.
         
         Args:
-            name (string): Task name. Any string but must be unique.
-            task (string): Task to run (e.g. executable image)
-            ports (int): TCP ports used by the service
-            args (list): Command line to run task task.
+            name: Service name. Any string but must be unique.
+            task: Task to run (e.g. the name of an executable image).
+            ports: A list of TCP ports (int) used by the task.
+            args: A list of command line argument for the task.
+
+        Returns:
+            TaskDescriptor for the task,
         """
         pass
 
@@ -46,11 +69,13 @@ class Paas(metaclass=abc.ABCMeta):
             name (string): task name
 
         Returns:
-            a task descriptor or None
+            a TaskDescriptor object or None if the task can't be found
         """
         pass
 
 class TaskStatus(Enum):
+    """ Task or service states
+    """
     RUNNING = 1
     EXITED = 2
     ERROR = 3
@@ -61,32 +86,20 @@ class TaskDescriptor:
     """ Task descriptor
 
     A task descriptor is an object that enables a client to interact
-    with a task; inquiring its status and properties and deleting it.
-
-    Four properties are defined by default:
-
-        task (string): The task name
-        hostname (string): The name of the host the task is running on.
-        ports (dict): A dictionary that maps from the ports the service
-                      exposes to ports on hostname
-        ident (string): Some sort of unique identifier
-
-    If the task is not a service the port will be zero.   
+    with a task or service; inquiring its status and properties and 
+    deleting it.
     """
     def __init__(self, name):
         """ Constructor
     
         Args:
-            name (string): Task name
+            name: Task name
         """
         self.name = name
-        self.hostname = None
-        self.ports = {}
-        self.ident = None
 
     @abc.abstractmethod
     def delete(self):
-        """ Stop and delete the task.
+        """ Stop and delete the task or service.
 
         When a task is deleted it is removed from the list of tasks
         being controlled by the service.
@@ -95,19 +108,21 @@ class TaskDescriptor:
 
     @abc.abstractmethod
     def status(self):
-        """ Get status of the tasks.
+        """ Get status of the task or service.
 
         Returns:
             The task status.
         """
         pass
 
-    def location(self):
+    @abc.abstractmethod
+    def location(self, port):
         """ Get the location of a task or service
 
-        The default implementation just returns the hostname and ports
-        stored in the descripter object. Other implementations may do
-        something more dynamic.
-        """
-        return self.hostname, self.ports
+        Args:
+            port: The port the service runs on.
 
+        Returns: 
+            The host name and port for connecting to the service.
+        """
+        pass
