@@ -49,7 +49,7 @@ class SlaveTaskControllerSpark(SlaveTaskController):
         self.descriptor = None
         print("INITING SlaveTaskControllerSpark")
 
-    def connect(self, descriptor):
+    def connect(self, descriptor=None):
         print("descriptor: {}".format(descriptor))
         if descriptor:
             self.descriptor = descriptor

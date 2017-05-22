@@ -30,27 +30,11 @@ def start(name, type):
 
     # Create an entry in the slave status dictionary if one doesn't already
     # exist
-    #OLD - for reference, DO NOT USE
-    #print("-- start --")
-    #print(name)
-    #print(config.slave_status)
-    #if name not in config.slave_status:
-    #    log.info('Creating new slave, name={}'.format(name))
-    #    if type == 'pipeline':
-    #        print("type is {}".format(type))
-    #        task_controller = task_control.SlaveTaskControllerSpark()
-    #    else:
-    #        task_controller = task_control.SlaveTaskControllerRPyC()
-    #    config.slave_status[name] = {
-    #            'type': type,
-    #            'task_controller': task_controller,
-    #            'state': SlaveControllerSM(name, type, task_controller),
-    #            'descriptor': None}
-    #print("-- after --")
-    #print(config.slave_status)
-    # END OLD
     log.info('Creating new slave, name={}'.format(name))
-    task_controller = task_control.SlaveTaskControllerRPyC()
+    if type == "pipeline": # TODO - how to test for slave type?
+        task_controller = task_control.SlaveTaskControllerSpark()
+    else:
+        task_controller = task_control.SlaveTaskControllerRPyC()
     state_machine = SlaveControllerSM(name, type, task_controller)
     create_slave_status(name, type, task_controller,
             state_machine)
@@ -144,8 +128,10 @@ def _start_spark_slave(name, type, cfg, status):
 
     paas = SparkPaaS()
     descriptor = paas.run_service(name, 'sip', None, task)
-    #else:
-    #    descriptor = None
+    #try:
+    status['task_controller'].connect(descriptor)
+    #except:
+    #    pass
 
     # Fill in the generic entries in the status dictionary
     #(host, ports) = descriptor.location()
