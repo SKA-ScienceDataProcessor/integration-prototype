@@ -46,19 +46,15 @@ class SlaveTaskController:
 class SlaveTaskControllerSpark(SlaveTaskController):
     def __init__(self):
         SlaveTaskController.__init__(self)
-        self.descriptor = None
-        print("INITING SlaveTaskControllerSpark")
+        self._descriptor = None
 
     def connect(self, descriptor=None):
-        print("descriptor: {}".format(descriptor))
         if descriptor:
-            self.descriptor = descriptor
+            self._descriptor = descriptor
 
     def status(self):
-        # TODO should probably not use/return TaskStatus enum item
-        print("STATUS REQUEST!")
-        if self.descriptor:
-            return self.descriptor.status()
+        if self._descriptor:
+            return self._descriptor.status()
 
         return TaskStatus.UNKNOWN
 
@@ -72,6 +68,12 @@ class SlaveTaskControllerSpark(SlaveTaskController):
         #    print(state)
         #    ###ENDDEBUG
         #    self.descriptor.delete()
+
+    def stop(self):
+        if self._descriptor:
+            self._descriptor.delete()
+
+        self._descriptor = None
 
 
 class SlaveTaskControllerRPyC(SlaveTaskController):

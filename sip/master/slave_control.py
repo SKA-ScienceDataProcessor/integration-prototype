@@ -15,6 +15,7 @@ from sip.common.spark_paas import SparkPaaS
 from sip.master.config import create_slave_status
 from sip.master.config import slave_status
 from sip.master.config import slave_config
+from sip.master.config import slave_config_dict
 from sip.master import task_control
 from sip.master import slave_states
 from sip.master.slave_states import SlaveControllerSM
@@ -28,10 +29,16 @@ def start(name, type):
 
     log.info('Starting slave (name={}, type={})'.format(name, type))
 
+    # Ugly method, but works for now
+    try:
+        launch_type = slave_config_dict()[type]['launch_policy']
+    except:
+        launch_type = None
+
     # Create an entry in the slave status dictionary if one doesn't already
     # exist
     log.info('Creating new slave, name={}'.format(name))
-    if type == "pipeline": # TODO - how to test for slave type?
+    if launch_type == "spark":
         task_controller = task_control.SlaveTaskControllerSpark()
     else:
         task_controller = task_control.SlaveTaskControllerRPyC()
@@ -114,8 +121,6 @@ def _start_spark_slave(name, type, cfg, status):
     req_log = logging.getLogger('requests')
     req_log.setLevel(logging.WARN)
     req_log.addHandler(logging.StreamHandler(sys.stdout))
-
-    print(cfg)
 
     log.info('Starting Spark slave (name={}, type={})'.format(name, type))
 
