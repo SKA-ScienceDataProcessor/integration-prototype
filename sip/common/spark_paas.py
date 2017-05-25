@@ -19,44 +19,41 @@ class SparkPaaS(Paas):
     # Still, keeping this for now - start with copying Docker_PaaS behaviour for
     # slave management, easy to adjust later on.
 
-    #spark_master = None
-    spark_master = {
-        'protocol': 'spark',
-        'url': '127.0.0.1',
-        'port': '7077',
-        'master_port': '8080',
-        'history_server': '127.0.0.1',
-        'history_port': '18080'
-        }
+    spark_master = None
+    #spark_master = {
+    #    'protocol': 'spark',
+    #    'url': '127.0.0.1',
+    #    'port': '7077',
+    #    'master_port': '8080',
+    #    'history_server': '127.0.0.1',
+    #    'history_port': '18080'
+    #    }
     tasks = {}
 
     def __init__(self):
         # worker port is set at worker start, so has to be read at app start
-        #if not self.spark_master:
-        #    print('setting self.spark_master')
-        #    self.spark_master = {
-        #            'protocol': 'spark',
-        #            'url': '127.0.0.1',
-        #            'port': '7077',
-        #            'history_server': '127.0.0.1',
-        #            'history_port': '18080'
-        #            }
-        #if not self.tasks:
-        #    self.tasks = {}
-        #else:
-        #    print('self.tasks already set')
-        pass
+        if not SparkPaaS.spark_master:
+            #print('setting SparkPaaS.spark_master')
+            SparkPaaS.spark_master = {
+                    'protocol': 'spark',
+                    'url': '127.0.0.1',
+                    'port': '7077',
+                    'master_port': '8080',
+                    'history_server': '127.0.0.1',
+                    'history_port': '18080'
+                    }
+        self.spark_master = SparkPaaS.spark_master
+        self.tasks = SparkPaaS.tasks
 
     def run_task(self, name, task, ports=None, args=None):
-        #TODO What are the expected retvals?
         if name in self.tasks.keys():
             return None #TODO apparently we remove and overwrite, or something?
-        td = SparkTaskDescriptor(name, self.spark_master) # Or however it's done. Look at docker_paas
+        td = SparkTaskDescriptor(name, self.spark_master)
         self.tasks[name] = td
 
         cmd = self.task_to_command(args) # TODO
         app = subprocess.Popen(cmd, stdout=subprocess.DEVNULL,
-                stderr=subprocess.PIPE, shell=True) # can we do without shell?
+                stderr=subprocess.PIPE, shell=True)
 
         ui_address = None
         ui_port = None
@@ -64,7 +61,6 @@ class SparkPaaS(Paas):
 
         while application_id is None:
             line = str(app.stderr.readline(), 'utf-8')
-            #print(line)
             if len(line) is 0:
                 #TODO cleanup correctly
                 break
@@ -124,7 +120,6 @@ class SparkPaaS(Paas):
                 jarfile=task['jarfile']
             )
 
-        #print(cmd)
         return cmd
 
     def run_service(self, name, task, ports=None, args=None):
@@ -141,6 +136,8 @@ class SparkPaaS(Paas):
     def delete_task(self, name):
         task = self.find_task(name)
 
+        #print('delete_task')
+
         if task:
             task.delete()
             del self.tasks[name]
@@ -152,26 +149,23 @@ class SparkTaskDescriptor(TaskDescriptor):
     def __init__(self, name, master_config):
         self.spark_master = master_config
         self.name = name
-        self.task_mode = 'app' # TODO or 'driver', and don't use strings
+        #self.task_mode = 'app' # TODO or 'driver', and don't use strings
 
         self.ui_address = None
         self.ui_port = None
         self.application_id = None # app-14x-4x OR driver-14x-4x
 
     def delete(self):
-        # TODO send kill command(if necessary), verify, return?
+        #print('delete')
         status = self.status()
         if status is not TaskStatus.EXITED:
-            print("Killing {}".format(self.application_id))
             self.kill()
 
     def kill(self):
+        # Killing apps is not supported in YARN
         pass
 
-    # TODO in master controller (?): status polling
     def status(self):
-        # TODO when do we return TaskStatus.ERROR?
-
         # Current situation: extract worker address at task start, try
         # connecting there for faster status update. Otherwise try to connect to
         # history server.
@@ -244,10 +238,6 @@ class SparkTaskDescriptor(TaskDescriptor):
         if not req.ok or req.status_code != 200:
             return TaskStatus.ERROR
 
-        #if req.headers['Content-Type'] != 'application/json':
-        #    print(req.headers)
-        #    return TaskStatus.ERROR
-
         resp = req.json()
 
         if 'activeapps' not in resp.keys() or 'completedapps' not in resp.keys():
@@ -270,8 +260,4 @@ class SparkTaskDescriptor(TaskDescriptor):
         self.application_id = app_id
         self.ui_address = addr
         self.ui_port = port
-        #TODO remove
-        #print(self.application_id)
-        #print(self.ui_address)
-        #print(self.ui_port)
 
