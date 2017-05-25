@@ -1,29 +1,29 @@
 {
-    "LTS": {
+    "lts": {
         "online": 1,
         "timeout": 10,
         "engine_url": "unix:///var/run/docker.sock",
-        "launch_policy": "docker",
+        "launch_policy": "marathon",
         "task_control_module": {
             "name": "TaskControlExample"
         },
         "docker_image": "sip",
         "task": [
-            "sip/tasks/task.py",
+            "/home/vlad/software/SKA/integration-prototype/sip/tasks/task.py",
             "2000"
             ]
         },
-    "QA": {
-        "online": 1,
+    "qa": {
+        "online": 0,
         "timeout": 10,
         "engine_url": "unix:///var/run/docker.sock",
-        "launch_policy": "docker",
+        "launch_policy": "marathon",
         "task_control_module": {
             "name": "TaskControlExample"
         },
         "docker_image": "sip",
         "task": [
-            "sip/tasks/task.py",
+            "/home/vlad/software/SKA/integration-prototype/sip/tasks/task.py",
             "2000"
             ]
         },

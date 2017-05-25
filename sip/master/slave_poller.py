@@ -41,7 +41,7 @@ class SlavePoller(threading.Thread):
             # Scan all the tasks in the status dictionary and update
             # the state machines
             for name, status in copy.copy(slave_status_dict()).items():
-
+                log.info('Slave poller (name={}, type={})'.format(name, status))
                 # If there is a PAAS descriptor for this task
                 if  status['descriptor']:
 

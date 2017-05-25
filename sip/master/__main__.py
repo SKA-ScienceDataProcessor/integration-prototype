@@ -31,10 +31,12 @@ from rpyc.utils.server import ThreadedServer
 os.environ['SIP_HOSTNAME'] = os.uname()[1]
 
 from sip.common.resource_manager import ResourceManager
-from sip.common.docker_paas import DockerPaas as Paas
+from sip.common.marathon_paas import MarathonPaas as Paas
+
+#from sip.common.docker_paas import DockerPaas as Paas
 from sip.master import config
 
-__author__ = 'David Terrett + Brian McIlwrath'
+__author__ = 'David Terrett + Brian McIlwrath + Vlad Stolyarov'
 
 sip_root = os.path.join(os.path.dirname(__file__), '..')
 config_file = os.path.join(sip_root, 'etc', 'slave_map.json')
@@ -58,10 +60,17 @@ with open(resources_file) as f:
     config.resource = ResourceManager(_resources)
 
 # Start logging server
+#    paas = Paas()
+#    config.logserver = paas.run_service('logging_server', 'sip',
+#        [logging.handlers.DEFAULT_TCP_LOGGING_PORT],
+#        ['python3', 'sip/common/logging_server.py'])
+
+# Start logging server in Marathon/Mesos
     paas = Paas()
-    config.logserver = paas.run_service('logging_server', 'sip',
+    config.logserver = paas.run_service('logging-server', 'sip',
         [logging.handlers.DEFAULT_TCP_LOGGING_PORT],
-        ['python3', 'sip/common/logging_server.py'])
+        ['python3', str(sip_root)+'/../sip/common/logging_server.py'])
+
 
     from sip.common.logging_api import log
     from sip.master.master_states import MasterControllerSM

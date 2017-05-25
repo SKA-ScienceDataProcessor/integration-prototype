@@ -10,7 +10,8 @@ import sys
 
 from sip.common.logging_api import log
 from sip.common.paas import TaskStatus
-from sip.common.docker_paas import DockerPaas as Paas
+#from sip.common.docker_paas import DockerPaas as Paas
+from sip.common.marathon_paas import MarathonPaas as Paas
 from sip.master.config import create_slave_status
 from sip.master.config import slave_status
 from sip.master.config import slave_config
@@ -51,6 +52,8 @@ def start(name, type):
         # Start the slave
         if config['launch_policy'] == 'docker':
             _start_docker_slave(name, type, config, status)
+        elif config['launch_policy'] == 'marathon':
+            _start_marathon_slave(name, type, config, status)
         else:
             raise RuntimeError(
                     'Error starting "{}": {} is not a known slave launch '
@@ -107,6 +110,9 @@ def stop(name, status):
     status['task_controller'].shutdown()
     if slave_config(name)['launch_policy'] == 'docker':
         _stop_docker_slave(name, status)
+    elif slave_config(name)['launch_policy'] == 'marathon':
+        _stop_marathon_slave(name, status)
+
 
 def _stop_docker_slave(name, status):
     """Stops a docker based slave controller."""
@@ -128,8 +134,10 @@ def reconnect(name, descriptor):
     """
     # Create a task controller for it
     task_controller = task_control.SlaveTaskControllerRPyC()
-    (hostname, port) = descriptor.location(rpc_port_)
-    task_controller.connect(hostname, port)
+    #(hostname, port) = descriptor.location(rpc_port_)
+    (hostname, port) = descriptor.location()
+    #task_controller.connect(hostname, port)
+    task_controller.connect(hostname, port[0])
 
     # Create a state machine for it with an intial state corresponding to
     # the state of the slave.
@@ -163,3 +171,88 @@ def reconnect(name, descriptor):
 
     # Set a descriptor for the service
     status['descriptor'] = descriptor
+
+
+def _start_marathon_slave(name, type, cfg, status):
+    """Starts a slave controller that is a Docker container.
+
+    NB This only works on localhost
+    """
+    # Improve logging soon!
+    req_log = logging.getLogger('requests')
+    req_log.setLevel(logging.WARN)
+    req_log.addHandler(logging.StreamHandler(sys.stdout))
+
+    log.info('Starting Docker slave (name={}, type={})'.format(name, type))
+
+    # Create a service. The paas takes care of the host and ports so
+    # we can use any ports we like in the container and they will get
+    # mapped to free ports on the host.
+#    image = cfg['docker_image']
+    task_control_module = cfg['task_control_module']['name']
+    print(task_control_module)
+
+#    _cmd = ['PYTHONPATH=/home/vlad/software/SKA/integration-prototype/ python3 -m', 'sip.slave',
+#            name,
+#            str(rpc_port_),
+#            taskControlModule,
+#            ]
+
+    _cmd = ['python3', '/home/vlad/software/SKA/integration-prototype/sip/slave/slavemain.py',
+            name,
+            str(rpc_port_),
+            task_control_module,
+            ]
+
+    # Start it
+    paas = Paas()
+    print("Inside _start_marathon_slave")
+    descriptor = paas.run_service(name, 'siptest', [rpc_port_], _cmd)
+
+
+    # Attempt to connect the controller
+    try:
+        (hostname, port) = descriptor.location()
+        status['task_controller'].connect(hostname, port)
+    except:
+        pass
+
+
+    # Fill in the generic entries in the status dictionary
+    (host, ports) = descriptor.location()
+ #   status['rpc_port'] = ports[0]
+    status['sip_root'] = '/home/vlad/software/SKA/integration-prototype'
+    status['descriptor'] = descriptor
+
+    log.info('"{}" (type {}) started'.format(name, type))
+
+
+    # Start it
+#    paas = Paas()
+#    descriptor = paas.run_service(name, 'siptest', [rpc_port_], _cmd)
+
+    # Attempt to connect the controller
+#    try:
+#        (hostname, port) = descriptor.location(rpc_port_)
+#        status['task_controller'].connect(hostname, port)
+#    except:
+#        pass
+
+    # Fill in the generic entries in the status dictionary
+#    status['sip_root'] = '/home/vlad/software/SKA/integration-prototype'
+#    status['descriptor'] = descriptor
+
+#    log.info('"{}" (type {}) started'.format(name, type))
+
+
+
+
+def _stop_marathon_slave(name, status):
+    """Stops a marathon based slave controller."""
+
+    log.info('stopping slave controller {}'.format(name))
+    paas = Paas()
+    descriptor = paas.find_task(name)
+    descriptor.delete()
+
+
