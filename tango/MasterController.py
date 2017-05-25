@@ -44,6 +44,8 @@ __docformat__ = 'restructuredtext'
 
 import PyTango
 import sys
+import os
+
 # Add additional import
 #----- PROTECTED REGION ID(MasterController.additionnal_import) ENABLED START -----#
 import rpyc
@@ -64,7 +66,6 @@ class MasterController (PyTango.Device_4Impl):
     # -------- Add you global variables here --------------------------
     #----- PROTECTED REGION ID(MasterController.global_variables) ENABLED START -----#
     mc_conn = None 
-    mc_status_local = None
     #----- PROTECTED REGION END -----#	//	MasterController.global_variables
 
     def __init__(self, cl, name):
@@ -85,12 +86,21 @@ class MasterController (PyTango.Device_4Impl):
         self.debug_stream("In init_device()")
         self.get_device_properties(self.get_device_class())
         self.attr_mc_status_read = ""
+        #self.add_logging_target(self,'file::logtest')
         #----- PROTECTED REGION ID(MasterController.init_device) ENABLED START -----#
         #----- PROTECTED REGION END -----#	//	MasterController.init_device
 
     def always_executed_hook(self):
         self.debug_stream("In always_excuted_hook()")
         #----- PROTECTED REGION ID(MasterController.always_executed_hook) ENABLED START -----#
+        # Check for any terminated Master Controller processes
+        try:
+           pid, sts = os.waitpid(-1, os.WNOHANG)
+           if pid:
+              self.debug_stream("PID {} - exit status={}".format(pid, sts))
+        except OSError:
+           pid = 0
+
         if(self.mc_conn == None):
            self.debug_stream("Trying to connect to Master Controller")
            try:
@@ -110,7 +120,7 @@ class MasterController (PyTango.Device_4Impl):
                self.debug_stream("getting Master Controller state")
                function = getattr(self.mc_conn.root, 'get_current_state')
                result = function()
-               self.mc_status_local = result 
+               self.mc_status_read = result 
            except EOFError:
                self.error_stream("EOFError in communication with Master Controller")
                self.mc_conn = None
@@ -126,12 +136,22 @@ class MasterController (PyTango.Device_4Impl):
     def read_mc_status(self, attr):
         self.debug_stream("In read_mc_status()")
         #----- PROTECTED REGION ID(MasterController.mc_status_read) ENABLED START -----#
-        if not self.mc_conn:
-           self.fatal_stream('No connection to master controller')
-           return
-        function = getattr(self.mc_conn.root, 'get_current_state')
-        result = function()
-        attr.set_value(result)
+        attr.set_value(self.mc_status_read)
+        return
+        #pdb.set_trace()
+        #self.info_stream("writing attribute %s", attr.get_name())
+        #self.info_stream("setting to %s", self.mc_status_read)
+        #attr.set_value(self.mc_status_read)
+        #return mc_status_read
+
+
+        #if not self.mc_conn:
+        #   self.fatal_stream('No connection to master controller')
+        #   return
+        #function = getattr(self.mc_conn.root, 'get_current_state')
+        #result = function()
+        #attr.set_value(result)
+        #return attr
         
         #----- PROTECTED REGION END -----#	//	MasterController.mc_status_read
         
@@ -157,8 +177,8 @@ class MasterController (PyTango.Device_4Impl):
         #pdb.set_trace()
         if not self.mc_conn:
            PyTango.Except.throw_exception("NOMC","No connection to MasterController", "online()")
-        if self.mc_status_local != 'Standby':
-           PyTango.Except.throw_exception("MCSTATE","MasterController in invalid state - {}".format(self.mc_status_local), "online()")
+        if self.mc_status_read != 'Standby':
+           PyTango.Except.throw_exception("MCSTATE","MasterController in invalid state - {}".format(self.mc_status_read), "online()")
  
         function = getattr(self.mc_conn.root, 'online')
         try:
@@ -176,8 +196,8 @@ class MasterController (PyTango.Device_4Impl):
         #----- PROTECTED REGION ID(MasterController.offline) ENABLED START -----#
         if not self.mc_conn:
            PyTango.Except.throw_exception("NOMC","No connection to MasterController", "online()")
-        if self.mc_status_local != 'Available':
-           PyTango.Except.throw_exception("MCSTATE","MasterController in invalid state - {}".format(self.mc_status_local), "offline()")
+        if self.mc_status_read != 'Available':
+           PyTango.Except.throw_exception("MCSTATE","MasterController in invalid state - {}".format(self.mc_status_read), "offline()")
  
         function = getattr(self.mc_conn.root, 'offline')
         try:
@@ -195,8 +215,8 @@ class MasterController (PyTango.Device_4Impl):
         #----- PROTECTED REGION ID(MasterController.shutdown) ENABLED START -----#
         if not self.mc_conn:
            PyTango.Except.throw_exception("NOMC","No connection to MasterController", "online()")
-        if self.mc_status_local != 'Standby':
-           PyTango.Except.throw_exception("MCSTATE","MasterController in invalid state - {}".format(self.mc_status_local), "shutdown()")
+        if self.mc_status_read != 'Standby':
+           PyTango.Except.throw_exception("MCSTATE","MasterController in invalid state - {}".format(self.mc_status_read), "shutdown()")
  
         function = getattr(self.mc_conn.root, 'shutdown')
         try:
@@ -224,8 +244,8 @@ class MasterController (PyTango.Device_4Impl):
         #pdb.set_trace()
         if not self.mc_conn:
            PyTango.Except.throw_exception("NOMC","No connection to MasterController", "capability()")
-        if self.mc_status_local != 'Available':
-           PyTango.Except.throw_exception("MCSTATE","MasterController in invalid state - {}".format(self.mc_status_local), "capability()")
+        if self.mc_status_read != 'Available':
+           PyTango.Except.throw_exception("MCSTATE","MasterController in invalid state - {}".format(self.mc_status_read), "capability()")
 
         function = getattr(self.mc_conn.root, 'capability')
         try:
