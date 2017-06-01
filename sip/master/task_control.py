@@ -56,9 +56,9 @@ class SlaveTaskControllerRPyC(SlaveTaskController):
         try: 
             self._conn.ping()
         except:
-            log.debug('Connecting to {}:{}'.format(self._address, self._port))
+            log.debug('RPyC Connecting to {}:{}'.format(self._address, self._port))
             self._conn = rpyc.connect(self._address, self._port)
-
+ 
     def shutdown(self):
         """Command the slave controller to shut down."""
         log.debug('shutting down task')

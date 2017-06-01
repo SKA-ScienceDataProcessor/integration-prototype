@@ -8,6 +8,9 @@ import signal
 import time
 import datetime
 import numpy
+# Test logging service
+import logging
+
 
 """ Skeleton process to be started by slave
 
@@ -22,6 +25,7 @@ the current state and its name
 sys.path.insert(0, os.path.join(os.path.dirname(__file__),'..', '..'))
 from sip.common import heartbeat_task
 from sip.ext.test_lib import TestObject
+#from sip.common.logging_api import log
 
 _context = zmq.Context()
 
@@ -78,7 +82,7 @@ def run():
 
         # Sent to the socket
         process_sender.send(st)
-
+ #       log.info('Task : {}'.format(st))
         # Wait 1 sec
         time.sleep(1)
 

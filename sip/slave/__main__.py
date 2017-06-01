@@ -37,7 +37,7 @@ def slave_main():
     signal.signal(signal.SIGTERM, _sig_handler)
 
     log.info('Slave controller "{}" starting'.format(name))
-
+    log.info('Slave parameters : {} {}'.format(task_control_module, server_port))
     # Define the module that the task load and unload functions will be
     # loaded from
     _class = getattr(importlib.import_module('sip.slave.task_control'),

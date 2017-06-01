@@ -11,6 +11,7 @@ import subprocess
 import threading
 import time
 import os
+import logging
 
 from sip.common import heartbeat_task
 from sip.common.logging_api import log

@@ -30,7 +30,7 @@ class MarathonPaas(Paas):
     def run_service(self, name, task, ports, cmd_args, restart=True, mem=512, cpus=1.0, instances=1, disk=10):
         """ Run a task as a service.
         """
-        print("Inside run_service 0: ", name, cmd_args)
+#        print("Inside run_service 0: ", name, cmd_args)
          # Create new task descriptor
         descriptor = self._new_task_descriptor(name)
  
@@ -44,10 +44,10 @@ class MarathonPaas(Paas):
 
 #           Get the list of tasks
             self._tasks = self._client.list_tasks(app_id=name) 
-            print("Inside run_service 1: ", self._tasks)
+#            print("Inside run_service 1: ", self._tasks)
             descriptor.ident = self._tasks[0].id
             self._tasks[0].service_ports = ports
-            print("Inside run_service 2: ", descriptor.ident, ports, self._tasks[0].service_ports, app.ports)
+#            print("Inside run_service 2: ", descriptor.ident, ports, self._tasks[0].service_ports, app.ports)
             # Bind the docker socket so that the container can talk to the
             # docker engine.
 #            mount = docker.types.Mount('/var/run/docker.sock', 
@@ -117,7 +117,7 @@ class MarathonPaas(Paas):
 
             # Mark the service as not terminated
             descriptor._terminated = False
-            print("Inside run_service 3: ", descriptor.ident,  descriptor.hostname, descriptor._target_ports, descriptor._published_ports )
+#            print("Inside run_service 3: ", descriptor.ident,  descriptor.hostname, descriptor._target_ports, descriptor._published_ports )
 
         return descriptor
 
@@ -169,7 +169,7 @@ class MarathonPaas(Paas):
             descriptor._target_ports = (self._client.list_apps(app_id=name))[0].ports
             descriptor._published_ports = (self._client.list_tasks(app_id=name))[0].ports
             descriptor._terminated = False
-            print("Inside _new_task_decriptor:", descriptor.ident, descriptor.hostname, descriptor._target_ports, descriptor._published_ports, )
+#            print("Inside _new_task_decriptor:", descriptor.ident, descriptor.hostname, descriptor._target_ports, descriptor._published_ports, )
 
 #                # Set the ident and host and port number (if there is one)
 #                descriptor.ident = task.id
@@ -188,11 +188,11 @@ class MarathonPaas(Paas):
 #                descriptor._terminated = False
 #
 #                # Return the descriptor
-            print('Returning exiting descriptor')
+#            print('Returning exiting descriptor')
             return descriptor
         except:
         # return the empty descriptor
-            print('Returning empty descriptor')
+#            print('Returning empty descriptor')
             return descriptor
 
     def _get_hostname(self, name):
@@ -227,7 +227,7 @@ class MarathonTaskDescriptor(TaskDescriptor):
         The answer depends on whether we are running inside or outside of
         the Docker swarm
         """
-        print("In MarathonPaas::location: ", self.hostname, self._target_ports)
+#        print("In MarathonPaas::location: ", self.hostname, self._target_ports)
 
         return self.hostname, self._target_ports
 

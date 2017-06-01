@@ -183,20 +183,13 @@ def _start_marathon_slave(name, type, cfg, status):
     req_log.setLevel(logging.WARN)
     req_log.addHandler(logging.StreamHandler(sys.stdout))
 
-    log.info('Starting Docker slave (name={}, type={})'.format(name, type))
+    log.info('Starting Marathon slave (name={}, type={})'.format(name, type))
 
     # Create a service. The paas takes care of the host and ports so
     # we can use any ports we like in the container and they will get
     # mapped to free ports on the host.
-#    image = cfg['docker_image']
     task_control_module = cfg['task_control_module']['name']
-    print(task_control_module)
 
-#    _cmd = ['PYTHONPATH=/home/vlad/software/SKA/integration-prototype/ python3 -m', 'sip.slave',
-#            name,
-#            str(rpc_port_),
-#            taskControlModule,
-#            ]
 
     _cmd = ['python3', '/home/vlad/software/SKA/integration-prototype/sip/slave/slavemain.py',
             name,
@@ -206,14 +199,13 @@ def _start_marathon_slave(name, type, cfg, status):
 
     # Start it
     paas = Paas()
-    print("Inside _start_marathon_slave")
     descriptor = paas.run_service(name, 'siptest', [rpc_port_], _cmd)
 
 
     # Attempt to connect the controller
     try:
         (hostname, port) = descriptor.location()
-        status['task_controller'].connect(hostname, port)
+        status['task_controller'].connect(hostname, port[0])
     except:
         pass
 
@@ -225,26 +217,6 @@ def _start_marathon_slave(name, type, cfg, status):
     status['descriptor'] = descriptor
 
     log.info('"{}" (type {}) started'.format(name, type))
-
-
-    # Start it
-#    paas = Paas()
-#    descriptor = paas.run_service(name, 'siptest', [rpc_port_], _cmd)
-
-    # Attempt to connect the controller
-#    try:
-#        (hostname, port) = descriptor.location(rpc_port_)
-#        status['task_controller'].connect(hostname, port)
-#    except:
-#        pass
-
-    # Fill in the generic entries in the status dictionary
-#    status['sip_root'] = '/home/vlad/software/SKA/integration-prototype'
-#    status['descriptor'] = descriptor
-
-#    log.info('"{}" (type {}) started'.format(name, type))
-
-
 
 
 def _stop_marathon_slave(name, status):

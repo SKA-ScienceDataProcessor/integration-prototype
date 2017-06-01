@@ -113,9 +113,7 @@ log = SipLogger('sip.log')
 # Find the logging_server service
 paas = Paas()
 service = paas.find_task('logging-server')
-print("Inside SipLogger: ", service.hostname, service.ident)
 (host, ports) = service.location()
-print("Inside SipLogger: ", host, ports)
 #port = ports[logging.handlers.DEFAULT_TCP_LOGGING_PORT]
 port = ports[0]
 

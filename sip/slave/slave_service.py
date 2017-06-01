@@ -32,7 +32,13 @@ class SlaveService(rpyc.Service):
 
     def exposed_shutdown(self):
         _Shutdown().start()
+# Test functions
+    def exposed_get_answer(self): # this is an exposed method
+        return 42
 
+    def exposed_get_question(self):  # while this method is not exposed
+        return "what is the airspeed velocity of an unladen swallow?"
+# End test functions
 
 class _Shutdown(threading.Thread):
     """Shutdown the slave.
