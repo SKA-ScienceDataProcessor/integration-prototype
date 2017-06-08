@@ -7,3 +7,6 @@ syntax "device::instance" for the logging target
 
 This example shows a simple device server to log messages
 
+Note that logging to a server JUST means that the Device Server has a
+suitable 'log' method - so this could be added to ANY Server
+
