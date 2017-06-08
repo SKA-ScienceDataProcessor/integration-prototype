@@ -8,3 +8,4 @@ Sphinx>=1.5.1
 sphinx-rtd-theme>=0.1.9
 pyftpdlib>=1.4.0
 unittest-xml-reporting>=2.1.0
+requests>=2.17.3

@@ -145,6 +145,9 @@ class SparkPaaS(Paas):
 
         return False
 
+    def spark_mode(self):
+        return "YARN"
+
 class SparkTaskDescriptor(TaskDescriptor):
     def __init__(self, name, master_config):
         self.spark_master = master_config
