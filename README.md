@@ -4,8 +4,9 @@
 # SDP Integration Prototype
 
 This is an experimental Docker Swarm version. See confluence pages for more
-information
+information.
 
+Apache Spark jobs are supported if spark-submit is installed.
 
 ## Requirements
 * Docker
@@ -14,5 +15,6 @@ information
 * rpyc
 * zmq
 * pyftpdlib
-
+* Apache Spark (for spark-submit)
+*
 
