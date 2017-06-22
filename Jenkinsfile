@@ -5,7 +5,6 @@ pipeline {
 		stage('Build') {
 			steps {
 				echo $WORKSPACE
-				sh 'echo $WORKSPACE'
 
 				echo 'Build stage initiating'
 
