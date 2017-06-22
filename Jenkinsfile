@@ -5,7 +5,6 @@ pipeline {
 		stage('Build') {
 			steps {
 				echo 'Build stage initiating'
-				sh 'echo $WORKSPACE'
 
 				sh '''
 					# Set up fresh Python virtual environment
