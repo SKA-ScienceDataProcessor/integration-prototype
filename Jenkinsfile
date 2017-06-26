@@ -1,5 +1,5 @@
 pipeline {
-	agent any
+	agent { label 'sdp-ci-01' }
 
 	stages {
 		stage('Build') {
