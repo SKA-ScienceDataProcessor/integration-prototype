@@ -19,6 +19,7 @@ pipeline {
 					# Make documentation
 					cd sdoc
 					make html
+					cd ..
 
 					# Make Docker containers
 					#docker swarm init
