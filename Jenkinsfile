@@ -10,22 +10,16 @@ pipeline {
 				sh '''
 					# Set up fresh Python virtual environment
 					virtualenv -p `which python3` --no-site-packages _build
-				'''
 
-				sh '''
 					# Install requirements
 					. _build/bin/activate
 					pip install -U pip setuptools
 					pip install -r requirements.txt
-				'''
 
-				sh '''
 					# Make documentation
 					cd sdoc
 					make html
-				'''
 
-				sh '''
 					# Make Docker containers
 					#docker swarm init
 					#docker network create --driver overlay sip
