@@ -96,23 +96,26 @@ reconnect(paas)
 # For testing we can also post events typed on the terminal
 sm = config.master_controller_state_machine
 while True:
-    # Read from the terminal and process the event
-    event = input('** Enter command:\n').split()
-    if event:
-        if event[0] == 'state':
-            log.info('CLI: Current state: {}'.
-                     format(sm.current_state()))
-            continue
-        log.info('CLI: !!! Posting event ==> {}'.format(event[0]))
-        result = sm.post_event(event)
-        if result == 'rejected':
-            log.warn('CLI: not allowed in current state')
-        elif result == 'ignored':
-            log.warn('CLI: command ignored: {}'.format(event[0]))
+    if os.path.exists("docker_swarm"):
+        time.sleep(1)
+    else:
+        # Read from the terminal and process the event
+        event = input('** Enter command:\n').split()
+        if event:
+            if event[0] == 'state':
+                log.info('CLI: Current state: {}'.
+                         format(sm.current_state()))
+                continue
+            log.info('CLI: !!! Posting event ==> {}'.format(event[0]))
+            result = sm.post_event(event)
+            if result == 'rejected':
+                log.warn('CLI: not allowed in current state')
+            elif result == 'ignored':
+                log.warn('CLI: command ignored: {}'.format(event[0]))
+            else:
+                # Print what state we are now in.
+                log.info('CLI: master controller state: {}'.format(
+                    sm.current_state()))
         else:
-            # Print what state we are now in.
-            log.info('CLI: master controller state: {}'.format(
-                sm.current_state()))
-    # else:
-    #     print('** Allowed commands: online, offline, shutdown, '
-    #           'cap [name] [task]')
+            print('** Allowed commands: online, offline, shutdown, '
+                   'cap [name] [task]')
