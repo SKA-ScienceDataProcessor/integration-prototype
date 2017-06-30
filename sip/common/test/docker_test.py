@@ -25,24 +25,28 @@ class TestDocker(unittest.TestCase):
         """ Test normal execution of task
         """
         # Start the task
-        t = paas.run_task('test_task', 'sip', [],
-                ['python3', 'sip/common/test/test_task.py', '5', '0'])
+        time.sleep(10)
+        t = paas.run_task('test_task_1', 'sip', [],
+                ['python3', 'sip/common/test/test_task.py', '10', '0'])
     
         # It should be running
         self._poll_for(TaskStatus.RUNNING, t)
         self.assertEqual(t.status(), TaskStatus.RUNNING)
 
         # Wait for it to end and it should be ended
+        time.sleep(10)
         self._poll_for(TaskStatus.EXITED, t)
         self.assertEqual(t.status(), TaskStatus.EXITED)
 
         # Stop the task 
         t.delete()
+        self._poll_for(TaskStatus.UNKNOWN, t)
 
     def testService(self):
         """ Test normal execution of service
         """
         # Start the task
+        time.sleep(10)
         t = paas.run_service('test_service', 'sip', [9999],
                 ['python3', 'sip/common/test/test_service.py', '9999'])
     
@@ -60,9 +64,10 @@ class TestDocker(unittest.TestCase):
         self._poll_for(TaskStatus.UNKNOWN, t)
         self.assertEqual(t.status(), TaskStatus.UNKNOWN)
 
-    def TestStop(self):
+    def testStop(self):
         """ Test of stopping a task
         """
+        time.sleep(10)
         t = paas.run_task('test_stop', 'sip', [],
                 ['python3', 'sip/common/test/test_task.py', '30', '0'])
     
@@ -86,6 +91,7 @@ class TestDocker(unittest.TestCase):
         """ Test trying to start a service twice with the same name
         """
         # Start the task
+        time.sleep(10)
         t1 = paas.run_service('test_dup', 'sip', [9999],
                 ['python3', 'sip/common/test/test_service.py', '9999'])
 
@@ -95,25 +101,29 @@ class TestDocker(unittest.TestCase):
         self.assertEqual(t1.ident, t2.ident)
 
         t1.delete()
+        self._poll_for(TaskStatus.UNKNOWN, t1)
     
     def testDuplicateTask(self):
         """ Test trying to start a task twice with the same name
         """
         # Start the task
-        t1 = paas.run_task('test_task', 'sip', [],
+        time.sleep(10)
+        t1 = paas.run_task('test_task_2', 'sip', [],
                 ['python3', 'sip/common/testp/test_service.py', '9999'])
     
         # Try another
-        t2 = paas.run_task('test_task', 'sip', [],
+        t2 = paas.run_task('test_task_2', 'sip', [],
                 ['python3', 'sip/common/testp/test_service.py', '9999'])
 
         self.assertNotEqual(t1.ident, t2.ident)
         t2.delete()
+        self._poll_for(TaskStatus.UNKNOWN, t2)
 
     def testFind(self):
         """ Test finding a task
         """
         # Start the task
+        time.sleep(10)
         t1 = paas.run_task('test_find', 'sip', [],
                 ['python3', 'sip/common/test/test_task.py', '0', '0'])
 
@@ -122,6 +132,7 @@ class TestDocker(unittest.TestCase):
 
         self.assertEqual(t1.ident, t2.ident)
         t2.delete()
+        self._poll_for(TaskStatus.UNKNOWN, t2)
 
     def _poll_for(self, status, descr):
         n = 0

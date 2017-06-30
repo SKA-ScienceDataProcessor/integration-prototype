@@ -81,9 +81,10 @@ class DockerPaas(Paas):
                 # processes are binding to ports but it will do for now)
                 s.close()
 
-                # Add the port to the endpoint spec
-            
+            	# Add the port to the dictionary of ports
                 endpoints[published_port] = target_port
+
+            # Add the port to the endpoint spec
             endpoint_spec = docker.types.EndpointSpec(ports=endpoints)
 
             # Create the service
@@ -168,7 +169,7 @@ class DockerTaskDescriptor(TaskDescriptor):
             name: Task name
         """
         super(DockerTaskDescriptor, self).__init__(name)
-        self._proc = 0
+        self.ident = 0
 
         # See if we are a manager node
         paas = DockerPaas();
@@ -224,7 +225,7 @@ class DockerTaskDescriptor(TaskDescriptor):
         """ Get the location of a task or service
 
         Args:
-            port: The port the service runs on.
+            port: The advertised port for the.
 
         Returns: 
             The host name and port for connecting to the service.
@@ -254,44 +255,49 @@ class DockerTaskDescriptor(TaskDescriptor):
             self._service[0].reload()
 
             # Look at the status of all the tasks in this service
-            # looking for the "best"
+            # looking for the "best". 
+            #
+            # The possible states are:
+            #    created
+            #    running
+            #    ready
+            #    starting
+            #    preparing
+            #    removing
+            #    paused
+            #    complete
+            #    failed
+            #    dead
+            #
+            # First look for a container in the running or paused state
             for task in self._service[0].tasks():
+                if (task['Status']['State'] == 'running') or (
+                    task['Status']['State'] == 'paused'):
+                     return TaskStatus.RUNNING
 
-                # Don't know who to do this really - for the moment just see
-                # if there is one running.
-                s = task['Status']['State']
-                if s == 'running':
-                    state = s
-                    break
-                if s == 'exited':
-                    state = s
-                    break
-                if s == 'new':
-                    state = s
-                    break
-                if s == 'preparing':
-                    state = s
-                    break
-                if s == 'complete':
-                    state = s
-                    break
-                if s == 'error':
-                    if state == 'unknown':
-                        state = s
-                    break
+            # If that failed, look for one that is starting
+            for task in self._service[0].tasks():
+                if (task['Status']['State'] == 'created' ) or (
+                    task['Status']['State'] == 'starting') or (
+                    task['Status']['State'] == 'preparing') or (
+                    task['Status']['State'] == 'ready'):
+                     return TaskStatus.STARTING
 
-        # Return the corresponding TaskStatus value.
-        if state == 'unknown':
+            # Look for exiting or exited or dead
+            for task in self._service[0].tasks():
+                if (task['Status']['State'] == 'removing' ) or (
+                    task['Status']['State'] == 'complete') or (
+                    task['Status']['State'] == 'dead'):
+                     return TaskStatus.EXITED
+
+            # Look for error
+            for task in self._service[0].tasks():
+                if (task['Status']['State'] == 'failed'):
+                     return TaskStatus.ERROR
+
+            # Check for some other state and log it
+            for task in self._service[0].tasks():
+                print('Unexpected Docker container state "{}"'.format(
+                        task['Status']['State']))
             return TaskStatus.UNKNOWN
-        if state == 'new':
-            return TaskStatus.STARTING
-        if state == 'preparing':
-            return TaskStatus.STARTING
-        if state == 'running':
-            return TaskStatus.RUNNING
-        if state == 'complete':
-            return TaskStatus.EXITED
-        if state == 'failed':
-            return TaskStatus.ERROR
-
-        pass
+        return TaskStatus.UNKNOWN
