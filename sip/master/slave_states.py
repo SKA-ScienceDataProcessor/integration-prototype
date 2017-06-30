@@ -155,3 +155,4 @@ class SlaveControllerSM(StateMachine):
     del state_table['Running_error'][SlaveStatus.error]
 
     # Update the entries where we want some action.
+    # (no such entries at present)
