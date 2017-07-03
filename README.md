@@ -1,5 +1,5 @@
 [![Documentation Status](https://readthedocs.org/projects/integration-prototype/badge/?version=latest)](http://integration-prototype.readthedocs.io/en/latest/?badge=latest)
-[![Build Status](https://travis-ci.org/SKA-ScienceDataProcessor/integration-prototype.svg?branch=master)](https://travis-ci.org/SKA-ScienceDataProcessor/integration-prototype)
+[![Build Status](https://jenkins.mrao.cam.ac.uk/buildStatus/icon?job=integration-prototype-pipeline/paas_spark)](https://jenkins.mrao.cam.ac.uk/job/integration-prototype-pipeline/job/paas_spark/))
 
 # SDP Integration Prototype
 

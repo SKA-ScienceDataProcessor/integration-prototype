@@ -99,7 +99,7 @@ extensions = []
 for m in modules:
     extensions.append(Extension(
         'sip.ext.' + m[0], sources=[os.path.join('sip', 'ext', 'src', m[1])],
-        language='c'))
+        language='c',extra_compile_args=["-std=c99"]))
 setup(
     name='sip',
     version=get_sip_version(),
