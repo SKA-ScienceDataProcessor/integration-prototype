@@ -4,9 +4,8 @@
 """
 
 import subprocess
-import requests
-import json
 import re
+import requests
 
 from sip.common.paas import Paas, TaskDescriptor, TaskStatus
 
@@ -35,25 +34,25 @@ class SparkPaaS(Paas):
         if not SparkPaaS.spark_master:
             #print('setting SparkPaaS.spark_master')
             SparkPaaS.spark_master = {
-                    'protocol': 'spark',
-                    'url': '127.0.0.1',
-                    'port': '7077',
-                    'master_port': '8080',
-                    'history_server': '127.0.0.1',
-                    'history_port': '18080'
-                    }
+                'protocol': 'spark',
+                'url': '127.0.0.1',
+                'port': '7077',
+                'master_port': '8080',
+                'history_server': '127.0.0.1',
+                'history_port': '18080'
+                }
         self.spark_master = SparkPaaS.spark_master
         self.tasks = SparkPaaS.tasks
 
     def run_task(self, name, task, ports=None, args=None):
         if name in self.tasks.keys():
-            return None #TODO apparently we remove and overwrite, or something?
+            return None
         td = SparkTaskDescriptor(name, self.spark_master)
         self.tasks[name] = td
 
-        cmd = self.task_to_command(args) # TODO
+        cmd = self.task_to_command(args)
         app = subprocess.Popen(cmd, stdout=subprocess.DEVNULL,
-                stderr=subprocess.PIPE, shell=True)
+                               stderr=subprocess.PIPE, shell=True)
 
         ui_address = None
         ui_port = None
@@ -62,7 +61,6 @@ class SparkPaaS(Paas):
         while application_id is None:
             line = str(app.stderr.readline(), 'utf-8')
             if len(line) is 0:
-                #TODO cleanup correctly
                 break
 
             ## Get worker UI address for status ping
@@ -86,39 +84,23 @@ class SparkPaaS(Paas):
         app.stderr.close()
 
         if not application_id:
-            #TODO cleanup
             return None
-       
+
         # Store essential data in task descriptor
         td.set_app_config(application_id, ui_address, ui_port)
 
         return td
 
     def task_to_command(self, task):
-        #if task is None:
-        #    args = '--conf spark.eventLog.enabled=true --conf spark.eventLog.dir=file:///tmp/spark-events --executor-memory 2g --driver-memory 2g --total-executor-cores 2'
-        #    cmd = 'spark-submit --master {protocol}://{host}:{port} {arguments} {jarpath}/{jarfile}'.format(
-        #            protocol=self.spark_master['protocol'],
-        #            host=self.spark_master['url'],
-        #            port=self.spark_master['port'],
-        #            arguments=args,
-        #            jarpath='/usr/local/bin',
-        #            jarfile='sdp-pipeline_2.10-1.0.jar'
-        #        )
-
-        #    #print(cmd)
-        #    return cmd
-
-        #print(task)
-
-        cmd = 'spark-submit --master {protocol}://{host}:{port} {arguments} {jarpath}/{jarfile}'.format(
-                protocol=self.spark_master['protocol'],
-                host=self.spark_master['url'],
-                port=self.spark_master['port'],
-                arguments=task['spark_args'],
-                jarpath=task['jarpath'],
-                jarfile=task['jarfile']
-            )
+        #TODO handle incorrect task
+        cmd = 'spark-submit --master {protocol}://{host}:{port} {args} {jarpath}/{jarfile}'.format(
+            protocol=self.spark_master['protocol'],
+            host=self.spark_master['url'],
+            port=self.spark_master['port'],
+            args=task['spark_args'],
+            jarpath=task['jarpath'],
+            jarfile=task['jarfile']
+        )
 
         return cmd
 
@@ -150,9 +132,9 @@ class SparkPaaS(Paas):
 
 class SparkTaskDescriptor(TaskDescriptor):
     def __init__(self, name, master_config):
+        super().__init__(name)
         self.spark_master = master_config
-        self.name = name
-        #self.task_mode = 'app' # TODO or 'driver', and don't use strings
+        #self.task_mode = 'app' # TODO or 'driver'
 
         self.ui_address = None
         self.ui_port = None
@@ -173,7 +155,7 @@ class SparkTaskDescriptor(TaskDescriptor):
         # connecting there for faster status update. Otherwise try to connect to
         # history server.
 
-        # TODO Due to delay in history server status value can be unreliable,
+        # NOTE Due to delay in history server status value can be unreliable,
         # particularly for short jobs - might go from RUNNING back to STARTING
         # (4040 to 18080 switchover happening before history server updated)
 
@@ -229,9 +211,9 @@ class SparkTaskDescriptor(TaskDescriptor):
             return TaskStatus.ERROR
 
         rest_url = 'http://{url}:{port}/json'.format(
-                url=self.spark_master['url'],
-                port=self.spark_master['master_port']
-                )
+            url=self.spark_master['url'],
+            port=self.spark_master['master_port']
+            )
 
         try:
             req = requests.get(rest_url)
@@ -256,11 +238,10 @@ class SparkTaskDescriptor(TaskDescriptor):
 
         return TaskStatus.UNKNOWN
 
-    def location(self):
-        pass
+    def location(self, port=None):
+        return None
 
     def set_app_config(self, app_id, addr, port):
         self.application_id = app_id
         self.ui_address = addr
         self.ui_port = port
-
