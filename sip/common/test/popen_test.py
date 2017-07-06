@@ -21,7 +21,7 @@ class TestPopen(unittest.TestCase):
         s = Paas()
 
         # Start the task
-        t = s.run_task('test', 'python3', 
+        t = s.run_task('test', 'python3', [],
                 ['python3', 'sip/common/test/test_task.py', '3', '0'])
     
         # It should be running
@@ -50,7 +50,7 @@ class TestPopen(unittest.TestCase):
         time.sleep(1)
 
         # Check that we can talk to it
-        (hostname, port) = t.location()
+        (hostname, port) = t.location(9999)
         conn = rpyc.connect(host=hostname, port=port)
         conn.root.hello()
 
@@ -61,7 +61,7 @@ class TestPopen(unittest.TestCase):
         """ Test of stopping a task
         """
         s = Paas()
-        t = s.run_task('test', 'python3', 
+        t = s.run_task('test', 'python3', [],
                 ['python3', 'sip/common/test/test_task.py', '3', '0'])
     
         self.assertEqual(t.status(), TaskStatus.RUNNING)
@@ -72,7 +72,7 @@ class TestPopen(unittest.TestCase):
         """ Test of task that exits with an error status
         """
         s = Paas()
-        t = s.run_task('test', 'python3', 
+        t = s.run_task('test', 'python3', [],
                 ['python3', 'sip/common/test/test_task.py', '0', '1'])
         time.sleep(1)
         self.assertEqual(t.status(), TaskStatus.ERROR)
@@ -84,11 +84,11 @@ class TestPopen(unittest.TestCase):
         s = Paas()
 
         # Start the task
-        t1 = s.run_task('test', 'python3', 
+        t1 = s.run_task('test', 'python3', [],
                 ['python3', 'sip/common/test/test_task.py', '0', '0'])
 
         # Try another
-        t2 = s.run_task('test', 'python3', 
+        t2 = s.run_task('test', 'python3', [],
                 ['python3', 'sip/common/test/test_task.py', '0', '0'])
 
         self.assertEqual(t1.ident, t2.ident)

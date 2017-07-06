@@ -3,7 +3,8 @@
 
 The popen paas is a paas service that starts tasks using 
 the Python subprocess management module. By definition, it is only
-capable of managing tasks on the local host.
+capable of managing tasks on the local host and task discovery
+only works for the process that started the task.
 
 Its main use is to start various critical services required by the
 master controller when the controller is started such as a log
@@ -26,8 +27,17 @@ class PopenPaas(Paas):
         """
         self._tasks = {}
 
-    def run_task(self, name, task, cmd_args):
+    def run_task(self, name, task, ports, cmd_args):
         """ Run a task as a subprocess.
+
+        Args:
+            name: Task name. Any string but must be unique.
+            task: Task to run (e.g. the name of an executable image).
+            ports: A list of TCP ports (int) used by the task.
+            args: A list of command line argument for the task.
+
+        Returns:
+            TaskDescriptor for the task,
         """
 
         # Create new task descriptor
@@ -48,6 +58,15 @@ class PopenPaas(Paas):
 
     def run_service(self, name, task, port, cmd_args):
         """ Run a service task as a subprocess.
+
+        Args:
+            name: Task name. Any string but must be unique.
+            task: Task to run (e.g. the name of an executable image).
+            ports: A list of TCP ports (int) used by the task.
+            args: A list of command line argument for the task.
+
+        Returns:
+            TaskDescriptor for the task,
         """
 
         # Create new task descriptor
@@ -96,13 +115,22 @@ class PopenPaas(Paas):
 
 class PopenTaskDescriptor(TaskDescriptor):
     def __init__(self, name, paas):
+        """ Constructor
+    
+        Args:
+            name: Task name
+            pass: The PAAS creating this descriptor
+        """
         super(PopenTaskDescriptor, self).__init__(name)
         self._paas = paas
         self._proc = 0
         self._terminated = False
 
     def delete(self):
-        """ Kill the task
+        """ Stop and delete the task or service.
+
+        When a task is deleted it is removed from the list of tasks
+        being controlled by the service.
         """
         # Terminate the task
         self._proc.terminate()
@@ -116,7 +144,7 @@ class PopenTaskDescriptor(TaskDescriptor):
         return
 
     def status(self):
-        """ Return the tasks status
+        """ Return the status of the task
         """
         if self._terminated:
             return TaskStatus.EXITED
@@ -131,3 +159,15 @@ class PopenTaskDescriptor(TaskDescriptor):
             else:
                 result = TaskStatus.ERROR
         return result
+
+    def location(self, port):
+        """ Get the location of a task or service
+
+        Args:
+            port: The advertised port for the service.
+
+        Returns: 
+            The host name and port for connecting to the service.
+        """
+        return 'localhost', port
+  

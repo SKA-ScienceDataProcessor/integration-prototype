@@ -19,7 +19,8 @@ class Paas(metaclass=abc.ABCMeta):
     and those which are expected to exit themselves after completing some
     task (called tasks). 
 
-    The PAAS is expected to restart services if they fail but not tasks.
+    The PAAS is expected to restart services if they fail but not 
+    restart tasks.
 
     Once created, a task or service is controlled with an object called
     a TaskDescriptor which is either created either when the service or
@@ -120,7 +121,7 @@ class TaskDescriptor:
         """ Get the location of a task or service
 
         Args:
-            port: The port the service runs on.
+            port: The advertised port for the service.
 
         Returns: 
             The host name and port for connecting to the service.
