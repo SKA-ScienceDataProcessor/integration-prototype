@@ -33,6 +33,9 @@ pipeline {
 					flake8 sip *.py > flake8.log || true
 				'''
 
+				// Temporary try/catch -- for Jenkins without Warnings Plugin installed
+				script {
+					try {
 				// Submit result. TODO: determine when to declare healthy/unstable/fail
 				step([
 						$class                     : 'WarningsPublisher',
@@ -52,6 +55,11 @@ pipeline {
 						unstableTotalAll           : '0',
 						usePreviousBuildAsReference: true
 				])
+					}
+					finally {
+						echo "Warnings plugin not supported on this Jenkins install"
+					}
+				}
 			}
 		}
 		stage('Build SIP') {
