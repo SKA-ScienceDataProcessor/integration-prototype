@@ -1,7 +1,5 @@
-docker-py>=1.10.6
-netifaces==0.10.5
+docker>=2.1.0
 numpy>=1.11.2
-pyroute2==0.4.10
 pyzmq>=16.0.0
 rpyc==3.3.0
 simplejson==3.10.0

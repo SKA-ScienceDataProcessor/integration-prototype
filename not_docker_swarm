@@ -1,0 +1,4 @@
+This file gets copied to a file called "docker_swarm" when the docker
+container gets built. It is created so that the Docker Paas can detect
+that it is running inside a container. The contents of this file don't
+matter.

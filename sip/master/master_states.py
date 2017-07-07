@@ -87,6 +87,7 @@ class MasterControllerSM(StateMachine):
 
     state_table = {
         'Standby': {
+            'all services':     (1, Available, None),
             'offline':          (0, None, None),
             'online':           (1, Configuring, online),
             'shutdown':         (1, _End, shutdown)

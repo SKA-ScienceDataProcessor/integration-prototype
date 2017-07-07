@@ -23,6 +23,7 @@ import threading
 import subprocess
 import os
 import time
+import logging.handlers
 from rpyc.utils.server import ThreadedServer
 
 # Export environment variable SIP_HOSTNAME
@@ -30,11 +31,8 @@ from rpyc.utils.server import ThreadedServer
 os.environ['SIP_HOSTNAME'] = os.uname()[1]
 
 from sip.common.resource_manager import ResourceManager
-from sip.common.logging_api import log
-from sip.master.master_states import MasterControllerSM
-from sip.master.heartbeat_listener import HeartbeatListener
+from sip.common.docker_paas import DockerPaas as Paas
 from sip.master import config
-from sip.master.rpc_service import RpcService
 
 __author__ = 'David Terrett + Brian McIlwrath'
 
@@ -59,28 +57,31 @@ with open(resources_file) as f:
             print('  - {} {}'.format(key, value))
     config.resource = ResourceManager(_resources)
 
-# "Allocate" localhost for the master controller so that we can
-# allocate it resources.
-config.resource.allocate_host(
-    "Master Controller", {'host': 'localhost'}, {})
+# Start logging server
+    paas = Paas()
+    config.logserver = paas.run_service('logging_server', 'sip',
+        [logging.handlers.DEFAULT_TCP_LOGGING_PORT],
+        ['python3', 'sip/common/logging_server.py'])
 
-# Start logging server as a subprocess (without a shell).
-config.logserver = subprocess.Popen(
-    ['python3', os.path.join(sip_root, 'common', 'logging_server.py')])
+    from sip.common.logging_api import log
+    from sip.master.master_states import MasterControllerSM
+    from sip.master.master_states import Standby
+    from sip.master.slave_poller import SlavePoller
+    from sip.master.rpc_service import RpcService
+    from sip.master.reconnect import reconnect
 
 # Wait until it initializes
 time.sleep(1.0)
 
 # Create the slave config array from the configuration (a JSON string)
 with open(config_file) as f:
-    config.slave_config = json.load(f)
+    config._slave_config_dict = json.load(f)
 
 # Create the master controller state machine
-config.state_machine = MasterControllerSM()
+config.master_controller_state_machine = MasterControllerSM()
 
-# Create and start the global heartbeat listener
-config.heartbeat_listener = HeartbeatListener(config.state_machine)
-config.heartbeat_listener.start()
+# Create and start the slave poller
+SlavePoller(config.master_controller_state_machine).start()
 
 # This starts the rpyc 'ThreadedServer' - this creates a new
 # thread for each connection on the given port
@@ -89,25 +90,32 @@ t = threading.Thread(target=server.start)
 t.setDaemon(True)
 t.start()
 
+# Attempt to connect to exiting services
+reconnect(paas)
+
 # For testing we can also post events typed on the terminal
+sm = config.master_controller_state_machine
 while True:
-    # Read from the terminal and process the event
-    event = input('** Enter command:\n').split()
-    if event:
-        if event[0] == 'state':
-            log.info('CLI: Current state: {}'.
-                     format(config.state_machine.current_state()))
-            continue
-        log.info('CLI: !!! Posting event ==> {}'.format(event[0]))
-        result = config.state_machine.post_event(event)
-        if result == 'rejected':
-            log.warn('CLI: not allowed in current state')
-        elif result == 'ignored':
-            log.warn('CLI: command ignored: {}'.format(event[0]))
+    if os.path.exists("docker_swarm"):
+        time.sleep(1)
+    else:
+        # Read from the terminal and process the event
+        event = input('** Enter command:\n').split()
+        if event:
+            if event[0] == 'state':
+                log.info('CLI: Current state: {}'.
+                         format(sm.current_state()))
+                continue
+            log.info('CLI: !!! Posting event ==> {}'.format(event[0]))
+            result = sm.post_event(event)
+            if result == 'rejected':
+                log.warn('CLI: not allowed in current state')
+            elif result == 'ignored':
+                log.warn('CLI: command ignored: {}'.format(event[0]))
+            else:
+                # Print what state we are now in.
+                log.info('CLI: master controller state: {}'.format(
+                    sm.current_state()))
         else:
-            # Print what state we are now in.
-            log.info('CLI: master controller state: {}'.format(
-                config.state_machine.current_state()))
-    # else:
-    #     print('** Allowed commands: online, offline, shutdown, '
-    #           'cap [name] [task]')
+            print('** Allowed commands: online, offline, shutdown, '
+                   'cap [name] [task]')

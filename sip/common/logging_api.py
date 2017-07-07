@@ -20,6 +20,7 @@ import logging.handlers
 import socket
 import os
 
+from sip.common.docker_paas import DockerPaas as Paas
 
 class SipLogRecord(logging.LogRecord):
     """SIP Log record class.
@@ -106,5 +107,14 @@ class SipLogger(logging.getLoggerClass()):
 # Create Logger for use with SIP modules.
 from sip.common.logging_handlers import ZmqLogHandler
 log = SipLogger('sip.log')
-host = os.environ['SIP_HOSTNAME']
-log.addHandler(ZmqLogHandler.to('all', host=host, level='DEBUG'))
+
+# Find the logging_server service
+paas = Paas()
+service = paas.find_task('logging_server')
+(host, port) = service.location(logging.handlers.DEFAULT_TCP_LOGGING_PORT)
+
+# For some reason ZMQ won't except a docker swarm pseudo host name
+host = socket.gethostbyname(host)
+
+# Create the handler
+log.addHandler(ZmqLogHandler.to('all', host=host, port=port, level='DEBUG'))

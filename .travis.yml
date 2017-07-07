@@ -12,7 +12,7 @@ before_install:
   - sudo apt-get install -y libboost-program-options-dev
   - sudo apt-get install -y libboost-system-dev
   - pip3 install -r requirements.txt
-  - docker build -f sip/slave/Dockerfile -t slave_controller .
+  - docker build -t sip .
 
 script:
 - python3 -m unittest sip.common.test.heartbeat_test

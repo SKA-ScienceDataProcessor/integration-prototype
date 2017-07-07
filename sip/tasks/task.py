@@ -21,7 +21,6 @@ the current state and its name
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__),'..', '..'))
 from sip.common import heartbeat_task
-from sip.common.logging_api import log
 from sip.ext.test_lib import TestObject
 
 _context = zmq.Context()
@@ -65,7 +64,7 @@ def run():
         sys.stdout.flush()
 
         # Change the state w.r.t. the time
-        if int(time.time())%10 < 5 :
+        if int(time.time())%100 < 50 :
 
             # Doing something
             _state = 'state1'
