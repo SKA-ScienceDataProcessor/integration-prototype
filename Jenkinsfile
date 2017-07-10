@@ -9,15 +9,14 @@ pipeline {
 					# Need to rm old virtualenv dir or else PIP will try to
 					# to install a hybrid old/new version. I don't get it
 					# either. NEEDS FIX.
-					rm -r _build || true # Jenkins bails on non-zero exit code o.O
-					virtualenv -p `which python3` --no-site-packages _build
+					#rm -r _build || true
+					virtualenv -p `which python3` _build
 				'''
 
 				// Install requirements
 				sh '''
 					. _build/bin/activate
-					pip install -U pip setuptools
-					pip install pylint flake8
+					pip install -U pip setuptools Sphinx sphinx-rtd-theme pep8 pylint
 					pip install -r requirements.txt
 				'''
 
@@ -25,52 +24,44 @@ pipeline {
 		}
 		stage('Analysis') {
 			steps {
-				// TODO: we need to decide to go with PyLint, Flake8, both or other
+				// Run PyLint for code errors, PEP8 for style checking
 				sh '''
 					. _build/bin/activate
-					#Run PyLint
-					pylint --output-format=parseable sip *.py > pylint.log || true
-					flake8 sip *.py > flake8.log || true
+					pylint --output-format=parseable --disable=C,too-many-branches,no-self-use,consider-using-ternary,mixed-indentation,unnecessary-semicolon,no-else-return,too-few-public-methods,too-many-public-methods,too-many-return-statements,too-many-branches sip *.py > pylint.log || true
+
+					#PEP8 - ignore E402: module level import not on top of file (due to code requirements)
+					pep8 --ignore=E402 sip *.py > pep8.log || true
 				'''
 
-				// Temporary try/catch -- for Jenkins without Warnings Plugin installed
-				script {
-					try {
-				// Submit result. TODO: determine when to declare healthy/unstable/fail
+				// Publish warings. Right now: Unstable on any warning
+				// TODO: Determine when to set build as 'Stable' or 'Failed'
 				step([
-						$class                     : 'WarningsPublisher',
-						parserConfigurations       : [[
-						parserName: 'PyLint',
-						pattern   : 'pylint.log'
-						]],
-						unstableTotalAll           : '0',
-						usePreviousBuildAsReference: true
+					$class                     : 'WarningsPublisher',
+					parserConfigurations       : [[
+									      parserName: 'PyLint',
+									      pattern   : 'pylint.log'
+								      ]],
+					unstableTotalAll           : '0',
+					usePreviousBuildAsReference: true
 				])
 				step([
-						$class                     : 'WarningsPublisher',
-						parserConfigurations       : [[
-						parserName: 'PEP8',
-						pattern   : 'flake8.log'
-						]],
-						unstableTotalAll           : '0',
-						usePreviousBuildAsReference: true
+					$class                     : 'WarningsPublisher',
+					parserConfigurations       : [[
+									      parserName: 'PEP8',
+									      pattern   : 'pep8.log'
+								      ]],
+					unstableTotalAll           : '0',
+					usePreviousBuildAsReference: true
 				])
-					}
-					finally {
-						echo "Warnings plugin not supported on this Jenkins install"
-					}
-				}
 			}
 		}
 		stage('Build SIP') {
 			steps {
-				// Build and install sip
-				// Also build docker container
+				// build and install SIP, build containers
 				sh '''
 					. _build/bin/activate
 
 					python3 ./setup.py install
-
 					docker build -t sip .
 				'''
 			}
@@ -79,7 +70,6 @@ pipeline {
 			steps {
 				sh '''
 					. _build/bin/activate
-
 					cd sdoc
 					make html
 				'''
@@ -87,16 +77,16 @@ pipeline {
 		}
 		stage('Test') {
 			steps {
-				// Run unittests and generate XML report (JUnit compatible)
+				// Run unit tests, then publish JUnit-style report
 				sh '''
 					. _build/bin/activate
 
 					python3 ./setup.py test -r xmlrunner
+					
 					# Kill stray processes (NEEDS TO BE FIXED)
 					pkill python3 || true
 				'''
 
-				// Publish JUnit report
 				junit 'test_reports.xml'
 			}
 		}

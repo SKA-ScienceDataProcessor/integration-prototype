@@ -6,3 +6,4 @@ simplejson==3.10.0
 pyftpdlib>=1.4.0
 unittest-xml-reporting>=2.1.0
 requests>=2.17.3
+astropy>=2.0
