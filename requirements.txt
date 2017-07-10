@@ -1,11 +1,8 @@
 docker>=2.1.0
 numpy>=1.11.2
 pyzmq>=16.0.0
-rpyc>=3.3.0
-simplejson>=3.10.0
-spead2>=1.2.1
-Sphinx>=1.5.1
-sphinx-rtd-theme>=0.1.9
+rpyc==3.3.0
+simplejson==3.10.0
 pyftpdlib>=1.4.0
 unittest-xml-reporting>=2.1.0
 requests>=2.17.3
