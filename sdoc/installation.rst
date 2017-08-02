@@ -62,6 +62,14 @@ To test the install log out and back in again to refresh group membership
 
     docker run hello-world
 
+Install Spark
+_____________
+
+Spark jobs are supported in SIP. At this moment only locally running Spark
+servers have been tested. Apache Spark can be downloaded from the
+`Spark website <https://spark.apache.org/downloads.html>`; version 2.1.1+ is
+recommended.
+
 Set up SSH authorised keys
 --------------------------
 

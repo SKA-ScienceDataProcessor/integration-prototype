@@ -24,8 +24,9 @@ from sip.common import heartbeat_task
 
 # Spark environment #########
 
-sys.path.append('/home/vlad/software.x32/spark-bin/python')
-sys.path.append('/home/vlad/software.x32/spark-bin/python/lib/py4j-0.10.3-src.zip')
+sys.path.append('/opt/apache-spark/python/')
+sys.path.append('/opt/apache-spark/python/lib/py4j-0.10.4-src.zip')
+
 
 os.environ['PYSPARK_PYTHON'] = 'python3'
 
@@ -76,19 +77,19 @@ def run():
 	mypi = 0.0
 
 # Starting cluster spark session with proper parameters
-#	spark = SparkSession\
-#		.builder\
-#	    	.master("spark://apvsws.ra.phy.private.cam.ac.uk:7077")\
-#		.appName("SIP_task2_PythonPi")\
-#	    	.config("spark.executor.memory", "2g")\
-#	    	.config("spark.driver.memory", "2g")\
-#		.getOrCreate()
-
-# Simple local Spark session with default settings
 	spark = SparkSession\
 		.builder\
+	    	.master("local")\
 		.appName("SIP_task2_PythonPi")\
+	    	.config("spark.executor.memory", "2g")\
+	    	.config("spark.driver.memory", "2g")\
 		.getOrCreate()
+
+# Simple local Spark session with default settings
+#	spark = SparkSession\
+#		.builder\
+#		.appName("SIP_task2_PythonPi")\
+#		.getOrCreate()
 
 	partitions = 2
 	n = 100000 * partitions
@@ -101,7 +102,8 @@ def run():
 	st = 'Pi is roughly ' + str(4.0 * count / n) + ' : '
 	process_sender.send(st)
 
-	while True:
+	for x in range(10):
+		print('---------------')
 		# Create a timestamp
 		ts = time.time()
 		st = datetime.datetime.fromtimestamp(ts).strftime(

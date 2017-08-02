@@ -11,9 +11,11 @@ import sys
 from sip.common.logging_api import log
 from sip.common.paas import TaskStatus
 from sip.common.docker_paas import DockerPaas as Paas
+from sip.common.spark_paas import SparkPaaS
 from sip.master.config import create_slave_status
 from sip.master.config import slave_status
 from sip.master.config import slave_config
+from sip.master.config import slave_config_dict
 from sip.master import task_control
 from sip.master import slave_states
 from sip.master.slave_states import SlaveControllerSM
@@ -27,10 +29,19 @@ def start(name, type):
 
     log.info('Starting slave (name={}, type={})'.format(name, type))
 
+    # Ugly method, but works for now
+    try:
+        launch_type = slave_config_dict()[type]['launch_policy']
+    except:
+        launch_type = None
+
     # Create an entry in the slave status dictionary if one doesn't already
     # exist
     log.info('Creating new slave, name={}'.format(name))
-    task_controller = task_control.SlaveTaskControllerRPyC()
+    if launch_type == "spark":
+        task_controller = task_control.SlaveTaskControllerSpark()
+    else:
+        task_controller = task_control.SlaveTaskControllerRPyC()
     state_machine = SlaveControllerSM(name, type, task_controller)
     create_slave_status(name, type, task_controller,
             state_machine)
@@ -51,6 +62,8 @@ def start(name, type):
         # Start the slave
         if config['launch_policy'] == 'docker':
             _start_docker_slave(name, type, config, status)
+        elif config['launch_policy'] == 'spark':
+            _start_spark_slave(name, type, config, status)
         else:
             raise RuntimeError(
                     'Error starting "{}": {} is not a known slave launch '
@@ -100,6 +113,39 @@ def _start_docker_slave(name, type, cfg, status):
 
     log.info('"{}" (type {}) started'.format(name, type))
 
+def _start_spark_slave(name, type, cfg, status):
+    """Starts a Spark slave.
+
+    """
+    # Improve logging soon!
+    req_log = logging.getLogger('requests')
+    req_log.setLevel(logging.WARN)
+    req_log.addHandler(logging.StreamHandler(sys.stdout))
+
+    log.info('Starting Spark slave (name={}, type={})'.format(name, type))
+
+    # Start it
+    #if name == 'wootwoot':
+    if 'task' in cfg.keys():
+        task = cfg['task']
+    else:
+        task = None
+
+    paas = SparkPaaS()
+    descriptor = paas.run_service(name, 'sip', None, task)
+    #try:
+    status['task_controller'].connect(descriptor)
+    #except:
+    #    pass
+
+    # Fill in the generic entries in the status dictionary
+    #(host, ports) = descriptor.location()
+    status['master_url'] = '127.0.0.1'
+    status['master_port'] = '8080'
+    status['descriptor'] = descriptor
+
+    log.info('"{}" (type {}) started'.format(name, type))
+
 
 def stop(name, status):
     """Stops a slave controller."""
@@ -107,12 +153,22 @@ def stop(name, status):
     status['task_controller'].shutdown()
     if slave_config(name)['launch_policy'] == 'docker':
         _stop_docker_slave(name, status)
+    if config.slave_config[status['type']]['launch_policy'] == 'spark':
+        _stop_spark_slave(name, status)
 
 def _stop_docker_slave(name, status):
     """Stops a docker based slave controller."""
 
     log.info('stopping slave controller {}'.format(name))
     paas = Paas()
+    paas.delete_task(name)
+    #descriptor.delete()
+
+def _stop_spark_slave(name, status):
+    """Stops a docker based slave controller."""
+
+    log.info('stopping slave controller {}'.format(name))
+    paas = SparkPaaS()
     descriptor = paas.find_task(name)
     if descriptor:
         descriptor.delete()

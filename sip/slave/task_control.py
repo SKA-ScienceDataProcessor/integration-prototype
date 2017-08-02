@@ -62,6 +62,80 @@ class TaskControl:
         config.state = 'error'
 
 
+class TaskControlSparkPoller(TaskControl):
+    """Task controller Spark.
+
+    """
+    def __init__(self):
+        TaskControl.__init__(self)
+        self._poller = None
+        self.name = ''
+        self.subproc = None
+
+    def start(self, task, settings):
+        """Starts the task and the task poller thread.
+
+        Args:
+            task (string list): Path to the task and its command line arguments.
+            settings (dict): Settings dictionary for the task control object.
+        """
+        print(task)
+        print(settings)
+        ## Start a task
+        #self.name = os.path.normpath(task[0])
+        #self.settings = settings
+        #log.info('[TaskControllProcessPoller] Starting task {}'.format(self.name))
+        #self.subproc = subprocess.Popen(task)
+
+        ## Create and start a thread which checks if the task is still running
+        ## or timed out.
+        self._poller = self.TaskPoller(self)
+        self._poller.start()
+
+    def stop(self):
+        """Stops (kills) the task."""
+        print("Stopping TaskControlSparkPoller")
+
+        #log.info('unloading task {}'.format(self.name))
+
+        ## Kill the sub-process and the polling thread.
+        #self._poller.stop_thread()
+        #self.subproc.kill()
+
+        # Reset state
+        self.set_slave_state_idle()
+
+    class TaskPoller(threading.Thread):
+        """Checks task is still running and has not exceeded a timeout."""
+        def __init__(self, task_controller):
+            threading.Thread.__init__(self)
+            self._task_controller = task_controller
+            self._done = threading.Event()
+            print("things")
+
+        def stop_thread(self):
+            self._done.set()
+
+        def run(self):
+            """Thread run method."""
+            log.info("running spark poller")
+            self._task_controller.set_slave_state_busy()
+            name = self._task_controller.name
+            timeout = self._task_controller.settings['timeout']
+            total_time = 0
+            while (self._task_controller.subproc.poll() is None
+                    and not self._done.is_set()):
+                time.sleep(1)
+                total_time += 1
+                # TODO(BM) interaction with slave time-out in HeartbeatListener?
+                if timeout is not None and total_time > timeout:
+                    log.warn("Task {} timed out".format(name))
+                    break
+
+            # TODO(FD) Check we're OK to kill the process here.
+            # Possible interaction with master controller UnConfigure.
+            self._task_controller.stop()
+
 class TaskControlProcessPoller(TaskControl):
     """Task controller for the visibility receiver.
 

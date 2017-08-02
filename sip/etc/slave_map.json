@@ -27,6 +27,20 @@
             "2000"
             ]
         },
+    "pipeline": {
+        "online": 0,
+        "timeout": 10,
+        "launch_policy": "spark",
+        "task_control_module": {
+            "name": "TaskControlSparkPoller",
+						"timeout": 10.0
+        },
+        "task": {
+					"jarfile": "sdp-pipeline_2.10-1.0.jar",
+					"jarpath": "/usr/local/bin",
+					"spark_args": "--conf spark.eventLog.enabled=true --conf spark.eventLog.dir=file:///tmp/spark-events --executor-memory 2g --driver-memory 2g --total-executor-cores 2"
+				}
+			},
     "ingest": {
         "online": 0,
         "timeout": 10,

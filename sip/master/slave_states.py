@@ -12,9 +12,11 @@ from sip.common.logging_api import log
 from sip.common.state_machine import State
 from sip.common.state_machine import StateMachine
 from sip.common.state_machine import _End
-from sip.common.paas import TaskStatus
+from sip.common.paas import TaskStatus, TaskDescriptor
 from sip.master.config import slave_status
 from sip.master.config import slave_config
+
+import sip.master.task_control as tc
 
 class SlaveStatus(Enum):
     noConnection = 0
@@ -92,10 +94,15 @@ class Error(State):
 
 class SlaveControllerSM(StateMachine):
     """Slave Controller state machine class."""
-    def __init__(self, name, type, task_controller, init=Init):
+    def __init__(self, name, type, task_controller, init=Init, descriptor=None):
         self._name = name
         self._type = type
         self._task_controller = task_controller
+
+        if descriptor:
+            self._descriptor = descriptor
+        else:
+            self._descriptor = None
 
         super(SlaveControllerSM, self).__init__(self.state_table, init)
 
@@ -103,9 +110,14 @@ class SlaveControllerSM(StateMachine):
         log.info('Attempting to connect to slave task. type={}, name={}'. \
                 format(self._type, self._name))
         try:
-            (host, port) = \
-                slave_status(self._name)['descriptor'].location(6666)
-            self._task_controller.connect(host, port)
+            if isinstance(self._task_controller, tc.SlaveTaskControllerRPyC):
+                (host, port) = \
+                    slave_status(self._name)['descriptor'].location(6666)
+                self._task_controller.connect(host, port)
+            elif isinstance(self._task_controller, tc.SlaveTaskControllerSpark):
+                if isinstance(event, TaskDescriptor):
+                    self._descriptor = event
+                self._task_controller.connect(self._descriptor)
         except:
             pass
 
