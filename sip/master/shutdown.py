@@ -10,8 +10,10 @@ import time
 
 from sip.common.logging_api import log
 
+from sip.master.config import slave_status_dict
 from sip.master import config
 from sip.master import slave_control
+from sip.master.slave_states import TaskStatus
 
 
 class Shutdown(threading.Thread):
@@ -25,14 +27,15 @@ class Shutdown(threading.Thread):
         log.info('starting shutdown')
 
         # Shut down any slaves that are still running
-        for slave, status in config.slave_status.items():
-            if status['state'].current_state() != '_End':
+        for slave, status in slave_status_dict().items():
+            state = status['state'].current_state()
+            print(state)
+            if state != 'Exited' and state != 'Unknown':
                 slave_control.stop(slave, status)
 
         # Shut down the log server
-        log.info('Terminating logserver, pid ', config.logserver.pid)
-        config.logserver.send_signal(signal.SIGINT)
-        # os.kill(config.logserver.pid, signal.SIGTERM)
+        log.info('Terminating logserver {}'.format(config.logserver.ident))
+        config.logserver.delete()
 
         print('Shutdown complete. Goodbye!')
 

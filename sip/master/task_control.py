@@ -11,7 +11,7 @@ import rpyc
 
 from sip.common.logging_api import log
 from sip.common.resource_manager import ResourceManager
-from sip.master import config
+from sip.master.config import resource
 
 
 class SlaveTaskController:
@@ -47,16 +47,22 @@ class SlaveTaskControllerRPyC(SlaveTaskController):
         SlaveTaskController.__init__(self)
         self._conn = None
 
-    def connect(self, address, port):
-        """Establishes an RPyC connection if it is not already."""
-        if self._conn is None:
-            self._conn = rpyc.connect(address, port)
+    def connect(self, address=None, port=None):
+        """Establishes an RPyC connection if needed."""
+        if address:
+            self._address = address
+        if port:
+            self._port = port
+        try: 
+            self._conn.ping()
+        except:
+            log.debug('Connecting to {}:{}'.format(self._address, self._port))
+            self._conn = rpyc.connect(self._address, self._port)
 
     def shutdown(self):
         """Command the slave controller to shut down."""
-        if self._conn is None:
-            log.fatal("Need to connect to RPyC first!")
-            return
+        log.debug('shutting down task')
+        self.connect()
         self._conn.root.shutdown()
 
     def start(self, name, cfg, status):
@@ -73,27 +79,20 @@ class SlaveTaskControllerRPyC(SlaveTaskController):
         log.debug('[SlaveTaskControllerRPyC] Starting task {}'.format(name))
         task_cfg = cfg['task']
         for i, value_str in enumerate(task_cfg):
-            task_cfg[i] = self._set_resource(value_str, name, config.resource)
-            # if v[0] == '#':
-            #     task_cfg[i] = str(
-            #         config.resource.allocate_resource(name, v[1:]))
-
-        # Update the task executable (the first element of the list) to an
-        # absolute path
-        # sip_root = os.path.join(os.path.dirname(__file__), '..', '..')
-        # task_cfg[0] = os.path.join(sip_root, task_cfg[0])
+            task_cfg[i] = self._set_resource(value_str, name, resource)
 
         # Send the slave the command to load the task
-        if self._conn is None:
-            log.fatal("Need to connect to RPyC first!")
-            return
+        self.connect()
         self._conn.root.load(task_cfg, cfg['task_control_module'])
+
+    def status(self):
+        """Return the status of the slave controller."""
+        self.connect()
+        return self._conn.root.get_state()
 
     def stop(self):
         """Command the slave controller to unload the task."""
-        if self._conn is None:
-            log.fatal("Need to connect to RPyC first!")
-            return
+        self.connect()
         self._conn.root.unload()
 
     @staticmethod

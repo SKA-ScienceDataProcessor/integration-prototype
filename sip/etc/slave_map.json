@@ -7,45 +7,50 @@
         "task_control_module": {
             "name": "TaskControlExample"
         },
-        "docker_image": "slave_controller",
+        "docker_image": "sip",
         "task": [
             "sip/tasks/task.py",
-            "#tcp_port"
+            "2000"
             ]
         },
     "QA": {
         "online": 1,
         "timeout": 10,
-        "launch_policy": "ssh",
+        "engine_url": "unix:///var/run/docker.sock",
+        "launch_policy": "docker",
         "task_control_module": {
             "name": "TaskControlExample"
         },
+        "docker_image": "sip",
         "task": [
-            "#{sip_root}/tasks/task.py",
-            "#tcp_port"
+            "sip/tasks/task.py",
+            "2000"
             ]
         },
     "ingest": {
         "online": 0,
         "timeout": 10,
-        "launch_policy": "ssh",
+        "engine_url": "unix:///var/run/docker.sock",
+        "launch_policy": "docker",
         "task_control_module": {
             "name": "TaskControlExample"
         },
+        "docker_image": "sip",
         "task": [
-            "#{sip_root}/tasks/exec_eng.py",
-            "#tcp_port",
+            "sip/tasks/exec_eng.py",
+            "1000",
             "30"
             ]
         },
     "vis_receive": {
         "online": 0,
         "timeout": 10,
-        "launch_policy": "ssh",
+        "launch_policy": "docker",
         "task_control_module": {
             "name": "TaskControlProcessPoller",
             "timeout": 30.0
         },
+        "docker_image": "sip",
         "task": [
             "#{sip_root}/tasks/vis_receiver_task.py",
             "#{sip_root}/etc/vis_receiver_config.json"
@@ -54,11 +59,12 @@
     "pulsar_search": {
         "online": 0,
         "timeout": 10,
-        "launch_policy": "ssh",
+        "launch_policy": "docker",
         "task_control_module": {
             "name": "TaskControlProcessPoller",
             "timeout": 30.0
         },
+        "docker_image": "sip",
         "task": [
             "#{sip_root}/tasks/pulsar_search_task.py",
             "#{sip_root}/etc/pulsar_receiver_config.json"

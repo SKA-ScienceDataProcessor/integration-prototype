@@ -1,6 +1,5 @@
 # -*- coding=utf-8 -*-
 """rpyc server interface for a slave controller."""
-import importlib
 import os
 import threading
 import time
@@ -15,16 +14,9 @@ class SlaveService(rpyc.Service):
     """rpyc service (server) for a slave controller."""
 
     def __init__(self, conn):
-        """Initialise the slave service with the task control module.
-
-        The task control module to use is specified in the slave map JSON
-        settings file read by the master controller main() and currently
-        stored in the slave global variable: config.task_control_module
+        """Initialise the slave service.
         """
         rpyc.Service.__init__(self, conn)
-        _class = getattr(importlib.import_module('sip.slave.task_control'),
-                         config.task_control_module)
-        self.task_control = _class()
 
     def exposed_get_state(self):
         """Return the current slave state."""
@@ -32,11 +24,11 @@ class SlaveService(rpyc.Service):
 
     def exposed_load(self, task_description, task_control_settings):
         """Load (start) a task using the task control module."""
-        self.task_control.start(task_description, task_control_settings)
+        config.task_control.start(task_description, task_control_settings)
 
     def exposed_unload(self):
         """Unload (stop) a task using the task control module."""
-        self.task_control.stop()
+        config.task_control.stop()
 
     def exposed_shutdown(self):
         _Shutdown().start()

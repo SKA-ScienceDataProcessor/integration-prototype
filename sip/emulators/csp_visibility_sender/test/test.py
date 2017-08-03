@@ -7,14 +7,17 @@ python -m unittest emulators.csp_visibility_sender.test.test
 or to run just 1 test:
 python -m unittest emulators.csp_visibility_sender.test.test.Test1.test_get_config_r
 """
-import sys
-
-import logging
-import numpy as np
 import unittest
 
-from sip.emulators.csp_visibility_sender import HeapStreamer
+import logging
+import os
+import sys
+import numpy as np
 
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..', '..',
+    '..'))
+
+from sip.emulators.csp_visibility_sender.heap_streamer import HeapStreamer
 
 class TestHeapSimulator:
 
@@ -23,20 +26,24 @@ class TestHeapSimulator:
         self.log = log
 
     def send_heaps(self, streamer: HeapStreamer):
-        self.streamer.start()
-        num_times = 1
-        num_streams = 1
+        print(streamer.__dict__, file=sys.stderr)
+        streamer.start()
+        num_times = self.config['observation']['time']['num_times']
+        #num_streams = len(self.config['sender_node']['streams'])
+        num_streams = self.config['sender_node']['stream_num_channels']
 
         # Time loop
         for i in range(num_times):
             for j in range(num_streams):
-                self.streamer.payload['complex_visibility'] = \
-                    np.ones(self.streamer.frame_shape) * i
-                self.streamer.payload['timestamp_utc'] = [(i, i+3)]
-                self.streamer.send_heap(heap_index=i, stream_id=j)
+                streamer.payload['complex_visibility'] = \
+                    np.ones(streamer._frame_shape) * i
+                streamer.payload['timestamp_utc'] = [(i, i+3)]
+                streamer.send_heap(heap_index=i, stream_id=j)
 
-        self.streamer.end()
-        self.streamer.log_stats()
+        streamer.end()
+
+        print(streamer.__dict__, file=sys.stderr)
+        streamer.log_stats()
 
 
 class Test1(unittest.TestCase):
@@ -95,8 +102,9 @@ class Test1(unittest.TestCase):
         self.assertEqual(streamer._streams[0][1]['complex_visibility'].shape,
                          frame_shape)
 
-        sim = TestHeapSimulator(streamer, log)
-        sim.sim_blocks(config['observation']['time']['num_times'])
+        sim = TestHeapSimulator(config, log)
+        #sim.sim_blocks(config['observation']['time']['num_times'])
+        sim.send_heaps(streamer)
 
 
 if __name__ == '__main__':
