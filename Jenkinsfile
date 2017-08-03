@@ -7,12 +7,12 @@ pipeline {
 				// Get digests for current -latest and -stable docker images
 				// and save to file. We need these so we can delete the old
 				// images when pushing the new ones to the registry
-				// Set up fresh Python virtual environment
 				sh '''
 				  /usr/local/bin/get_reg_digest.sh localhost:5000 sip ${JOB_BASE_NAME}-latest > dockerimage.digest
 				  /usr/local/bin/get_reg_digest.sh localhost:5000 sip ${JOB_BASE_NAME}-stable > dockerimage-stable.digest
 				'''
 
+				// Set up fresh Python virtual environment
 				sh '''
 					# Need to rm old virtualenv dir or else PIP will try to
 					# to install a hybrid old/new version. I don't get it
