@@ -21,7 +21,7 @@ class DockerPaas(Paas):
         """
 
         # Create a docker client
-        self._client = docker.from_env();
+        self._client = docker.from_env()
 
         # Store a flag to show whether we are on a manager node or a 
         # worker.
