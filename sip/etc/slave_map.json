@@ -33,12 +33,12 @@
         "engine_url": "unix:///var/run/docker.sock",
         "launch_policy": "docker",
         "task_control_module": {
-            "name": "TaskControlExample"
+            "name": "TaskControlIngest"
         },
         "docker_image": "sip",
         "task": [
-            "sip/tasks/exec_eng.py",
-            "1000",
+            "sip/tasks/ingest_demo.py",
+            "6000",
             "30"
             ]
         },

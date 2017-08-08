@@ -4,6 +4,7 @@
 FIXME(FD) Rename this file to slave_task_controller.py ?
 """
 
+import json
 import os
 import re
 
@@ -83,7 +84,8 @@ class SlaveTaskControllerRPyC(SlaveTaskController):
 
         # Send the slave the command to load the task
         self.connect()
-        self._conn.root.load(task_cfg, cfg['task_control_module'])
+        #self._conn.root.load(task_cfg, cfg['task_control_module'])
+        self._conn.root.load(task_cfg, json.dumps(cfg))
 
     def status(self):
         """Return the status of the slave controller."""

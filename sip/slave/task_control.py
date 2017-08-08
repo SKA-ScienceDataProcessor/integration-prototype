@@ -7,6 +7,9 @@ and poll to check when it has finished, or reached a timeout.
 To implement new task controllers, inherit the base class TaskControl and
 implement the start() and stop() methods.
 """
+import abc
+import json
+import docker
 import subprocess
 import threading
 import time
@@ -17,13 +20,14 @@ from sip.common.logging_api import log
 from sip.slave import config
 
 
-class TaskControl:
+class TaskControl(metaclass=abc.ABCMeta):
     """Base class to define the slave task control interface."""
 
     def __init__(self):
         """Constructor."""
         self.settings = None
 
+    @abc.abstractmethod
     def start(self, task, settings):
         """Start (load) the task
 
@@ -31,11 +35,12 @@ class TaskControl:
             task: Task description (name or path?)
             settings: Settings dictionary for the task control object.
         """
-        raise RuntimeError("Implement TaskControl.start()!")
+        pass
 
+    @abc.abstractmethod
     def stop(self):
         """Stop (unload) the task."""
-        raise RuntimeError("Implement TaskControl.stop()!")
+        pass
 
     def set_slave_state_idle(self):
         """Update the slave state (global) to idle.
@@ -246,3 +251,35 @@ class TaskControlExample(TaskControl):
             if len(tokens) < 4:
                 tokens = [' ', ' ', ' ', '', ' ', ' ']
             return tokens[3]
+
+class TaskControlIngest(TaskControl):
+    """ Task controller for ingest type tasks
+
+    Uses docker to start and stop the task.
+    """
+    def __init__(self):
+        TaskControl.__init__(self)
+
+        # Create a docker client
+        self._client = docker.from_env()
+
+    def start(self, task, settings):
+        """Start the task in a docker container
+
+        Args:
+            task (string list): Path to the task and its command line arguments.
+            settings (dict): Settings dictionary for the task control object.
+        """
+        log.info('[TaskControlIngest] Starting task {}'.format(task[0]))
+        command = list(task)
+        s = json.loads(settings)
+        self._container = self._client.containers.run(image='sip', 
+                command=command, detach=True, network_mode='host')
+        self.set_slave_state_busy()
+
+    def stop(self):
+        """Stops the task
+        """
+        self._container.stop()
+        self.set_slave_state_idle()
+ 
