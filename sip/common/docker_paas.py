@@ -135,7 +135,7 @@ class DockerPaas(Paas):
 
         # Define the constraints
         constraints = []
-        if node != None:
+        if host != None:
             constraints.append('node.hostname == {}'.format(host))
 
         # Start the task 

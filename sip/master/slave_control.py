@@ -22,7 +22,7 @@ from sip.master.slave_states import SlaveControllerSM
 # some ephemeral port on the local host by Docker.
 rpc_port_ = 6666
 
-def start(name, type):
+def start(name, type, service):
     """Starts a slave controller."""
 
     log.info('Starting slave (name={}, type={})'.format(name, type))
@@ -50,7 +50,7 @@ def start(name, type):
 
         # Start the slave
         if config['launch_policy'] == 'docker':
-            _start_docker_slave(name, type, config, status)
+            _start_docker_slave(name, type, config, status, service)
         else:
             raise RuntimeError(
                     'Error starting "{}": {} is not a known slave launch '
@@ -60,7 +60,7 @@ def start(name, type):
     status['restart'] = True
 
 
-def _start_docker_slave(name, type, cfg, status):
+def _start_docker_slave(name, type, cfg, status, service):
     """Starts a slave controller that is a Docker container.
 
     NB This only works on localhost
@@ -85,7 +85,15 @@ def _start_docker_slave(name, type, cfg, status):
 
     # Start it
     paas = Paas()
-    descriptor = paas.run_service(name, 'sip', [rpc_port_], _cmd)
+    if service:
+        descriptor = paas.run_service(name, 'sip', [rpc_port_], _cmd)
+    else:
+
+        # Look for a host in the config dictionary
+        host = None
+        if 'host' in cfg:
+            host = cfg['host']
+        descriptor = paas.run_task(name, 'sip', [rpc_port_], _cmd, host=host)
 
     # Attempt to connect the controller
     try:

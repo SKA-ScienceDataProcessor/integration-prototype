@@ -24,6 +24,6 @@ class Capability(threading.Thread):
         log.info('starting capability {} with name {}'.format(
             self._args[1], self._args[0]))
         try:
-            slave_control.start(self._args[0], self._args[1])
+            slave_control.start(self._args[0], self._args[1], service=False)
         except RuntimeError as err:
             log.error('Failed to start capability: {}'.format(err))

@@ -27,6 +27,6 @@ class Configure(threading.Thread):
         # definition there is only one task of each type.
         for task, config in slave_config_dict().items():
             if config.get('online', False):
-                slave_control.start(task, task)
+                slave_control.start(task, task, service=True)
 
         log.info('Configuration thread exiting.')

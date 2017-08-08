@@ -36,6 +36,7 @@
             "name": "TaskControlIngest"
         },
         "docker_image": "sip",
+        "host": "ska2",
         "task": [
             "sip/tasks/ingest_demo.py",
             "6000",
