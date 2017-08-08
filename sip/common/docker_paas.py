@@ -27,7 +27,8 @@ class DockerPaas(Paas):
         # worker.
         self._manager = self._client.info()['Swarm']['ControlAvailable']
 
-    def run_service(self, name, task, ports, cmd_args, restart=True):
+    def run_service(self, name, task, ports, cmd_args, restart=True,
+            constraints=[]):
         """ Run a task as a service.
 
         Only manager nodes can create a service
@@ -89,10 +90,14 @@ class DockerPaas(Paas):
 
             # Create the service
             service = self._client.services.create(image=task, 
-                    command=cmd_args[0], args=cmd_args[1:],
-                    endpoint_spec=endpoint_spec, name=name,
-                    networks=['sip'], mounts=mount,
-                        restart_policy=restart_policy);
+                    command=cmd_args[0], 
+                    args=cmd_args[1:],
+                    endpoint_spec=endpoint_spec, 
+                    name=name,
+                    networks=['sip'], 
+                    mounts=mount,
+                    restart_policy=restart_policy,
+                    constraints=constraints);
 
             # Create a new descriptor now that the service is running. We
             # need to sleep to give docker time to configure the new service
@@ -101,7 +106,7 @@ class DockerPaas(Paas):
             descriptor = DockerTaskDescriptor(name)
         return descriptor
 
-    def run_task(self, name, task, ports, cmd_args):
+    def run_task(self, name, task, ports, cmd_args, host=None):
         """ Run a task
 
         A task is the same as a service except that it is not restarted
@@ -128,9 +133,14 @@ class DockerPaas(Paas):
         if d:
             d.delete()
 
+        # Define the constraints
+        constraints = []
+        if node != None:
+            constraints.append('node.hostname == {}'.format(host))
+
         # Start the task 
         descriptor = self.run_service(name, task, ports, cmd_args, 
-                restart=False)
+                restart=False, constraints=constraints)
 
         return descriptor
 
@@ -258,6 +268,7 @@ class DockerTaskDescriptor(TaskDescriptor):
             # looking for the "best". 
             #
             # The possible states are:
+            #    pending
             #    created
             #    running
             #    ready
@@ -280,6 +291,7 @@ class DockerTaskDescriptor(TaskDescriptor):
                 if (task['Status']['State'] == 'created' ) or (
                     task['Status']['State'] == 'starting') or (
                     task['Status']['State'] == 'preparing') or (
+                    task['Status']['State'] == 'pending') or (
                     task['Status']['State'] == 'ready'):
                      return TaskStatus.STARTING
 
