@@ -1,0 +1,80 @@
+---
+# This Playbook deploys a docker swarm cluster.
+
+
+# Run plays to install Python2 as python3 is still experimental.
+- include: python.yml
+
+# Update bashrc for better history search behaviour
+- include: update_bashrc.yml
+
+# Install docker and reboot
+- hosts: all
+  become_method: sudo
+  become: true
+  roles:
+  - role: angstwad.docker_ubuntu
+    docker_apt_cache_valid_time: 3600
+    install_docker_py_on_1604: true
+    update_docker_package: true
+    docker_group_members: [ "{{ ansible_user }}" ]
+
+  - role: GROG.reboot
+    reboot_interval: yes
+    reboot_interval_seconds: 1
+    reboot_wait_timeout: 300
+    reboot_wait_ctimeout: 5
+
+# Configure Docker swarm mode.
+- name: Gather information on the Docker swarm status
+  hosts: all
+  roles:
+  - role: docker_swarm.info
+
+- name: Initialise the swarm
+  hosts: swarm_leader
+  roles:
+    - role: docker_swarm.init
+
+- name: Join manager nodes to the swarm
+  hosts: swarm_managers
+  roles:
+    - role: docker_swarm.join
+      leader_ip: "{{ hostvars[groups['swarm_leader'][0]]['swarm_leader_ip'] }}"
+      token: "{{ hostvars[groups['swarm_leader'][0]]['swarm_manager_token'].stdout }}"
+
+- name: Join worker nodes to the swarm
+  hosts: swarm_workers
+  roles:
+    - role: docker_swarm.join
+      leader_ip: "{{ hostvars[groups['swarm_leader'][0]]['swarm_leader_ip'] }}"
+      token: "{{ hostvars[groups['swarm_leader'][0]]['swarm_worker_token'].stdout }}"
+
+# Create SIP docker overlay network
+# ... Note the shell command is a work around for a bug in the ansible
+# docker_network module.
+- name: Create docker network for SIP
+  hosts: swarm_leader
+  become: true
+  tasks:
+    # - name: Create SIP overlay network
+    #   docker_network:
+    #     name: sip
+    #     driver: overlay
+    #     state: present
+    - name: Determine network status
+      shell: >
+        docker network inspect sip | grep 'Error' | cut -d '' -f2
+      register: docker_network_sip
+    - name: Create SIP overlay network
+      raw: docker network create --driver overlay sip
+      when: docker_network_sip.stderr != ""
+
+# Download and install SIP code.
+- name: Download and install SIP
+  hosts: all
+  become_method: sudo
+  roles:
+    - role: ska.sip
+      sip_branch: master
+
