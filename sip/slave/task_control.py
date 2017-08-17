@@ -274,7 +274,8 @@ class TaskControlIngest(TaskControl):
         command = list(task)
         s = json.loads(settings)
         self._container = self._client.containers.run(image='sip', 
-                command=command, detach=True, network_mode='host')
+                command=command, detach=True, network_mode='host',
+                volumes=s['volumes'])
         self.set_slave_state_busy()
 
     def stop(self):

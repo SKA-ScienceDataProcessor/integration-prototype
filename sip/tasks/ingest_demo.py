@@ -16,6 +16,10 @@ def _sig_handler(signum, frame):
 
 def run():
 
+    # Write to the host file system
+    f = open('/mnt/tmp/hello_dave', 'w')
+    f.close()
+
     # Read port number
     port = int(sys.argv[1])
 

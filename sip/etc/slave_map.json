@@ -36,7 +36,13 @@
             "name": "TaskControlIngest"
         },
         "docker_image": "sip",
-        "host": "ska2",
+        "host": "ska1",
+        "volumes": {
+            "/var/tmp": {
+                "bind": "/mnt/tmp",
+                "mode": "rw"
+            }
+        },
         "task": [
             "sip/tasks/ingest_demo.py",
             "6000",
