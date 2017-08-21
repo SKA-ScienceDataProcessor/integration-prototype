@@ -4,6 +4,14 @@ pipeline {
 	stages {
 		stage('Setup') {
 			steps {
+				// Get digests for current -latest and -stable docker images
+				// and save to file. We need these so we can delete the old
+				// images when pushing the new ones to the registry
+				sh '''
+				  /usr/local/bin/get_reg_digest.sh localhost:5000 sip ${JOB_BASE_NAME}-latest > dockerimage.digest
+				  /usr/local/bin/get_reg_digest.sh localhost:5000 sip ${JOB_BASE_NAME}-stable > dockerimage-stable.digest
+				'''
+
 				// Set up fresh Python virtual environment
 				sh '''
 					# Need to rm old virtualenv dir or else PIP will try to
@@ -58,11 +66,12 @@ pipeline {
 		stage('Build SIP') {
 			steps {
 				// build and install SIP, build containers
+				// Tag container with branch name (JOB_BASE_NAME)
 				sh '''
 					. _build/bin/activate
 
 					python3 ./setup.py install
-					docker build -t sip .
+					docker build -t sip:${JOB_BASE_NAME} .
 				'''
 			}
 		}
@@ -90,10 +99,37 @@ pipeline {
 				junit 'test_reports.xml'
 			}
 		}
-		stage('Deploy') {
-			steps {
-				echo 'To be implemented'
-			}
+	}
+	post {
+		success {
+			echo 'Build stable. Pushing image as -latest and -stable.'
+
+			// Push -stable
+			sh '''
+				/usr/local/bin/delete_from_reg.sh localhost:5000 sip `cat dockerimage-stable.digest`
+				sh 'docker tag sip:${JOB_BASE_NAME} localhost:5000/sip:${JOB_BASE_NAME}-stable
+				sh 'docker push localhost:5000/sip:${JOB_BASE_NAME}-stable
+			'''
+
+			// Push -latest
+			sh '''
+				'/usr/local/bin/delete_from_reg.sh localhost:5000 sip `cat dockerimage.digest`
+				'docker tag sip:${JOB_BASE_NAME} localhost:5000/sip:${JOB_BASE_NAME}-latest
+				'docker push localhost:5000/sip:${JOB_BASE_NAME}-latest
+			'''
+		}
+		unstable {
+			echo 'Build unstable. Only pushing -latest image.'
+
+			// Push -latest
+			sh '''
+				/usr/local/bin/delete_from_reg.sh localhost:5000 sip `cat dockerimage.digest`
+				docker tag sip:${JOB_BASE_NAME} localhost:5000/sip:${JOB_BASE_NAME}-latest
+				docker push localhost:5000/sip:${JOB_BASE_NAME}-latest
+			'''
+		}
+		failure {
+			echo 'Build failure. No images pushed to registry.'
 		}
 	}
 }

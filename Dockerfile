@@ -2,20 +2,22 @@ FROM ubuntu
 MAINTAINER David Terrett
 USER root
 
-# Install Python 3 and pip
-RUN apt-get -y update 
-RUN apt-get -y install docker
-RUN apt-get -y install python3 python3-pip
-RUN apt-get -y install libboost-program-options-dev
-RUN apt-get -y install libboost-system-dev
-RUN apt-get -y install libboost-python-dev
-RUN apt-get -y install python-numpy-dev
+RUN adduser --disabled-password -gecos 'unprivileged user' sdp
+
+# Install dependencies, and clear cache
+RUN apt-get -y update \
+ && apt-get -y install docker \
+ python3 \
+ python3-pip \
+ libboost-program-options-dev \
+ libboost-system-dev \
+ libboost-python-dev \
+ python-numpy-dev \
+ dnsutils \
+ && rm -rf /var/lib/apt/lists/*
+
 COPY requirements.txt .
 RUN python3 -m pip install -r requirements.txt
-RUN apt-get -y install dnsutils
-
-# Create non-privileged user
-RUN adduser --disabled-password -gecos 'unprivileged user' sdp
 
 # Set working directory
 WORKDIR /home/sdp
