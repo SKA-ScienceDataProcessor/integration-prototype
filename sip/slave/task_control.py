@@ -287,7 +287,8 @@ class TaskControlIngest(TaskControl):
         """Stops the task
         """
         log.info('unloading task {}'.format(self.name))
-        self._container.stop()
+        self._container.kill()
+        self._container.remove()
         self._poller.stop_thread()
         self.set_slave_state_idle()
 
