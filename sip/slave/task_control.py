@@ -270,17 +270,55 @@ class TaskControlIngest(TaskControl):
             task (string list): Path to the task and its command line arguments.
             settings (dict): Settings dictionary for the task control object.
         """
-        log.info('[TaskControlIngest] Starting task {}'.format(task[0]))
+        self.name = os.path.normpath(task[0])
+        log.info('[TaskControlIngest] Starting task {}'.format(self.name))
         command = list(task)
         s = json.loads(settings)
         self._container = self._client.containers.run(image='sip', 
                 command=command, detach=True, network_mode='host',
                 volumes=s['volumes'])
+
+        # Start thread to poll the container status
+        self._poller = self._DockerPoller(self)
+        self._poller.start()
         self.set_slave_state_busy()
 
     def stop(self):
         """Stops the task
         """
+        log.info('unloading task {}'.format(self.name))
         self._container.stop()
+        self._poller.stop_thread()
         self.set_slave_state_idle()
- 
+
+    class _DockerPoller(threading.Thread):
+        """Polls for the state of the task container
+        """
+        def __init__(self, controller):
+            """Constructor."""
+            threading.Thread.__init__(self)
+            self._task_controller = controller
+            self._done = threading.Event()
+
+        def stop_thread(self):
+            self._done.set()
+
+        def run(self):
+            """Thread run method."""
+            log.info('DockerPoller: starting')
+            while not self._done.is_set():
+                time.sleep(10)
+
+                # Get the status of the container
+                self._task_controller._container.reload()
+                status = self._task_controller._container.status
+                if status == 'created' or status == 'restarting' or (
+                       status == 'running' or status == 'paused'):
+                    self._task_controller.set_slave_state_busy()
+                elif status == 'removing' or status == 'exited' or (
+                        status == 'dead'):
+                    self._task_controller.set_slave_state_idle()
+
+            # Set to idle before exiting.
+            self._task_controller.set_slave_state_idle()
+            log.info('DockerPoller: exiting')
