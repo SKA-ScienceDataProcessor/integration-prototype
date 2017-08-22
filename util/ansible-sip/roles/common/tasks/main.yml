@@ -1,6 +1,7 @@
 ---
 #
-- name: Copy gitconfig
+- name: Copy local $HOME/.gitconfig to hosts if it exists
   copy:
-    src: files/gitconfig
+    src: "{{ lookup('env', 'HOME') }}/.gitconfig"
     dest: "{{ ansible_env.HOME }}/.gitconfig"
+  failed_when: false
