@@ -1,5 +1,5 @@
 ---
-# file: ska.sip-new/tasks/main.yml
+# file: ska.sip/tasks/main.yml
 
 - name: Ensure Git is installed (Debian)
   apt:

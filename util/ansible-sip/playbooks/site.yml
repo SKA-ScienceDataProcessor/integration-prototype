@@ -8,6 +8,11 @@
 # Update bashrc for better history search behaviour
 - include: update_bashrc.yml
 
+# Run common role
+- hosts: all
+  roles:
+    - common
+
 # Install docker and reboot
 - hosts: all
   become_method: sudo
@@ -77,4 +82,3 @@
   roles:
     - role: ska.sip
       sip_branch: master
-
