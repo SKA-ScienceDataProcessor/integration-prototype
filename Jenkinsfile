@@ -131,5 +131,13 @@ pipeline {
 		failure {
 			echo 'Build failure. No images pushed to registry.'
 		}
+		always {
+			// Some of the Docker services tend to go haywire and kill Jenkins
+			// They should all be removed, or at least fully stopped
+			// This hackaround kills all services
+			// Keep until problem is fixed (`docker service ls` should be empty)
+			sh 'docker service ls'
+			sh 'docker service rm `docker service ls -q`'
+		}
 	}
 }
