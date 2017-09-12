@@ -138,5 +138,6 @@ pipeline {
 			// Keep until problem is fixed (`docker service ls` should be empty)
 			sh 'docker service ls'
 			sh 'docker service rm `docker service ls -q`'
+		}
 	}
 }
