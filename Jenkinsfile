@@ -106,9 +106,9 @@ pipeline {
 				// 'onlyStable = false' to enable report publication even when build
 				// status is not 'SUCCESS'
 				step ([$class: 'CoberturaPublisher',
-                coberturaReportFile: 'coverage.xml',
-                onlyStable: false,
-                sourceEncoding: 'ASCII'])
+							coberturaReportFile: 'coverage.xml',
+							onlyStable: false,
+							sourceEncoding: 'ASCII'])
 			}
 		}
 	}
