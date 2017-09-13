@@ -24,7 +24,7 @@ pipeline {
 				// Install requirements
 				sh '''
 					. _build/bin/activate
-					pip install -U pip setuptools Sphinx sphinx-rtd-theme pep8 pylint
+					pip install -U pip setuptools Sphinx sphinx-rtd-theme coverage pep8 pylint
 					pip install -r requirements.txt
 				'''
 
@@ -87,16 +87,28 @@ pipeline {
 		stage('Test') {
 			steps {
 				// Run unit tests, then publish JUnit-style report
+				// use 'coverage' to generate code coverage report &&
+				// publish results through Cobertura plugin
 				sh '''
 					. _build/bin/activate
 
-					python3 ./setup.py test -r xmlrunner
+					coverage run --source=sip ./setup.py test -r xmlrunner
+					coverage run -a --source=sip sip/test/test_execution.py || true
+					coverage xml
 					
 					# Kill stray processes (NEEDS TO BE FIXED)
 					pkill python3 || true
 				'''
 
 				junit 'test_reports.xml'
+
+				// Coverage report.
+				// 'onlyStable = false' to enable report publication even when build
+				// status is not 'SUCCESS'
+				step ([$class: 'CoberturaPublisher',
+							coberturaReportFile: 'coverage.xml',
+							onlyStable: false,
+							sourceEncoding: 'ASCII'])
 			}
 		}
 	}
