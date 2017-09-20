@@ -12,7 +12,12 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
   and avoids the confusion between unittests and test utility classes which 
   sometimes use the prefix `test_`. For more information see 
   [SIP: Unit test naming convensions](https://confluence.ska-sdp.org/display/WBS/SIP%3A+Unit+test+naming+conventions).
-- Various PEP-8 and PyLint errors in unit tests   
+- Various PEP-8 and PyLint errors in unit tests.
+### Removed
+- Python modules in requirements.txt related to non core SIP functions. These
+  these should be moved into their own module but for now are simply disabled.
+- A number of broken unit tests have been marked as skipped. 
+
  
 ## [0.2.1] - 2017-09-12
 ### Fixed
