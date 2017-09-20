@@ -16,6 +16,9 @@ __pycache__/
 # SIP logging aggregator output
 all.log
 
+# Python venv folder
+/venv/
+
 # Files created during testing
 /_build/
 test_reports.xml
