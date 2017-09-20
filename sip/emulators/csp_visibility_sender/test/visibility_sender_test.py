@@ -46,6 +46,7 @@ class TestHeapSimulator:
         streamer.log_stats()
 
 
+@unittest.skip("Skipping to avoid spead dependency.")
 class Test1(unittest.TestCase):
 
     @staticmethod
