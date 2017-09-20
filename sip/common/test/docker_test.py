@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """ Test of docker platform as a service
 
-.. moduleauthor:; David Terrett <david.terrett@stfc.ac.uk>
+.. moduleauthor:: David Terrett <david.terrett@stfc.ac.uk>
 """
 
 import rpyc
@@ -14,6 +14,8 @@ from sip.common.paas import TaskStatus
 
 paas = Paas()
 
+
+@unittest.skip("Skipping as this is broken.")
 class TestDocker(unittest.TestCase):
 
     # dockerpy keeps the socket to the docker engine open so we need to

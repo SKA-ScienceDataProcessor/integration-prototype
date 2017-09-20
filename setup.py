@@ -86,7 +86,19 @@ class Test(test):
     def discover_tests(self):
         """Greedy unittest discovery for all tests"""
         loader = unittest.TestLoader()
-        self.test_suite = loader.discover('sip', pattern='*test*.py')
+        modules_ = [
+            'sip.common',
+            'sip.emulators',
+            'sip.master',
+            'sip.processor_software',
+            'sip.slave',
+            'sip.tasks',
+        ]
+        self.test_suite = unittest.TestSuite()
+        for test_module in modules_:
+            tests = loader.discover(test_module, pattern='*_test.py')
+            self.test_suite.addTests(tests)
+        # self.test_suite = loader.discover('sip', pattern='*test*.py')
 
     def run(self):
         self.discover_tests()

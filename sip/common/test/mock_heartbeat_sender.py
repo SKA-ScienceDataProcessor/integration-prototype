@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
-
-# Helper script for the heartbeat test.
+"""Helper script for the heartbeat test."""
 
 import time
 import os
@@ -12,6 +11,7 @@ os.environ['SIP_HOSTNAME'] = os.uname()[1]
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..', '..'))
 from sip.common.heartbeat import Sender
+
 
 if __name__ == '__main__':
     sender = Sender('test', '12345')
