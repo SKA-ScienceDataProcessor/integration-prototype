@@ -1,8 +1,25 @@
+# Python temp files
 __pycache__/
 *.pyc
 *.py~
-*.swp
+
+# PyCharm project file
 /.idea/
-/venv/
+/.vscode/
+
+# Vim tempory files.
+*.swp
+
+# MacOS folder attributes files
 .DS_Store
+
+# SIP logging aggregator output
 all.log
+
+# Files created during testing
+/_build/
+test_reports.xml
+
+# Files created by the Python build system
+/build/
+/ska_sip.egg-info/
