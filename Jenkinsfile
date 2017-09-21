@@ -95,7 +95,7 @@ pipeline {
                     . _build/bin/activate
 
                     coverage run --source=sip ./setup.py test -r xmlrunner
-                    coverage run -a --source=sip sip/test/execution_test.py || true
+                    # coverage run -a --source=sip sip/test/execution_test.py || true
                     coverage xml
 
                     # Kill stray processes (NEEDS TO BE FIXED)
