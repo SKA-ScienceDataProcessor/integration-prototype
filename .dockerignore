@@ -1,0 +1,15 @@
+# NOTE: '**' is used to match all directories and subdirectories
+
+# Python cache / temp files
+**/__pycache__
+**/*.pyc
+
+# Readme and Dockerfiles
+**/Dockerfile
+**/README.md
+
+# Test directories
+# (Need to keep these in the images for now as these are used in some tests)
+# **/test
+
+
