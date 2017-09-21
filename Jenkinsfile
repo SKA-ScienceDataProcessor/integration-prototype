@@ -75,6 +75,7 @@ pipeline {
                 '''
             }
         }
+/*
         stage('Build docs') {
             steps {
                 sh '''
@@ -84,6 +85,7 @@ pipeline {
                 '''
             }
         }
+*/
         stage('Test') {
             steps {
                 // Run unit tests, then publish JUnit-style report
@@ -93,7 +95,7 @@ pipeline {
                     . _build/bin/activate
 
                     coverage run --source=sip ./setup.py test -r xmlrunner
-                    coverage run -a --source=sip sip/test/test_execution.py || true
+                    coverage run -a --source=sip sip/test/execution_test.py || true
                     coverage xml
 
                     # Kill stray processes (NEEDS TO BE FIXED)
