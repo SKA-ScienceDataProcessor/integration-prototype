@@ -125,33 +125,23 @@ pipeline {
                 sh 'docker push localhost:5000/sip:${JOB_BASE_NAME}-stable
             '''
 
-            // Push -latest
-            sh '''
-                '/usr/local/bin/delete_from_reg.sh localhost:5000 sip `cat dockerimage.digest`
-                'docker tag sip:${JOB_BASE_NAME} localhost:5000/sip:${JOB_BASE_NAME}-latest
-                'docker push localhost:5000/sip:${JOB_BASE_NAME}-latest
-            '''
-        }
-        unstable {
-            echo 'Build unstable. Only pushing -latest image.'
-
-            // Push -latest
-            sh '''
-                /usr/local/bin/delete_from_reg.sh localhost:5000 sip `cat dockerimage.digest`
-                docker tag sip:${JOB_BASE_NAME} localhost:5000/sip:${JOB_BASE_NAME}-latest
-                docker push localhost:5000/sip:${JOB_BASE_NAME}-latest
-            '''
-        }
-        failure {
-            echo 'Build failure. No images pushed to registry.'
-        }
-        always {
-            // Some of the Docker services tend to go haywire and kill Jenkins
-            // They should all be removed, or at least fully stopped
-            // This hackaround kills all services
-            // Keep until problem is fixed (`docker service ls` should be empty)
-            sh 'docker service ls'
-            sh 'docker service rm `docker service ls -q`'
-        }
-    }
+			// Push -latest
+			sh '''
+				/usr/local/bin/delete_from_reg.sh localhost:5000 sip `cat dockerimage.digest`
+				docker tag sip:${JOB_BASE_NAME} localhost:5000/sip:${JOB_BASE_NAME}-latest
+				docker push localhost:5000/sip:${JOB_BASE_NAME}-latest
+			'''
+		}
+		failure {
+			echo 'Build failure. No images pushed to registry.'
+		}
+		always {
+			// Some of the Docker services tend to go haywire and kill Jenkins
+			// They should all be removed, or at least fully stopped
+			// This hackaround kills all services
+			// Keep until problem is fixed (`docker service ls` should be empty)
+			sh 'docker service ls'
+			sh 'docker service rm `docker service ls -q` | true'
+		}
+	}
 }
