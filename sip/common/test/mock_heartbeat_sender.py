@@ -1,6 +1,8 @@
 #!/usr/bin/env python3
-"""Helper script for the heartbeat test."""
+""" Helper script for the heartbeat test.
 
+This script is used to create a mock service which just sends heartbeat.
+"""
 import time
 import os
 import sys
@@ -14,7 +16,14 @@ from sip.common.heartbeat import Sender
 
 
 if __name__ == '__main__':
-    sender = Sender('test', '12345')
-    for i in range(0, 10):
-        sender.send('ok')
-        time.sleep(1)
+    print('Starting sender.')
+    SENDER = Sender('test', '12345')
+    COUNTER = 0
+    try:
+        while True:
+            print('Sending message %i' % COUNTER, flush=True)
+            SENDER.send('ok')
+            COUNTER += 1
+            time.sleep(1)
+    except KeyboardInterrupt:
+        print('Interupted!')
