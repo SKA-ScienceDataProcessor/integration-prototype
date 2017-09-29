@@ -54,6 +54,7 @@ class Listener:
         try:
             self._socket.connect('tcp://' + host + ':' + str(port))
         except zmq.ZMQError as e:
+            print('ERROR: Failed to connect to heartbeat sender.', flush=True)
             log.error(e)
 
     def listen(self):
