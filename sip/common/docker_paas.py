@@ -21,10 +21,13 @@ class DockerPaas(Paas):
         """
 
         # Create a docker client
-        self._client = docker.from_env();
+        self._client = docker.from_env()
 
-        # Store a flag to show whether we are on a manager node or a 
-        # worker.
+        # Create the SIP overlay network if it does not exist.
+        if not self._client.networks.list(names=['sip']):
+            self._client.networks.create('sip', driver='overlay')
+
+        # Store a flag to show whether we are on a manager node or a worker.
         self._manager = self._client.info()['Swarm']['ControlAvailable']
 
     def run_service(self, name, task, ports, cmd_args, restart=True):
@@ -43,8 +46,12 @@ class DockerPaas(Paas):
         """
         # Raise an exception if we are not a manager
         if not self._manager:
-            raise RuntimeError(\
-                'Services can only be run on swarm manager nodes')
+            raise RuntimeError('Services can only be run on swarm manager '
+                               'nodes')
+
+        # Raise exception if ports is not a list. FIXME(BM) review this.
+        if not hasattr(ports, "__iter__"):
+            raise RuntimeError('Ports must be a list.')
 
         # Try to get a descriptor for this service
         descriptor = self.find_task(name)
@@ -91,6 +98,7 @@ class DockerPaas(Paas):
             service = self._client.services.create(image=task, 
                     command=cmd_args[0], args=cmd_args[1:],
                     endpoint_spec=endpoint_spec, name=name,
+                    # stop_grace_period=0,
                     networks=['sip'], mounts=mount,
                         restart_policy=restart_policy);
 
@@ -238,8 +246,10 @@ class DockerTaskDescriptor(TaskDescriptor):
         the port is the published port the port was mapped to.
         """
         if os.path.exists("docker_swarm"):
+            # print('Running inside swarm? Yes')
             return self.name, port
         else:
+            # print('Running inside swarm? No')
             return self._hostname, self._published_ports[port]
 
     def status(self):
