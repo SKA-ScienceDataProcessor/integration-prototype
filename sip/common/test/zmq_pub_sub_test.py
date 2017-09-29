@@ -2,7 +2,7 @@
 """Unit tests for ZMQ pub / sub interface.
 
 Run with:
-    python3 -m unittest sip.common.test.test_zmq_pub_sub
+    $ python3 -m unittest -f -v sip.common.test.zmq_pub_sub_test
 
 .. moduleauthor:: Benjamin Mort <benjamin.mort@oerc.ox.ac.uk>
 """
@@ -27,6 +27,7 @@ def recv_messages(zmq_subscriber, timeout_count, message_count):
     Returns:
         (int) Number of messages received.
     """
+    # pylint: disable=E1101
     fails = 0  # No. of receives that didn't return a message.
     receive_count = 0  # Total number of messages received.
     while fails < timeout_count:
@@ -36,8 +37,8 @@ def recv_messages(zmq_subscriber, timeout_count, message_count):
             receive_count += 1
             if receive_count == message_count:
                 break
-        except zmq.ZMQError as e:
-            if e.errno == zmq.EAGAIN:
+        except zmq.ZMQError as error:
+            if error.errno == zmq.EAGAIN:
                 pass
             else:
                 raise
@@ -46,12 +47,21 @@ def recv_messages(zmq_subscriber, timeout_count, message_count):
     return receive_count
 
 
-class TestMode1(unittest.TestCase):
-    """Mode1: Subscriber connects and the publisher binds to the socket."""
+class TestPubSocketBind(unittest.TestCase):
+    """ Mode1: Subscriber connects and the publisher binds to the socket.
+    
+    This method means that each subscriber must know the hostname (IP)
+    of each publisher, publishers do not need to know the hostname of the 
+    subscriber.
+
+    This has some advantages for writing publishers but means that the 
+    subscriber must know all of the hostnames of the publishers.
+    """
 
     @classmethod
     def setUpClass(cls):
         """Set up subscriber in a thread."""
+        # pylint: disable=E1101
         cls.sub_host = 'localhost'
         cls.sub_port = 6666
         cls.send_count = 100
@@ -60,11 +70,11 @@ class TestMode1(unittest.TestCase):
         cls.sub = context.socket(zmq.SUB)
         try:
             cls.sub.connect('tcp://{}:{}'.format(cls.sub_host, cls.sub_port))
-        except zmq.ZMQError as e:
-            print(e)
+        except zmq.ZMQError as error:
+            print(error)
         cls.sub.setsockopt_string(zmq.SUBSCRIBE, '')
         cls.sub_context = context
-        time.sleep(0.1)
+        time.sleep(1.0)
 
         def watcher(zmq_subscriber, message_count, timeout=5000):
             """Thread run method to monitor subscription socket"""
@@ -86,12 +96,13 @@ class TestMode1(unittest.TestCase):
 
     def test_pub(self):
         """Publish log messages. bind() to PUB socket."""
+        # pylint: disable=E1101
         context = zmq.Context()
         pub = context.socket(zmq.PUB)
         try:
             pub.bind('tcp://*:{}'.format(self.sub_port))
-        except zmq.ZMQError as e:
-            print(e)
+        except zmq.ZMQError as error:
+            print(error)
         time.sleep(0.1)
 
         send_count = self.send_count
@@ -108,15 +119,20 @@ class TestMode1(unittest.TestCase):
         context.term()
 
 
-class TestMode2(unittest.TestCase):
-    """Mode2: Subscriber binds and the publisher connects to the socket.
+class TestSubSocketBind(unittest.TestCase):
+    """ Mode2: Subscriber binds and the publisher connects to the socket.
 
     This is the current model for the SIP logger.
+
+    This method means that each log publisher must know the hostname (IP)
+    of the subscriber, but the subscriber only needs to know the logging
+    port.
     """
 
     @classmethod
     def setUpClass(cls):
         """Set up subscriber in a thread."""
+        # pylint: disable=E1101
         cls.sub_host = 'localhost'
         cls.sub_port = 6666
         cls.send_count = 100
@@ -126,8 +142,8 @@ class TestMode2(unittest.TestCase):
         subscriber = context.socket(zmq.SUB)
         try:
             subscriber.bind('tcp://*:{}'.format(cls.sub_port))
-        except zmq.ZMQError as e:
-            print('ERROR:', e)
+        except zmq.ZMQError as error:
+            print('ERROR:', error)
         subscriber.setsockopt_string(zmq.SUBSCRIBE, '')
         cls.sub = subscriber
         cls.sub_context = context
@@ -153,13 +169,14 @@ class TestMode2(unittest.TestCase):
 
     def test_pub(self):
         """Publish log messages. connect() to PUB socket."""
+        # pylint: disable=E1101
         context = zmq.Context()
         pub = context.socket(zmq.PUB)
         try:
             _address = 'tcp://{}:{}'.format(self.sub_host, self.sub_port)
             pub.connect(_address)
-        except zmq.ZMQError as e:
-            print('ERROR:', e)
+        except zmq.ZMQError as error:
+            print('ERROR:', error)
         time.sleep(0.1)
 
         send_count = self.send_count
