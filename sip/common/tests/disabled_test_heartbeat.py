@@ -42,9 +42,10 @@ class HeartbeatTest(unittest.TestCase):
         # Get a client to the local docker engine.
         client = docker.from_env()
 
-        # Check if the test is being run from a swarm manager node.
+        # Skip the tests in this class if not running from a manager node.
         if not client.info()['Swarm']['ControlAvailable']:
-            raise RuntimeError(cls, 'Docker Swarm not availiable.')
+            raise unittest.SkipTest('This test must be run from a swarm '
+                                    'manager node.')
             # client.swarm.init()
 
         # Create a logging server
@@ -66,7 +67,7 @@ class HeartbeatTest(unittest.TestCase):
         cls.logger.delete()
 
     def setUp(self):
-        """ Initialise the test case.
+        """ Initialise the test case
         """
         warnings.simplefilter('ignore', ResourceWarning)
         paas = Paas()
@@ -79,12 +80,13 @@ class HeartbeatTest(unittest.TestCase):
         time.sleep(3)
 
     def tearDown(self):
-        """ Tear down the test case.
+        """ Tear down the test case
         """
         self.sender.delete()
 
     def test_simple(self):
-        """."""
+        """ Test for successful receive of heartbeat messages
+        """
         # Import the heartbeat Listener class
         # (imports logging_api which needs the logging server to be running)
         from sip.common.heartbeat import Listener
