@@ -1,4 +1,4 @@
-""" This is a trival test task 
+""" This is a trivial test task
 
 It sleeps for a time specified by the first command line argument (seconds)
 and then exits with a status specified by the second.

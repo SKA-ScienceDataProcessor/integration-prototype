@@ -2,7 +2,7 @@
 """ Test of popen platform as a service
 
 Run with:
-    $ python3 -m unittest -f -v sip.common.test.test_popen
+    $ python3 -m unittest -f -v sip.common.tests.test_popen
 or
     $ python3 -m unittest discover -f -v -p test_popen.py
 
@@ -29,7 +29,7 @@ class TestPopen(unittest.TestCase):
 
         # Start the task
         t = s.run_task('test', 'python3', [],
-                       ['python3', 'sip/common/test/mock_task.py', '3', '0'])
+                       ['python3', 'sip/common/tests/mock_task.py', '3', '0'])
 
         # It should be running
         self.assertEqual(t.status(), TaskStatus.RUNNING)
@@ -48,7 +48,7 @@ class TestPopen(unittest.TestCase):
 
         # Start the task
         t = s.run_service('test', 'python3', 9999,
-                          ['python3', 'sip/common/test/mock_service.py',
+                          ['python3', 'sip/common/tests/mock_service.py',
                            '9999'])
 
         # It should be running
@@ -70,7 +70,7 @@ class TestPopen(unittest.TestCase):
         """
         s = Paas()
         t = s.run_task('test', 'python3', [],
-                       ['python3', 'sip/common/test/mock_task.py', '3', '0'])
+                       ['python3', 'sip/common/tests/mock_task.py', '3', '0'])
 
         self.assertEqual(t.status(), TaskStatus.RUNNING)
         t.delete()
@@ -81,7 +81,7 @@ class TestPopen(unittest.TestCase):
         """
         s = Paas()
         t = s.run_task('test', 'python3', [],
-                       ['python3', 'sip/common/test/mock_task.py', '0', '1'])
+                       ['python3', 'sip/common/tests/mock_task.py', '0', '1'])
         time.sleep(1)
         self.assertEqual(t.status(), TaskStatus.ERROR)
         t.delete()
@@ -93,11 +93,11 @@ class TestPopen(unittest.TestCase):
 
         # Start the task
         t1 = s.run_task('test', 'python3', [],
-                        ['python3', 'sip/common/test/mock_task.py', '0', '0'])
+                        ['python3', 'sip/common/tests/mock_task.py', '0', '0'])
 
         # Try another
         t2 = s.run_task('test', 'python3', [],
-                        ['python3', 'sip/common/test/mock_task.py', '0', '0'])
+                        ['python3', 'sip/common/tests/mock_task.py', '0', '0'])
 
         self.assertEqual(t1.ident, t2.ident)
 

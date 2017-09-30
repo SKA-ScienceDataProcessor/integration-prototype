@@ -2,7 +2,7 @@
 """Unit tests for ZMQ pub / sub interface.
 
 Run with:
-    $ python3 -m unittest -f -v sip.common.test.zmq_pub_sub_test
+    $ python3 -m unittest -f -v sip.common.tests.zmq_pub_sub_test
 
 .. moduleauthor:: Benjamin Mort <benjamin.mort@oerc.ox.ac.uk>
 """

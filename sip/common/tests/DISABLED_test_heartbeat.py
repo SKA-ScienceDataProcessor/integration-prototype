@@ -5,7 +5,7 @@ The heartbeat interface is used for health checking between the
 Master Controller and Slaves.
 
 Run with:
-    $ python3 -m unittest -f -v sip.common.test.test_heartbeat
+    $ python3 -m unittest -f -v sip.common.tests.test_heartbeat
 or
     $ python3 -m unittest discover -f -v -p test_heartbeat.py
 """
@@ -73,7 +73,7 @@ class HeartbeatTest(unittest.TestCase):
         name = 'heartbeat_sender'
         task = 'sip'
         port = 12345
-        cmd = ['python3', 'sip/common/test/mock_heartbeat_sender.py']
+        cmd = ['python3', 'sip/common/tests/mock_heartbeat_sender.py']
         self.sender = paas.run_service(name, task, [port], cmd)
         self.sender_port = port
         time.sleep(1)

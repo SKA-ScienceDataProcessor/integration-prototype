@@ -26,4 +26,4 @@ if __name__ == '__main__':
             COUNTER += 1
             time.sleep(1)
     except KeyboardInterrupt:
-        print('Interupted!')
+        print('Interrupted!')

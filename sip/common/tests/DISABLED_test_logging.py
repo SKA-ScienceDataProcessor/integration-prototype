@@ -2,7 +2,7 @@
 """Tests of SIP logging API.
 
 Run with:
-    python3 -m unittest sip.common.test.test_logging
+    python3 -m unittest sip.common.tests.test_logging
 
 .. moduleauthor:: Benjamin Mort <benjamin.mort@oerc.ox.ac.uk>
 """
