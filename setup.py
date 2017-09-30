@@ -98,7 +98,6 @@ class Test(test):
         for test_module in modules_:
             tests = loader.discover(test_module, pattern='test_*.py')
             self.test_suite.addTests(tests)
-        # self.test_suite = loader.discover('sip', pattern='*test*.py')
 
     def run(self):
         self.discover_tests()
