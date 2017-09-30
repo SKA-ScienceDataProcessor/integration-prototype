@@ -95,7 +95,7 @@ pipeline {
                     . _build/bin/activate
 
                     coverage run --source=sip ./setup.py test -r xmlrunner
-                    # coverage run -a --source=sip sip/test/execution_test.py || true
+                    # coverage run -a --source=sip sip/tests/test_execution.py || true
                     coverage xml
 
                     # Kill stray processes (NEEDS TO BE FIXED)
@@ -125,23 +125,23 @@ pipeline {
                 sh 'docker push localhost:5000/sip:${JOB_BASE_NAME}-stable
             '''
 
-			// Push -latest
-			sh '''
-				/usr/local/bin/delete_from_reg.sh localhost:5000 sip `cat dockerimage.digest`
-				docker tag sip:${JOB_BASE_NAME} localhost:5000/sip:${JOB_BASE_NAME}-latest
-				docker push localhost:5000/sip:${JOB_BASE_NAME}-latest
-			'''
-		}
-		failure {
-			echo 'Build failure. No images pushed to registry.'
-		}
-		always {
-			// Some of the Docker services tend to go haywire and kill Jenkins
-			// They should all be removed, or at least fully stopped
-			// This hackaround kills all services
-			// Keep until problem is fixed (`docker service ls` should be empty)
-			sh 'docker service ls'
-			sh 'docker service rm `docker service ls -q` | true'
-		}
-	}
+            // Push -latest
+            sh '''
+                /usr/local/bin/delete_from_reg.sh localhost:5000 sip `cat dockerimage.digest`
+                docker tag sip:${JOB_BASE_NAME} localhost:5000/sip:${JOB_BASE_NAME}-latest
+                docker push localhost:5000/sip:${JOB_BASE_NAME}-latest
+            '''
+        }
+        failure {
+            echo 'Build failure. No images pushed to registry.'
+        }
+        always {
+            // Some of the Docker services tend to go haywire and kill Jenkins
+            // They should all be removed, or at least fully stopped
+            // This hackaround kills all services
+            // Keep until problem is fixed (`docker service ls` should be empty)
+            sh 'docker service ls'
+            sh 'docker service rm `docker service ls -q` | true'
+        }
+    }
 }
