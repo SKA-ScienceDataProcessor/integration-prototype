@@ -72,16 +72,16 @@ class TestSipRunner(unittest.TestCase):
             ('get_current_state', None, []),
             ('online', 'Available', []),
             ('capability', None, ['receiver', 'vis_receive'],
-             self.run_vis, ('sip/etc/vis_sender_config.json')),
+             self.run_vis, 'sip/etc/vis_sender_config.json'),
             ('capability', None, ['receiver', 'vis_receive'],
              self.vis_timeout),
             ('offline', 'Standby', []),
             ('shutdown', None, [])
-            ]
+        ]
 
         for step in steps:
-            function = getattr(conn.root, step[0])
-            ret = function(*step[2])
+            _function = getattr(conn.root, step[0])
+            ret = _function(*step[2])
             print('>> ', step[0], ':', ret)
 
             if len(step) > 3:
@@ -94,19 +94,21 @@ class TestSipRunner(unittest.TestCase):
                 count = 0
                 while not ret == step[1]:
                     if count == 10:
-                        print('Encountered error in [', step[0], '], terminating')
+                        print('Encountered error in [', step[0],
+                              '], terminating')
                         return -1
                     count += 1
-                    function = getattr(conn.root, 'get_current_state')
+                    _function = getattr(conn.root, 'get_current_state')
                     _args = []
-                    ret = function(*_args)
+                    ret = _function(*_args)
                     print('\t>> get_current_state:', ret)
                     time.sleep(1)
 
     def _init_master(self):
         """."""
         print('Starting master controller, waiting to initialise...')
-        self._master = subprocess.Popen(['/usr/bin/python', '-m', 'sip.master'],
+        self._master = subprocess.Popen(['/usr/bin/python', '-m',
+                                         'sip.master'],
                                         stdin=subprocess.PIPE,
                                         stdout=subprocess.PIPE,
                                         stderr=subprocess.PIPE)
@@ -120,7 +122,6 @@ class TestSipRunner(unittest.TestCase):
     def shutdown_master(self):
         """."""
         print('Waiting for master to shut down.')
-        #self.poll_master_stdout(5, 'Shutdown complete. Goodbye!', 'shutdown_master')
         self.poll_master_stdout(5, 'SIGINT', 'shutdown_master')
 
         self._master.wait()
@@ -131,19 +132,25 @@ class TestSipRunner(unittest.TestCase):
 
     def run_vis(self, config):
         """."""
-        self.poll_master_stdout(5, 'Waiting to receive', 'run_vis initialisation')
+        self.poll_master_stdout(5, 'Waiting to receive',
+                                'run_vis initialisation')
 
-        proc = subprocess.Popen(['/usr/bin/python', '-m',
-                                 'sip.emulators.csp_visibility_sender', config],
-                                stdin=subprocess.DEVNULL,
-                                stdout=subprocess.PIPE,
-                                stderr=subprocess.PIPE)
-        proc.wait()
-        output = proc.communicate()
+        pid = subprocess.Popen(['/usr/bin/python', '-m',
+                                'sip.emulators.csp_visibility_sender',
+                                config],
+                               stdin=subprocess.DEVNULL,
+                               stdout=subprocess.PIPE,
+                               stderr=subprocess.PIPE)
+        pid.wait()
+        output = pid.communicate()
         if DEBUG:
-            print('--------------------------\nvis_sender, stdout:\n--------------------------')
+            print('--------------------------')
+            print('nvis_sender, stdout:')
+            print('--------------------------')
             print(output[0].decode("utf-8"))
-            print('--------------------------\nvis_sender, stderr:\n--------------------------')
+            print('--------------------------')
+            print('nvis_sender, stderr:')
+            print('--------------------------')
             print(output[1].decode("utf-8"))
 
         self.poll_master_stdout(5, 'Received heap 9', 'run_vis termination')
@@ -173,7 +180,6 @@ class TestSipRunner(unittest.TestCase):
                     print(errstring + ' loop:' + str(outsize))
                     print(output)
                     print('---------------------- ' + str(timer))
-
 
         if timer is timeout:
             print('error in ' + errstring)
