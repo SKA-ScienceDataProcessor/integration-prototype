@@ -31,7 +31,7 @@ class TestSparkPaaS(unittest.TestCase):
             self.fail("Cannot connect to Spark Master @ [{}]".format(master_url))
 
     def test1TaskSubmit(self):
-        cfg = {'jarfile': "spark_sleep.py", 'jarpath': "sip/common/test", "spark_args": ""}
+        cfg = {'jarfile': "mock_spark_task.py", 'jarpath': "sip/common/test", "spark_args": ""}
         task = paas.run_service("test_spark", "test_spark", None, cfg)
         self.assertIsInstance(paas.find_task("test_spark"), SparkTaskDescriptor)
         self.assertEqual(task.status(),TaskStatus.RUNNING)
@@ -39,7 +39,7 @@ class TestSparkPaaS(unittest.TestCase):
         self.assertEqual(task.status(),TaskStatus.EXITED)
 
     def test2TaskDestroy(self):
-        cfg = {'jarfile': "spark_sleep.py", 'jarpath': "sip/common/test", "spark_args": ""}
+        cfg = {'jarfile': "mock_spark_task.py", 'jarpath': "sip/common/test", "spark_args": ""}
         task = paas.run_service("test_spark", "test_spark", None, cfg)
         self.assertEqual(task.status(),TaskStatus.RUNNING)
         paas.delete_task("test_spark")
