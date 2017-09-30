@@ -96,7 +96,7 @@ class Test(test):
         ]
         self.test_suite = unittest.TestSuite()
         for test_module in modules_:
-            tests = loader.discover(test_module, pattern='*_test.py')
+            tests = loader.discover(test_module, pattern='test_*.py')
             self.test_suite.addTests(tests)
         # self.test_suite = loader.discover('sip', pattern='*test*.py')
 

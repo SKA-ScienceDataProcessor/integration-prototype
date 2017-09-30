@@ -29,7 +29,7 @@ class TestDocker(unittest.TestCase):
         # Start the task
         time.sleep(10)
         t = paas.run_task('test_task_1', 'sip', [],
-                ['python3', 'sip/common/test/test_task.py', '10', '0'])
+                ['python3', 'sip/common/test/mock_task.py', '10', '0'])
     
         # It should be running
         self._poll_for(TaskStatus.RUNNING, t)
@@ -50,7 +50,7 @@ class TestDocker(unittest.TestCase):
         # Start the task
         time.sleep(10)
         t = paas.run_service('test_service', 'sip', [9999],
-                ['python3', 'sip/common/test/test_service.py', '9999'])
+                ['python3', 'sip/common/test/mock_service.py', '9999'])
     
         # It should be running
         self._poll_for(TaskStatus.RUNNING, t)
@@ -71,7 +71,7 @@ class TestDocker(unittest.TestCase):
         """
         time.sleep(10)
         t = paas.run_task('test_stop', 'sip', [],
-                ['python3', 'sip/common/test/test_task.py', '30', '0'])
+                ['python3', 'sip/common/test/mock_task.py', '30', '0'])
     
         self._poll_for(TaskStatus.RUNNING, t)
         self.assertEqual(t.status(), TaskStatus.RUNNING)
@@ -83,7 +83,7 @@ class TestDocker(unittest.TestCase):
     #    """ Test of task that exits with an error status
     #    """
     #    t = paas.run_task('test_stop', 'sip', [],
-    #            ['python3', 'sip/common/testp/test_task.py', '3', '1'])
+    #            ['python3', 'sip/common/test/mock_task.py', '3', '1'])
     #    time.sleep(10)
     #    self.assertEqual(t.status(), TaskStatus.ERROR)
     #    t.delete()
@@ -95,10 +95,10 @@ class TestDocker(unittest.TestCase):
         # Start the task
         time.sleep(10)
         t1 = paas.run_service('test_dup', 'sip', [9999],
-                ['python3', 'sip/common/test/test_service.py', '9999'])
+                ['python3', 'sip/common/test/mock_service.py', '9999'])
 
         t2 = paas.run_service('test_dup', 'sip', [9999],
-                    ['python3', 'sip/common/test/test_service.py', '9999'])
+                    ['python3', 'sip/common/test/mock_service.py', '9999'])
 
         self.assertEqual(t1.ident, t2.ident)
 
@@ -111,11 +111,11 @@ class TestDocker(unittest.TestCase):
         # Start the task
         time.sleep(10)
         t1 = paas.run_task('test_task_2', 'sip', [],
-                ['python3', 'sip/common/testp/test_service.py', '9999'])
+                ['python3', 'sip/common/test/mock_service.py', '9999'])
     
         # Try another
         t2 = paas.run_task('test_task_2', 'sip', [],
-                ['python3', 'sip/common/testp/test_service.py', '9999'])
+                ['python3', 'sip/common/test/mock_service.py', '9999'])
 
         self.assertNotEqual(t1.ident, t2.ident)
         t2.delete()
@@ -127,7 +127,7 @@ class TestDocker(unittest.TestCase):
         # Start the task
         time.sleep(10)
         t1 = paas.run_task('test_find', 'sip', [],
-                ['python3', 'sip/common/test/test_task.py', '0', '0'])
+                ['python3', 'sip/common/test/mock_task.py', '0', '0'])
 
         # Find it
         t2 = paas.find_task('test_find')

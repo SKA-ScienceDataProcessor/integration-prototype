@@ -1,15 +1,22 @@
 # -*- coding: utf-8 -*-
-"""FIXME Module description!"""
+""" FIXME(BM) Missing module description!
+
+Run with:
+    $ python3 -m unittest -f -v sip.tasks.test.test_vis_data_write
+or
+    $ python3 -m unittest discover -f -v -p test_vis_data_write.py
+"""
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
+
 import glob
-import numpy
 import os
 import pickle
-
 import unittest
 
-oskar = None
+import numpy
+
+OSKAR = None
 # Comment out 'try' block to not write Measurement Sets.
 # try:
 #     import oskar
@@ -18,9 +25,21 @@ oskar = None
 
 
 def create_heap(header, start_time, start_chan, end_chan):
-    # Create the visibility data array.
-    # Dimensions are:
-    # num_sub_arrays (1), num_beams (1), num_channels, num_baselines, num_pols
+    """ Creates a visibility data dictionary.
+
+    Data dimensions:
+        [sub_arrays (1), beams (1), channels, baselines, pols]
+
+    Args:
+        header (dict): Visibility header dictionary.
+        start_time (int): Visibility data block start time index.
+        start_chan (int): Visibility start channel index.
+        end_chan (int): Visibility end channel index.
+
+    Returns:
+        dict: Visibility data heap consisting of the 'data' and two meta-data
+        fields, 'start_time' and 'start_channel'.
+    """
     num_stations = header['num_stations']
     num_chan = end_chan - start_chan + 1
     num_baselines = num_stations * (num_stations - 1) // 2
@@ -28,20 +47,23 @@ def create_heap(header, start_time, start_chan, end_chan):
     data = numpy.zeros([1, 1, num_chan, num_baselines, num_pols], dtype='c8')
 
     # Fill with pattern.
-    for c in range(num_chan):
-        data[:, :, c, :, :].real = start_time
-        data[:, :, c, :, :].imag = c + start_chan
+    for chan in range(num_chan):
+        data[:, :, chan, :, :].real = start_time
+        data[:, :, chan, :, :].imag = chan + start_chan
 
     # Return a dictionary containing the heap data.
     return {'start_time': start_time, 'start_chan': start_chan, 'data': data}
 
 
 def ms_create(filename, header, file_start_chan, file_num_chan):
-    if oskar:
+    """ Create a Measurement Set.
+    """
+    # pylint: disable=R1705
+    if OSKAR:
         channel_width_hz = header['channel_width_hz']
         start_freq_hz = header['start_frequency_hz'] + (
             channel_width_hz * file_start_chan)
-        return oskar.MeasurementSet.create(
+        return OSKAR.MeasurementSet.create(
             filename, header['num_stations'], file_num_chan,
             header['num_pols'], start_freq_hz, channel_width_hz)
     else:
@@ -49,39 +71,56 @@ def ms_create(filename, header, file_start_chan, file_num_chan):
 
 
 def ms_open(filename):
-    return oskar.MeasurementSet.open(filename) if oskar else None
+    """ Open a Measurement Set
+    """
+    return OSKAR.MeasurementSet.open(filename) if OSKAR else None
 
 
-def ms_write(ms, file_start_time, file_start_chan, heap):
-    if oskar:
+def ms_write(measurement_set, file_start_time, file_start_chan, heap):
+    """ Write a Measurement Set.
+    """
+    if OSKAR:
         vis_shape = heap['data'].shape
         num_chan = vis_shape[2]
         num_baselines = vis_shape[3]
         start_chan = heap['start_chan'] - file_start_chan
         start_time = heap['start_time'] - file_start_time
         start_row = num_baselines * start_time
-        ms.write_vis(start_row, start_chan, num_chan,
-                     num_baselines, heap['data'][0, 0, :, :, :])
+        measurement_set.write_vis(start_row, start_chan, num_chan,
+                                  num_baselines, heap['data'][0, 0, :, :, :])
     else:
         pass
 
 
 def pickle_write(filename, data):
-    with open(filename, 'ab') as f:
-        pickle.dump(data, f, protocol=2)
+    """ Write a pickle file.
+    """
+    with open(filename, 'ab') as file:
+        pickle.dump(data, file, protocol=2)
 
 
 def pickle_read(filename):
-    with open(filename, 'rb') as f:
+    """" Read a pickle file.
+    """
+    with open(filename, 'rb') as file:
         while True:
             try:
-                yield pickle.load(f)
+                yield pickle.load(file)
             except EOFError:
                 break
 
+
 class TestVisData(unittest.TestCase):
+    """ Unit tests for receiving visibility data.
+    """
 
     def test(self):
+        """ Test method.
+
+        Mocks the receive of visibility data writing the data received
+        to a set of pickle files.
+        """
+        # pylint: disable=R0914,R0912,R0915
         # Create a header. (Choose some prime numbers for dimensions.)
         hdr = {
             'heap_max_num_chan': 3,
@@ -106,12 +145,13 @@ class TestVisData(unittest.TestCase):
                              heap_max_num_chan) * heap_max_num_chan
 
         # Get the total number of heaps required.
-        num_heaps_chan = (num_chan + heap_max_num_chan - 1) // heap_max_num_chan
+        num_heaps_chan = ((num_chan + heap_max_num_chan - 1) //
+                          heap_max_num_chan)
         num_heaps_time = num_time
         num_heaps = num_heaps_chan * num_heaps_time
 
         # Loop over heaps (this is the "send/receive" loop).
-        ms = {}
+        measurement_sets = {}
         for heap_index in range(num_heaps):
             # Get the time and channel range for this heap.
             heap_start_time = heap_index // num_heaps_chan
@@ -121,7 +161,8 @@ class TestVisData(unittest.TestCase):
                 heap_end_chan = num_chan - 1
 
             # Create a filled heap (i.e. "send").
-            heap = create_heap(hdr, heap_start_time, heap_start_chan, heap_end_chan)
+            heap = create_heap(hdr, heap_start_time, heap_start_chan,
+                               heap_end_chan)
 
             # Find out which file this heap goes in (i.e. "receive").
             # Get the time and channel range for the file.
@@ -138,7 +179,7 @@ class TestVisData(unittest.TestCase):
             file_num_chan = file_end_chan - file_start_chan + 1
 
             # Construct filename.
-            base_name = 'vis_T%04d-%04d_C%04d-%04d' % (
+            base_name = 'test_vis_T%04d-%04d_C%04d-%04d' % (
                 file_start_time, file_end_time, file_start_chan, file_end_chan)
 
             # Write header if the file doesn't exist, then write the heap.
@@ -149,17 +190,19 @@ class TestVisData(unittest.TestCase):
 
             # Write to Measurement Set if required.
             ms_name = base_name + '.ms'
-            if ms_name not in ms:
-                if len(ms.items()) > 5:
-                    ms.popitem()  # Don't open too many files at once.
-                ms[ms_name] = ms_create(
+            if ms_name not in measurement_sets:
+                # Don't open too many files at once.
+                if len(measurement_sets.items()) > 5:
+                    measurement_sets.popitem()
+                measurement_sets[ms_name] = ms_create(
                     ms_name, hdr, file_start_chan, file_num_chan) \
                     if not os.path.isdir(ms_name) else ms_open(ms_name)
-            ms_write(ms[ms_name], file_start_time, file_start_chan, heap)
+            ms_write(measurement_sets[ms_name], file_start_time,
+                     file_start_chan, heap)
 
         # Test that heaps have been received and written correctly.
         # Get a list of all 'vis_' pickle files.
-        file_list = glob.glob('vis_*.p')
+        file_list = glob.glob('test_vis_*.p')
         for file_name in file_list:
             # Read the heaps in the file.
             items = pickle_read(file_name)
@@ -175,12 +218,13 @@ class TestVisData(unittest.TestCase):
                     num_chan = vis_shape[2]
 
                     # Check pattern.
-                    for c in range(num_chan):
-                        self.assertTrue(numpy.array(vis_data[:, :, c, :, :].real ==
-                                           start_time).all())
-                        self.assertTrue(numpy.array(vis_data[:, :, c, :, :].imag ==
-                                           c + start_chan).all())
+                    for channel in range(num_chan):
+                        channel_data = vis_data[:, :, channel, :, :]
+                        self.assertTrue((channel_data.real == start_time)
+                                        .any())
+                        self.assertTrue((channel_data.imag ==
+                                         channel + start_chan).any())
 
-
-if __name__ == '__main__':
-    unittest.main()
+        # Clean up visibility files
+        for file in file_list:
+            os.remove(file)

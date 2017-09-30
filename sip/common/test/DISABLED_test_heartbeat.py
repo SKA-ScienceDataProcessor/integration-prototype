@@ -1,10 +1,13 @@
 # coding: utf-8
-"""Test of the heartbeat interface.
+""" Test of the heartbeat interface.
+
+The heartbeat interface is used for health checking between the
+Master Controller and Slaves.
 
 Run with:
-    $ python3 -m unittest -f -v sip.common.test.heartbeat_test
+    $ python3 -m unittest -f -v sip.common.test.test_heartbeat
 or
-    $ python3 -m unittest discover -f -v -p heartbeat_test.py
+    $ python3 -m unittest discover -f -v -p test_heartbeat.py
 """
 import logging.handlers
 import os
