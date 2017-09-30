@@ -26,7 +26,7 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(__file__)))
 from sip.common.docker_paas import DockerPaas as Paas
 
 
-@unittest.skip('Needs fixing.')
+# @unittest.skip('Needs fixing.')
 class HeartbeatTest(unittest.TestCase):
     """ Test of the Heartbeat interface.
 
@@ -65,10 +65,10 @@ class HeartbeatTest(unittest.TestCase):
         """
         cls.logger.delete()
 
-
     def setUp(self):
-        """."""
-        # Create a heartbeat sender service
+        """ Initialise the test case.
+        """
+        warnings.simplefilter('ignore', ResourceWarning)
         paas = Paas()
         name = 'heartbeat_sender'
         task = 'sip'
@@ -76,15 +76,16 @@ class HeartbeatTest(unittest.TestCase):
         cmd = ['python3', 'sip/common/tests/mock_heartbeat_sender.py']
         self.sender = paas.run_service(name, task, [port], cmd)
         self.sender_port = port
-        time.sleep(1)
+        time.sleep(3)
 
     def tearDown(self):
-        """."""
+        """ Tear down the test case.
+        """
         self.sender.delete()
 
     def test_simple(self):
         """."""
-        # Import the heartbeatt Listener class
+        # Import the heartbeat Listener class
         # (imports logging_api which needs the logging server to be running)
         from sip.common.heartbeat import Listener
 
@@ -92,26 +93,24 @@ class HeartbeatTest(unittest.TestCase):
         listener = Listener(timeout=2000)
         location = self.sender.location(self.sender_port)
         listener.connect(location[0], location[1])
+        time.sleep(5)
 
-        msg = listener.listen()
-        print('msg = ', msg)
-
-        # # Check that we have received heartbeat messages.
-        # recieved_count = 0
-        # fail_count = 0
-        # while recieved_count < 2:    
+        # for _ in range(20):
         #     msg = listener.listen()
-        #     print("msg = '{}'".format(msg))
-        #     if msg:
-        #         recieved_count += 1
-        #         self.assertEqual(msg[0], 'test',
-        #                          msg="Name of the sender expected to be 'test'")
-        #         self.assertEqual(msg[1], 'ok',
-        #                          msg="Heartbeat message expected to be 'ok'")
-        #     else:
-        #         fail_count += 1
-        #         if fail_count > 10:
-        #             sender.delete()
-        #             self.fail('Failed to receive heartbeat messages.')
-        #     time.sleep(0.5)
+        #     print('msg = ', msg)
 
+        # Check that we have received heartbeat messages.
+        received_count = 0
+        fail_count = 0
+        while received_count < 2:
+            msg = listener.listen()
+            # print("msg = '{}'".format(msg))
+            if msg:
+                received_count += 1
+                self.assertEqual(msg[0], 'test')
+                self.assertEqual(msg[1], 'ok')
+            else:
+                fail_count += 1
+                if fail_count > 10:
+                    self.fail('Failed to receive heartbeat messages.')
+            time.sleep(0.5)

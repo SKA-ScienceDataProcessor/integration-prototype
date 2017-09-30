@@ -24,6 +24,6 @@ if __name__ == '__main__':
             print('Sending message %i' % COUNTER, flush=True)
             SENDER.send('ok')
             COUNTER += 1
-            time.sleep(1)
+            time.sleep(0.1)
     except KeyboardInterrupt:
         print('Interrupted!')
