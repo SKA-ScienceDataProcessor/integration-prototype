@@ -96,7 +96,7 @@ pipeline {
 
                     coverage run \
                         --omit=*/tests/*,*/_*.py,*/__init__.py,sip/ext/* \
-                        --source=sip ./setup.py test
+                        --source=sip ./setup.py test -r xmlrunner
                     # coverage run -a --source=sip sip/tests/test_execution.py || true
                     coverage xml
 
