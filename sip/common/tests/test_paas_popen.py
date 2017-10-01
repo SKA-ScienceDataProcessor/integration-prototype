@@ -9,17 +9,13 @@ or
 
 .. moduleauthor:: David Terrett <david.terrett@stfc.ac.uk>
 """
-import os
-import sys
 import time
 import unittest
 
 import rpyc
 
-# pylint: disable=wrong-import-position
-sys.path.append(os.path.dirname(os.path.dirname(__file__)))
-from sip.common.popen_paas import PopenPaas as Paas
 from sip.common.paas import TaskStatus
+from sip.common.popen_paas import PopenPaas as Paas
 
 
 class TestPopen(unittest.TestCase):

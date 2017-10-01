@@ -55,6 +55,7 @@ class HeapStreamer:
       in sending the heap.
     """
 
+    # FIXME(BM) do not pass logger object to this method!
     def __init__(self, config, frame_shape, log=Logger(__name__)):
         """Creates and sets up SPEAD streams.
 
@@ -168,7 +169,11 @@ class HeapStreamer:
 
     @staticmethod
     def _get_config_r(settings, key, default=None):
-        """Read a configuration value from a settings dictionary"""
+        """Read a configuration value from a settings dictionary
+
+        FIXME(BM) Just use dict get() method instead?
+        https://docs.python.org/3.6/library/stdtypes.html#dict.get
+        """
         value = default
         if len(key) == 1:
             if key[0] in settings:
