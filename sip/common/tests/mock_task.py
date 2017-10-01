@@ -35,7 +35,7 @@ def main():
 
 
 if __name__ == '__main__':
-    LOG = logging.getLogger()
-    LOG.setLevel(logging.DEBUG)
-    LOG.addHandler(logging.StreamHandler())
+    # LOG = logging.getLogger()
+    # LOG.setLevel(logging.DEBUG)
+    # LOG.addHandler(logging.StreamHandler())
     main()
