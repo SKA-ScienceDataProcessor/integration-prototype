@@ -120,29 +120,42 @@ class TestDocker(unittest.TestCase):
         self._poll_for(TaskStatus.UNKNOWN, descriptor)
         self.assertEqual(descriptor.status(), TaskStatus.UNKNOWN)
 
-    # def testService(self):
-    #     """ Test normal execution of service
-    #     """
-    #     # Start the task
-    #     time.sleep(10)
-    #     t = paas.run_service('test_service', 'sip', [9999],
-    #                          ['python3', 'sip/common/tests/mock_service.py',
-    #                           '9999'])
-    #
-    #     # It should be running
-    #     self._poll_for(TaskStatus.RUNNING, t)
-    #     self.assertEqual(t.status(), TaskStatus.RUNNING)
-    #
-    #     # Check that we can talk to it
-    #     (hostname, port) = t.location(9999)
-    #     conn = rpyc.connect(host=hostname, port=port)
-    #     conn.root.hello()
-    #
-    #     # Stop the task
-    #     t.delete()
-    #     self._poll_for(TaskStatus.UNKNOWN, t)
-    #     self.assertEqual(t.status(), TaskStatus.UNKNOWN)
-    #
+    @repeat(REPEAT_COUNT)
+    def test_run_services(self):
+        """ Test normal execution of service
+        """
+        # Start the task
+        service_name = 'mock_service'
+        service_port = 9999
+        cmd = [
+            'python3',
+            'sip/common/tests/mock_service.py',
+            str(service_port)
+        ]
+        descriptor = Paas().run_service(service_name, 'sip', [service_port],
+                                        cmd)
+
+        # It should be running
+        self._poll_for(TaskStatus.RUNNING, descriptor)
+        self.assertEqual(descriptor.status(), TaskStatus.RUNNING)
+
+        # Check that we can connect to the service's RPyC interface.
+        hostname, port = descriptor.location(service_port)
+        try:
+            conn = rpyc.connect(host=hostname, port=port)
+        except socket.timeout:
+            descriptor.delete()
+            self._poll_for(TaskStatus.UNKNOWN, descriptor)
+            self.fail('Not able to connect to the services RPyC endpoint')
+
+        # Try to talk to the service over RPYC
+        self.assertTrue(conn.root.hello().startswith('hello from '))
+
+        # Stop the task
+        descriptor.delete()
+        self._poll_for(TaskStatus.UNKNOWN, descriptor)
+        self.assertEqual(descriptor.status(), TaskStatus.UNKNOWN)
+
     # def testStop(self):
     #     """ Test of stopping a task
     #     """
