@@ -39,7 +39,7 @@ class TestHeapSimulator:
             for j in range(num_streams):
                 streamer.payload['complex_visibility'] = \
                     np.ones(streamer._frame_shape) * i
-                streamer.payload['timestamp_utc'] = [(i, i+3)]
+                streamer.payload['timestamp_utc'] = [(i, i + 3)]
                 streamer.send_heap(heap_index=i, stream_id=j)
 
         streamer.end()
