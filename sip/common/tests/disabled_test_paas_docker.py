@@ -20,7 +20,7 @@ from sip.common.docker_paas import DockerPaas as Paas
 from sip.common.paas import TaskStatus
 
 
-REPEAT_COUNT = 3  # Number of times to run each test
+REPEAT_COUNT = 1  # Number of times to run each test
 
 
 def repeat(times):
