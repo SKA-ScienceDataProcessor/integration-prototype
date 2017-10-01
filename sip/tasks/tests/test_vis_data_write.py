@@ -16,12 +16,13 @@ import unittest
 
 import numpy
 
-
 try:
     import oskar
     WRITE_MS = True
 except ImportError:
     WRITE_MS = False
+
+WRITE_MS = False  # FIXME(BM) Measurement Set writing disabled (review this).
 
 
 def create_heap(header, start_time, start_chan, end_chan):
