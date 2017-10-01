@@ -25,11 +25,14 @@ class DockerPaas(Paas):
         """
         Paas.__init__(self)
 
+        log = logging.getLogger(__name__ + '.' + self.__class__.__name__)
+
         # Create a docker client
         self._client = docker.from_env()
 
         # Create the SIP overlay network if it does not exist.
         if not self._client.networks.list(names=['sip']):
+            log.info('Creating sip overlay network.')
             self._client.networks.create('sip', driver='overlay')
 
         # Store a flag to show whether we are on a manager node or a worker.
@@ -111,20 +114,21 @@ class DockerPaas(Paas):
                 log.debug('  - command  : %s', cmd_args[0])
                 log.debug('  - args     : {}'.format(cmd_args[1:]))
                 log.debug('  - endpoints: {}'.format(endpoints))
+
                 service = self._client.services.create(
                     image=task,
                     command=cmd_args[0],
                     args=cmd_args[1:],
                     endpoint_spec=endpoint_spec,
                     name=name,
-                    # stop_grace_period=0,
+                    stop_grace_period=0,
                     networks=['sip'],
                     mounts=mount,
                     restart_policy=restart_policy
                 )
                 log.debug('Service created id = %s', service.short_id)
             except docker.errors.APIError:
-                log.error('Error creating service (%s, %s', task, name)
+                log.error('Error creating service (%s, %s)', task, name)
                 raise
 
             # Create a new descriptor now that the service is running. We

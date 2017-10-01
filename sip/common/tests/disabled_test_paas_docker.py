@@ -8,7 +8,6 @@ or:
 
 .. moduleauthor:: David Terrett <david.terrett@stfc.ac.uk>
 """
-
 import socket
 import time
 import unittest
@@ -21,7 +20,7 @@ from sip.common.docker_paas import DockerPaas as Paas
 from sip.common.paas import TaskStatus
 
 
-REPEAT_COUNT = 1  # Number of times to run each test
+REPEAT_COUNT = 3  # Number of times to run each test
 
 
 def repeat(times):
@@ -30,9 +29,15 @@ def repeat(times):
     # pylint: disable=missing-docstring
     def repeat_helper(method):
         def call_helper(*args):
-            for _ in range(0, times):
+            for i in range(times):
+                # If running more than once reinitialise the swarm between
+                # tests as this won't be done by setUp / tearDown.
+                if i > 0:
+                    client = docker.from_env()
+                    client.swarm.leave(force=True)
+                    client.networks.prune()
+                    client.swarm.init()
                 method(*args)
-            call_helper.__doc__ = "Hello"
         return call_helper
     return repeat_helper
 
@@ -69,6 +74,7 @@ class TestDocker(unittest.TestCase):
         """ Prepare the test fixture
         """
         client = docker.from_env()
+        client.networks.prune()
         if not client.info()['Swarm']['ControlAvailable']:
             client.swarm.init()
 
@@ -78,6 +84,7 @@ class TestDocker(unittest.TestCase):
         client = docker.from_env()
         if client.info()['Swarm']['ControlAvailable']:
             client.swarm.leave(force=True)
+            client.networks.prune()
 
     @repeat(REPEAT_COUNT)
     def test_run_task(self):
@@ -156,81 +163,90 @@ class TestDocker(unittest.TestCase):
         self._poll_for(TaskStatus.UNKNOWN, descriptor)
         self.assertEqual(descriptor.status(), TaskStatus.UNKNOWN)
 
-    # def testStop(self):
-    #     """ Test of stopping a task
-    #     """
-    #     time.sleep(10)
-    #     t = paas.run_task('test_stop', 'sip', [],
-    #                       ['python3', 'sip/common/tests/mock_task.py', '30',
-    #                        '0'])
-    #
-    #     self._poll_for(TaskStatus.RUNNING, t)
-    #     self.assertEqual(t.status(), TaskStatus.RUNNING)
-    #     t.delete()
-    #     self._poll_for(TaskStatus.UNKNOWN, t)
-    #     self.assertEqual(t.status(), TaskStatus.UNKNOWN)
-    #
-    # # def testEndInError(self):
-    # #    """ Test of task that exits with an error status
-    # #    """
-    # #    t = paas.run_task('test_stop', 'sip', [],
-    # #            ['python3', 'sip/common/tests/mock_task.py', '3', '1'])
-    # #    time.sleep(10)
-    # #    self.assertEqual(t.status(), TaskStatus.ERROR)
-    # #    t.delete()
-    # #    time.sleep(5)
-    #
-    # def testDuplicateService(self):
-    #     """ Test trying to start a service twice with the same name
-    #     """
-    #     # Start the task
-    #     time.sleep(10)
-    #     t1 = paas.run_service('test_dup', 'sip', [9999],
-    #                           ['python3', 'sip/common/tests/mock_service.py',
-    #                            '9999'])
-    #
-    #     t2 = paas.run_service('test_dup', 'sip', [9999],
-    #                           ['python3', 'sip/common/tests/mock_service.py',
-    #                            '9999'])
-    #
-    #     self.assertEqual(t1.ident, t2.ident)
-    #
-    #     t1.delete()
-    #     self._poll_for(TaskStatus.UNKNOWN, t1)
-    #
-    # def testDuplicateTask(self):
-    #     """ Test trying to start a task twice with the same name
-    #     """
-    #     # Start the task
-    #     time.sleep(10)
-    #     t1 = paas.run_task('test_task_2', 'sip', [],
-    #                        ['python3', 'sip/common/tests/mock_service.py',
-    #                         '9999'])
-    #
-    #     # Try another
-    #     t2 = paas.run_task('test_task_2', 'sip', [],
-    #                        ['python3', 'sip/common/tests/mock_service.py',
-    #                         '9999'])
-    #
-    #     self.assertNotEqual(t1.ident, t2.ident)
-    #     t2.delete()
-    #     self._poll_for(TaskStatus.UNKNOWN, t2)
-    #
-    # def testFind(self):
-    #     """ Test finding a task
-    #     """
-    #     # Start the task
-    #     time.sleep(10)
-    #     t1 = paas.run_task('test_find', 'sip', [],
-    #                        ['python3', 'sip/common/tests/mock_task.py', '0',
-    #                         '0'])
-    #
-    #     # Find it
-    #     t2 = paas.find_task('test_find')
-    #
-    #     self.assertEqual(t1.ident, t2.ident)
-    #     t2.delete()
-    #     self._poll_for(TaskStatus.UNKNOWN, t2)
+    @repeat(REPEAT_COUNT)
+    def test_stop(self):
+        """ Test of stopping a task
+        """
+        # Start the mock task running for 1000 seconds.
+        name = 'test_stop'
+        cmd = ['python3', 'sip/common/tests/mock_task.py', '1000', '0']
+        descriptor = Paas().run_task(name, 'sip', [], cmd)
+
+        # Make sure it is running.
+        self._poll_for(TaskStatus.RUNNING, descriptor, timeout=40)
+        self.assertEqual(descriptor.status(), TaskStatus.RUNNING)
+
+        # Stop the task
+        descriptor.delete()
+
+        self._poll_for(TaskStatus.UNKNOWN, descriptor)
+        self.assertEqual(descriptor.status(), TaskStatus.UNKNOWN)
+
+    @repeat(REPEAT_COUNT)
+    def test_end_in_error(self):
+        """ Test of task that exits with an error status
+        """
+        name = 'test_stop_with_error'
+        cmd = ['python3', 'sip/common/tests/mock_task.py', '3', '1']
+        descriptor = Paas().run_task(name, 'sip', [], cmd)
+        self._poll_for(TaskStatus.ERROR, descriptor)
+        self.assertEqual(descriptor.status(), TaskStatus.ERROR)
+        descriptor.delete()
+        self._poll_for(TaskStatus.UNKNOWN, descriptor)
+
+    @repeat(REPEAT_COUNT)
+    def test_duplicate_service(self):
+        """ Test trying to start a service twice with the same name
+        """
+        name = 'test_duplicate_service'
+        cmd = ['python3', 'sip/common/tests/mock_service.py', '9999']
+
+        # Start two service tasks with the same name
+        tsk1 = Paas().run_service(name, 'sip', [9999], cmd)
+        tsk2 = Paas().run_service(name, 'sip', [9999], cmd)
+
+        # Check that the task descriptors are identical.
+        self.assertEqual(tsk1.ident, tsk2.ident)
+
+        tsk1.delete()
+        self._poll_for(TaskStatus.UNKNOWN, tsk1)
+        # FIXME(BM) checking status of the original descriptor gives an error
+        # self._poll_for(TaskStatus.UNKNOWN, tsk2)
+
+    @repeat(REPEAT_COUNT)
+    def test_duplicate_task(self):
+        """ Test trying to start a task twice with the same name
+        """
+        name = 'test_task_2'
+        cmd = ['python3', 'sip/common/tests/mock_service.py', '9999']
+
+        # Start two tasks with the same name
+        tsk1 = Paas().run_task(name, 'sip', [], cmd)
+        tsk2 = Paas().run_task(name, 'sip', [], cmd)
+
+        # Check that they have identical task descriptors
+        self.assertNotEqual(tsk1.ident, tsk2.ident)
+
+        tsk2.delete()
+        self._poll_for(TaskStatus.UNKNOWN, tsk2)
+
+    @repeat(REPEAT_COUNT)
+    def test_find(self):
+        """ Test finding a task
+        """
+        cmd = ['python3', 'sip/common/tests/mock_task.py', '0', '0']
+
+        # Start the task
+        tsk1 = Paas().run_task('test_find', 'sip', [], cmd)
+
+        # Find it
+        tsk2 = Paas().find_task('test_find')
+
+        # The descriptor returned from run_task() and find() should be the same
+        self.assertEqual(tsk1.ident, tsk2.ident)
+
+        tsk2.delete()
+        self._poll_for(TaskStatus.UNKNOWN, tsk2)
 
     def _poll_for(self, status, task_descriptor, timeout=20):
         """ Poll the task descriptor for a status until timeout is reached.

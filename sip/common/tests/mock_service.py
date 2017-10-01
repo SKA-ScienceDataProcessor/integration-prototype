@@ -8,6 +8,8 @@ by the first command line argument.
 """
 import platform
 import sys
+import threading
+import time
 
 import rpyc
 
@@ -38,4 +40,8 @@ class MyService(rpyc.Service):
 if __name__ == '__main__':
     from rpyc.utils.server import ThreadedServer
     SERVER = ThreadedServer(MyService, port=int(sys.argv[1]))
-    SERVER.start()
+    THREAD = threading.Thread(target=SERVER.start)
+    THREAD.setDaemon(True)
+    THREAD.start()
+    while True:
+        time.sleep(0.1)
