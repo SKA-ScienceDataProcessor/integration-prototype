@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+# coding: utf-8
 """ Helper script for the heartbeat test.
 
 This script is used to create a mock service which just sends heartbeat.
