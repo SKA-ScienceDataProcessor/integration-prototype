@@ -9,7 +9,6 @@ or:
 .. moduleauthor:: David Terrett <david.terrett@stfc.ac.uk>
 """
 
-import logging
 import socket
 import time
 import unittest
@@ -21,19 +20,19 @@ import docker
 from sip.common.docker_paas import DockerPaas as Paas
 from sip.common.paas import TaskStatus
 
-# Number of times to run tests marked with the @repeat decorator.
-REPEAT_COUNT = 1
+
+REPEAT_COUNT = 1  # Number of times to run each test
 
 
 def repeat(times):
     """ Decorator that can be used to repeat a test.
     """
+    # pylint: disable=missing-docstring
     def repeat_helper(method):
-        """."""
         def call_helper(*args):
-            """."""
             for _ in range(0, times):
                 method(*args)
+            call_helper.__doc__ = "Hello"
         return call_helper
     return repeat_helper
 
@@ -52,23 +51,42 @@ class TestDocker(unittest.TestCase):
 
         client = docker.from_env()
 
-        # Skip the tests in this class if not running from a manager node.
+        # Store state of docker swarm so it can be recovered after the test
         if not client.info()['Swarm']['ControlAvailable']:
-            raise unittest.SkipTest('This test must be run from a swarm '
-                                    'manager node.')
+            cls.swarm_mode_enabled = False
+        else:
+            cls.swarm_mode_enabled = True
+
+    @classmethod
+    def tearDownClass(cls):
+        """ Tear down the test class.
+        """
+        client = docker.from_env()
+        if cls.swarm_mode_enabled:
+            client.swarm.init()
 
     def setUp(self):
         """ Prepare the test fixture
         """
-        pass
+        client = docker.from_env()
+        if not client.info()['Swarm']['ControlAvailable']:
+            client.swarm.init()
 
+    def tearDown(self):
+        """ Tear down the test fixture
+        """
+        client = docker.from_env()
+        if client.info()['Swarm']['ControlAvailable']:
+            client.swarm.leave(force=True)
+
+    @repeat(REPEAT_COUNT)
     def test_run_task(self):
         """ Test normal execution of a Docker Swarm 'task'
         """
         # Start the task
         service_name = 'test_task'
         image = 'sip'
-        timeout = 5
+        timeout = 3
         exit_code = 0
         cmd = [
             'python3',
@@ -101,7 +119,6 @@ class TestDocker(unittest.TestCase):
         # Check that the task no longer exists.
         self._poll_for(TaskStatus.UNKNOWN, descriptor)
         self.assertEqual(descriptor.status(), TaskStatus.UNKNOWN)
-
 
     # def testService(self):
     #     """ Test normal execution of service
