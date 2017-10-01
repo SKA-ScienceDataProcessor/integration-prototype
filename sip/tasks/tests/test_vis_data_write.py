@@ -16,12 +16,12 @@ import unittest
 
 import numpy
 
-OSKAR = None
-# Comment out 'try' block to not write Measurement Sets.
-# try:
-#     import oskar
-# except ImportError:
-#     oskar = None
+
+try:
+    import oskar
+    WRITE_MS = True
+except ImportError:
+    WRITE_MS = False
 
 
 def create_heap(header, start_time, start_chan, end_chan):
@@ -59,11 +59,11 @@ def ms_create(filename, header, file_start_chan, file_num_chan):
     """ Create a Measurement Set.
     """
     # pylint: disable=R1705
-    if OSKAR:
+    if WRITE_MS:
         channel_width_hz = header['channel_width_hz']
         start_freq_hz = header['start_frequency_hz'] + (
             channel_width_hz * file_start_chan)
-        return OSKAR.MeasurementSet.create(
+        return oskar.MeasurementSet.create(
             filename, header['num_stations'], file_num_chan,
             header['num_pols'], start_freq_hz, channel_width_hz)
     else:
@@ -73,13 +73,13 @@ def ms_create(filename, header, file_start_chan, file_num_chan):
 def ms_open(filename):
     """ Open a Measurement Set
     """
-    return OSKAR.MeasurementSet.open(filename) if OSKAR else None
+    return oskar.MeasurementSet.open(filename) if WRITE_MS else None
 
 
 def ms_write(measurement_set, file_start_time, file_start_chan, heap):
     """ Write a Measurement Set.
     """
-    if OSKAR:
+    if WRITE_MS:
         vis_shape = heap['data'].shape
         num_chan = vis_shape[2]
         num_baselines = vis_shape[3]
@@ -111,16 +111,19 @@ def pickle_read(filename):
 
 
 class TestVisData(unittest.TestCase):
-    """ Unit tests for receiving visibility data.
+    """ Unit tests for receiving and writing visibility data.
     """
 
-    def test(self):
-        """ Test method.
+    def test_receive_write(self):
+        """ Test the receive and write of visibility data.
 
         Mocks the receive of visibility data writing the data received
         to a set of pickle files.
         """
-        # pylint: disable=R0914,R0912,R0915
+        # pylint: disable=too-many-locals
+        # pylint: disable=too-many-branches
+        # pylint: disable=too-many-statements
+
         # Create a header. (Choose some prime numbers for dimensions.)
         hdr = {
             'heap_max_num_chan': 3,
