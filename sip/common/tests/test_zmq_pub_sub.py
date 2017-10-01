@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""Unit tests for ZMQ pub / sub interface.
+""" Unit tests for ZMQ pub / sub interface.
 
 Run with:
     $ python3 -m unittest -f -v sip.common.tests.zmq_pub_sub_test
@@ -17,7 +17,7 @@ import zmq
 def recv_messages(zmq_subscriber, timeout_count, message_count):
     """Test utility function.
 
-    Provides subscriber thread run method that receives and counts ZMQ messages.
+    Subscriber thread that receives and counts ZMQ messages.
 
     Args:
         zmq_subscriber (zmq.Socket): ZMQ subscriber socket.
@@ -49,18 +49,19 @@ def recv_messages(zmq_subscriber, timeout_count, message_count):
 
 class TestPubSocketBind(unittest.TestCase):
     """ Mode1: Subscriber connects and the publisher binds to the socket.
-    
+
     This method means that each subscriber must know the hostname (IP)
-    of each publisher, publishers do not need to know the hostname of the 
+    of each publisher, publishers do not need to know the hostname of the
     subscriber.
 
-    This has some advantages for writing publishers but means that the 
+    This has some advantages for writing publishers but means that the
     subscriber must know all of the hostnames of the publishers.
     """
 
     @classmethod
     def setUpClass(cls):
-        """Set up subscriber in a thread."""
+        """ Set up subscriber in a thread.
+        """
         # pylint: disable=E1101
         cls.sub_host = 'localhost'
         cls.sub_port = 6666
@@ -90,6 +91,8 @@ class TestPubSocketBind(unittest.TestCase):
 
     @classmethod
     def tearDownClass(cls):
+        """ Destroy the test class.
+        """
         cls.sub.disconnect('tcp://{}:{}'.format(cls.sub_host, cls.sub_port))
         cls.sub.close()
         cls.sub_context.term()
@@ -163,6 +166,8 @@ class TestSubSocketBind(unittest.TestCase):
 
     @classmethod
     def tearDownClass(cls):
+        """ Destroy the test class
+        """
         cls.sub.unbind('tcp://0.0.0.0:{}'.format(cls.sub_port))
         cls.sub.close()
         cls.sub_context.term()
