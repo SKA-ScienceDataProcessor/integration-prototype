@@ -37,15 +37,17 @@ pipeline {
                     pep8 --ignore=E402 sip *.py > pep8.log || true
                 '''
 
-                // Publish warings. Right now: Unstable on any warning
-                // TODO: Determine when to set build as 'Stable' or 'Failed'
+                // Publish warnings. Currently, this does not affect the build
+								// status.
+								// Can report difference from last stable build using
+								// 'useStableBuildAsReference'
                 step([
                     $class                     : 'WarningsPublisher',
                     parserConfigurations       : [[
                                           parserName: 'PyLint',
                                           pattern   : 'pylint.log'
                                       ]],
-                    unstableTotalAll           : '0',
+                    changeBuildStatus          : false,
                     usePreviousBuildAsReference: true
                 ])
                 step([
@@ -54,7 +56,7 @@ pipeline {
                                           parserName: 'PEP8',
                                           pattern   : 'pep8.log'
                                       ]],
-                    unstableTotalAll           : '0',
+                    changeBuildStatus          : false,
                     usePreviousBuildAsReference: true
                 ])
             }
