@@ -1,5 +1,6 @@
 [![Documentation Status](https://readthedocs.org/projects/integration-prototype/badge/?version=latest)](http://integration-prototype.readthedocs.io/en/latest/?badge=latest)
 [![Build Status](http://128.232.224.174/buildStatus/icon?job=sip/master)](http://128.232.224.174/job/sip/job/master/)
+[![GitHub (pre-)release](https://img.shields.io/github/release/SKA-ScienceDataProcessor/integration-prototype/all.svg)](https://github.com/SKA-ScienceDataProcessor/integration-prototype/releases)
 
 # SDP Integration Prototype
 
