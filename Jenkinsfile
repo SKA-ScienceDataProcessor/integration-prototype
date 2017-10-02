@@ -129,7 +129,7 @@ pipeline {
                 docker push localhost:5000/sip:${JOB_BASE_NAME}-latest
             '''
         }
-        success {
+        unstable {
             echo 'Build unstable. Pushing image as -latest only.'
 
             // Push -latest
