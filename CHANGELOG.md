@@ -24,7 +24,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - Python modules in requirements.txt related to non core SIP functions. These
   these should be moved into their own module but for now are simply disabled.
 - A number of broken unit tests have been marked as skipped and their file
-  names prefixed with `DISABLED`. 
+  names prefixed with `disabled_`. 
 
  
 ## [0.2.1] - 2017-09-12
