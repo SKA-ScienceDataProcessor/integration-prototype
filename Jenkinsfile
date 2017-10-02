@@ -14,10 +14,6 @@ pipeline {
 
                 // Set up fresh Python virtual environment
                 sh '''
-                    # Need to rm old virtualenv dir or else PIP will try to
-                    # to install a hybrid old/new version. I don't get it
-                    # either. NEEDS FIX.
-                    #rm -r _build || true
                     virtualenv -p `which python3` _build
                 '''
 
@@ -99,9 +95,6 @@ pipeline {
                         --source=sip ./setup.py test -r xmlrunner
                     # coverage run -a --source=sip sip/tests/test_execution.py || true
                     coverage xml
-
-                    # Kill stray processes (NEEDS TO BE FIXED)
-                    pkill python3 || true
                 '''
 
                 junit 'test_reports.xml'
@@ -123,8 +116,8 @@ pipeline {
             // Push -stable
             sh '''
                 /usr/local/bin/delete_from_reg.sh localhost:5000 sip `cat dockerimage-stable.digest`
-                sh 'docker tag sip:${JOB_BASE_NAME} localhost:5000/sip:${JOB_BASE_NAME}-stable
-                sh 'docker push localhost:5000/sip:${JOB_BASE_NAME}-stable
+                docker tag sip:${JOB_BASE_NAME} localhost:5000/sip:${JOB_BASE_NAME}-stable
+                docker push localhost:5000/sip:${JOB_BASE_NAME}-stable
             '''
 
             // Push -latest
