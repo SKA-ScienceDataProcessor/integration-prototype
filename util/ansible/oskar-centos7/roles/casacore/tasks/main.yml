@@ -1,0 +1,62 @@
+---
+# file: cascore/tasks/main.yml
+
+- name: Install casacore dependencies
+  become: yes
+  yum:
+    name: "{{ item }}"
+    state: installed
+  with_items:
+    - gcc-gfortran
+    - flex
+    - bison
+    - blas
+    - blas-devel
+    - lapack
+    - lapack-devel
+    - cfitsio
+    - cfitsio-devel
+    - wcslib
+    - wcslib-devel
+    - python-devel
+    - boost
+    - boost-devel
+    - fftw
+    - fftw-devel
+    - hdf5
+    - hdf5-devel
+    - numpy
+    - boost-python
+    - ncurses
+    - ncurses-devel
+    - readline
+    - readline-devel
+
+- name: Get the latest release of CASACORE
+  git:
+    repo: 'https://github.com/casacore/casacore.git'
+    dest: casacore.git
+    update: yes
+    version: v2.3.0
+
+- name: Create build directory (if needed)
+  file:
+    path: casacore.git/build
+    state: directory
+
+- name: Run CMake
+  command: cmake3 .. -DMODULE=ms
+  args:
+    chdir: casacore.git/build
+
+- name: Run make
+  make:
+    chdir: casacore.git/build
+    target: all
+    params:
+      NUM_THREADS: 4
+
+- make:
+    chdir: casacore.git/build
+    target: install
+  become: yes

@@ -1,0 +1,31 @@
+---
+# file: oskar/tasks/main.yml
+
+- name: Get the latest release of OSKAR
+  git:
+    repo: 'https://github.com/OxfordSKA/OSKAR.git'
+    dest: oskar.git
+    update: yes
+    version: HEAD
+
+- name: Create build directory (if needed)
+  file:
+    path: oskar.git/release
+    state: directory
+
+- name: Run CMake
+  command: cmake3 ..
+  args:
+    chdir: oskar.git/release
+
+- name: Run make
+  make:
+    chdir: oskar.git/release
+    target: all
+    params:
+      NUM_THREADS: 4
+
+- make:
+    chdir: oskar.git/release
+    target: install
+  become: yes

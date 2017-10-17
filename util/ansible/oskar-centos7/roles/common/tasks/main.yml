@@ -1,0 +1,19 @@
+---
+# file: common/tasks/main.yml
+
+- name: Install EPEL-release (Extra packages for Enterprise Linux)
+  become: yes
+  yum:
+    name: epel-release
+    state: latest
+
+- name: Install common dependencies
+  become: yes
+  yum:
+    name: "{{ item }}"
+    state: installed
+  with_items:
+    - git
+    - cmake3
+    - gcc
+    - gcc-c++
