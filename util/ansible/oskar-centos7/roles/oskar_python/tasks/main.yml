@@ -10,12 +10,18 @@
 #     - python2-pip
 
 - easy_install:
-  name: pip
-  state: latest
+    name: pip
+    state: latest
+  become: yes
 
-# - name: Run make
-#   make:
-#     chdir: oskar.git/release
-#     target: all
-#     params:
-#       NUM_THREADS: 4
+- pip:
+    name: "{{ item }}"
+    state: latest
+  with_items:
+    - setuptools
+    - numpy
+  become: yes
+
+- pip:
+    name: file:///home/vagrant/oskar.git/python
+  become: yes
