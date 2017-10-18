@@ -1,0 +1,21 @@
+---
+# file: oskar_python/tasks/main.yml
+
+# - name: Install oskar python dependencies
+#   become: yes
+#   yum:
+#     name: "{{ item }}"
+#     state: installed
+#   with_items:
+#     - python2-pip
+
+- easy_install:
+  name: pip
+  state: latest
+
+# - name: Run make
+#   make:
+#     chdir: oskar.git/release
+#     target: all
+#     params:
+#       NUM_THREADS: 4
