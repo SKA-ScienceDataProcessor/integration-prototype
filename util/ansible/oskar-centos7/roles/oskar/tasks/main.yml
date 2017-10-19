@@ -19,7 +19,7 @@
     chdir: oskar.git/release
 
 - name: Run make
-  command: make -j4 all
+  command: make -j8 all
   args:
     chdir: oskar.git/release
 

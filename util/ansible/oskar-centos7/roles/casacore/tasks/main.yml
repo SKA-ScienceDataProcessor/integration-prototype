@@ -18,19 +18,19 @@
     - cfitsio-devel
     - wcslib
     - wcslib-devel
-    - python-devel
     - boost
     - boost-devel
     - fftw
     - fftw-devel
-    - hdf5
-    - hdf5-devel
-    - numpy
-    - boost-python
-    - ncurses
-    - ncurses-devel
-    - readline
-    - readline-devel
+    # - python-devel
+    # - hdf5
+    # - hdf5-devel
+    # - numpy
+    # - boost-python
+    # - ncurses
+    # - ncurses-devel
+    # - readline
+    # - readline-devel
 
 - name: Get the latest release of CASACORE
   git:
@@ -45,12 +45,12 @@
     state: directory
 
 - name: Run CMake
-  command: cmake3 .. -DMODULE=ms
+  command: cmake3 .. -DMODULE=ms -DBUILD_PYTHON=OFF -DBUILD_TESTING=OFF -DUSE_HDF5=OFF -DUSE_THREADS=ON -DUSE_FFTW3=ON
   args:
     chdir: casacore.git/build
 
 - name: Run make
-  command: make -j4 all
+  command: make -j8 all
   args:
     chdir: casacore.git/build
 
