@@ -19,11 +19,9 @@
     chdir: oskar.git/release
 
 - name: Run make
-  make:
+  command: make -j4 all
+  args:
     chdir: oskar.git/release
-    target: all
-    params:
-      NUM_THREADS: 4
 
 - make:
     chdir: oskar.git/release
