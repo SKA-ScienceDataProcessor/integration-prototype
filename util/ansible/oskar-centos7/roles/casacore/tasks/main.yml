@@ -50,11 +50,9 @@
     chdir: casacore.git/build
 
 - name: Run make
-  make:
+  command: make -j4 all
+  args:
     chdir: casacore.git/build
-    target: all
-    params:
-      NUM_THREADS: 4
 
 - make:
     chdir: casacore.git/build
