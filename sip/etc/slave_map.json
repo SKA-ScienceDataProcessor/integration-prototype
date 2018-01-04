@@ -23,7 +23,7 @@
         },
         "docker_image": "sip",
         "task": [
-            "sip/tasks/task.py",
+            "sip/tasks/ical-pipeline.py",
             "2000"
             ]
         },

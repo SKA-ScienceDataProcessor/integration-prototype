@@ -1,0 +1,57 @@
+FROM ubuntu
+MAINTAINER David Terrett
+USER root
+
+RUN adduser --disabled-password -gecos 'unprivileged user' sdp
+
+# Install dependencies, and clear cache
+RUN apt-get -y update \
+ && apt-get -y install docker \
+ python3 \
+ python3-pip \
+ python3-tk \
+ git \
+ nano \
+ graphviz \
+ libpng-dev \
+ sed \
+ libboost-program-options-dev \
+ libboost-system-dev \
+ libboost-python-dev \
+ python-numpy-dev \
+ dnsutils \
+ wget \
+ && rm -rf /var/lib/apt/lists/*
+
+RUN pip3 install pip --upgrade
+RUN pip3 install dask distributed --upgrade
+RUN pip3 install bokeh
+
+COPY requirements.txt .
+RUN python3 -m pip install -r requirements.txt
+
+# Set working directory
+WORKDIR /home/sdp
+
+# Copy the SIP
+COPY sip/ sip/
+RUN wget -c -t 10 http://www.mrao.cam.ac.uk/projects/ska/arl/algorithm-reference-library.tar.gz
+RUN tar xvzf algorithm-reference-library.tar.gz && rm -f algorithm-reference-library.tar.gz
+WORKDIR /home/sdp/algorithm-reference-library
+RUN pip3 install -r requirements.txt
+WORKDIR /usr/lib/python3.5
+RUN ln -s /home/sdp/algorithm-reference-library/arl
+RUN ln -s /home/sdp/algorithm-reference-library/data
+#RUN cp algorithm-reference-library/examples/arl/continuum-imaging-pipeline.py sip/tasks
+WORKDIR /home/sdp
+RUN jupyter notebook --generate-config
+RUN sed -i -e 's/#c.NotebookApp.ip = \x27localhost\x27/c.NotebookApp.ip = \x27*\x27/' /root/.jupyter/jupyter_notebook_config.py
+RUN sed -i -e 's/#c.NotebookApp.allow_root = False/c.NotebookApp.allow_root = True/' /root/.jupyter/jupyter_notebook_config.py
+RUN sed -i -e 's/#c.NotebookApp.password = \x27\x27/c.NotebookApp.password = \x27sha1:d347247f2e85:67b7832acf5f0e9294abd34f878ba7d32860d1f3\x27/' /root/.jupyter/jupyter_notebook_config.py
+ENV LC_ALL=C.UTF-8
+ENV LANG=C.UTF-8
+ENV ARL_DASK_SCHEDULER=172.19.0.3:8786
+
+
+# Create an empty file that the Paas can use to detect being inside a swarm
+COPY not_docker_swarm docker_swarm
