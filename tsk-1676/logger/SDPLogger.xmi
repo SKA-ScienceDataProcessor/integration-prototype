@@ -1,0 +1,108 @@
+<?xml version="1.0" encoding="ASCII"?>
+<pogoDsl:PogoSystem xmi:version="2.0" xmlns:xmi="http://www.omg.org/XMI" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:pogoDsl="http://www.esrf.fr/tango/pogo/PogoDsl">
+  <classes name="SDPLogger" pogoRevision="9.1">
+    <description description="Top-level logging class for SDP code" title="" sourcePath="/home/bkm/protodev/logger" language="PythonHL" filestogenerate="XMI   file,Code files,Protected Regions" license="GPL" copyright="" hasMandatoryProperty="false" hasConcreteProperty="false" hasAbstractCommand="false" hasAbstractAttribute="true">
+      <inheritances classname="Device_Impl" sourcePath=""/>
+      <inheritances classname="SKADevice" sourcePath="../common"/>
+      <identification contact="at stfc.ac.uk - brian.mcilwrath" author="brian.mcilwrath" emailDomain="stfc.ac.uk" classFamily="SoftwareSystem" siteSpecific="" platform="All Platforms" bus="Not Applicable" manufacturer="none" reference=""/>
+    </description>
+    <commands name="State" description="This command gets the device state (stored in its device_state data member) and returns it to the caller." execMethod="dev_state" displayLevel="OPERATOR" polledPeriod="0">
+      <argin description="none">
+        <type xsi:type="pogoDsl:VoidType"/>
+      </argin>
+      <argout description="Device state">
+        <type xsi:type="pogoDsl:StateType"/>
+      </argout>
+      <status abstract="true" inherited="true" concrete="true"/>
+    </commands>
+    <commands name="Status" description="This command gets the device status (stored in its device_status data member) and returns it to the caller." execMethod="dev_status" displayLevel="OPERATOR" polledPeriod="0">
+      <argin description="none">
+        <type xsi:type="pogoDsl:VoidType"/>
+      </argin>
+      <argout description="Device status">
+        <type xsi:type="pogoDsl:ConstStringType"/>
+      </argout>
+      <status abstract="true" inherited="true" concrete="true"/>
+    </commands>
+    <commands name="GetVersionInfo" description="List with version strings of all entities modelled by this device&#xA;&#xA;For each entity, a JSON string containing the following information:&#xA;     entityName: An enumeration to indicate the type of the entity. &#xA;                         Possible set of values {Subelement, Assembly, &#xA;                         Subassembly, Component}&#xA;     entityType: An enumeration to indicate the type of the entity. &#xA;                       Possible set of values {Subelement, Assembly, &#xA;                       Subassembly, Component}&#xA;     Software/Firmware Info: A string to indicate the software/firmware&#xA;                                         version indicating major and minor &#xA;                                         version &#xA;    installationTimeStamp: Time at which software/firmware was&#xA;                                        installed." execMethod="get_version_info" displayLevel="OPERATOR" polledPeriod="0">
+      <argin description="">
+        <type xsi:type="pogoDsl:VoidType"/>
+      </argin>
+      <argout description="">
+        <type xsi:type="pogoDsl:StringArrayType"/>
+      </argout>
+      <status abstract="false" inherited="true" concrete="true"/>
+    </commands>
+    <commands name="log" description="This is the standard log target if redirecting logging to a device. The&#xA;options for Tango logging are:&#xA;&#xA;1) Console&#xA;2) File&#xA;3) Other device&#xA;&#xA;The Tango documentation talks mostly about the supplied GUI &#xA;`LogViewer` - but the example file Logtest.py (in this directory) shows&#xA;a more gneral approach&#xA;&#xA;I beleive that the limitation that the logging level applies&#xA;to all log targets still exists" execMethod="log" displayLevel="OPERATOR" polledPeriod="0" isDynamic="false">
+      <argin description="# Tango Manual Appendix 9 gives the format&#xA;        # argin[0] = millisecond Unix timestamp&#xA;        # argin[1] = log level&#xA;        # argin[2] = the source log device name&#xA;        # argin[3] = the log message&#xA;        # argin[4] = Not used - reserved&#xA;        # argin[5] = thread identifier of originating message">
+        <type xsi:type="pogoDsl:StringArrayType"/>
+      </argin>
+      <argout description="">
+        <type xsi:type="pogoDsl:VoidType"/>
+      </argout>
+      <status abstract="false" inherited="false" concrete="true" concreteHere="true"/>
+    </commands>
+    <attributes name="healthState" attType="Scalar" rwType="READ" displayLevel="OPERATOR" polledPeriod="0" maxX="" maxY="" allocReadMember="false">
+      <dataType xsi:type="pogoDsl:EnumType"/>
+      <changeEvent fire="false" libCheckCriteria="false"/>
+      <archiveEvent fire="false" libCheckCriteria="false"/>
+      <status abstract="false" inherited="true" concrete="true"/>
+      <properties description="IIndicates the overall rolled up health status of the Element as interpreted by &#xA;the ElementMaster" label="" unit="" standardUnit="" displayUnit="" format="" maxValue="" minValue="" maxAlarm="" minAlarm="" maxWarning="" minWarning="" deltaTime="" deltaValue=""/>
+    </attributes>
+    <attributes name="adminMode" attType="Scalar" rwType="READ" displayLevel="OPERATOR" polledPeriod="0" maxX="" maxY="" allocReadMember="false">
+      <dataType xsi:type="pogoDsl:EnumType"/>
+      <changeEvent fire="false" libCheckCriteria="false"/>
+      <archiveEvent fire="false" libCheckCriteria="false"/>
+      <status abstract="false" inherited="true" concrete="true"/>
+      <properties description="" label="" unit="" standardUnit="" displayUnit="" format="" maxValue="" minValue="" maxAlarm="" minAlarm="" maxWarning="" minWarning="" deltaTime="" deltaValue=""/>
+    </attributes>
+    <attributes name="obsState" attType="Scalar" rwType="READ" displayLevel="OPERATOR" polledPeriod="0" maxX="" maxY="" allocReadMember="false">
+      <dataType xsi:type="pogoDsl:EnumType"/>
+      <changeEvent fire="false" libCheckCriteria="false"/>
+      <archiveEvent fire="false" libCheckCriteria="false"/>
+      <status abstract="false" inherited="true" concrete="true"/>
+      <properties description="" label="" unit="" standardUnit="" displayUnit="" format="" maxValue="" minValue="" maxAlarm="" minAlarm="" maxWarning="" minWarning="" deltaTime="" deltaValue=""/>
+    </attributes>
+    <attributes name="obsMode" attType="Scalar" rwType="READ" displayLevel="OPERATOR" polledPeriod="0" maxX="" maxY="" allocReadMember="false">
+      <dataType xsi:type="pogoDsl:EnumType"/>
+      <status abstract="true" inherited="true" concrete="false"/>
+      <properties description="" label="" unit="" standardUnit="" displayUnit="" format="" maxValue="" minValue="" maxAlarm="" minAlarm="" maxWarning="" minWarning="" deltaTime="" deltaValue=""/>
+    </attributes>
+    <attributes name="simulationMode" attType="Scalar" rwType="READ" displayLevel="OPERATOR" polledPeriod="0" maxX="" maxY="" allocReadMember="false">
+      <dataType xsi:type="pogoDsl:BooleanType"/>
+      <status abstract="false" inherited="true" concrete="true"/>
+      <properties description="" label="" unit="" standardUnit="" displayUnit="" format="" maxValue="" minValue="" maxAlarm="" minAlarm="" maxWarning="" minWarning="" deltaTime="" deltaValue=""/>
+    </attributes>
+    <attributes name="testMode" attType="Scalar" rwType="READ" displayLevel="OPERATOR" polledPeriod="0" maxX="" maxY="" allocReadMember="false">
+      <dataType xsi:type="pogoDsl:EnumType"/>
+      <status abstract="false" inherited="true" concrete="true"/>
+      <properties description="" label="" unit="" standardUnit="" displayUnit="" format="" maxValue="" minValue="" maxAlarm="" minAlarm="" maxWarning="" minWarning="" deltaTime="" deltaValue=""/>
+    </attributes>
+    <attributes name="controlMode" attType="Scalar" rwType="READ" displayLevel="OPERATOR" polledPeriod="0" maxX="" maxY="" allocReadMember="false">
+      <dataType xsi:type="pogoDsl:EnumType"/>
+      <status abstract="false" inherited="true" concrete="true"/>
+      <properties description="" label="" unit="" standardUnit="" displayUnit="" format="" maxValue="" minValue="" maxAlarm="" minAlarm="" maxWarning="" minWarning="" deltaTime="" deltaValue=""/>
+    </attributes>
+    <attributes name="configurationProgress" attType="Scalar" rwType="READ" displayLevel="OPERATOR" polledPeriod="0" maxX="" maxY="" allocReadMember="false">
+      <dataType xsi:type="pogoDsl:ShortType"/>
+      <status abstract="false" inherited="true" concrete="true"/>
+      <properties description="Optional. Is required if obsState is implemented&#xA;Provides a progress report on Scan Configuration progress with a % indication. &#xA;100 indicates completion&#xA;" label="" unit="" standardUnit="" displayUnit="" format="" maxValue="" minValue="" maxAlarm="" minAlarm="" maxWarning="" minWarning="" deltaTime="" deltaValue=""/>
+    </attributes>
+    <attributes name="SkaLevel" attType="Scalar" rwType="READ" displayLevel="OPERATOR" polledPeriod="0" maxX="" maxY="" allocReadMember="true">
+      <dataType xsi:type="pogoDsl:UCharType"/>
+      <status abstract="false" inherited="true" concrete="true"/>
+      <properties description="Indication of importance of the device in the SKA hierarchy to support drill-down navigation: &#xA;1..6, with 1 highest&#xA;" label="" unit="" standardUnit="" displayUnit="" format="" maxValue="" minValue="" maxAlarm="" minAlarm="" maxWarning="" minWarning="" deltaTime="" deltaValue=""/>
+    </attributes>
+    <attributes name="versionId" attType="Scalar" rwType="READ" displayLevel="OPERATOR" polledPeriod="0" maxX="" maxY="" allocReadMember="true">
+      <dataType xsi:type="pogoDsl:StringType"/>
+      <status abstract="false" inherited="true" concrete="true"/>
+      <properties description="Version ID for this Element to TM interface. &#xA;This has to be unique and is indicative of a different SDD.&#xA;A string in the format XX.YY to indicate the Element interface version where XX indicates &#xA;the major version and YY indicates the minor version.&#xA;Each of the Element Level device servers will have a &quot;versionId&quot; attribute to accurately &#xA;identify different versions of the Element to TM interface.&#xA;" label="" unit="" standardUnit="" displayUnit="" format="" maxValue="" minValue="" maxAlarm="" minAlarm="" maxWarning="" minWarning="" deltaTime="" deltaValue=""/>
+    </attributes>
+    <attributes name="buildState" attType="Scalar" rwType="READ" displayLevel="OPERATOR" polledPeriod="0" maxX="" maxY="" allocReadMember="false">
+      <dataType xsi:type="pogoDsl:StringType"/>
+      <status abstract="false" inherited="true" concrete="true"/>
+      <properties description="Build state of this device" label="" unit="" standardUnit="" displayUnit="" format="" maxValue="" minValue="" maxAlarm="" minAlarm="" maxWarning="" minWarning="" deltaTime="" deltaValue=""/>
+    </attributes>
+    <preferences docHome="./doc_html" makefileHome="/usr/share/pogo/preferences"/>
+  </classes>
+</pogoDsl:PogoSystem>

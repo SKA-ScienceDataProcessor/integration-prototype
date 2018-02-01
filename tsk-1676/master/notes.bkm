@@ -1,0 +1,12 @@
+Notes from BKM in creating these files
+
+1) Needed recent POGO 9.3.0
+2) LOts of Enums in the ICDs use '_' (eg IMG_CONTINUUM). Pogo complains
+   with a PopUp ("Do not use '_' in enums"). Used '-' instead (for now!)
+3) Need PYTHONPATH defined
+4) Generated CLASSes need fixed for Python3 - they work as generated for
+   Python2
+5) Double quotes in comments don't work out - POGO surrounds whole quote
+   by ""
+6) Starter class needs Python device classes moved to 'StartDsPath'
+   and #!/usr/bin/python (and, possibly chmod 755)
