@@ -1,3 +1,8 @@
+[![Docker Pulls](https://img.shields.io/docker/pulls/skasip/master_controller_rest.svg)](https://hub.docker.com/r/skasip/master_controller_rest/)
+[![Docker Stars](https://img.shields.io/docker/stars/skasip/master_controller_rest.svg)](https://hub.docker.com/r/skasip/master_controller_rest/)
+[![](https://images.microbadger.com/badges/version/skasip/master_controller_rest.svg)](https://microbadger.com/images/skasip/master_controller_rest "Get your own version badge on microbadger.com")
+[![](https://images.microbadger.com/badges/image/skasip/master_controller_rest.svg)](https://microbadger.com/images/skasip/master_controller_rest "Get your own image badge on microbadger.com")
+
 # SIP Master Controller Service (REST variant)
 
 ## Roles and responsibilities
