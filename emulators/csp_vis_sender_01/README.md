@@ -1,8 +1,15 @@
-## CSP visibility sender, version 1
+[![Docker Pulls](https://img.shields.io/docker/pulls/skasip/csp_vis_sender_01.svg)](https://hub.docker.com/r/skasip/csp_vis_sender_01/)
+[![Docker Stars](https://img.shields.io/docker/stars/skasip/csp_vis_sender_01.svg)](https://hub.docker.com/r/skasip/csp_vis_sender_01/)
+[![](https://images.microbadger.com/badges/version/skasip/csp_vis_sender_01.svg)](https://microbadger.com/images/skasip/csp_vis_sender_01 "Get your own version badge on microbadger.com")
+[![](https://images.microbadger.com/badges/image/skasip/csp_vis_sender_01.svg)](https://microbadger.com/images/skasip/csp_vis_sender_01 "Get your own image badge on microbadger.com")
+
+
+
+# CSP visibility sender, version 1
 
 (from old SIP master branch)
 
-### Description
+## Description
 
 Emulates the CSP-SDP visibility data interface by sending visibility 
 data as SPEAD heaps. Data is sent using one or more UDP streams. The 
@@ -15,16 +22,16 @@ It is expected that this will be extended in future iterations of the
 SIP to include more realistic data either from simulation or broadcast 
 of observed data sets. 
 
-### Running the emulator
+## Running the emulator
 
 The emulator can either by run as a python script or from a Docker container. 
 
-#### Running the Python script
+### Running the Python script
 `python send_vis_data.py [-v] [-p] myconfig.json`
 
 Where `myconfig.json` is a JSON settings file.
 
-#### Using Docker
+### Using Docker
 The Docker image can be built with the following command:
 
 `docker build -t send_vis_data:devel .`
@@ -36,7 +43,7 @@ and can be run as follows:
 *Note: JSON configurations files are passed to the container by mounting a host
 directory as a data volume using the `-v` flag.*
 
-### Configuration
+## Configuration
 
 - The emulator is configured using a JSON file.
 - The JSON file has three top level groups used to specify the SPEAD protocol
@@ -134,7 +141,7 @@ keys:
   - `port` the port to send data to
   - `threads` the number of threads used to send the SPEAD heaps
 
-### References
+## References
 1. [ICD documents](https://confluence.ska-sdp.org/pages/viewpage.action?pageId=145653762)
 2. [SPEAD format](https://casper.berkeley.edu/astrobaki/images/9/93/SPEADsignedRelease.pdf)
 3. [SPEAD2 library](https://github.com/ska-sa/spead2)
