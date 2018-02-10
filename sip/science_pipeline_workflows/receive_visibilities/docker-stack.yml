@@ -1,0 +1,75 @@
+version: "3.3"
+
+services:
+
+  vis_recv1:
+    image: njthykkathu/vis_test:latest
+    entrypoint: python3
+    command: /home/sdp/vis_receiver/recv_vis_data.py -i 10.60.253.34 -p 6379
+    volumes:
+      - type: volume
+        source: vis-vol1
+        target: /home/sdp/output
+    networks:
+      - outside
+    deploy:
+      replicas: 1
+      restart_policy: 
+        condition: none
+      placement:
+        constraints:
+          - node.labels.sip_worker1 == true
+      labels:
+        com.dn.description: "Host networking"
+
+  vis_recv2:
+    image: njthykkathu/vis_test:latest
+    entrypoint: python3
+    command: /home/sdp/vis_receiver/recv_vis_data.py -i 10.60.253.34 -p 6379
+    volumes:
+      - type: volume
+        source: vis-vol2
+        target: /home/sdp/output
+    networks:
+      - outside
+    deploy:
+      replicas: 1
+      restart_policy: 
+        condition: none
+      placement:
+        constraints:
+          - node.labels.sip_worker2 == true
+      labels:
+        com.dn.description: "Host networking"
+
+  vis_recv3:
+    image: njthykkathu/vis_test:latest
+    entrypoint: python3
+    command: /home/sdp/vis_receiver/recv_vis_data.py -i 10.60.253.34 -p 6379
+    volumes:
+      - type: volume
+        source: vis-vol3
+        target: /home/sdp/output
+    networks:
+      - outside
+    deploy:
+      replicas: 1
+      restart_policy: 
+        condition: none
+      placement:
+        constraints:
+          - node.labels.sip_worker3 == true
+      labels:
+        com.dn.description: "Host networking"
+networks:
+  outside:
+    external:
+      name: "host"
+
+volumes:
+    vis-vol1:
+        external: True
+    vis-vol2:
+        external: True
+    vis-vol3:
+        external: True

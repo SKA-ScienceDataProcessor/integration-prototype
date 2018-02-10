@@ -1,0 +1,31 @@
+{
+  "spead_flavour": {
+    "version": 4,
+    "item_pointer_bits": 64,
+    "heap_address_bits": 40,
+    "bug_compat_mask": 0
+  },
+
+  "observation":
+  {
+    "num_stations": 197,
+    "num_channels": 1,
+    "num_times": 9,
+    "num_pol": 4
+  },
+
+  "simulation": {
+    "TBD": "xxx"
+  },
+
+  "sender_node": {
+    "start_channel": 0,
+    "streams": [
+      {
+        "port": 8001,
+        "host": "10.0.0.16",
+        "threads": 1
+      }
+    ]
+  }
+}

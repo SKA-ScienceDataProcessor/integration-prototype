@@ -1,0 +1,18 @@
+# Python temp files
+**/__pycache__/
+**/*.py~
+
+# Python virtualenv folder
+**/venv/
+
+# IDE Project files
+**/.idea/
+**/.vscode/
+**/*.swp
+
+# MacOS folder attributes files
+**/*.DS_Store
+
+# Files created during testing
+/_build/
+test_reports.xml

@@ -1,0 +1,19 @@
+# -*- mode: ruby -*-
+# vi: set ft=ruby :
+
+Vagrant.configure("2") do |config|
+
+  # Remove existing IP from known_hosts
+  system("ssh-keygen -f ~/.ssh/known_hosts -R [127.0.0.1]:2222 -q "\
+         "2>/dev/null")
+
+  config.vm.box = "centos/7"
+  config.vm.hostname = 'centos7-oskar'
+
+  config.vm.provider :virtualbox do |vb|
+    vb.name = 'centos7-oskar'
+    vb.customize ['modifyvm', :id, '--cpus', 4]
+    vb.customize ['modifyvm', :id, '--memory', 4096]
+  end
+
+end

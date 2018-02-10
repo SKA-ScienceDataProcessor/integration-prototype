@@ -1,0 +1,84 @@
+---
+# file: ska.sip/tasks/main.yml
+
+- name: Ensure Git is installed (Debian)
+  apt:
+    name: git
+    state: present
+    update_cache: yes
+    cache_valid_time: 86400
+  become: True
+
+- name: The SIP branch being used
+  debug:
+    var: sip_branch
+
+#- debug:
+#    msg: "{{ ansible_user_dir }}"
+#  become: true
+
+# http://docs.ansible.com/ansible/git_module.html
+- name: Get the lastest release of SIP
+  git:
+    repo: https://github.com/SKA-ScienceDataProcessor/integration-prototype.git
+    dest: "{{ ansible_user_dir }}/integration-prototype.git"
+    update: yes
+    version: "{{ sip_branch }}"
+
+- name: Install python3-pip
+  apt:
+    name: python3-pip
+    state: latest
+    update_cache: yes
+    cache_valid_time: 3600
+  become: True
+
+- name: Install boost python
+  apt:
+    name: libboost-python-dev
+    state: latest
+    update_cache: yes
+    cache_valid_time: 3600
+  become: True
+
+- name: Install boost program options
+  apt:
+    name: libboost-program-options-dev
+    state: latest
+    update_cache: yes
+    cache_valid_time: 3600
+  become: True
+
+- name: Install boost system
+  apt:
+    name: libboost-system-dev
+    state: latest
+    update_cache: yes
+    cache_valid_time: 3600
+  become: True
+
+- name: Update pip
+  pip:
+    executable: pip3
+    name: pip
+    state: latest
+
+- name: Install SIP Python deps
+  pip:
+    executable: pip3
+    requirements: "{{ ansible_user_dir }}/integration-prototype.git/requirements.txt"
+  become: True
+
+- name: Install SIP Python package
+  pip:
+    executable: pip3
+    name: "file://{{ ansible_user_dir }}/integration-prototype.git"
+  become: True
+
+# http://docs.ansible.com/ansible/docker_image_module.html
+- name: Build SIP docker image (This takes quite a long time...)
+  docker_image:
+    state: present
+    name: sip
+    dockerfile: "{{ ansible_user_dir }}/integration-prototype.git/Dockerfile"
+    path: "{{ ansible_user_dir }}/integration-prototype.git"

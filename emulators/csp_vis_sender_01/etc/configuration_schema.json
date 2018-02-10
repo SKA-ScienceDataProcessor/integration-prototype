@@ -1,0 +1,60 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "title": "SIP CSP Visibility Sender Configuration",
+    "description": "Schema for the SIP CSP Visibility Sender .",
+    "version": "1",
+    "type": "object",
+    "required": ["spead_flavour", "observation", "sender_node"],
+    "properties": {
+        "spead_flavour": {
+            "description": "SPEAD flavour configuration",
+            "type": "object",
+            "required": [],
+            "properties": {
+                "version": { "type": "integer" },
+                "item_pointer_bits": { "type": "integer" },
+                "heap_address_bits": { "type": "integer" },
+                "bug_compat_mask": { "type": "integer" }
+            }
+        },
+        "observation": {
+            "description": "Observation parameters which effect dimensions of the SPEAD packet",
+            "type": "object",
+            "required": [],
+            "properties": {
+                "num_stations": { "type": "integer" },
+                "num_channels": { "type": "integer" },
+                "num_times": { "type": "integer" }
+            }
+        },
+        "simulation": {
+            "description": "Placeholder field for simulation settings",
+            "type": "object",
+            "required": [],
+            "properties": {}
+        },
+        "sender_node": {
+            "description": "",
+            "type": "object",
+            "required": ["start_channel", "streams"],
+            "properties": {
+                "start_channel": { "type": "integer" },
+                "streams": {
+                    "type": "array",
+                    "items": {
+                        "description": "SPEAD stream specification",
+                        "type": "object",
+                        "required": ["port", "host"],
+                        "properties": {
+                            "port": {"type": "integer"},
+                            "host": {"type": "string"},
+                            "threads": {"type": "integer"}
+                        }
+
+                    }
+                }
+            }
+            
+        }
+    }
+}

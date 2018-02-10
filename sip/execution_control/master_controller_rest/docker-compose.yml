@@ -1,0 +1,19 @@
+version: '3.4'
+
+services:
+
+  master:
+    image: skasip/master_controller_rest
+    environment:
+      DATABASE_HOST: "master_db"
+    ports:
+      - 5000
+    build: .
+
+  master_db:
+    image: redis:4.0.6-alpine
+    volumes:
+      - master_db:/data/db
+
+volumes:
+  master_db:

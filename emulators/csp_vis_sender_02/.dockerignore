@@ -1,0 +1,10 @@
+/doc/
+/etc/
+/tests/
+/venv/
+**/__pycache__
+Dockerfile
+README.md
+docker-compose.yml
+docker-stack.yml
+

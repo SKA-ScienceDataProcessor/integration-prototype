@@ -1,0 +1,7 @@
+/.vagrant/
+/keys/
+*.retry
+*.log
+/roles/angstwad.docker_ubuntu
+/roles/GROG.reboot
+hosts

@@ -1,0 +1,10 @@
+---
+# This playbook installs OSKAR
+
+- hosts: all
+  become_method: sudo
+  roles:
+    - common
+    - casacore
+    - oskar
+    - oskar_python

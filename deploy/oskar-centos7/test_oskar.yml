@@ -1,0 +1,32 @@
+---
+# This playbook runs the OSKAR unit tests
+
+- hosts: all
+  become_method: sudo
+  tasks:
+    - name: Installing unzip
+      yum:
+        name: unzip
+        state: present
+      become: yes
+    - name: Download and unzip OSKAR example data
+      unarchive:
+        src: https://www.dropbox.com/s/fkgpkruj6vq1z4r/OSKAR-2.7-Example-Data.zip?dl=1
+        dest: .
+        remote_src: yes
+    - name: Set sky model
+      command: oskar_sim_interferometer --set oskar_sim_interferometer.ini sky/oskar_sky_model/file sky.osm
+      args:
+        chdir: ./OSKAR-2.7-Example-Data
+    - name: Set telesocpe model
+      command: oskar_sim_interferometer --set oskar_sim_interferometer.ini telescope/input_directory telescope.tm
+      args:
+        chdir: ./OSKAR-2.7-Example-Data
+    - name: Set MS output
+      command: oskar_sim_interferometer --set oskar_sim_interferometer.ini interferometer/ms_filename example.ms
+      args:
+        chdir: ./OSKAR-2.7-Example-Data
+    - name: Run example simulation
+      command: oskar_sim_interferometer oskar_sim_interferometer.ini
+      args:
+        chdir: ./OSKAR-2.7-Example-Data
