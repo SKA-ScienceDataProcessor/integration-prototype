@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 """SIP Processing Controller Interface (REST)."""
 import os
-import json
 
 from flask import request
 from flask_api import FlaskAPI, status
