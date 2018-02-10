@@ -1,8 +1,13 @@
 # TODO
 
 - [ ] Add templates / examples for REST services
+    - [ ] Split out different resources in the Processing Controller into separate files
+    - [ ] Add a simple Example ZooKeeper Config db
+    - [ ] Create Processing block scheduler with watcher on the scheduling 
+          block list
+    - [ ] Create Processing block Controller Celery worker
+    - [ ] Trigger Processing block controller from processing controller scheduler
 - [ ] Add documentation README.md files
-- [ ] Add templates / examples for MQ / Celery Services
 - [ ] Add templates for Tango services
 - [ ] Add Dockerfiles + Docker compose files (for REST services)
 - [ ] Add unit tests on REST services
