@@ -9,7 +9,7 @@ import json
 from app.app import APP
 
 
-class MasterControllerTests(unittest.TestCase):
+class ProcessingControllerInterfaceTests(unittest.TestCase):
     """Tests of the Master Controller"""
 
     def setUp(self):
@@ -24,13 +24,11 @@ class MasterControllerTests(unittest.TestCase):
         """Executed after each test."""
         pass
 
-    def test_get_state_successful(self):
-        """Test of successfully returning the SDP state."""
-        states = ['OFF', 'INIT', 'STANDBY', 'ON', 'DISABLE', 'FAULT', 'ALARM',
-                  'UNKNOWN']
-        response = self.app.get('/state')
-        self.assertEqual(response.mimetype,
-                         'application/json')
-        self.assertEqual(response.status_code, 200)
-        data = json.loads(response.get_data())
-        self.assertTrue(data['state'] in states)
+    def test_post_scheduling_block(self):
+        """Test request of a new scheduling block."""
+        # response = self.app.get('/state')
+        # self.assertEqual(response.mimetype,
+        #                  'application/json')
+        # self.assertEqual(response.status_code, 200)
+        # data = json.loads(response.get_data())
+        # self.assertTrue(data['state'] in states)
