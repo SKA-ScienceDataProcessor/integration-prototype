@@ -1,0 +1,13 @@
+version: '3.4'
+
+services:
+
+  processing_controller:
+    environment:
+      DATABASE_URL: "mongodb://processing_controller_db:27017"
+    ports:
+      - 5000:5001
+
+  processing_controller_db:
+    ports:
+      - 27017:27017
