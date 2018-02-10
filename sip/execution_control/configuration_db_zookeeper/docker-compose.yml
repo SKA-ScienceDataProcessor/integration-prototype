@@ -1,0 +1,12 @@
+version: '3.4'
+
+services:
+  config_db:
+    image: zookeeper:3.4.11
+    volumes:
+      - config_db_data:/data
+    ports:
+      - 2181:2181
+
+volumes:
+  config_db_data:
