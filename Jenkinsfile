@@ -43,6 +43,10 @@ pipeline {
         // Run PyLint and PyCodeStyle
         sh '''
         source venv/bin/activate
+        pylint --version
+        pycodestyle --version
+        python --version
+
         find emulators -iname "*.py" | xargs pylint > pylint.log || true
         find sip -iname "*.py" | xargs pylint >> pylint.log || true
         find emulators -iname "*.py" | xargs pycodestyle > style.log || true
