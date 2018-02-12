@@ -38,9 +38,15 @@ pipeline {
 
         // Inspect current Docker Setup
         sh '''
+        echo "----------------"
         docker image ls
+        echo "----------------"
         docker volume ls
+        echo "----------------"
         docker network ls
+        echo "----------------"
+        docker systme df
+        echo "----------------"
         '''
       }
     } // End stage('Setup')
@@ -54,6 +60,9 @@ pipeline {
         find sip -iname "*.py" | xargs pylint >> pylint.log || true
         find emulators -iname "*.py" | xargs pycodestyle > style.log || true
         find sip -iname "*.py" | xargs pycodestyle >> style.log || true
+
+        echo "--------------"
+        pylint emulators/csp_vis_sender_01/app/__main__.py
         '''
 
         // Publish warnings. Currently, this does not affect the build status.
@@ -158,8 +167,16 @@ pipeline {
       echo 'Build failure. No images pushed to registry.'
     }
 
-    // always {
-    // }
+    always {
+      // Try to clean Docker up a bit
+      sh '''
+      docker image prune -f
+      docker volume prune -f
+      docker network prune -f
+      docker system prune -f
+      docker system df
+      '''
+    }
 
   } // end post
 }
