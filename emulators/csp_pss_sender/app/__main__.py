@@ -3,11 +3,10 @@
 
 .. moduleauthor: Nijin Thykkathu
 """
-import sys
-
 import argparse
+import json
 import logging
-import simplejson as json
+import sys
 
 from .pulsar_sender import PulsarSender
 
@@ -35,12 +34,12 @@ def _init_log(level=logging.DEBUG):
     """
     log = logging.getLogger(__file__)
     log.setLevel(level)
-    ch = logging.StreamHandler(sys.stdout)
-    ch.setLevel(level)
+    handler = logging.StreamHandler(sys.stdout)
+    handler.setLevel(level)
     formatter = logging.Formatter('%(asctime)s: %(message)s',
                                   '%Y/%m/%d-%H:%M:%S')
-    ch.setFormatter(formatter)
-    log.addHandler(ch)
+    handler.setFormatter(formatter)
+    log.addHandler(handler)
     return log
 
 
@@ -56,19 +55,13 @@ def main():
     _log = _init_log(level=logging.DEBUG if args.verbose else logging.INFO)
 
     # Load configuration.
-    _log.info('Loading config: {}'.format(args.config_file.name))
+    _log.info('Loading config: %s', args.config_file.name)
     _config = json.load(args.config_file)
     if args.print_settings:
-        _log.debug('Settings:\n {}'.format(json.dumps(_config, indent=4,
-                                                      sort_keys=True)))
+        _log.debug('Settings:\n %s', json.dumps(_config, indent=4,
+                                                sort_keys=True))
     sender.send(_config, _log, 1, 1)
 
 
 if __name__ == '__main__':
     main()
-
-
-
-
-
-

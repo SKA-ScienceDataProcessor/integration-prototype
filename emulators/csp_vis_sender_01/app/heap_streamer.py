@@ -5,11 +5,12 @@ The visibility data is sent as a number of SPEAD heaps, with a have a structure
 (payload) defined in the CSP-SDP ICD documents. Heaps are sent to a stream
 which is a UDP socket.
 """
-import spead2
-import spead2.send
-import numpy as np
 import time
 from logging import Logger
+
+import numpy as np
+import spead2
+import spead2.send
 
 
 class HeapStreamer:

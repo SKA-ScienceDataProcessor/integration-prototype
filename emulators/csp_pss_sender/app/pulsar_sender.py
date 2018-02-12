@@ -15,6 +15,8 @@ from ftplib import FTP
 
 
 class PulsarSender:
+    """."""
+
     def __init__(self):
         """Creates and initialises the ftp client"""
         self._host = 'localhost'
