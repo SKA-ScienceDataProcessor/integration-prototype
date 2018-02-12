@@ -43,6 +43,7 @@ pipeline {
         // Run PyLint and PyCodeStyle
         sh '''
         source venv/bin/activate
+        uname -rm
         pylint --version
         pycodestyle --version
         python --version
