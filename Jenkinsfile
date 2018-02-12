@@ -35,19 +35,6 @@ pipeline {
         find sip/execution_control -iname "requirements.txt" | \
           xargs -n1 pip install -r
         '''
-
-        // Inspect current Docker Setup
-        sh '''
-        echo "----------------"
-        docker image ls
-        echo "----------------"
-        docker volume ls
-        echo "----------------"
-        docker network ls
-        echo "----------------"
-        docker systme df
-        echo "----------------"
-        '''
       }
     } // End stage('Setup')
 
@@ -62,7 +49,7 @@ pipeline {
         find sip -iname "*.py" | xargs pycodestyle >> style.log || true
 
         echo "--------------"
-        pylint emulators/csp_vis_sender_01/app/__main__.py
+        pylint emulators/csp_vis_sender_01/app/__main__.py || true
         '''
 
         // Publish warnings. Currently, this does not affect the build status.
@@ -168,12 +155,26 @@ pipeline {
     }
 
     always {
+      // Inspect current Docker Setup
+      sh '''
+      echo "----------------" || true
+      docker image ls || true
+      echo "----------------" || true
+      docker volume ls || true
+      echo "----------------" || true
+      docker network ls || true
+      echo "----------------" || true
+      docker system df || true
+      echo "----------------" || true
+      '''
+
       // Try to clean Docker up a bit
       sh '''
       docker image prune -f
       docker volume prune -f
       docker network prune -f
       docker system prune -f
+      echo "----------------" || true
       docker system df
       '''
     }
