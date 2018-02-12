@@ -33,21 +33,14 @@ pipeline {
         pip install pylint pycodestyle
         find emulators -iname "requirements.txt" | xargs -n1 pip install -r
         find sip/execution_control -iname "requirements.txt" | \
-          xargs -n1 pip install -r 
+          xargs -n1 pip install -r
         '''
 
         // Inspect current Docker Setup
         sh '''
         docker image ls
-        '''
-        sh '''
         docker volume ls
-        '''
-        sh '''
         docker network ls
-        '''
-        sh '''
-        docker system df
         '''
       }
     } // End stage('Setup')
@@ -88,45 +81,45 @@ pipeline {
       }
     } // End stage('Analysis')
 
-    stage('Build') {
-      steps {
-        // Build and install SIP, build containers
-        // Tag container with branch name (JOB_BASE_NAME)
-        // sh '''
-        // . _build/bin/activate
-        //
-        // python3 ./setup.py install
-        // docker build -t sip:${JOB_BASE_NAME} .
-        // '''
-      }
-    } // End stage('Build')
+    // stage('Build') {
+    //   steps {
+    //     // Build and install SIP, build containers
+    //     // Tag container with branch name (JOB_BASE_NAME)
+    //     // sh '''
+    //     // . _build/bin/activate
+    //     //
+    //     // python3 ./setup.py install
+    //     // docker build -t sip:${JOB_BASE_NAME} .
+    //     // '''
+    //   }
+    // } // End stage('Build')
 
-    stage('Test') {
-      steps {
-        // // Run unit tests, then publish JUnit-style report
-        // // use 'coverage' to generate code coverage report &&
-        // // publish results through Cobertura plugin
-        // sh '''
-        // . _build/bin/activate
-        //
-        // coverage run \
-        // --omit=*/tests/*,*/_*.py,*/__init__.py,sip/ext/* \
-        // --source=sip ./setup.py test -r xmlrunner
-        // # coverage run -a --source=sip sip/tests/test_execution.py || true
-        // coverage xml
-        // '''
-        //
-        // junit 'test_reports.xml'
-        //
-        // // Coverage report.
-        // // 'onlyStable = false' to enable report publication even when build
-        // // status is not 'SUCCESS'
-        // step ([$class: 'CoberturaPublisher',
-        // coberturaReportFile: 'coverage.xml',
-        // onlyStable: false,
-        // sourceEncoding: 'ASCII'])
-      }
-    } // end stage('Test')
+    // stage('Test') {
+    //   steps {
+    //     // // Run unit tests, then publish JUnit-style report
+    //     // // use 'coverage' to generate code coverage report &&
+    //     // // publish results through Cobertura plugin
+    //     // sh '''
+    //     // . _build/bin/activate
+    //     //
+    //     // coverage run \
+    //     // --omit=*/tests/*,*/_*.py,*/__init__.py,sip/ext/* \
+    //     // --source=sip ./setup.py test -r xmlrunner
+    //     // # coverage run -a --source=sip sip/tests/test_execution.py || true
+    //     // coverage xml
+    //     // '''
+    //     //
+    //     // junit 'test_reports.xml'
+    //     //
+    //     // // Coverage report.
+    //     // // 'onlyStable = false' to enable report publication even when build
+    //     // // status is not 'SUCCESS'
+    //     // step ([$class: 'CoberturaPublisher',
+    //     // coberturaReportFile: 'coverage.xml',
+    //     // onlyStable: false,
+    //     // sourceEncoding: 'ASCII'])
+    //   }
+    // } // end stage('Test')
   } // end stages
 
 
@@ -165,8 +158,8 @@ pipeline {
       echo 'Build failure. No images pushed to registry.'
     }
 
-    always {
-    }
+    // always {
+    // }
 
   } // end post
 }
