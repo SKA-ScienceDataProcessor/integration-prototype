@@ -26,13 +26,15 @@ pipeline {
         sh '''
         ls
         ls /bin/python*
+        rm -rf venv || true
+        ls
         virtualenv -p `which python3` venv
         '''
 
         // Install requirements
         sh '''
         source venv/bin/activate
-        pip install pylint pycodestyle
+        pip install -U pylint pycodestyle
         find emulators -iname "requirements.txt" | xargs -n1 pip install -r
         find sip/execution_control -iname "requirements.txt" | \
           xargs -n1 pip install -r
@@ -56,9 +58,10 @@ pipeline {
         # find sip -iname "*.py" | xargs pycodestyle >> style.log || true
 
         echo $(pwd)
-        # find emulators -iname "*.py" | xargs pylint  || true
         find emulators -iname "*.py"
         pylint emulators/csp_vis_sender_01/app/__main__.py
+        echo "------"
+        find emulators -iname "*.py" | xargs pylint  || true
         # find emulators -iname "*.py" | xargs pycodestyle || true
         '''
 
