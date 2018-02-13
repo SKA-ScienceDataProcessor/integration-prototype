@@ -5,12 +5,14 @@ The visibility data is sent as a number of SPEAD heaps, with a have a structure
 (payload) defined in the CSP-SDP ICD documents. Heaps are sent to a stream
 which is a UDP socket.
 """
-import time
 import logging
+import time
 
 import numpy as np
 import spead2
 import spead2.send
+
+from .heap_descriptor import get_heap_descriptor
 
 
 class HeapStreamer:
@@ -31,54 +33,31 @@ class HeapStreamer:
             streamer.payload['complex_visibility'] = get_vis_data(i)
             streamer.send_heap(i)
         streamer.end()
-
-    Configuration::
-
-        {
-            "sender_node": {
-                "streams": [
-                    {
-                        "port": 8001,
-                        "host": "127.0.0.1"
-                        "threads": 1
-                    }
-                ]
-            }
-        }
-
-    - ``streams`` is a list of dictionaries of describing where SPEAD heap data
-      should be sent.
-    - Each stream dictionary can have the keys: ``port``, ``host``, and
-      ``threads``.
-    - ``port`` and ``host`` are required keys and give the address to which
-      SPEAD heaps should be sent.
-    - ``threads`` is optional (default: 1) and sets the number of threads used
-      in sending the heap.
     """
 
     def __init__(self, config, frame_shape):
         """Creates and sets up SPEAD streams.
 
-        The configuration of streams is passed in via the ``config`` arguent.
+        The configuration of streams is passed in via the ``config`` argument.
 
-        The dimensions of the visibility data must be specified in order
-        to initialise the payload. This is a tuple of dimensions defined in the
-        ICD as:
+        The dimensions of the visibility data (frame shape) should be provided
+        in order to initialise the payload. This is a tuple defined as follows:
 
+            (1, 1, num_channels, num_baselines, 4)
+
+        where num_channels and num_baselines are the number of channels
+        and number of baselines per stream heap.
 
         Args:
             config (dict): Dictionary of settings (see above).
             frame_shape (tuple): Dimensions of the payload visibility data.
-            log (logging.Logger): Python logging object.
         """
         self._config = config
         self._frame_shape = frame_shape
-        self._heap_descriptor = self._init_heap_descriptor()
-        self._streams = list()
         self._heap_counter = 0
         self._send_timer = 0
         self._heap_size = self._get_heap_size()
-        self._create_streams()
+        self._streams = self._create_streams()
         self._payload = self._init_payload()
 
     def start(self):
@@ -102,18 +81,26 @@ class HeapStreamer:
             stream_id (int): Stream index (default=0).
         """
         log = logging.getLogger(__name__)
-        log.debug('  heap_descriptor %03i', heap_index)
+        log.debug('sending heap %03i', heap_index)
         # Update the values of items in the item group for this stream.
-        t0 = time.time()
+        timer = time.time()
         stream, item_group = self._streams[stream_id]
         for name, item in item_group.items():
-            log.debug(f'    item: 0x{item.id:04X} {name}')
+            log.debug(f' adding item from payload: 0x{item.id:04X} {name}')
             item.value = self._payload[name]
         # Send the updated heap_descriptor
         _heap = item_group.get_heap()
         stream.send_heap(_heap)
         self._heap_counter += 1
-        self._send_timer += (time.time() - t0)
+        self._send_timer += (time.time() - timer)
+
+    @property
+    def streams(self):
+        """Streams attribute.
+
+        This is a list of SPEAD streams.
+        """
+        return self._streams
 
     @property
     def payload(self):
@@ -136,9 +123,9 @@ class HeapStreamer:
         """
         return self._payload
 
-    @payload.setter
-    def payload(self, **kwargs):
-        print(kwargs)
+    # @payload.setter
+    # def payload(self, **kwargs):
+    #     print(kwargs)
 
     @payload.deleter
     def payload(self):
@@ -158,7 +145,7 @@ class HeapStreamer:
     def _get_heap_size(self):
         """Return the total size of items in the SPEAD heap in bytes."""
         heap_size = 0
-        for item in self._heap_descriptor:
+        for item in get_heap_descriptor(self._frame_shape):
             num_elements = np.prod(item['shape'])
             if 'type' in item:
                 heap_size += np.dtype(item['type']).itemsize * num_elements
@@ -168,151 +155,59 @@ class HeapStreamer:
         return heap_size
 
     @staticmethod
-    def _get_config_r(settings, key, default=None):
-        """Read a configuration value from a settings dictionary
+    def _create_stream(config, flavour, heap_descriptor):
+        """Construct a single stream."""
+        log = logging.getLogger(__name__)
 
-        FIXME(BM) Just use dict get() method instead?
-        https://docs.python.org/3.6/library/stdtypes.html#dict.get
-        """
-        value = default
-        if len(key) == 1:
-            if key[0] in settings:
-                value = settings[key[0]]
-        else:
-            if key[0] in settings:
-                return HeapStreamer._get_config_r(settings[key[0]], key[1:],
-                                                  default)
-        return value
+        # Create the item group for the stream
+        item_group = spead2.send.ItemGroup(flavour=flavour)
+        for item in heap_descriptor:
+            _item = item_group.add_item(
+                item['id'], item['name'], item['description'],
+                shape=item['shape'], dtype=item.get('type'),
+                format=item.get('format'))
+            log.debug('Added item: 0x%04X (%s)', _item.id, _item.name)
+            log.debug('  description = %s', _item.description)
+            log.debug('  format = %s', _item.format)
+            log.debug('  type   = %s', _item.dtype)
+            log.debug('  shape  = %s', _item.shape)
 
-    def _get_config(self, key, default=None):
-        """Read a configuration value"""
-        return self._get_config_r(self._config, key, default)
+        # Create stream object
+        threads = config.get('threads', 1)
+        stream = spead2.send.UdpStream(spead2.ThreadPool(threads=threads),
+                                       config.get('host'), config.get('port'),
+                                       spead2.send.StreamConfig(rate=0))
+
+        # Return the stream and item group
+        return stream, item_group
 
     def _create_streams(self):
         """Construct streams, item group and item descriptions."""
         # Construct the SPEAD flavour description
         log = logging.getLogger(__name__)
-        parent = 'spead_flavour'
-        version = self._get_config([parent, 'version'], 4)
-        item_pointer_bits = self._get_config([parent, 'item_pointer_bits'], 64)
-        heap_address_bits = self._get_config([parent, 'heap_address_bits'], 40)
-        bug_compat_mask = self._get_config([parent, 'bug_compat_mask'], 0)
-        flavour = spead2.Flavour(version, item_pointer_bits, heap_address_bits,
-                                 bug_compat_mask)
 
-        # Construct UDP stream objects and associated heap_descriptor item
-        # groups.
+        # Define the SPEAD flavour
+        flavour_config = self._config.get('spead_flavour')
+        flavour = spead2.Flavour(flavour_config.get('version', 4),
+                                 flavour_config.get('item_pointer_bits', 64),
+                                 flavour_config.get('heap_address_bits', 40),
+                                 flavour_config.get('bug_compat_mask', 0))
+        log.debug('Using SPEAD flavour = SPEAD-%d-%d v%d compat:%d',
+                  flavour.item_pointer_bits, flavour.heap_address_bits,
+                  flavour.version, flavour.bug_compat)
+
+        # Create SPEAD streams
+        streams_config = self._config.get('sender_node').get('streams')
+        descriptor = get_heap_descriptor(self._frame_shape)
         streams = list()
-        for i, stream in enumerate(self._config['sender_node']['streams']):
-            host = stream['host']
-            port = stream['port']
-            threads = stream['threads'] if 'threads' in stream else 1
-            stream_config = spead2.send.StreamConfig(rate=0)
-            thread_pool = spead2.ThreadPool(threads=threads)
-            stream = spead2.send.UdpStream(thread_pool, host, port,
-                                           stream_config)
-            item_group = spead2.send.ItemGroup(flavour=flavour)
-
-            # Append stream & item group the stream list.
-            streams.append((stream, item_group))
-
+        for i, config in enumerate(streams_config):
             log.debug('Configuring stream %d:', i)
-            log.debug('  Address = %s:%d', host, port)
-            log.debug('  Flavour = SPEAD-%d-%d v%d compat:%d',
-                      flavour.item_pointer_bits,
-                      flavour.heap_address_bits,
-                      flavour.version,
-                      flavour.bug_compat)
-            log.debug('  Threads = %d', threads)
+            log.debug('  Address = %s:%d', config.get('host'),
+                      config.get('port'))
+            log.debug('  Threads = %d', config.get('threads', 1))
+            streams.append(self._create_stream(config, flavour, descriptor))
 
-            # Add items to the item group based on the heap_descriptor
-            for j, item in enumerate(self._heap_descriptor):
-                item_id = item['id']
-                if isinstance(item_id, str):
-                    item_id = int(item_id, 0)
-                name = item['name']
-                desc = item['description']
-                item_type = item['type'] if 'type' in item else None
-                item_format = item['format'] if 'format' in item else None
-                if 'shape' not in item:
-                    raise RuntimeError('shape not defined for {}'.format(name))
-                shape = item['shape']
-                item_group.add_item(item_id, name, desc, shape=shape,
-                                    dtype=item_type, format=item_format)
-                log.debug('Adding item {} : {} {}'.format(j, item_id,
-                                                          name))
-                log.debug('  description = {}'.format(desc))
-                if item_type is not None:
-                    log.debug('  type = {}'.format(item_type))
-                if item_format is not None:
-                    log.debug('  format = {}'.format(item_format))
-                    log.debug('  shape = {}'.format(shape))
-
-        self._streams = streams
-
-    def _init_heap_descriptor(self):
-        """Return the heap descriptor dictionary."""
-        heap_descriptor = [
-            # Per SPEAD heap_descriptor
-            {
-                "id": 0x0045,
-                "name": "timestamp_utc",
-                "description": "SDP_REQ_INT-45.",
-                "format": [('u', 32), ('u', 32)],
-                "shape": (1,)
-            },
-            {
-                "id": 0x0046,
-                "name": "channel_baseline_id",
-                "description": "SDP_REQ_INT-46",
-                "format": [('u', 26), ('u', 22)],
-                "shape": (1,)
-            },
-            {
-                "id": 0x0047,
-                "name": "channel_baseline_count",
-                "description": "SDP_REQ_INT-47",
-                "format": [('u', 26), ('u', 22)],
-                "shape": (1,)
-            },
-            {
-                "id": 0x0048,
-                "name": "schedule_block",
-                "description": "SDP_REQ_INT-48",
-                "type": "u8",
-                "shape": (1,)
-            },
-            {
-                "id": 0x0049,
-                "name": "hardware_source_id",
-                "description": "SDP_REQ_INT-49",
-                "format": [('u', 24)],
-                "shape": (1,)
-            },
-            # Per visibility data
-            {
-                "id": 0x0050,
-                "name": "time_centroid_index",
-                "description": "SDP_REQ_INT-50",
-                "format": [('u', 8)],
-                "shape": self._frame_shape
-            },
-            {
-                "id": 0x0051,
-                "name": "complex_visibility",
-                "description": "SDP_REQ_INT-51",
-                "type": 'c8',
-                "shape": self._frame_shape
-            },
-            {
-                "id": 0x0052,
-                "name": "flagging_fraction",
-                "description": "SDP_REQ_INT-52",
-                "format": [('u', 8)],
-                "shape": self._frame_shape
-            }
-        ]
-        return heap_descriptor
+        return streams
 
     def _init_payload(self):
         """Return an empty payload"""

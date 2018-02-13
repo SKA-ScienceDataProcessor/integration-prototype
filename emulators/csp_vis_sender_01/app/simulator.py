@@ -21,24 +21,26 @@ class SimpleSimulator:
         Creates and initialises the visibility simulator.
 
         Args:
-            config (dict): Dictionary of settings
-            log (logging.Logger): Python logging object
+            config (dict): Dictionary of emulator configuration settings
         """
-        self.log_ = logging.getLogger(__name__)
-        _obs = config['observation']
-        self.config = config
-        self.num_stations = _obs['num_stations']
-        self.num_baselines = self.num_stations * (self.num_stations - 1) // 2
-        self.num_times = _obs['num_times']
-        self.total_channels = _obs['num_channels']
-        self.sender_start_channel = config['sender_node']['start_channel']
-        self.num_streams = len(config['sender_node']['streams'])
-        self.stream_num_channels = self.total_channels // self.num_streams
-        self.frame_shape = (1, 1, self.stream_num_channels, self.num_baselines,
-                            4)
-        self.log_.debug('Number of channels per heap_descriptor = %d',
-                        self.stream_num_channels)
-        self.log_.debug('Number of baselines = %d', self.num_baselines)
+        self._config = config
+        num_stations = config['observation']['num_stations']
+        total_channels = config['observation']['num_channels']
+        num_streams = len(config['sender_node']['streams'])
+        num_baselines = num_stations * (num_stations - 1) // 2
+        stream_num_channels = total_channels // num_streams
+        self.frame_shape = (1, 1, stream_num_channels, num_baselines, 4)
+
+    def _stream_channels(self, stream_index):
+        """Returns channels for the specified stream"""
+        streams_spec = self._config.get('sender_node').get('streams')
+        num_streams = len(streams_spec)
+        total_channels = self._config.get('observation').get('num_channels')
+        stream_num_channels = total_channels // num_streams
+        sender_start_channel = self._config['sender_node']['start_channel']
+        start = sender_start_channel + stream_index * stream_num_channels
+        end = start + stream_num_channels
+        return range(start, end)
 
     def simulate_heaps(self, streamer: HeapStreamer):
         """Simulate and send a stream of heaps using the specified
@@ -47,36 +49,42 @@ class SimpleSimulator:
         Args:
             streamer (HeapStreamer): SPEAD heap streamer class.
         """
-        num_streams = len(streamer._streams)
-        assert(num_streams == self.num_streams)
-        self.log_.info('Starting simulation...')
-        self.log_.info('  * No. times = %d', self.num_times)
-        self.log_.info('  * No. channels (per stream) = %d',
-                       self.stream_num_channels)
-        self.log_.info('  * Start channel = %d',
-                       self.sender_start_channel)
-        self.log_.info('  * No. streams = %d', self.num_streams)
+        obs = self._config.get('observation')
+        assert obs is not None
+        num_times = obs.get('num_times')
+        num_streams = len(streamer.streams)
+        num_channels = obs.get('num_channels') // num_streams
+        start_channel = self._config['sender_node']['start_channel']
+
+        log = logging.getLogger(__name__)
+        log.info('Starting simulation...')
+        log.info('  * No. times = %d', num_times)
+        log.info('  * No. channels (per stream) = %d', num_channels)
+        log.info('  * Start channel = %d', start_channel)
+        log.info('  * No. streams = %d', num_streams)
 
         streamer.start()
 
-        for t in range(self.num_times):
-            self.log_.debug('== Time {%03d}/{%03d} ==', t + 1, self.num_times)
-            streamer._payload['timestamp_utc'] = [(t, t + 3)]
+        for time in range(num_times):
+            log.debug('== Time {%03d}/{%03d} ==', time + 1,
+                      num_times)
+            streamer.payload['timestamp_utc'] = [(time, time + 3)]
 
-            # Loop over heap stream. a heap stream contains 1 or more channels.
+            # Loop over streams and simulate heap payloads.
             for j in range(num_streams):
-                c0 = self.sender_start_channel + j * self.stream_num_channels
-                c1 = c0 + self.stream_num_channels
-                streamer._payload['channel_baseline_count'] = \
-                    [(self.stream_num_channels, 0)]
-                streamer._payload['channel_baseline_id'] = [(c0, 0)]
+                stream_channels = self._stream_channels(j)
+                streamer.payload['channel_baseline_count'] = \
+                    [(num_channels, 0)]
+                streamer.payload['channel_baseline_id'] = \
+                    [(stream_channels[0], 0)]
                 vis_data = np.ones(self.frame_shape, dtype='c8')
-                self.log_.debug('>> Channels = {} <<'.format(range(c0, c1)))
-                for c in range(c0, c1):
-                    vis_data[:, :, c, :, :].real = t
-                    vis_data[:, :, c, :, :].imag = c
-                streamer._payload['complex_visibility'] = vis_data
-                streamer.send_heap(heap_index=t, stream_id=j)
+                log.debug('>> Channels = %s <<', stream_channels)
+                # For each channel in the heap.
+                for channel in stream_channels:
+                    vis_data[:, :, channel, :, :].real = time
+                    vis_data[:, :, channel, :, :].imag = channel
+                streamer.payload['complex_visibility'] = vis_data
+                streamer.send_heap(heap_index=time, stream_id=j)
 
         streamer.end()
         streamer.log_stats()

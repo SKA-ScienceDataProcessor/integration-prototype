@@ -10,15 +10,12 @@ from .simulator import SimpleSimulator
 
 
 def _init_log(level=logging.DEBUG):
-    """Initialise the logging object.
+    """Initialise logging.
 
     Args:
         level (int): Logging level.
-
-    Returns:
-        Logger: Python logging object.
     """
-    log = logging.getLogger(__file__)
+    log = logging.getLogger()
     log.setLevel(level)
     handler = logging.StreamHandler(sys.stdout)
     handler.setLevel(level)
@@ -26,7 +23,6 @@ def _init_log(level=logging.DEBUG):
                                   '%Y/%m/%d-%H:%M:%S')
     handler.setFormatter(formatter)
     log.addHandler(handler)
-    return log
 
 
 def _parse_command_line():
@@ -43,23 +39,20 @@ def _parse_command_line():
     return parser.parse_args()
 
 
-def main(config):
-    """Main script function"""
-    # Create simulation object, and start streaming SPEAD heaps
+def main():
+    """Main
+    Create simulation object, and start streaming SPEAD heaps
+    """
+    args = _parse_command_line()
+    _init_log(level=logging.DEBUG if args.verbose else logging.INFO)
+    log = logging.getLogger()
+    log.info('Loading config: %s', args.config_file.name)
+    config = json.load(args.config_file)
+    if args.print_settings:
+        log.info('Settings:\n %s', json.dumps(config, indent=2, sort_keys=True))
     sim = SimpleSimulator(config)
     sim.simulate_heaps(HeapStreamer(config, sim.frame_shape))
 
 
 if __name__ == '__main__':
-    # Parse command line arguments
-    ARGS = _parse_command_line()
-
-    # Load configuration.
-    LOG = _init_log(level=logging.DEBUG if ARGS.verbose else logging.INFO)
-    LOG.info('Loading config: %s', ARGS.config_file.name)
-    CONFIG = json.load(ARGS.config_file)
-    if ARGS.print_settings:
-        LOG.debug('Settings:\n %s', json.dumps(CONFIG, indent=4,
-                                               sort_keys=True))
-
-    main(CONFIG)
+    main()

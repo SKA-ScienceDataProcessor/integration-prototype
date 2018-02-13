@@ -41,6 +41,7 @@
                 "start_channel": { "type": "integer" },
                 "streams": {
                     "type": "array",
+                    "description": "List of objects describing where SPEAD heap data should be sent",
                     "items": {
                         "description": "SPEAD stream specification",
                         "type": "object",
@@ -48,7 +49,11 @@
                         "properties": {
                             "port": {"type": "integer"},
                             "host": {"type": "string"},
-                            "threads": {"type": "integer"}
+                            "threads": {
+                                "type": "integer",
+                                "description": "No. threads used for sending the heap",
+                                "default": 1
+                            }
                         }
 
                     }
