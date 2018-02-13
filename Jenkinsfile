@@ -31,11 +31,11 @@ pipeline {
         sh '''
         source venv/bin/activate
         pip list -o
-        pip install -U --no-cache-dir pylint pycodestyle
+        pip install -U --no-cache-dir -q pylint pycodestyle
         find emulators -iname "requirements.txt" | \
-          xargs -n1 pip install --no-cache-dir -q -U -
+          xargs -n1 pip install --no-cache-dir -q -U -r
         find sip/execution_control -iname "requirements.txt" | \
-          xargs -n1 pip install --no-cache-dir -q -U -
+          xargs -n1 pip install --no-cache-dir -q -U -r
         '''
       }
     } // End stage('Setup')
