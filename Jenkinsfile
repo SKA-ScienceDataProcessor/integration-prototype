@@ -32,6 +32,8 @@ pipeline {
         sh '''
         source venv/bin/activate
         pip list --format=columns
+        find sip -iname "requirements.txt" | xargs -I % sh -c 'echo -- %; cat %;'
+        find emulators -iname "requirements.txt" | xargs -I % sh -c 'echo -- %; cat %;'
         pip install -U --no-cache-dir -q pylint pycodestyle
         find emulators -iname "requirements.txt" | \
           xargs -n1 pip install --no-cache-dir -q -U -r
@@ -47,33 +49,15 @@ pipeline {
         // Run PyLint and PyCodeStyle
         sh '''
         source venv/bin/activate
-
-        # find emulators -iname "*.py" | xargs pylint > pylint.log || true
-        # find sip -iname "*.py" | xargs pylint >> pylint.log || true
-        # find emulators -iname "*.py" | xargs pycodestyle > style.log || true
-        # find sip -iname "*.py" | xargs pycodestyle >> style.log || true
-
-        echo $(pwd)
-        pylint emulators/csp_vis_sender_02/app/simulator.py || true
-        '''
-
-        sh '''
-        source venv/bin/activate
-        rm -f pylint.log || true
-        rm -f style.log || true
-        ls
-        find emulators/csp_vis_sender_01/app -iname "*.py" \
-          | xargs -n1 pylint -r n -s n >> pylint.log || true
-        find emulators/csp_vis_sender_02/app -iname "*.py" \
-          | xargs -n1 pylint -r n -s n >> pylint.log || true
-        ls
+        echo "PWD = $(pwd)"
+        rm -f pylint.log style.log || true
+        find emulators -iname "*.py" | xargs -n1 -I % \
+          sh -c 'echo "\n ### % ###"; \ pylint -r n -s n % >> pylint.log' \
+          || true
         cat pylint.log || true
         '''
 
-
-        // Publish warnings. Currently, this does not affect the build status.
-        // Can report difference from last stable build using
-        // 'useStableBuildAsReference'
+        // Publish warnings (This does not affect the build status)
         step([
           $class : 'WarningsPublisher',
           parserConfigurations : [[
@@ -83,7 +67,6 @@ pipeline {
           changeBuildStatus : false,
           usePreviousBuildAsReference: true
         ])
-
         // step([
         //   $class : 'WarningsPublisher',
         //   parserConfigurations : [[
