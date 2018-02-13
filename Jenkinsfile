@@ -62,8 +62,9 @@ pipeline {
         sh '''
         source venv/bin/activate
         ls
-        find emulators -iname "*.py" || true
-        find emulators -iname "*.py" | xargs pylint -s n -r n >> pylint.log
+        # find emulators -iname "*.py" || true
+        find emulators -iname "*.py" | xargs pylint -r n -s n >> pylint.log || true
+        ls 
         cat pylint.log || true
         '''
 
