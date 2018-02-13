@@ -1,11 +1,9 @@
 # -*- coding: utf-8 -*-
 """Module main to stream SPEAD visibility data."""
-import sys
-
 import argparse
-import logging
 import json
-
+import logging
+import sys
 
 from .heap_streamer import HeapStreamer
 from .simulator import SimpleSimulator
