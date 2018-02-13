@@ -22,15 +22,17 @@ pipeline {
 
     stage('Setup') {
       steps {
-        // Create a fresh Virtual environment
+        // Create a (fresh) Virtual environment
         sh '''
-        virtualenv -p `which python3` --clear venv
+        ls
+        # virtualenv -p `which python3` --clear venv
+        virtualenv -p `which python3` venv
         '''
 
         // Install requirements
         sh '''
         source venv/bin/activate
-        pip list -o
+        pip list
         pip install -U --no-cache-dir -q pylint pycodestyle
         find emulators -iname "requirements.txt" | \
           xargs -n1 pip install --no-cache-dir -q -U -r
@@ -52,13 +54,14 @@ pipeline {
         # find sip -iname "*.py" | xargs pycodestyle >> style.log || true
 
         echo $(pwd)
-        pylint emulators/csp_vis_sender_01/app/__main__.py
+        pylint emulators/csp_vis_sender_01/app/__main__.py || true
         '''
 
         sh '''
         source venv/bin/activate
-        find emulators -iname "*.py"
-        find emulators -iname "*.py" | xargs -n1 pylint
+        ls
+        find emulators -iname "*.py" || true
+        find emulators -iname "*.py" | xargs -n1 pylint > pylint.log
         '''
 
 
