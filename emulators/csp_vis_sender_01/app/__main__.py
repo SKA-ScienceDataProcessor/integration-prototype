@@ -20,12 +20,12 @@ def _init_log(level=logging.DEBUG):
     """
     log = logging.getLogger(__file__)
     log.setLevel(level)
-    ch = logging.StreamHandler(sys.stdout)
-    ch.setLevel(level)
+    handler = logging.StreamHandler(sys.stdout)
+    handler.setLevel(level)
     formatter = logging.Formatter('%(asctime)s: %(message)s',
                                   '%Y/%m/%d-%H:%M:%S')
-    ch.setFormatter(formatter)
-    log.addHandler(ch)
+    handler.setFormatter(formatter)
+    log.addHandler(handler)
     return log
 
 
@@ -43,25 +43,23 @@ def _parse_command_line():
     return parser.parse_args()
 
 
-def main(config, log):
+def main(config):
     """Main script function"""
     # Create simulation object, and start streaming SPEAD heaps
-    sim = SimpleSimulator(config, log)
-    sim.simulate_heaps(HeapStreamer(config, sim.frame_shape, log))
+    sim = SimpleSimulator(config)
+    sim.simulate_heaps(HeapStreamer(config, sim.frame_shape))
 
 
 if __name__ == '__main__':
     # Parse command line arguments
-    args = _parse_command_line()
-
-    # Initialise logging.
-    _log = _init_log(level=logging.DEBUG if args.verbose else logging.INFO)
+    ARGS = _parse_command_line()
 
     # Load configuration.
-    _log.info('Loading config: {}'.format(args.config_file.name))
-    _config = json.load(args.config_file)
-    if args.print_settings:
-        _log.debug('Settings:\n {}'.format(json.dumps(_config, indent=4,
-                                                      sort_keys=True)))
+    LOG = _init_log(level=logging.DEBUG if ARGS.verbose else logging.INFO)
+    LOG.info('Loading config: %s', ARGS.config_file.name)
+    CONFIG = json.load(ARGS.config_file)
+    if ARGS.print_settings:
+        LOG.debug('Settings:\n %s', json.dumps(CONFIG, indent=4,
+                                               sort_keys=True))
 
-    main(_config, _log)
+    main(CONFIG)

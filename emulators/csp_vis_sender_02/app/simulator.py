@@ -3,23 +3,12 @@
 
 This module makes use of the HeapStreamer class to send the visibility data.
 """
-from abc import ABCMeta, abstractmethod
-
 import numpy as np
 
 from .heap_streamer import HeapStreamer
 
 
-class AbstractSimulator(metaclass=ABCMeta):
-    """Simulator base class."""
-
-    @abstractmethod
-    def simulate_heaps(self, streamer: HeapStreamer):
-        """Simulate and send a stream of SPEAD Heaps"""
-        pass
-
-
-class SimpleSimulator(AbstractSimulator):
+class SimpleSimulator:
     """Very simple simulation class used to stream SPEAD heaps.
 
     SPEAD heaps contain simple patterns.
@@ -55,11 +44,11 @@ class SimpleSimulator(AbstractSimulator):
         HeapStreamer.
         """
         streamer = HeapStreamer(self.log, self.config, self.num_pol,
-                              self.num_baselines, self.frame_shape)
+                                self.num_baselines, self.frame_shape)
         streamer.start()
 
         num_streams = len(streamer._streams)
-        assert (num_streams == self.num_streams)
+        assert num_streams == self.num_streams
 
         self.log.info('Starting simulation...')
         self.log.info('  * No. times = {}'.format(self.num_times))

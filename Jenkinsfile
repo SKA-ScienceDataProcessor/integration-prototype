@@ -56,7 +56,7 @@ pipeline {
         # find sip -iname "*.py" | xargs pycodestyle >> style.log || true
 
         echo $(pwd)
-        pylint emulators/csp_vis_sender_01/app/__main__.py || true
+        pylint emulators/csp_vis_sender_02/app/simulator.py || true
         '''
 
         sh '''
@@ -64,7 +64,7 @@ pipeline {
         ls
         # find emulators -iname "*.py" || true
         find emulators -iname "*.py" | xargs pylint -r n -s n >> pylint.log || true
-        ls 
+        ls
         cat pylint.log || true
         '''
 

@@ -6,7 +6,7 @@ The visibility data is sent as a number of SPEAD heaps, with a have a structure
 which is a UDP socket.
 """
 import time
-from logging import Logger
+import logging
 
 import numpy as np
 import spead2
@@ -56,8 +56,7 @@ class HeapStreamer:
       in sending the heap.
     """
 
-    # FIXME(BM) do not pass logger object to this method!
-    def __init__(self, config, frame_shape, log=Logger(__name__)):
+    def __init__(self, config, frame_shape):
         """Creates and sets up SPEAD streams.
 
         The configuration of streams is passed in via the ``config`` arguent.
@@ -74,7 +73,6 @@ class HeapStreamer:
         """
         self._config = config
         self._frame_shape = frame_shape
-        self._log = log
         self._heap_descriptor = self._init_heap_descriptor()
         self._streams = list()
         self._heap_counter = 0
@@ -103,12 +101,13 @@ class HeapStreamer:
             heap_index (int): HEAP index.
             stream_id (int): Stream index (default=0).
         """
-        self._log.debug('  heap_descriptor {:03d}'.format(heap_index))
+        log = logging.getLogger(__name__)
+        log.debug('  heap_descriptor %03i', heap_index)
         # Update the values of items in the item group for this stream.
         t0 = time.time()
         stream, item_group = self._streams[stream_id]
         for name, item in item_group.items():
-            self._log.debug('    item: 0x{:04X} {}'.format(item.id, name))
+            log.debug(f'    item: 0x{item.id:04X} {name}')
             item.value = self._payload[name]
         # Send the updated heap_descriptor
         _heap = item_group.get_heap()
@@ -148,13 +147,13 @@ class HeapStreamer:
     def log_stats(self):
         """Print (to the log) the stats for sending heaps"""
         # Print some performance statistics.
+        log = logging.getLogger(__name__)
         total_bytes = self._heap_size * self._heap_counter
         total_time = self._send_timer
-        self._log.info('Sending complete in {} s'.format(total_time))
-        self._log.info('Total bytes = {} ({:.3f} MiB)'.
-                       format(total_bytes, total_bytes / 1024**2))
-        self._log.info('Rate = {:.3f} MiB/s'
-                       .format(total_bytes / (1024**2 * total_time)))
+        log.info('Sending complete in %.2f s', total_time)
+        log.info('Total bytes = %i (%.3f MiB)', total_bytes,
+                 total_bytes / 1024**2)
+        log.info('Rate = %.3f MiB/s', total_bytes / (1024**2 * total_time))
 
     def _get_heap_size(self):
         """Return the total size of items in the SPEAD heap in bytes."""
@@ -192,6 +191,7 @@ class HeapStreamer:
     def _create_streams(self):
         """Construct streams, item group and item descriptions."""
         # Construct the SPEAD flavour description
+        log = logging.getLogger(__name__)
         parent = 'spead_flavour'
         version = self._get_config([parent, 'version'], 4)
         item_pointer_bits = self._get_config([parent, 'item_pointer_bits'], 64)
@@ -216,14 +216,14 @@ class HeapStreamer:
             # Append stream & item group the stream list.
             streams.append((stream, item_group))
 
-            self._log.debug('Configuring stream {}:'.format(i))
-            self._log.debug('  Address = {}:{}'.format(host, port))
-            self._log.debug('  Flavour = SPEAD-{}-{} v{} compat:{}'.
-                            format(flavour.item_pointer_bits,
-                                  flavour.heap_address_bits,
-                                  flavour.version,
-                                  flavour.bug_compat))
-            self._log.debug('  Threads = {}'.format(threads))
+            log.debug('Configuring stream %d:', i)
+            log.debug('  Address = %s:%d', host, port)
+            log.debug('  Flavour = SPEAD-%d-%d v%d compat:%d',
+                      flavour.item_pointer_bits,
+                      flavour.heap_address_bits,
+                      flavour.version,
+                      flavour.bug_compat)
+            log.debug('  Threads = %d', threads)
 
             # Add items to the item group based on the heap_descriptor
             for j, item in enumerate(self._heap_descriptor):
@@ -239,14 +239,14 @@ class HeapStreamer:
                 shape = item['shape']
                 item_group.add_item(item_id, name, desc, shape=shape,
                                     dtype=item_type, format=item_format)
-                self._log.debug('Adding item {} : {} {}'.format(j, item_id,
-                                                                name))
-                self._log.debug('  description = {}'.format(desc))
+                log.debug('Adding item {} : {} {}'.format(j, item_id,
+                                                          name))
+                log.debug('  description = {}'.format(desc))
                 if item_type is not None:
-                    self._log.debug('  type = {}'.format(item_type))
+                    log.debug('  type = {}'.format(item_type))
                 if item_format is not None:
-                    self._log.debug('  format = {}'.format(item_format))
-                    self._log.debug('  shape = {}'.format(shape))
+                    log.debug('  format = {}'.format(item_format))
+                    log.debug('  shape = {}'.format(shape))
 
         self._streams = streams
 
@@ -322,8 +322,8 @@ class HeapStreamer:
             channel_baseline_count=[(0, 0)],
             schedule_block=[0],
             hardware_source_id=[0],
-            complex_visibility=np.zeros(self._frame_shape, dtype=np.complex64),
-            time_centroid_index=np.ones(self._frame_shape, dtype=np.uint8),
-            flagging_fraction=np.ones(self._frame_shape, dtype=np.uint8)
+            complex_visibility=np.zeros(self._frame_shape, dtype='c8'),
+            time_centroid_index=np.ones(self._frame_shape, dtype='u1'),
+            flagging_fraction=np.ones(self._frame_shape, dtype='u1')
         )
         return payload
