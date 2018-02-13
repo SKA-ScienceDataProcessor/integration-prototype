@@ -31,14 +31,19 @@ pipeline {
         // Install requirements
         sh '''
         source venv/bin/activate
+
         pip list --format=columns
-        find sip -iname "requirements.txt" | xargs -I % sh -c 'echo -- %; cat %;'
-        find emulators -iname "requirements.txt" | xargs -I % sh -c 'echo -- %; cat %;'
+
+        find sip -iname "req*.txt" | xargs -n1 -I % sh -c 'echo "\n### % ###"; cat %;'
+        find emulators -iname "req*.txt" | xargs -n1 -I % sh -c 'echo "\n### % ###"; cat %;'
+
         pip install -U --no-cache-dir -q pylint pycodestyle
-        find emulators -iname "requirements.txt" | \
+
+        find emulators -iname "req*.txt" | \
           xargs -n1 pip install --no-cache-dir -q -U -r
-        find sip/execution_control -iname "requirements.txt" | \
+        find sip/execution_control -iname "req*.txt" | \
           xargs -n1 pip install --no-cache-dir -q -U -r
+
         pip list --format=columns
         '''
       }
