@@ -32,7 +32,7 @@ pipeline {
         // Install requirements
         sh '''
         source venv/bin/activate
-        pip list
+        pip list --format=columns
         pip install -U --no-cache-dir -q pylint pycodestyle
         find emulators -iname "requirements.txt" | \
           xargs -n1 pip install --no-cache-dir -q -U -r
@@ -47,6 +47,8 @@ pipeline {
         // Run PyLint and PyCodeStyle
         sh '''
         source venv/bin/activate
+        rm -f pylint.log || true
+        rm -f style.log || true
 
         # find emulators -iname "*.py" | xargs pylint > pylint.log || true
         # find sip -iname "*.py" | xargs pylint >> pylint.log || true
@@ -61,7 +63,8 @@ pipeline {
         source venv/bin/activate
         ls
         find emulators -iname "*.py" || true
-        find emulators -iname "*.py" | xargs -n1 pylint > pylint.log
+        find emulators -iname "*.py" | xargs pylint -s n -r n >> pylint.log
+        cat pylint.log || true
         '''
 
 
