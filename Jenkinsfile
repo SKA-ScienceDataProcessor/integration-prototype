@@ -61,8 +61,8 @@ pipeline {
         find emulators -iname "*.py"
         pylint emulators/csp_vis_sender_01/app/__main__.py
         echo "------"
-        find emulators -iname "*.py" | xargs pylint  || true
-        # find emulators -iname "*.py" | xargs pycodestyle || true
+        find emulators -iname "*.py" | xargs pylint
+        # find emulators -iname "*.py" | xargs pycodestyle
         '''
 
         // Publish warnings. Currently, this does not affect the build status.
@@ -78,15 +78,15 @@ pipeline {
           usePreviousBuildAsReference: true
         ])
 
-        step([
-          $class : 'WarningsPublisher',
-          parserConfigurations : [[
-            parserName: 'PEP8',
-            pattern   : 'style.log'
-          ]],
-          changeBuildStatus : false,
-          usePreviousBuildAsReference: true
-        ])
+        // step([
+        //   $class : 'WarningsPublisher',
+        //   parserConfigurations : [[
+        //     parserName: 'PEP8',
+        //     pattern   : 'style.log'
+        //   ]],
+        //   changeBuildStatus : false,
+        //   usePreviousBuildAsReference: true
+        // ])
       }
     } // End stage('Analysis')
 
@@ -154,7 +154,6 @@ pipeline {
 
     unstable {
       echo 'Build unstable. Pushing image as -latest only.'
-
       // // Push -latest
       // sh '''
       // /usr/local/bin/delete_from_reg.sh localhost:5000 sip `cat dockerimage.digest`
@@ -168,22 +167,23 @@ pipeline {
     }
 
     always {
+      echo 'Always run, post pipline steps.'
       // Inspect current Docker Setup
-      sh '''
-      docker image ls || true
-      docker volume ls || true
-      docker network ls || true
-      docker system df || true
-      '''
-
-      // Try to clean Docker up a bit
-      sh '''
-      docker image prune -f
-      docker volume prune -f
-      docker network prune -f
-      docker system prune -f
-      docker system df
-      '''
+      // sh '''
+      // docker image ls || true
+      // docker volume ls || true
+      // docker network ls || true
+      // docker system df || true
+      // '''
+      //
+      // // Try to clean Docker up a bit
+      // sh '''
+      // docker image prune -f || true
+      // docker volume prune -f || true
+      // docker network prune -f || true
+      // docker system prune -f  || true
+      // docker system df
+      // '''
     }
 
   } // end post
