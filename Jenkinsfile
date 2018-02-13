@@ -24,6 +24,8 @@ pipeline {
       steps {
         // Create a fresh Virtual environment
         sh '''
+        ls
+        ls /bin/python*
         virtualenv -p `which python3` venv
         '''
 
@@ -55,6 +57,7 @@ pipeline {
 
         echo $(pwd)
         # find emulators -iname "*.py" | xargs pylint  || true
+        find emulators -iname "*.py"
         pylint emulators/csp_vis_sender_01/app/__main__.py
         # find emulators -iname "*.py" | xargs pycodestyle || true
         '''
