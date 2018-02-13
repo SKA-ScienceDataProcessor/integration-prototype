@@ -24,20 +24,18 @@ pipeline {
       steps {
         // Create a fresh Virtual environment
         sh '''
-        ls
-        ls /bin/python*
-        rm -rf venv || true
-        ls
-        virtualenv -p `which python3` venv
+        virtualenv -p `which python3` --clear venv
         '''
 
         // Install requirements
         sh '''
         source venv/bin/activate
-        pip install -U pylint pycodestyle
-        find emulators -iname "requirements.txt" | xargs -n1 pip install -r
+        pip list -o
+        pip install -U --no-cache-dir pylint pycodestyle
+        find emulators -iname "requirements.txt" | \
+          xargs -n1 pip install --no-cache-dir -q -U -
         find sip/execution_control -iname "requirements.txt" | \
-          xargs -n1 pip install -r
+          xargs -n1 pip install --no-cache-dir -q -U -
         '''
       }
     } // End stage('Setup')
@@ -47,10 +45,6 @@ pipeline {
         // Run PyLint and PyCodeStyle
         sh '''
         source venv/bin/activate
-        uname -rm
-        pylint --version
-        pycodestyle --version
-        python --version
 
         # find emulators -iname "*.py" | xargs pylint > pylint.log || true
         # find sip -iname "*.py" | xargs pylint >> pylint.log || true
@@ -58,12 +52,15 @@ pipeline {
         # find sip -iname "*.py" | xargs pycodestyle >> style.log || true
 
         echo $(pwd)
-        find emulators -iname "*.py"
         pylint emulators/csp_vis_sender_01/app/__main__.py
-        echo "------"
-        find emulators -iname "*.py" | xargs pylint
-        # find emulators -iname "*.py" | xargs pycodestyle
         '''
+
+        sh '''
+        source venv/bin/activate
+        find emulators -iname "*.py"
+        find emulators -iname "*.py" | xargs -n1 pylint
+        '''
+
 
         // Publish warnings. Currently, this does not affect the build status.
         // Can report difference from last stable build using
