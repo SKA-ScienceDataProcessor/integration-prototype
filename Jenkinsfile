@@ -24,9 +24,8 @@ pipeline {
       steps {
         // Create a (fresh) Virtual environment
         sh '''
-        ls
-        # virtualenv -p `which python3` --clear venv
-        virtualenv -p `which python3` venv
+        virtualenv -p `which python3` --clear venv
+        # virtualenv -p `which python3` venv
         '''
 
         // Install requirements
@@ -38,6 +37,7 @@ pipeline {
           xargs -n1 pip install --no-cache-dir -q -U -r
         find sip/execution_control -iname "requirements.txt" | \
           xargs -n1 pip install --no-cache-dir -q -U -r
+        pip list --format=columns
         '''
       }
     } // End stage('Setup')
@@ -47,8 +47,6 @@ pipeline {
         // Run PyLint and PyCodeStyle
         sh '''
         source venv/bin/activate
-        rm -f pylint.log || true
-        rm -f style.log || true
 
         # find emulators -iname "*.py" | xargs pylint > pylint.log || true
         # find sip -iname "*.py" | xargs pylint >> pylint.log || true
@@ -61,9 +59,13 @@ pipeline {
 
         sh '''
         source venv/bin/activate
+        rm -f pylint.log || true
+        rm -f style.log || true
         ls
-        # find emulators -iname "*.py" || true
-        find emulators -iname "*.py" | xargs pylint -r n -s n >> pylint.log || true
+        find emulators/csp_vis_sender_01/app -iname "*.py" \
+          | xargs -n1 pylint -r n -s n >> pylint.log || true
+        find emulators/csp_vis_sender_02/app -iname "*.py" \
+          | xargs -n1 pylint -r n -s n >> pylint.log || true
         ls
         cat pylint.log || true
         '''
