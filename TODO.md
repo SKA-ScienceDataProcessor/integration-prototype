@@ -1,20 +1,20 @@
 # TODO
 
 - General
-    - [ ] Add Jenkinsfile
+    - [x] Add Jenkinsfile
+    - [ ] Update Jenkinsfile code.
 - Deployment 
     - [ ] Add deployment script (using images from dockerhub?)
     - [ ] Review Ansible scripts in deploy
 - Documentation
-    - [ ] Master Controller
-    - [ ] Processing Controller Interface
+    - [x] Master Controller
+    - [x] Processing Controller Interface
     - [ ] Processing Controller Scheduler
-    - [ ] Processing Block Controller
+    - [x] Processing Block Controller
     - [ ] Configuration DB
 - REST Services
     - [x] Split out different resources in the Processing Controller into 
           separate files
-    - [ ] Add a simple Example ZooKeeper Config db
     - [ ] Create Processing block scheduler with watcher on the scheduling 
           block list
     - [ ] Create Processing block Controller Celery worker
