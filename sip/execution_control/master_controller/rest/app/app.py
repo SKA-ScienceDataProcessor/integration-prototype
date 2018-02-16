@@ -53,6 +53,6 @@ def state():
             current_state = current_state.decode('utf-8')
         return {'state': '{}'.format(current_state)}
     except redis.exceptions.ConnectionError:
-        return {'state:': 'UNKNOWN',
-                'error:': 'Unable to connect to database.'}
+        return {'state': 'UNKNOWN',
+                'error': 'Unable to connect to database.'}
 
