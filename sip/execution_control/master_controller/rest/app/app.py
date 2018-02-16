@@ -26,6 +26,7 @@ def root():
 
 @APP.route('/state', methods=['GET', 'PUT'])
 def state():
+
     """Return the SDP State."""
     states = ['OFF', 'INIT', 'STANDBY', 'ON', 'DISABLE', 'FAULT', 'ALARM',
               'UNKNOWN']

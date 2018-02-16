@@ -4,13 +4,9 @@
 
 This package groups all modules related to the control and monitoring of SDP.
 
-It is composed of a set of sub-packages, the majority of which are deployable 
-as containerised services under control of a container orchestration framework 
+It is composed of a set of sub-packages, the majority of which are deployable
+as containerised services under control of a container orchestration framework
 such as Docker Swarm.
-
-## Quickstart
-
-TODO
 
 ## References
 

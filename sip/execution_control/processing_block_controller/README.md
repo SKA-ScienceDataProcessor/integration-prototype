@@ -2,10 +2,10 @@
 
 ## Roles and Responsibilities
 
-- Execution of one or more Processing Blocks.
+- Execution of Processing Blocks.
     - The default assumption is one Processing Block per Processing Block 
-      Controller although depending on the implementation this may not be a 
-      hard requirement.
+      Controller (although depending on the implementation this may not be a 
+      hard requirement).
     - Interacts with various Platform Services and SDP Services to complete the
       end-to-end execution of each Processing Block which it is responsible 
       for.

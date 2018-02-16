@@ -1,8 +1,14 @@
-# Top level SIP code folder.
+# SIP: Top level code folder
+
+## Roles and Responsibilities
 
 Code in this folder tree is organised according to the the SDP System-level
 Module Decomposition View \[1\] (see figure below), with additional details
 drawn from the from other SDP Architecture documents.
+
+Leaf-level code folders are designed as much as possible to be independently
+deployable and testable software components in the form of service applications,
+pipeline or workflow scripts, and supporting libraries.
 
 ## References
 
