@@ -28,8 +28,7 @@ def root():
 def state():
 
     """Return the SDP State."""
-    states = ['OFF', 'INIT', 'STANDBY', 'ON', 'DISABLE', 'FAULT', 'ALARM',
-              'UNKNOWN']
+    states = ['OFF', 'STANDBY', 'ON', 'DISABLE']
 
     if request.method == 'PUT':
         requested_state = request.data.get('state', '').upper()
