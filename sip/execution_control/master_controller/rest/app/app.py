@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 """SIP Master Controller (REST)."""
 import os
+import signal
 
 import redis
 from flask import request
@@ -28,6 +29,8 @@ def root():
 def state():
 
     """Return the SDP State."""
+
+    # These are the states we allowed to rquest
     states = ['OFF', 'STANDBY', 'ON', 'DISABLE']
 
     if request.method == 'PUT':
@@ -41,11 +44,15 @@ def state():
             DB.set('state', requested_state)
         except redis.exceptions.ConnectionError:
             response['error'] = 'Unable to connect to database.'
+        if requested_state == 'OFF':
+            os.kill(os.getpid(), signal.SIGINT)
         return response
 
+    # GET - if the state in the database is OFF we want to replace it with
+    # INIT
     try:
         current_state = DB.get('state')
-        if current_state is None:
+        if current_state is None or current_state.decode('utf-8') == 'OFF':
             DB.set('state', 'INIT')
             current_state = 'INIT'
         else:
@@ -54,4 +61,3 @@ def state():
     except redis.exceptions.ConnectionError:
         return {'state': 'UNKNOWN',
                 'error': 'Unable to connect to database.'}
-
