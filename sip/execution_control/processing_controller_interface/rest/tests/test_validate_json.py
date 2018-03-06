@@ -32,9 +32,8 @@ def fix_file_refs(schema, path):
 
 def load_schema():
     schema_root = os.path.join(os.path.dirname(__file__),
-                               "..", "app", "schema", "post")
-    schema_path = os.path.join(schema_root,
-                               'scheduling_block_instance_request.json')
+                               "..", "app", "scheduling_block")
+    schema_path = os.path.join(schema_root, 'post_request.json')
     with open(schema_path) as json_data:
         schema = json.load(json_data)
 

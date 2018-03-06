@@ -7,10 +7,10 @@ from ..mock_config_db_client import get_processing_block, \
                                     delete_processing_block
 
 
-PROCESSING_BLOCK_API = Blueprint('processing_block_api', __name__)
+API = Blueprint('processing_block_api', __name__)
 
 
-@PROCESSING_BLOCK_API.route('/processing-block/<block_id>', methods=['GET'])
+@API.route('/processing-block/<block_id>', methods=['GET'])
 def get_processing_block_detail(block_id):
     """Processing block detail resource."""
     block = get_processing_block(block_id)
@@ -22,7 +22,7 @@ def get_processing_block_detail(block_id):
     return block
 
 
-@PROCESSING_BLOCK_API.route('/processing-block/<block_id>', methods=['DELETE'])
+@API.route('/processing-block/<block_id>', methods=['DELETE'])
 def delete_processing_block_request(block_id):
     """Processing block detail resource."""
     try:

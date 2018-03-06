@@ -7,10 +7,10 @@ from ..mock_config_db_client import get_processing_block_ids, \
                                     get_processing_block
 
 
-processing_blocks_api = Blueprint('processing_blocks_api', __name__)
+API = Blueprint('processing_block_list', __name__)
 
 
-@processing_blocks_api.route('/processing-blocks', methods=['GET'])
+@API.route('/processing-blocks', methods=['GET'])
 def get_processing_block_list():
     """Return the list of Processing Blocks known to SDP."""
     response = []

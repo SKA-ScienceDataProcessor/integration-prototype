@@ -3,10 +3,14 @@
 
 Adds a set of Scheduling Block Instances to a test / mock configuration
 database.
+
+Run with:
+    python3 -m utils.init_db
 """
 import random
 from time import gmtime, strftime
 import json
+
 
 from app.mock_config_db_client import add_scheduling_block, \
                                       clear_db

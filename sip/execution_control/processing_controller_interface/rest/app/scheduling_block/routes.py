@@ -7,10 +7,10 @@ from ..mock_config_db_client import get_scheduling_block, \
                                     delete_scheduling_block
 
 
-scheduling_block_api = Blueprint('scheduling_block_api', __name__)
+API = Blueprint('scheduling_block', __name__)
 
 
-@scheduling_block_api.route('/scheduling-block/<block_id>', methods=['GET'])
+@API.route('/scheduling-block/<block_id>', methods=['GET'])
 def get_scheduling_block_detail(block_id):
     """Scheduling block detail resource."""
     block = get_scheduling_block(block_id)
@@ -22,7 +22,7 @@ def get_scheduling_block_detail(block_id):
     return block
 
 
-@scheduling_block_api.route('/scheduling-block/<block_id>', methods=['DELETE'])
+@API.route('/scheduling-block/<block_id>', methods=['DELETE'])
 def delete_scheduling_block_request(block_id):
     """Scheduling block detail resource."""
     try:

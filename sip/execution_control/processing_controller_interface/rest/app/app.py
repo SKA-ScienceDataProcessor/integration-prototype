@@ -6,21 +6,23 @@ http://blog.subair.net/make-a-simple-modular-rest-api-using-flask-and-blueprint/
 from flask import request
 from flask_api import FlaskAPI
 
-from .scheduling_blocks.route import scheduling_blocks_api
-from .scheduling_block.route import scheduling_block_api
-from .processing_blocks.route import processing_blocks_api
+from .scheduling_block_list.routes import API as SCHEDULING_BLOCK_LIST
+from .scheduling_block.routes import API as SCHEDULING_BLOCK
+from .processing_block_list.routes import API as PROCESSING_BLOCK_LIST
+from .processing_block.routes import API as PROCESSING_BLOCK
 
 APP = FlaskAPI(__name__)
 
-APP.register_blueprint(scheduling_blocks_api)
-APP.register_blueprint(scheduling_block_api)
-APP.register_blueprint(processing_blocks_api)
+APP.register_blueprint(SCHEDULING_BLOCK_LIST)
+APP.register_blueprint(SCHEDULING_BLOCK)
+APP.register_blueprint(PROCESSING_BLOCK_LIST)
+APP.register_blueprint(PROCESSING_BLOCK)
 
 
 @APP.route('/')
 def root():
     """."""
-    return {"_links": {
+    return {"links": {
         "message": "Welcome to the SIP Processing Controller interface",
         "items": [
             {"href": "{}scheduling-blocks".format(request.url)},
@@ -28,8 +30,3 @@ def root():
         ]
     }}
 
-
-@APP.route('/processing-block/<block_id>', methods=['GET', 'DELETE'])
-def processing_block_detail():
-    """Processing blocks detail resource."""
-    return {}

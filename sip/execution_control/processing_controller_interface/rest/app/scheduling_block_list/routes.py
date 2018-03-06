@@ -9,10 +9,10 @@ from ..mock_config_db_client import get_scheduling_block_ids, \
                                     add_scheduling_block
 
 
-scheduling_blocks_api = Blueprint('scheduling_blocks_api', __name__)
+API = Blueprint('scheduling_block_list', __name__)
 
 
-@scheduling_blocks_api.route('/scheduling-blocks', methods=['GET'])
+@API.route('/scheduling-blocks', methods=['GET'])
 def get_scheduling_block_list():
     """Return the list of Scheduling Blocks instances known to SDP."""
     response = dict(scheduling_blocks=[],
@@ -39,7 +39,7 @@ def get_scheduling_block_list():
     return response, status.HTTP_200_OK
 
 
-@scheduling_blocks_api.route('/scheduling-blocks', methods=['POST'])
+@API.route('/scheduling-blocks', methods=['POST'])
 def create_scheduling_block():
     """Create / register a Scheduling Block instance with SDP."""
     config = request.data

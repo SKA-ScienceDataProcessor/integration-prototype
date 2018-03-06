@@ -67,8 +67,9 @@ def add_scheduling_block(config):
     Args:
         config (dict): Scheduling Block instance request configuration.
     """
-    schema_path = os.path.join('app', 'schema', 'post',
-                               'scheduling_block_instance_request.json')
+
+    schema_path = os.path.join(os.path.dirname(__file__),
+                               'scheduling_block_list', 'post_request.json')
     schema = load_schema(schema_path)
     jsonschema.validate(config, schema)
 
