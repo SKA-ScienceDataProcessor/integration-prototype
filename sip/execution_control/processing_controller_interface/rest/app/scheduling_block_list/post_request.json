@@ -6,7 +6,10 @@
         "processing_block": {
             "type": "object",
             "properties": {
-                "id": { "type": "string" },
+                "id": {
+                    "type": "string",
+                    "pattern": "^[0-9]{8}-[\\w|\\d]+-sbi[\\d]+:pb[0-9]{3}$"
+                },
                 "status": { "type": "string" },
                 "workflow": { "$ref": "#definitions/workflow" }
             },
@@ -15,13 +18,14 @@
         "workflow": {
             "type": "object",
             "properties": {
-                "template": { "type": "string" },
+                "name": { "type": "string" },
+                "template": { "type": "object" },
                 "stages": {
                     "type": "array",
                     "items": { "$ref": "#definitions/workflow_stage" }
                 }
             },
-            "required": ["template", "stages"]
+            "required": ["name"]
         },
         "workflow_stage": {
             "type": "object"

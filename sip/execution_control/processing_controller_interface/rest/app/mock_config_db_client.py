@@ -120,8 +120,7 @@ def get_processing_block_ids():
     for key in DB.keys(pattern='scheduling_block/*'):
         config = json.loads(DB.get(key))
         for processing_block in config['processing_blocks']:
-            ids.append('{}:{}'.format(key.split('/')[-1],
-                                      processing_block['id']))
+            ids.append(processing_block['id'])
     return ids
 
 
@@ -131,9 +130,7 @@ def get_processing_block(block_id):
     scheduling_block_id = identifiers[0]
     scheduling_block_config = get_scheduling_block(scheduling_block_id)
     for processing_block in scheduling_block_config['processing_blocks']:
-        if processing_block['id'] == identifiers[-1]:
-            processing_block['scheduling_block_instance_id'] = \
-                scheduling_block_id
+        if processing_block['id'] == block_id:
             return processing_block
     raise KeyError('Unknown Processing Block id: {} ({})'
                    .format(identifiers[-1], block_id))

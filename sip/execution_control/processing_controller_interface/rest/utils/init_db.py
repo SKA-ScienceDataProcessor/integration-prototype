@@ -35,8 +35,14 @@ def main():
         }
         for p in range(random.randint(1, 3)):
             config['processing_blocks'].append({
-                "id": "pb-{:02d}".format(p),
-                "workflow": {"template": "", "stages": []}
+                "id": "{}:pb{:03d}".format(block_id, p),
+                "workflow": {
+                    "name": "{}".format(random.choice(['vis_ingest_01',
+                                                      'dask_ical_01',
+                                                      'dask_maps_01'])),
+                    "template": {},
+                    "stages": []
+                }
             })
         print('-' * 40)
         print(json.dumps(config, indent=2))

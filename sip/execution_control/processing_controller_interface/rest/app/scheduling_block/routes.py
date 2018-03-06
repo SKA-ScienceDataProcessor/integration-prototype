@@ -15,9 +15,12 @@ def get_scheduling_block_detail(block_id):
     """Scheduling block detail resource."""
     block = get_scheduling_block(block_id)
     response = block
-    response['_links'] = {
+    response['links'] = {
         'self': '{}'.format(request.url),
-        'list': '{}scheduling-blocks'.format(request.url_root)
+        'next': 'TODO',
+        'previous': 'TODO',
+        'list': '{}scheduling-blocks'.format(request.url_root),
+        'home': '{}'.format(request.url_root)
     }
     return block
 

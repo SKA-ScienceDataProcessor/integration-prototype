@@ -57,7 +57,10 @@ def create_scheduling_block():
     response['links'] = {
         'self': '{}scheduling-block/{}'.format(request.url_root,
                                                config['id']),
-        'list': '{}'.format(request.url)
+        'next': 'TODO',
+        'previous': 'TODO',
+        'list': '{}'.format(request.url),
+        'home': '{}'.format(request.url_root)
     }
     response = []
     return response, status.HTTP_202_ACCEPTED
