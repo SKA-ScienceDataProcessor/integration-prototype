@@ -8,11 +8,13 @@ from flask_api import FlaskAPI
 
 from .scheduling_blocks.route import scheduling_blocks_api
 from .scheduling_block.route import scheduling_block_api
+from .processing_blocks.route import processing_blocks_api
 
 APP = FlaskAPI(__name__)
 
 APP.register_blueprint(scheduling_blocks_api)
 APP.register_blueprint(scheduling_block_api)
+APP.register_blueprint(processing_blocks_api)
 
 
 @APP.route('/')
@@ -25,12 +27,6 @@ def root():
             {"href": "{}processing-blocks".format(request.url)}
         ]
     }}
-
-
-@APP.route('/processing-blocks', methods=['GET'])
-def processing_block_list():
-    """Processing blocks list resource."""
-    return {}
 
 
 @APP.route('/processing-block/<block_id>', methods=['GET', 'DELETE'])

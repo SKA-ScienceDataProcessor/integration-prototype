@@ -1,67 +1,63 @@
 # -*- coding: utf-8 -*-
 """Scheduling blocks route"""
-import os
-
 from flask import Blueprint, request
 from flask_api import status
-import pymongo
-from pymongo import MongoClient, errors
 import jsonschema
-from jsonschema import validate
 
-# from ..app import DATABASE_URL
-# from ..app import CLIENT, BLOCKS
-from ..schema.schema import SCHEDULING_BLOCK_SCHEMA
-
-DATABASE_URL = os.getenv('DATABASE_URL', 'mongodb://localhost:27017')
-CLIENT = MongoClient(DATABASE_URL,
-                     serverSelectionTimeoutMS=500,
-                     connectTimeoutMS=500,
-                     connect=True)
-DB = CLIENT.processing_controller_interface
-BLOCKS = DB.scheduling_blocks
+from ..mock_config_db_client import get_scheduling_block_ids, \
+                                    get_scheduling_block, \
+                                    add_scheduling_block
 
 
 scheduling_blocks_api = Blueprint('scheduling_blocks_api', __name__)
 
 
-@scheduling_blocks_api.route('/scheduling-blocks', methods=['GET', 'POST'])
-def scheduling_block_list():
-    """Scheduling blocks list resource."""
-    try:
-        CLIENT.server_info()
-    except pymongo.errors.ServerSelectionTimeoutError:
-        return {'error': 'Unable to connect to database: {}'.
-                format(DATABASE_URL)}, status.HTTP_500_INTERNAL_SERVER_ERROR
+@scheduling_blocks_api.route('/scheduling-blocks', methods=['GET'])
+def get_scheduling_block_list():
+    """Return the list of Scheduling Blocks instances known to SDP."""
+    response = dict(scheduling_blocks=[],
+                    links=dict(home="{}".format(request.url_root)))
+    blocks = response['scheduling_blocks']
+    block_ids = get_scheduling_block_ids()
 
-    if request.method == 'POST':
-        data = request.data
+    for block_id in block_ids:
+        block = get_scheduling_block(block_id)
+        # Remove processing blocks key.
+        # Scheduling blocks list should just be a summary.
+        print(block['processing_blocks'])
+        print(type(block['processing_blocks']))
+        block['num_processing_blocks'] = len(block['processing_blocks'])
         try:
-            validate(data, SCHEDULING_BLOCK_SCHEMA)
-        except jsonschema.exceptions.SchemaError as error:
-            return {'error': 'Invalid scheduling block Schema: {}'.
-                    format(error.message)}, status.HTTP_400_BAD_REQUEST
-
-        block_id = 0
-        for block in BLOCKS.find({}):
-            block_id = max(block_id, int(block['_id'].lstrip('sb-')))
-        data['_id'] = 'sb-%02i' % (block_id + 1)
-        BLOCKS.insert_one(data)
-        response = data
-        response['links'] = {
-            'self': '{}scheduling-block/{}'.format(request.url_root,
-                                                   data['_id']),
-            'list': '{}'.format(request.url)
-
-        }
-        return response, status.HTTP_202_ACCEPTED
-
-    # request.method == GET
-    response = []
-    for block in BLOCKS.find({}):
+            del block['processing_blocks']
+        except KeyError:
+            pass
         block['links'] = {
             'self': '{}scheduling-block/{}'.format(request.url_root,
-                                                   block['_id'])
+                                                   block_id)
         }
-        response.append(block)
+        blocks.append(block)
     return response, status.HTTP_200_OK
+
+
+@scheduling_blocks_api.route('/scheduling-blocks', methods=['POST'])
+def create_scheduling_block():
+    """Create / register a Scheduling Block instance with SDP."""
+    config = request.data
+    try:
+        add_scheduling_block(config)
+    except jsonschema.ValidationError as error:
+        error_dict = error.__dict__
+        for key in error_dict:
+            error_dict[key] = error_dict[key].__str__()
+        error_response = dict(message="Failed to add scheduling block",
+                              reason="JSON validation error",
+                              details=error_dict)
+        return error_response, status.HTTP_400_BAD_REQUEST
+    response = config
+    response['links'] = {
+        'self': '{}scheduling-block/{}'.format(request.url_root,
+                                               config['id']),
+        'list': '{}'.format(request.url)
+    }
+    response = []
+    return response, status.HTTP_202_ACCEPTED

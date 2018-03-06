@@ -16,7 +16,6 @@ currently registered with the SDP system.
 
 ## Quickstart
 
-
 ```bash
 docker-compose build
 ```
@@ -31,7 +30,7 @@ docker-compose rm -s -f
 
 
 ```bash
-docker-compose run -p 27017:27017 -d processing_controller_db
+docker-compose run -p 6379:6379 -d processing_controller_db
 export FLASK_APP=app/app.py
 export FLASK_DEBUG=True
 flask run

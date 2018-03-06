@@ -2,12 +2,17 @@ version: '3.4'
 
 services:
 
-  processing_controller:
-    environment:
-      DATABASE_URL: "mongodb://processing_controller_db:27017"
-    ports:
-      - 5000:5001
-
   processing_controller_db:
+    image: redis:4.0.6-alpine
     ports:
-      - 27017:27017
+      - 6379:6379
+
+  # https://github.com/joeferner/redis-commander
+  # REDIS_HOSTS string format:
+  #    [label]:[hostname]:[port]:[dbIndex]:[password]
+  redis-commander-db0:
+    image: rediscommander/redis-commander:latest
+    environment:
+    - REDIS_HOSTS=config_db:processing_controller_db:6379:0
+    ports:
+    - 8081:8081
