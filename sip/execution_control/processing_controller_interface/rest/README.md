@@ -21,16 +21,25 @@ docker-compose build
 ```
 
 ```bash
-docker-compose -f docker-compose.yml -f docker-compose-dev.yml up -d
+docker-compose -f docker-compose.yml -f docker-compose.dev.yml up -d
 ```
+
+or 
+
+```bash
+docker stack deploy -c docker-compose.dev.yml [stack name]
+```
+
 
 ```bash
 docker-compose rm -s -f
 ```
 
+```bash
+docker stack rm [stack name]
+```
 
 ```bash
-docker-compose run -p 6379:6379 -d processing_controller_db
 export FLASK_APP=app/app.py
 export FLASK_DEBUG=True
 flask run

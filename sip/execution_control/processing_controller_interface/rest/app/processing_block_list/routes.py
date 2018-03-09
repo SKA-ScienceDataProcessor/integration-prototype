@@ -18,15 +18,16 @@ def get_processing_block_list():
     for block_id in block_ids:
         block = get_processing_block(block_id)
         block['links'] = {
-            'self': ('{}processing-block/{}'
-                     .format(request.url_root,
-                             block_id)),
+            'detail': ('{}processing-block/{}'
+                       .format(request.url_root,
+                               block_id)),
             'scheduling_block': ('{}scheduling-block/{}'
                                  .format(request.url_root,
                                          block_id.split(':')[0]))
         }
         response['processing_blocks'].append(block)
     response['links'] = {
+        'self': '{}'.format(request.url),
         'home': '{}'.format(request.url_root)
     }
     return response, status.HTTP_200_OK

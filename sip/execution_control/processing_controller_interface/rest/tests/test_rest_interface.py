@@ -24,7 +24,11 @@ class ProcessingControllerInterfaceTests(unittest.TestCase):
         """Executed after each test."""
         pass
 
-    def test_post_scheduling_block(self):
+    def test_get_scheduling_block_list(self):
+        """Test GET request of scheduling block list"""
+        pass
+
+    def test_post_invalid_scheduling_block(self):
         """Test request of a new scheduling block."""
         # response = self.app.get('/state')
         # self.assertEqual(response.mimetype,
@@ -32,3 +36,12 @@ class ProcessingControllerInterfaceTests(unittest.TestCase):
         # self.assertEqual(response.status_code, 200)
         # data = json.loads(response.get_data())
         # self.assertTrue(data['state'] in states)
+
+    def test_post_successful_scheduling_block(self):
+        """Test request of a new scheduling block."""
+        pass
+
+    def test_delete_scheduling_block(self):
+        """Test delete of a scheduling block"""
+        pass
+

@@ -16,7 +16,8 @@ API = Blueprint('scheduling_block_list', __name__)
 def get_scheduling_block_list():
     """Return the list of Scheduling Blocks instances known to SDP."""
     response = dict(scheduling_blocks=[],
-                    links=dict(home="{}".format(request.url_root)))
+                    links=dict(self='{}'.format(request.url),
+                               home='{}'.format(request.url_root)))
     blocks = response['scheduling_blocks']
     block_ids = get_scheduling_block_ids()
 
@@ -24,15 +25,13 @@ def get_scheduling_block_list():
         block = get_scheduling_block(block_id)
         # Remove processing blocks key.
         # Scheduling blocks list should just be a summary.
-        print(block['processing_blocks'])
-        print(type(block['processing_blocks']))
         block['num_processing_blocks'] = len(block['processing_blocks'])
         try:
             del block['processing_blocks']
         except KeyError:
             pass
         block['links'] = {
-            'self': '{}scheduling-block/{}'.format(request.url_root,
+            'detail': '{}scheduling-block/{}'.format(request.url_root,
                                                    block_id)
         }
         blocks.append(block)

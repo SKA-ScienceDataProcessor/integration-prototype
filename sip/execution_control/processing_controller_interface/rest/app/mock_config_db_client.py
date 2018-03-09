@@ -50,7 +50,7 @@ def get_scheduling_block_ids():
     """Return list of scheduling block IDs"""
     ids = [key.split('/')[-1]
            for key in DB.keys(pattern='scheduling_block/*')]
-    return ids
+    return sorted(ids)
 
 
 def get_num_scheduling_blocks():
@@ -117,7 +117,7 @@ def get_scheduling_block_event():
 def get_processing_block_ids():
     """Return an array of Processing Block ids"""
     ids = []
-    for key in DB.keys(pattern='scheduling_block/*'):
+    for key in sorted(DB.keys(pattern='scheduling_block/*')):
         config = json.loads(DB.get(key))
         for processing_block in config['processing_blocks']:
             ids.append(processing_block['id'])
@@ -136,8 +136,9 @@ def get_processing_block(block_id):
                    .format(identifiers[-1], block_id))
 
 
-def delete_processing_block(scheduling_block_id, processing_block_id):
+def delete_processing_block(processing_block_id):
     """Delete Processing Block with the specified ID"""
+    scheduling_block_id = processing_block_id.split(':')[0]
     config = get_scheduling_block(scheduling_block_id)
     processing_blocks = config.get('processing_blocks')
     processing_block = list(filter(lambda x: x.get('id') == processing_block_id,

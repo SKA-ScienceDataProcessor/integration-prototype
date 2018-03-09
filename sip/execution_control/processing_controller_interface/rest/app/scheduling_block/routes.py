@@ -4,6 +4,7 @@ from flask import Blueprint, request
 from flask_api import status
 
 from ..mock_config_db_client import get_scheduling_block, \
+                                    get_scheduling_block_ids, \
                                     delete_scheduling_block
 
 
@@ -13,12 +14,18 @@ API = Blueprint('scheduling_block', __name__)
 @API.route('/scheduling-block/<block_id>', methods=['GET'])
 def get_scheduling_block_detail(block_id):
     """Scheduling block detail resource."""
+    blocks = get_scheduling_block_ids()
     block = get_scheduling_block(block_id)
+    this_index = blocks.index(block_id)
+    next_index = this_index + 1 if this_index + 1 < len(blocks) else 0
+    prev_index = this_index - 1 if this_index - 1 > 0 else len(blocks) - 1
     response = block
     response['links'] = {
         'self': '{}'.format(request.url),
-        'next': 'TODO',
-        'previous': 'TODO',
+        'next': '{}scheduling-block/{}'.format(request.url_root,
+                                               blocks[next_index]),
+        'prev': '{}scheduling-block/{}'.format(request.url_root,
+                                               blocks[prev_index]),
         'list': '{}scheduling-blocks'.format(request.url_root),
         'home': '{}'.format(request.url_root)
     }
