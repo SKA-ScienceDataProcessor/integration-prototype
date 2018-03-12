@@ -73,7 +73,8 @@ class DockerPaas(Paas):
 
             # Define a mount so that the container can talk to the
             # docker engine.
-            mount = ['/var/run/docker.sock:/var/run/docker.sock:rw'] 
+            mount = ['/var/run/docker.sock:/var/run/docker.sock:rw','arl-results:/home/sdp/results:rw', 
+                      '/home/vlad/software.x32/SKA/integration-prototype/algorithm-reference-library:/home/sdp/algorithm-reference-library:rw']
 
             # Define the restart policy
             if restart:
