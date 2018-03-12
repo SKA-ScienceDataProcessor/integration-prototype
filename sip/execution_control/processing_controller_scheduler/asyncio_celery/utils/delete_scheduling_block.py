@@ -7,19 +7,32 @@ Request command from TM.
 """
 
 import random
-from app.mock_config_db_client import (get_scheduling_block_ids,
-                                       delete_scheduling_block)
+# from app.mock_config_db_client import (get_scheduling_block_ids,
+#                                        delete_scheduling_block)
+
+from app.config_client_api import ConfigClient
+
 
 
 def main():
     # Obtain list of scheduling blocks
-    blocks = get_scheduling_block_ids()
+    # blocks = get_scheduling_block_ids()
 
-    # Delete a random scheduling block
-    if blocks:
-        block_id = random.choice(blocks)
-        delete_scheduling_block(block_id)
-        print('Deleted Scheduling Block %s' % block_id)
+    # For testing, hardcoding the scheduling block id
+    block_id = "180201-sched-blinst0"
+
+    redis_api = ConfigClient()
+    redis_api.delete_scheduling_block(block_id)
+    print('Deleted Scheduling Block %s' % block_id)
+
+
+
+
+    # # Delete a random scheduling block
+    # if blocks:
+    #     block_id = random.choice(blocks)
+    #     delete_scheduling_block(block_id)
+    #     print('Deleted Scheduling Block %s' % block_id)
 
 
 if __name__ == '__main__':

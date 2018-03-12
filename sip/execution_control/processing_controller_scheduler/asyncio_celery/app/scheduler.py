@@ -25,6 +25,8 @@ from .mock_config_db_client import get_processing_block, \
 from mock_processing_block_controller.tasks import execute_processing_block
 from .queue import ProcessingBlockQueue
 
+from app.config_client_api import ConfigClient
+
 
 class ProcessingBlockScheduler:
 
@@ -37,6 +39,7 @@ class ProcessingBlockScheduler:
         """
         self._queue = ProcessingBlockQueue()
         self._report_rate = report_rate
+        self._redis_api = ConfigClient()
 
     def run(self):
         """Starts the Scheduler event loop."""
@@ -94,7 +97,8 @@ class ProcessingBlockScheduler:
         print('Starting watch for Scheduling Block events')
         while True:
             try:
-                event = get_scheduling_block_event()
+                # event = get_scheduling_block_event()
+                event = self._redis_api.get_scheduling_block_event()
                 if event:
                     if event['type'] == 'created':
                         await self._register_scheduling_block(event['id'])
@@ -117,19 +121,22 @@ class ProcessingBlockScheduler:
             block_id (str): Scheduling block id.
         """
         print("Registering Scheduling Block: %s" % block_id)
-        config = get_scheduling_block(block_id)
-        processing_blocks = config.get('processing_blocks')
-        if not processing_blocks:
-            return
-        for processing_block in processing_blocks:
-            priority = random.randint(0, 5)
-            block_id = processing_block.get('id')
-            try:
-                self._queue.put(block_id, priority)
-            except KeyError:
-                return
-        print('Added %d processing blocks to the queue'
-              % len(processing_blocks))
+        # TODO (NJT) Check with BM the logic of this function
+        # config = self._redis_api.get_scheduling_block(block_id)
+        # # config = get_scheduling_block(block_id)
+        # processing_blocks = config.get('processing_blocks')
+        # print(processing_blocks)
+        # if not processing_blocks:
+        #     return
+        # for processing_block in processing_blocks:
+        #     priority = random.randint(0, 5)
+        #     block_id = processing_block.get('id')
+        #     try:
+        #         self._queue.put(block_id, priority)
+        #     except KeyError:
+        #         return
+        # print('Added %d processing blocks to the queue'
+        #       % len(processing_blocks))
 
     async def _remove_scheduling_block(self, block_id):
         """Remove a Scheduling Block from the queue.

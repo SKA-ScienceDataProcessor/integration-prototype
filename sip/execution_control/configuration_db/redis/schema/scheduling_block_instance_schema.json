@@ -1,0 +1,219 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "title": "Scheduling Block Instance",
+    "description": "Schema for an SKA Scheduling Block Instance",
+    "type": "object",
+    "properties": {
+        "sched_block_id": {
+            "description": "[date]-[project]-[type][id] for the scheduling block id",
+            "type": "string"
+        },
+        "name": {
+            "description": "Optional name string",
+            "type": "string"
+        },
+        "sched_block_instance_id": {
+            "description": "[date]-[project]-[type][id] for the scheduling block instance id",
+            "type": "string"
+        },
+        "type": {
+            "description": "Type of scheduling block",
+            "type": "string"
+        },
+        "date": {
+            "description": "YYmmdd for the date",
+            "type": "string"
+        },
+        "sub_array_id": {
+            "description": "[date]-[project]-[type][id] for the sub array id",
+            "type": "string"
+        },
+        "status": {
+            "description": "Status of the scheduling block instance",
+            "type": "string"
+        },
+        "verison": {
+            "description": "Version of the scheduling block instance",
+            "type": "string"
+        },
+        "project": {
+            "description": "Project of the scheduling block instance",
+            "type": "string"
+        },
+        "processing_blocks": {
+            "description": "Array of processing blocks associated with this scheduling block",
+            "type": "array",
+            "items": {
+                "description": "Processing block specification - description of required processing",
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "description": "[date]-[project]-[type][id] for the processing block",
+                        "type": "string"
+                    },
+                    "type": {
+                        "description": "Type of the processing block",
+                        "type": "string"
+                    },
+                    "priority": {
+                        "description": "The Priority of the processing block",
+                        "type": "number"
+                    },
+                    "status": {
+                        "description": "Status of the processing block",
+                        "type": "string"
+                    },
+                    "resources_requirement": {
+                        "description": "Resource required for the processing block",
+                        "type": "object",
+                        "properties": {
+                            "storage_type": {
+                                "description": "Hot or cold buffer storage type",
+                                "type": "string"
+                            },
+                            "status": {
+                                "description": "Status of the resource required",
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "assigned_resources": {
+                        "description": "Resource assigned for the processing block",
+                        "type": "object",
+                        "properties": {
+                            "status": {
+                                "description": "Status of the resource assigned",
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "workflow": {
+                        "description": "Workflow stages",
+                        "type": "object",
+                        "properties": {
+                            "status": {
+                                "description": "Status of the workflow stage",
+                                "type": "string"
+                            },
+                            "stages": {
+                                "description": "Each stage of the workflow",
+                                "type": "array",
+                                "items": {
+                                    "description": "List of all the stages",
+                                    "type": "object",
+                                    "properties": {
+                                        "processing_stage": {
+                                            "description": "Processing Stage",
+                                            "type": "object",
+                                            "properties": {
+                                                "status": {
+                                                    "description": "Status of the processing stage",
+                                                    "type": "string"
+                                                },
+                                                "start_time": {
+                                                    "description": "Optional start time of the processing block",
+                                                    "type": "string"
+                                                },
+                                                "end_time": {
+                                                    "description": "Optional end time of the processing block",
+                                                    "type": "string"
+                                                },
+                                                "processing_component": {
+                                                    "description": "Processing block configuration",
+                                                    "type": "object",
+                                                    "properties": {
+                                                        "status": {
+                                                            "description": "Status of the processing block configuration",
+                                                            "type": "string"
+                                                        },
+                                                        "config": {
+                                                            "vis_ingest": {"$ref": "#/definitions/vis_ingest"},
+                                                            "ical": {"$ref": "#/definitions/ical"}
+                                                        }
+                                                    }
+                                                },
+                                                "execution_engine": {
+                                                    "description": "Execution engine",
+                                                    "type": "object",
+                                                    "properties": {
+                                                        "status": {
+                                                            "description": "Status of the execution engine",
+                                                            "type": "string"
+                                                        },
+                                                        "framework": {
+                                                            "description": "Framework of the processing block",
+                                                            "type": "string"
+                                                        }
+                                                    }
+                                                }
+                                            },
+                                            "required": ["processing_component", "execution_engine"]
+                                        },
+                                        "service_stage": {
+                                            "description": "",
+                                            "type:": "object",
+                                            "properties": {
+                                                "status": {
+                                                    "description": "Status of the service stage",
+                                                    "type": "string"
+                                                },
+                                                "buffer": {
+                                                    "description": "Buffer Stage",
+                                                    "type": "string"
+                                                },
+                                                "preservation": {
+                                                    "description": "Preservation Stage",
+                                                    "type": "string"
+                                                },
+                                                "model_database": {
+                                                    "description": "Model Database Stage",
+                                                    "type": "string"
+                                                },
+                                                "data_queue": {
+                                                    "description": "Data queue Stage",
+                                                    "type": "string"
+                                                },
+                                                "delivery": {
+                                                    "description": "Delivery Stage",
+                                                    "type": "string"
+                                                }
+                                            }
+                                        },
+                                        "dependency": {
+                                            "description": "Optional",
+                                            "type:": "object",
+                                            "properties": {
+                                                "status": {
+                                                    "description": "Optional - Status of the Dependency",
+                                                    "type": "string"
+                                                },
+                                                "sky_model_tag_id": {
+                                                    "description": "Optional Sky model tag id",
+                                                    "type": "string"
+                                                },
+                                                "telescope_model_tag_id": {
+                                                    "description": "Optional telescope model tag id",
+                                                    "type": "string"
+                                                },
+                                                "data_queue_id": {
+                                                    "description": "Optional data queue id",
+                                                    "type": "string"
+                                                },
+                                                "buffer_object_id": {
+                                                    "description": "Optional buffer object id",
+                                                    "type": "string"
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                "required": ["id", "resources_requirement", "workflow"]
+            }
+        }
+    },
+    "required": ["sched_block_id", "sched_block_instance_id", "sub_array_id", "processing_blocks"]
+}
