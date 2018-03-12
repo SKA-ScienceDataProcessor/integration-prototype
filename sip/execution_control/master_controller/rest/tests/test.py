@@ -32,5 +32,5 @@ class MasterControllerTests(unittest.TestCase):
         self.assertEqual(response.mimetype,
                          'application/json')
         self.assertEqual(response.status_code, 200)
-        data = json.loads(response.get_data())
+        data = json.loads(response.get_data().decode('utf-8'))
         self.assertTrue(data['state'] in states)
