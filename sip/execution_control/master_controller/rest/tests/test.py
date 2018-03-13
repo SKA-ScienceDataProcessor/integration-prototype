@@ -5,9 +5,11 @@
 """
 import unittest
 import json
+import os
+
+os.environ['UNIT_TESTING'] = 'yes'
 
 from app.app import APP
-
 
 class MasterControllerTests(unittest.TestCase):
     """Tests of the Master Controller"""
@@ -34,3 +36,22 @@ class MasterControllerTests(unittest.TestCase):
         self.assertEqual(response.status_code, 200)
         data = json.loads(response.get_data().decode('utf-8'))
         self.assertTrue(data['state'] in states)
+
+    def test_put_state_successful(self):
+        """Test of successfully setting the SDP state."""
+        pass
+        response = self.app.put('/state', data={'state': 'STANDBY'})
+        self.assertEqual(response.mimetype,
+                         'application/json')
+        self.assertEqual(response.status_code, 200)
+        response = self.app.get('/state')
+        data = json.loads(response.get_data().decode('utf-8'))
+        self.assertEqual(data['state'], 'STANDBY' )
+
+    def test_put_state_failure(self):
+        """Test of failing to set the SDP state."""
+        pass
+        response = self.app.put('/state', data={'state': 'BAD'})
+        self.assertEqual(response.mimetype,
+                         'application/json')
+        self.assertEqual(response.status_code, 400)

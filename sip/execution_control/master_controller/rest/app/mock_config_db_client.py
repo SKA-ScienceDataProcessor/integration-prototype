@@ -12,3 +12,6 @@ def put_target_state(state):
 
 def get_tango_state():
     return TARGET_STATE
+
+def check_timestamp():
+    return True;

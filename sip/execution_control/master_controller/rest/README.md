@@ -7,6 +7,19 @@
 
 ## Quick start
 
+### Starting the Master Controller for the first time
+
+Start the Master Controller in development mode:
+
+```bash
+docker-compose -f docker-compose.yml -f docker-compose.dev.yml up -d
+```
+Initialize the redis database
+
+```bash
+python3 init_db.py
+```
+
 ### Starting the Master Controller
 
 Start the Master Controller in production mode:
@@ -31,8 +44,6 @@ docker-compose rm -s -f
 ```
 
 ### Running the unit tests
-
-(First start the Master Controller in development mode)
 
 ```bash
 python3 -m unittest tests/test.py

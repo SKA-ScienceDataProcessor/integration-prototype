@@ -15,5 +15,11 @@ services:
     volumes:
       - master_db:/data/db
 
+  services_watchdog:
+    image: skasip/mock_services_watchdog
+    environment:
+      DATABASE_HOST: "master_db"
+    build: mock_watchdog
+
 volumes:
   master_db:

@@ -7,10 +7,16 @@ import redis
 from flask import request
 from flask_api import FlaskAPI, status
 
-
 APP = FlaskAPI(__name__)
-DB = redis.Redis(host=os.getenv('DATABASE_HOST'))
 
+if 'UNIT_TESTING' in os.environ:
+    from .mock_config_db_client import put_target_state
+    from .mock_config_db_client import get_tango_state
+    from .mock_config_db_client import check_timestamp
+else:
+    from .config_db_client import put_target_state
+    from .config_db_client import get_tango_state
+    from .config_db_client import check_timestamp
 
 @APP.route('/')
 def root():
@@ -27,10 +33,9 @@ def root():
 
 @APP.route('/state', methods=['GET', 'PUT'])
 def state():
-
     """Return the SDP State."""
 
-    # These are the states we allowed to rquest
+    # These are the states we allowed to request
     states = ['OFF', 'STANDBY', 'ON', 'DISABLE']
 
     if request.method == 'PUT':
@@ -41,7 +46,7 @@ def state():
                     status.HTTP_400_BAD_REQUEST)
         response = {'message': 'Accepted state: {}'.format(requested_state)}
         try:
-            DB.set('state', requested_state)
+            put_target_state(requested_state)
         except redis.exceptions.ConnectionError:
             response['error'] = 'Unable to connect to database.'
         if requested_state == 'OFF':
@@ -51,13 +56,19 @@ def state():
     # GET - if the state in the database is OFF we want to replace it with
     # INIT
     try:
-        current_state = DB.get('state')
-        if current_state is None or current_state.decode('utf-8') == 'OFF':
-            DB.set('state', 'INIT')
-            current_state = 'INIT'
+        current_state = get_tango_state()
+        if current_state == None:
+            return {'state': 'UNKNOWN',
+                    'error': 'database not initialised.'}
+
+        # Check the timestamp to be sure that the watchdog is alive
+        if check_timestamp():
+            if current_state == 'OFF':
+                current_state = 'INIT'
+            return {'state': current_state.decode()}
         else:
-            current_state = current_state.decode('utf-8')
-        return {'state': '{}'.format(current_state)}
+            return {'state': 'UNKNOWN',
+                    'error': 'services watchdog has died.'}
     except redis.exceptions.ConnectionError:
         return {'state': 'UNKNOWN',
                 'error': 'Unable to connect to database.'}
