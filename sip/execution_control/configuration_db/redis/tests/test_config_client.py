@@ -29,57 +29,35 @@ from app.config_client_api import ConfigClient
 
 
 def main():
+    """ Testing Scheduling Block"""
     with open('schema/scheduling_block_instance_data.json', 'r') as f:
         schema_data = f.read()
     sched_block_instance_schema = json.loads(schema_data)
 
     redis_api = ConfigClient()
 
-
-
-
-    # with open('/home/nijinjose123/integration-prototype/'
-    #           'sip/execution_control/configuration_db/redis/'
-    #           'schema/test_data.json', 'r') as f:
-    #     schema_t = f.read()
-    # test_data = json.loads(schema_t)
-    #
-    # with open('/home/nijinjose123/integration-prototype/'
-    #           'sip/execution_control/configuration_db/redis/'
-    #           'schema/schema_structure_test.json', 'r') as f:
-    #     schema = f.read()
-    # test_schema = json.loads(schema)
-    #
-    #
-    # validate(test_data,test_schema)
-
-
-
-##########################################################################################
-# UNCOMMENT LATER FOR FURTHER TESTING
-    # Need to add an extra step for error checking
     redis_api.set_schedule_block_instance(sched_block_instance_schema)
 
     event = redis_api.get_scheduling_block_event()
 
-    print(event)
-
-    print(event['type'])
-    print(event['id'])
-
-    print("Getting scheduling block instance using id")
-
-    block_id = "180201-sched-blinst0"
-
-
-    redis_api.delete_scheduling_block(block_id)
-
-    event1 = redis_api.get_scheduling_block_event()
-
-    print(event1)
-
-    print(event1['type'])
-    print(event1['id'])
+    # print(event)
+    #
+    # print(event['type'])
+    # print(event['id'])
+    #
+    # print("Getting scheduling block instance using id")
+    #
+    # block_id = "180201-sched-blinst0"
+    #
+    #
+    # redis_api.delete_scheduling_block(block_id)
+    #
+    # event1 = redis_api.get_scheduling_block_event()
+    #
+    # print(event1)
+    #
+    # print(event1['type'])
+    # print(event1['id'])
 
     # print(block)
 
@@ -100,17 +78,54 @@ def main():
     # if delete != "no":
     #     redis_api.remove_sched_block_instance(scheduling_bl_inst_id)
     #     print("Removed the instance")
-########################################################################################
+    ########################################################################################
 
-    # scheduling_bl_inst_id = "180201-sched-blinst0"
-    # proc_id = ["180201-sip-vis0", "180201-sip-vis1"]
-    # processing_id = "180201-sip-vis0"
-    # stage = "service_stage"
-    #
-    # status = 'UPDATE'
-    #
-    # # Update status of the scheduling block instance
-    # redis_api.update_status(scheduling_bl_inst_id, status, processing_id, status, stage)
+        # scheduling_bl_inst_id = "180201-sched-blinst0"
+        # proc_id = ["180201-sip-vis0", "180201-sip-vis1"]
+        # processing_id = "180201-sip-vis0"
+        # stage = "service_stage"
+        #
+        # status = 'UPDATE'
+        #
+        # # Update status of the scheduling block instance
+        # redis_api.update_status(scheduling_bl_inst_id, status, processing_id, status, stage)
+
+    #######################################################################################
+
+    """Testing Master Controller"""
+
+    with open('schema/init_data.json', 'r') as f:
+        schema_data = f.read()
+    master_controller_data = json.loads(schema_data)
+
+    # print(master_controller_data)
+
+    redis_api = ConfigClient()
+    redis_api.set_init_data(master_controller_data)
+
+    # Get the status
+    # service = 'master_controller'
+    service = 'system_services'
+
+    sub_service = 'logging'
+    # sub_service = 'local_sky_model'
+    state = 'state'
+
+    state = redis_api.get_state(service, state, sub_service=sub_service)
+    print(state)
+
+    # Update the status
+    service1 = 'master_controller'
+    service_s = 'sdp_services'
+
+    sub_service1 = 'local_sky_model'
+    # sub_service = 'local_sky_model'
+    new_state = 'stopped'
+    new_state1 = 'off'
+    master_controller_state= 'TANGO_state'
+
+    state = redis_api.update_state(service1, new_state1, m_state=master_controller_state)
+    state = redis_api.update_state(service_s, new_state, sub_service=sub_service1)
 
 
 

@@ -50,13 +50,87 @@ class ConfigClient():
         # Need to change the name to self._db
         self._db = redis.StrictRedis(host=REDIS_HOST, db=REDIS_DB_ID)
 
-    def set_master_controller(self):
+        # Initialising varibales
+        self._master_controller_key = {}
+        self._service_list = []
+        self._local_sky_model = {}
+        self._telescope_model = {}
+        self._data_queue = {}
+        self._logging = {}
+
+    def set_init_data(self, init_data):
         """
         Add master controller initial data to the configuration database
         """
-        print("Add initial data")
+        # Parse the master controller data
+        self.split_init_data(init_data)
 
-    def set_schedule_block_instance(self, scheduling_block_instance):
+        # Add keys and values to the configuration database
+        # TODO: (NJT) Optimize the code
+        instance_key = "execution_control:master_controller"
+        self._db.hmset(instance_key, self._master_controller_key)
+
+        instance_key = "execution_control:master_controller"
+        self._db.hmset(instance_key, self._master_controller_key)
+
+        instance_key = "execution_control:master_controller:service_list"
+        for service_list in self._service_list:
+            self._db.lpush(instance_key, service_list)
+
+        instance_key = "sdp_services:local_sky_model"
+        self._db.hmset(instance_key, self._local_sky_model)
+
+        instance_key = "sdp_services:telescope_model"
+        self._db.hmset(instance_key, self._telescope_model)
+
+        instance_key = "sdp_services:data_queue"
+        self._db.hmset(instance_key, self._data_queue)
+
+        instance_key = "system_services:logging"
+        self._db.hmset(instance_key, self._logging)
+
+    def get_state(self, service, state, sub_service=None,):
+        """Get the state of the service"""
+        # TODO: (NJT) Implement Error Messages
+        # TODO: (NJT) Add Print Messages
+        if sub_service != None:
+            key_search = self._db.keys(service + '*' + sub_service)
+            for key in key_search:
+                state = self._db.hget(key, state)
+            if state:
+                state = state.decode('utf-8')
+        else:
+            key_search = self._db.keys('*' + service)
+            for key in key_search:
+                state = self._db.hget(key, state)
+            if state:
+                state = state.decode('utf-8')
+
+        return state
+
+    def update_state(self, service, state, sub_service=None, m_state=None):
+        """Update the status of the"""
+        # TODO: (NJT) Implement Error Messages
+        # TODO: (NJT) Add Print Messages
+        if sub_service != None:
+            key_search = self._db.keys(service + '*' + sub_service)
+            for key in key_search:
+                update_state = {"state": state}
+                self._db.hmset(key, update_state)
+        else:
+            key_search = self._db.keys('*' + service)
+            for key in key_search:
+                update_state = {m_state: state}
+                self._db.hmset(key, update_state)
+
+    def get_service_list(self, service):
+        """Get the list of services"""
+        # TODO: (NJT) Implement this function
+        # TODO: (NJT) Implement Error Messages
+        # TODO: (NJT) Add Print Messages
+        print("Get the list of services - Placeholder")
+
+    def set_schedule_block_instance(self, scheduling_block_data):
         """
         Set scheduling block instance
         This includes adding the processing blocks and each of of its stages
@@ -65,39 +139,27 @@ class ConfigClient():
 
         try:
             # Validates the schema
-            validate(scheduling_block_instance, scheduling_block_schema)
+            validate(scheduling_block_data, scheduling_block_schema)
         except:
             print("Validation Error - Schema")
 
         # Add status
-        self.add_status(scheduling_block_instance)
+        self.add_status(scheduling_block_data)
 
         # Splitting the data into different keys before adding
         # to the database
-        scheduling_block_key, processing_key = self.parse_data(scheduling_block_instance)
+        scheduling_block_key, processing_key = self.split_scheduling_block(
+            scheduling_block_data)
         # Adding Scheduling block instance with id
         instance_key = "schedule_block_instance:" + \
-                       scheduling_block_instance["sched_block_instance_id"]
+                       scheduling_block_data["sched_block_instance_id"]
         self._db.hmset(instance_key, scheduling_block_key)
 
         # Add a event to the scheduling block event list to notify
         # of a new scheduling block being added to the db.
         self._db.rpush('scheduling_block_events', dict(
-            type=scheduling_block_instance["status"],
-            id=scheduling_block_instance["sched_block_instance_id"]))
-
-        # # Adding Processing blocks instance with id
-        # for key in processing_key:
-        #     processing_key = "schedule_block_instance:" + \
-        #                      scheduling_block_data["sched_block_instance_id"] + \
-        #                      ":" + key["id"]
-        #     self._db.hmset(processing_key, key)
-        #
-        #     # Add a event to the processing block event list to notify
-        #     # of a new processing block being added to the db.
-        #     self._db.rpush('processing_block_events', dict(
-        #         type=key["status"],
-        #         id=key["id"]))
+            type=scheduling_block_data["status"],
+            id=scheduling_block_data["sched_block_instance_id"]))
 
     def get_scheduling_block_event(self):
         """
@@ -108,13 +170,6 @@ class ConfigClient():
         if event:
             event = ast.literal_eval(event.decode('utf-8'))
         return (event)
-
-    # def get_scheduling_block(self, block_id):
-    #     """Return the Scheduling Block configuration for a specified ID"""
-    #     config = self._db.get('scheduling_block/{}'.format(block_id))
-    #
-    #     print(ast.literal_eval(config.decode('utf-8')))
-    #     return ast.literal_eval(config.decode('utf-8'))
 
 
     def get_scheduling_block(self, block_id):
@@ -148,21 +203,7 @@ class ConfigClient():
         block_data['status'] = "created"
         for i in block_data['processing_blocks']:
             i['status'] = 'created'
-
-            # Remove the resource requirement
-            i['resources_requirement']['status'] = 'ACTIVE'
             i['workflow']['status'] = 'ACTIVE'
-
-            # Dont require any of these for the time being
-            # for j in i['workflow']['stages']:
-            #     j['status'] = 'ACTIVE'
-            #     j['processing_stage']['status'] = 'ACTIVE'
-            #     j['service_stage']['status'] = 'ACTIVE'
-            #     j['dependency']['status'] = 'ACTIVE'
-            #     j['processing_stage']['processing_component']['status'] =\
-            #         'ACTIVE'
-            #     j['processing_stage']['execution_engine']['status'] = 'ACTIVE'
-        # pprint(data)
 
     def get_processing_blocks_event(self):
         """Get the latest event added to the scheduling block"""
@@ -175,73 +216,6 @@ class ConfigClient():
             event = ast.literal_eval(event.decode('utf-8'))
         return event
 
-    #
-    # def get_status(self):
-    #     print("Get Status")
-    #
-    # def update_status(self, sched_blk_inst_id, sched_blk_inst_status=None,
-    #                   process_blk_id=None, process_blk_status=None, stage=None):
-    #     """
-    #     This function updates the status of the scheduling block or
-    #     processing block or both
-    #     """
-    #     if process_blk_id != None:
-    #         # Updates the status either the processing blocks or stages inside
-    #         # the processing blocks
-    #         if stage != None:
-    #             process_blk_key = self.get_scheduling_block_instance(
-    #                 sched_blk_inst_id, process_blk_id, False)
-    #             for i in process_blk_key:
-    #                 workflow = self._server.hget(i, "workflow")
-    #                 workflow_eval = eval(workflow)
-    #                 pprint(workflow_eval)
-    #                 for j in workflow_eval['stages']:
-    #                     j[stage]['status'] = process_blk_status
-    #                 pprint(workflow_eval)
-    #                 join = {"workflow": workflow_eval}
-    #                 self._server.hmset(i, join)
-    #
-    #                 # This is not good as it updates the full key
-    #                 # If the status of the processing stage is updated then it
-    #                 # needs to remain
-    #                 # One way to do is to split the stages maybe into a different key
-    #                 # or same them as a list in a key -> Look into this
-    #
-    #
-    #
-    #
-    #
-    #
-    #         else:
-    #             process_blk_key = self.get_scheduling_block_instance(
-    #                 sched_blk_inst_id, process_blk_id, False)
-    #             for i in process_blk_key:
-    #                 self._server.hmset(i, {'status': process_blk_status})
-    #     else:
-    #         # Updates the status of the scheduling block instance
-    #         sched_blk_key = self.get_scheduling_block_instance(
-    #             sched_blk_inst_id, True)
-    #         for i in sched_blk_key:
-    #             self._server.hmset(i, {'status': sched_blk_inst_status})
-    #
-    # def set_resouces(self):
-    #     print("Set assigned resources")
-    #
-
-    #
-    # # def get_processing_blocks(self, sched_bl_instance_id, proc_block_id):
-    # #     """Get processing blocks for a specified
-    # #     scheduling block instance by ID"""
-    # #
-    # #     # Searching for processing block associated with
-    # #     # the scheduling instance
-    # #     for i in scheduling_block_instance_key:
-    # #         for p in proc_block_id:
-    # #             if p in i.decode():
-    # #                 print("Processing Blocks - ", p)
-    #
-
-    #
     def get_schema(self):
         """
         Gets the scheduling block instance schema for validation
@@ -251,9 +225,11 @@ class ConfigClient():
         schema = json.loads(schema_top_data)
         return (schema)
 
-    def parse_data(self, scheduling_block_data):
-        """Parse the schema before adding to the
-        database"""
+    def split_scheduling_block(self, scheduling_block_data):
+        """
+        Split the scheduling block data into multiple keys 
+        before adding to the configuration database
+        """
         scheduling_block_key = {}
         processing_key = []
 
@@ -266,26 +242,35 @@ class ConfigClient():
 
             processing_key = scheduling_block_data['processing_blocks']
 
-        # print("Processsing Key !!!!!!!")
-        # print(processing_key)
-
-        #
-        # for proc_data in data:
-        #     processing_key = data['processing_blocks']
-        #
-        # for x in processing_key:
-        #     processing_key = "schedule_block_instance:" + data["sched_block_instance_id"] +\
-        #                          ":" + x["id"]
-        #     self._server.hmset(processing_key, x)
-        #
-        #     Need to think about if the having a different for the stages is useful or not
-        #     Currently put on hold
-        #
-        #     for stages in x['workflow']['stages']:
-        #         stages_key = stages
-        #         print(stages_key)
-        #
-        #         stage_key = "schedule_block_instance:" + data["sched_block_instance_id"] +\
-        #                          ":" + x["id"] + ":" +
-
         return scheduling_block_key, processing_key
+
+    def split_init_data(self, init_data):
+        """
+        Splitting the master controller data into multiple
+        keys before adding to the configuration database
+        """
+        for top_level_key in init_data:
+            for nested_key in init_data[top_level_key]:
+                if nested_key == 'master_controller':
+                    self._service_list = init_data[top_level_key][nested_key][
+                        'service_list']
+                    for keys in init_data[top_level_key][nested_key]:
+                        if keys != 'service_list':
+                            self._master_controller_key[keys] = init_data[
+                                top_level_key][nested_key][keys]
+
+            if top_level_key == 'sdp_services':
+                for key in init_data[top_level_key]:
+                    if key == 'local_sky_model':
+                        self._local_sky_model = init_data[top_level_key][key]
+
+                    if key == 'telescope_model':
+                        self._telescope_model = init_data[top_level_key][key]
+
+                    if key == 'data_queue':
+                        self._data_queue = init_data[top_level_key][key]
+
+            if top_level_key == 'system_services':
+                for key in init_data[top_level_key]:
+                    if key == 'logging':
+                        self._logging = init_data[top_level_key][key]
