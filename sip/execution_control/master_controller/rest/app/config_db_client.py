@@ -18,7 +18,7 @@ def put_target_state(state):
 
 def get_tango_state():
     """ Get TANGO state from the database."""
-    return DB.get(ROOT + ':TANGO_state')
+    return DB.get(ROOT + ':TANGO_state').decode()
 
 
 def check_timestamp():

@@ -65,7 +65,7 @@ def state():
         if check_timestamp():
             if current_state == 'OFF':
                 current_state = 'INIT'
-            return {'state': current_state.decode()}
+            return {'state': current_state}
         else:
             return {'state': 'UNKNOWN',
                     'error': 'services watchdog has died.'}
