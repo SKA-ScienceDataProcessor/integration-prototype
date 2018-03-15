@@ -70,10 +70,6 @@
                             "storage_type": {
                                 "description": "Hot or cold buffer storage type",
                                 "type": "string"
-                            },
-                            "status": {
-                                "description": "Status of the resource required",
-                                "type": "string"
                             }
                         }
                     },

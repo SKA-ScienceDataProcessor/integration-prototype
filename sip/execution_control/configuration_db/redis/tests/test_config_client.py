@@ -92,41 +92,59 @@ def main():
 
     #######################################################################################
 
-    """Testing Master Controller"""
-
-    with open('schema/init_data.json', 'r') as f:
-        schema_data = f.read()
-    master_controller_data = json.loads(schema_data)
-
-    # print(master_controller_data)
-
-    redis_api = ConfigClient()
-    redis_api.set_init_data(master_controller_data)
-
-    # Get the status
-    # service = 'master_controller'
-    service = 'system_services'
-
-    sub_service = 'logging'
-    # sub_service = 'local_sky_model'
-    state = 'state'
-
-    state = redis_api.get_state(service, state, sub_service=sub_service)
-    print(state)
-
-    # Update the status
-    service1 = 'master_controller'
-    service_s = 'sdp_services'
-
-    sub_service1 = 'local_sky_model'
-    # sub_service = 'local_sky_model'
-    new_state = 'stopped'
-    new_state1 = 'off'
-    master_controller_state= 'TANGO_state'
-
-    state = redis_api.update_state(service1, new_state1, m_state=master_controller_state)
-    state = redis_api.update_state(service_s, new_state, sub_service=sub_service1)
-
+    # """Testing Master Controller"""
+    #
+    # with open('schema/init_data.json', 'r') as f:
+    #     schema_data = f.read()
+    # master_controller_data = json.loads(schema_data)
+    #
+    # # print(master_controller_data)
+    #
+    # redis_api = ConfigClient()
+    # redis_api.set_init_data(master_controller_data)
+    #
+    # # Get the status
+    # # service = 'master_controller'
+    # service = 'system_services'
+    #
+    # sub_service = 'logging'
+    # # sub_service = 'local_sky_model'
+    # state = 'state'
+    #
+    # state = redis_api.get_state(service, state, sub_service=sub_service)
+    # print(state)
+    #
+    # # Update the status
+    # service1 = 'master_controller'
+    # service_s = 'sdp_services'
+    #
+    # sub_service1 = 'local_sky_model'
+    # # sub_service = 'local_sky_model'
+    # new_state = 'stopped'
+    # new_state1 = 'off'
+    # master_controller_state= 'TANGO_state'
+    #
+    # state = redis_api.update_state(service1, new_state1, m_state=master_controller_state)
+    # state = redis_api.update_state(service_s, new_state, sub_service=sub_service1)
+    #
+    #
+    # # Get service list
+    #
+    # list = redis_api.get_service_list()
+    #
+    # print(list)
+    #
+    # for i in list:
+    #     print(i)
+    #
+    # print("Get service from the service list")
+    # print("")
+    #
+    # name = "sdp_services.data_queue"
+    # enabled = redis_api.get_service_from_list(name)
+    #
+    # for i in enabled:
+    #     print(i)
 
 
 

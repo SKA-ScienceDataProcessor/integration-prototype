@@ -67,32 +67,28 @@ class ConfigClient():
 
         # Add keys and values to the configuration database
         # TODO: (NJT) Optimize the code
-        instance_key = "execution_control:master_controller"
-        self._db.hmset(instance_key, self._master_controller_key)
+        master_controller_key = "execution_control:master_controller"
+        self._db.hmset(master_controller_key, self._master_controller_key)
 
-        instance_key = "execution_control:master_controller"
-        self._db.hmset(instance_key, self._master_controller_key)
-
-        instance_key = "execution_control:master_controller:service_list"
+        service_list_key = "execution_control:master_controller:service_list"
         for service_list in self._service_list:
-            self._db.lpush(instance_key, service_list)
+            self._db.lpush(service_list_key, service_list)
 
-        instance_key = "sdp_services:local_sky_model"
-        self._db.hmset(instance_key, self._local_sky_model)
+        sdp_service_local_key = "sdp_services:local_sky_model"
+        self._db.hmset(sdp_service_local_key, self._local_sky_model)
 
-        instance_key = "sdp_services:telescope_model"
-        self._db.hmset(instance_key, self._telescope_model)
+        sdp_service_telescope_key = "sdp_services:telescope_model"
+        self._db.hmset(sdp_service_telescope_key, self._telescope_model)
 
-        instance_key = "sdp_services:data_queue"
-        self._db.hmset(instance_key, self._data_queue)
+        sdp_service_data_key = "sdp_services:data_queue"
+        self._db.hmset(sdp_service_data_key, self._data_queue)
 
-        instance_key = "system_services:logging"
-        self._db.hmset(instance_key, self._logging)
+        system_service_logging_key = "system_services:logging"
+        self._db.hmset(system_service_logging_key, self._logging)
 
     def get_state(self, service, state, sub_service=None,):
         """Get the state of the service"""
         # TODO: (NJT) Implement Error Messages
-        # TODO: (NJT) Add Print Messages
         if sub_service != None:
             key_search = self._db.keys(service + '*' + sub_service)
             for key in key_search:
@@ -111,7 +107,6 @@ class ConfigClient():
     def update_state(self, service, state, sub_service=None, m_state=None):
         """Update the status of the"""
         # TODO: (NJT) Implement Error Messages
-        # TODO: (NJT) Add Print Messages
         if sub_service != None:
             key_search = self._db.keys(service + '*' + sub_service)
             for key in key_search:
@@ -123,12 +118,37 @@ class ConfigClient():
                 update_state = {m_state: state}
                 self._db.hmset(key, update_state)
 
-    def get_service_list(self, service):
+    def get_service_list(self):
         """Get the list of services"""
-        # TODO: (NJT) Implement this function
         # TODO: (NJT) Implement Error Messages
-        # TODO: (NJT) Add Print Messages
-        print("Get the list of services - Placeholder")
+        service_list = []
+        key_search = self._db.keys('*master_controller:service_list')
+        for key in key_search:
+            list = self._db.lrange(key, 0, -1)
+            for items in list:
+                service_list.append(items.decode('utf-8'))
+        return service_list
+
+    def get_service_from_list(self, name):
+        """Get the service details from the service list"""
+        # TODO: (NJT) Implement Error Messages
+        service = []
+        service_list = self.get_service_list()
+        for items in service_list:
+            if name in items:
+                service.append(items)
+                # TODO: (NJT) Need to check if splitting required here
+                # split_value = items.split(",")
+                # enabled = split_value[1].split(":")
+                # #print(enabled[1])
+        return service
+
+    def add_service_to_list(self):
+        """Add service to the service list"""
+        # TODO: (NJT) Implement the function
+        # TODO: (NJT) Test the function
+        # TODO: (NJT) Implement Error Messages
+        print("Placeholder")
 
     def set_schedule_block_instance(self, scheduling_block_data):
         """
@@ -161,6 +181,10 @@ class ConfigClient():
             type=scheduling_block_data["status"],
             id=scheduling_block_data["sched_block_instance_id"]))
 
+        # TODO: (NJT) Add processing blocks
+        # TODO: (NJT) Test the function
+        # TODO: (NJT) Implement Error Messages
+
     def get_scheduling_block_event(self):
         """
         Get the latest event added to the scheduling block
@@ -178,6 +202,26 @@ class ConfigClient():
         instance_search = '*' + block_id
         scheduling_block_key = self._db.keys(instance_search)
         return scheduling_block_key
+
+    def get_processing_block(self, processing_block_id, block_id=None):
+        """
+        Get processing block using processing block id 
+        and using scheduling block id if given
+        """
+        # TODO: (NJT) Implement the function
+        # TODO: (NJT) Test the function
+        # TODO: (NJT) Implement Error Messages
+        print("Placeholder")
+
+    def delete_processing_block(self, processing_block_id, block_id=None):
+        """
+        Delete processing block using processing block id 
+        and using scheduling block id if given
+        """
+        # TODO: (NJT) Implement the function
+        # TODO: (NJT) Test the function
+        # TODO: (NJT) Implement Error Messages
+        print("Placeholder")
 
     def delete_scheduling_block(self, block_id):
         """
@@ -231,16 +275,29 @@ class ConfigClient():
         before adding to the configuration database
         """
         scheduling_block_key = {}
-        processing_key = []
+        processing_key = {}
 
         for key in scheduling_block_data:
             values = scheduling_block_data[key]
-
             # Need to add processing block id
             if key != 'processing_blocks':
                 scheduling_block_key[values] = values
+        for items in scheduling_block_data['processing_blocks']:
+            for data in items:
+                if data !='workflow':
+                    processing_values = items[data]
 
-            processing_key = scheduling_block_data['processing_blocks']
+                    print(processing_values)
+                # if data != 'workflow':
+                #     print(data)
+        #for items in processing_key:
+
+            # for data in items:
+            #     processing_values = items[data]
+            #     if data != 'workflows':
+            #         processing_key[data] = processing_values
+
+
 
         return scheduling_block_key, processing_key
 
