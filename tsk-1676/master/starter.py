@@ -15,11 +15,14 @@ except DevFailed as e:
 
 start_dict = starter.get_property('StartDsPath')
 key, value = start_dict.popitem()
-if not value:
-    dir = input('Node Starter directory: ')
-    starter.put_property({'StartDsPath' : dir}) 
-else:
+if  len(value):
     print('Node starter directory path = ' + ''.join(value))
+    dir = input('Enter new value to change: ')
+else:
+    dir = input('Node Starter directory: ')
+if dir:
+    starter.put_property({'StartDsPath' : dir}) 
+    print('Value changed')
 
 cls = input('Enter Device Controller class name: ')
 db = Database()

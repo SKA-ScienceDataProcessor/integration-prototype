@@ -1,0 +1,14 @@
+FROM tangodb
+MAINTAINER brian.mcilwrath@stfc.ac.uk (SKA Project)
+
+EXPOSE 3306
+EXPOSE 10000
+CMD ["mysqld&"]
+#ENTRYPOINT  ["/bin/bash" "/etc/init.d/tango-db" "start"]
+RUN mkdir /etc/service/mysqld
+COPY run_mysql.sh /etc/service/mysqld/run
+RUN mkdir /etc/service/tangodb
+COPY run_tangodb.sh /etc/service/tangodb/run
+
+CMD ["/sbin/my_init"]
+
