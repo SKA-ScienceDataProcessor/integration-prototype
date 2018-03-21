@@ -1,4 +1,4 @@
-FROM skasip/tangodb
+FROM skasip/tangodb_mysql
 LABEL maintainer="Brian McIlwrath <brian.mcilwrath@stfc.ac.uk> (SKA Project)"
 
 # Use the tangodb baseimage to run a Tango database server
