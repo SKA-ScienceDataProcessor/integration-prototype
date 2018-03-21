@@ -1,0 +1,7 @@
+version: '3.4'
+
+services:
+
+  tangodb_mysql:
+    image: skasip/tangodb_mysql
+    build: .

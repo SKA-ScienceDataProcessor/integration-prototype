@@ -1,0 +1,11 @@
+deb http://gb.archive.ubuntu.com/ubuntu/ artful main restricted
+deb http://gb.archive.ubuntu.com/ubuntu/ artful-updates main restricted
+deb http://gb.archive.ubuntu.com/ubuntu/ artful universe
+deb http://gb.archive.ubuntu.com/ubuntu/ artful-updates universe
+deb http://gb.archive.ubuntu.com/ubuntu/ artful multiverse
+deb http://gb.archive.ubuntu.com/ubuntu/ artful-updates multiverse
+deb http://gb.archive.ubuntu.com/ubuntu/ artful-backports main restricted universe multiverse
+deb http://security.ubuntu.com/ubuntu artful-security main restricted
+deb http://security.ubuntu.com/ubuntu artful-security universe
+deb http://security.ubuntu.com/ubuntu artful-security multiverse
+deb [arch=amd64] https://download.docker.com/linux/ubuntu artful stable
