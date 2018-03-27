@@ -2,6 +2,9 @@
 """Module defining the Processing Block Scheduler Queue data model.
 
 TODO(BM) back this data model with a database (private or otherwise?)
+TODO(BM) need to consider linked Processing Blocks.
+    See SDP scheduling model document:
+    https://docs.google.com/document/d/14nsnMx69dsIl_4T4f1xmrh8HNjYdezdjlUQLxz829yI
 """
 try:
     import threading
