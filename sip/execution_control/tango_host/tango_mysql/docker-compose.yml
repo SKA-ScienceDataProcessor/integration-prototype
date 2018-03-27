@@ -1,7 +1,0 @@
-version: '3.4'
-
-services:
-
-  tangodb_mysql:
-    image: skasip/tango_mysql
-    build: .
