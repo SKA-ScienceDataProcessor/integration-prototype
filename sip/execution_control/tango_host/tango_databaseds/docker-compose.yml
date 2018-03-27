@@ -3,7 +3,7 @@ version: '3.4'
 services:
 
   tangodb_databaseds:
-    image: skasip/tangodb_databaseds
+    image: skasip/tango_databaseds
     build: .
     ports:
       - 10000:10000

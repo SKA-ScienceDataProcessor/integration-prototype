@@ -16,8 +16,8 @@ ENV DEBIAN_FRONTEND=noninteractive
 
 # Set mysql root password
 COPY mysql_root_password .
-RUN mv /usr/sbin/policy-rc.d . && \
-    apt-get update && \
+RUN mv /usr/sbin/policy-rc.d .
+RUN apt-get update && \
     debconf-set-selections mysql_root_password && \
     apt-get install -y mysql-server
 
