@@ -5,13 +5,15 @@ import redis
 import json
 from jsonschema import validate
 from pprint import pprint
+from flatten_json import flatten
 import os
 import ast
-
+from time import sleep
 
 class ConfigClient():
     """
     Client API Interface
+    
 
     Get full snapshot of the data in the database
     Set scheduling block instance to the database
@@ -86,9 +88,23 @@ class ConfigClient():
         system_service_logging_key = "system_services:logging"
         self._db.hmset(system_service_logging_key, self._logging)
 
+
+    def handle_key(self, key_list):
+        """
+        Generic database API
+        Gets a handle or points in the database.
+        """
+        # TODO: (NJT) Implement this function
+        construct_key = key_list[0] + ":" + key_list[1] + ":" + key_list[2]
+        for i in self._db.lrange(construct_key, 0, -1):
+            sleep(.5)
+            yield i
+        return i
+
     def get_state(self, service, state, sub_service=None,):
         """Get the state of the service"""
-        # TODO: (NJT) Implement Error Messages
+        # TODO: (NJT) Might not need this function. As the state
+        # TODO: will always be updated my master controller
         if sub_service != None:
             key_search = self._db.keys(service + '*' + sub_service)
             for key in key_search:
@@ -101,7 +117,6 @@ class ConfigClient():
                 state = self._db.hget(key, state)
             if state:
                 state = state.decode('utf-8')
-
         return state
 
     def update_state(self, service, state, sub_service=None, m_state=None):
@@ -264,7 +279,8 @@ class ConfigClient():
         """
         Gets the scheduling block instance schema for validation
         """
-        with open('schema/scheduling_block_instance_schema.json', 'r') as f:
+        # TODO: (NJT) Need to change how schema is loaded
+        with open('schema/scheduling_block_schema.json', 'r') as f:
             schema_top_data = f.read()
         schema = json.loads(schema_top_data)
         return (schema)
@@ -277,17 +293,25 @@ class ConfigClient():
         scheduling_block_key = {}
         processing_key = {}
 
+
         for key in scheduling_block_data:
             values = scheduling_block_data[key]
-            # Need to add processing block id
             if key != 'processing_blocks':
-                scheduling_block_key[values] = values
-        for items in scheduling_block_data['processing_blocks']:
-            for data in items:
-                if data !='workflow':
-                    processing_values = items[data]
+                scheduling_block_key[key] = values
 
-                    print(processing_values)
+            processing_key = scheduling_block_data['processing_blocks']
+            # print(len(scheduling_block_data['processing_blocks']))
+           # pprint(scheduling_block_data['processing_blocks'][0])
+        # for items in scheduling_block_data['processing_blocks']:
+        #     for data in items:
+        #         if data !='workflow':
+        #             processing_values = items[data]
+        #
+        #
+        #
+        #             print(processing_values)
+        #
+        #             processing_key[processing_values] = processing_values
                 # if data != 'workflow':
                 #     print(data)
         #for items in processing_key:
@@ -297,8 +321,6 @@ class ConfigClient():
             #     if data != 'workflows':
             #         processing_key[data] = processing_values
 
-
-
         return scheduling_block_key, processing_key
 
     def split_init_data(self, init_data):
@@ -306,6 +328,18 @@ class ConfigClient():
         Splitting the master controller data into multiple
         keys before adding to the configuration database
         """
+
+        # Experimental - DO NOT DELETE UNTIL YOU ARE SURE
+        # flat = flatten(init_data)
+        # #pprint(flat)
+        # dictlist = []
+        # for key, value in flat.items():
+        #     temp = key,value
+        #     dictlist.append(temp)
+        # pprint(dictlist)
+        # print(dictlist[0])
+
+
         for top_level_key in init_data:
             for nested_key in init_data[top_level_key]:
                 if nested_key == 'master_controller':
@@ -315,6 +349,7 @@ class ConfigClient():
                         if keys != 'service_list':
                             self._master_controller_key[keys] = init_data[
                                 top_level_key][nested_key][keys]
+
 
             if top_level_key == 'sdp_services':
                 for key in init_data[top_level_key]:

@@ -17,7 +17,7 @@
             "enabled": true
         },
         {
-            "name": "logging.local_sky_model",
+            "name": "system_services.logging",
             "enabled": true
         },
         {
