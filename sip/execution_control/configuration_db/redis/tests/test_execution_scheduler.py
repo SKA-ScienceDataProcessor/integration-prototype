@@ -1,36 +1,14 @@
 # -*- coding: utf-8 -*-
-"""
-Script to test with the config client service is
-working according to the requirement
+"""Test for the execution scheduler"""
 
-# A sample schema, like what we'd get from json.load()
-schema = {
-    "type": "object",
-    "properties": {
-        "price": {"type": "number"},
-        "name": {"type": "string"},
-    },
-}
-
-# if no exception is raised by validate(), the instance is valid.
-validate({'name': "myname", "price": 34.99}, schema)
-"""
-
-from jsonschema import validate
 import simplejson as json
-from flatten_json import flatten
-
-import sys
-import os
-
-
 from app.config_api import ConfigDB
 
 
 def main():
     db = ConfigDB()
 
-    """ Testing Scheduling Block"""
+    print("***Test Execution Scheduler***")
 
     with open('utils/scheduling_block_data.json', 'r') as f:
         schema_data = f.read()
@@ -68,7 +46,7 @@ def main():
     value = "Testing"
     field = "status"
     db.update_status(processing_key, field , value)
-
+    print("Status Updated")
 
 
 if __name__ == '__main__':

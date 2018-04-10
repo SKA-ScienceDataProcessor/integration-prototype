@@ -24,26 +24,24 @@ class ConfigDB():
         """Get the state of the key"""
         key = ':'.join(key)
         state = self._db.hget(key, field)
-        return state
+        if state:
+            return state.decode('utf-8')
+        else:
+            return None
 
     def add_state(self, key, field, value):
         """Add the state of the key and field"""
         self._db.hset(key, field, value)
-
-    # TODO: (NJT) Need to look into this
-    # def get_state_eval(self, key, field):
-    #     """ Gets the state from the database to a boolean or number
-    #     or None"""
-    #     return ast.literal_eval(self.get_state(key, field))
 
     def get_list_length(self, key):
         """ Returns the number of elements in a list
         If the does not point to a list 0 is return"""
         key = ':'.join(key)
         len = self._db.llen(key)
-        if not len:
+        if len:
+            return len
+        else:
             return 0
-        return len
 
     def get_list(self, key):
         """ Get list of service"""
@@ -60,9 +58,11 @@ class ConfigDB():
         key = ':'.join(key)
         n_element = self._db.lindex(key, n)
         if n_element:
+            n_element_eval = ast.literal_eval(n_element.decode('utf-8'))
+            return n_element_eval
+        else:
             return 0
-        n_element_eval = ast.literal_eval(n_element.decode('utf-8'))
-        return n_element_eval
+
 
     def add_element(self, key, element):
         """ Add an new entry to the end of a list"""
@@ -264,6 +264,7 @@ class ConfigInit():
         # Add keys and values to the configuration database
         # TODO: (NJT) Optimize the code
         master_controller_key = "execution_control:master_controller"
+        print(self._master_controller_key)
         self._db.hmset(master_controller_key, self._master_controller_key)
 
         service_list_key = "execution_control:master_controller:service_list"

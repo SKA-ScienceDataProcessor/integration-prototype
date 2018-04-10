@@ -1,14 +1,5 @@
-
-
-from jsonschema import validate
-import simplejson as json
-from flatten_json import flatten
-
-import sys
-import os
-import ast
-import unittest
-
+# -*- coding: utf-8 -*-
+"""Test for the master controller"""
 
 from app.config_api import ConfigDB
 
@@ -16,13 +7,13 @@ from app.config_api import ConfigDB
 def main():
 
     """Testing Master Controller"""
-    print("Generic Database API Test")
+    print("***Test Master Controller***")
 
     db = ConfigDB()
 
     print("Get SDP State")
     key = ['execution_control', 'master_controller']
-    field = ['SDP_state']
+    field = 'SDP_state'
     value = db.get_state(key, field)
     print(value)
     print("")
