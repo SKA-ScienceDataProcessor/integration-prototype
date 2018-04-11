@@ -19,14 +19,14 @@ from app.config_api import ConfigDB
 
 class DbClientTests(unittest.TestCase):
     def setup(self):
-        pass
+        self._db = ConfigDB()
 
     def tearDown(self):
         """Executed after each test."""
         pass
 
     def testGetSDPState(self):
-        self._db = ConfigDB()
+
         key = ['execution_control', 'master_controller']
         field = 'SDP_state'
         value = self._db.get_state(key, field)

@@ -48,7 +48,7 @@ class ConfigDB():
         key = ':'.join(key)
         for i in self._db.lrange(key, 0, -1):
             list_eval = ast.literal_eval(i.decode('utf-8'))
-            sleep(.5)
+            # sleep(.5)
             yield list_eval
         return list_eval
 
@@ -62,7 +62,6 @@ class ConfigDB():
             return n_element_eval
         else:
             return 0
-
 
     def add_element(self, key, element):
         """ Add an new entry to the end of a list"""
