@@ -2,29 +2,9 @@ version: '3.6'
 
 services:
 
-  tango_mysql:
-    image: skasip/tango_mysql
-    environment:
-      - MYSQL_ROOT_PASSWORD=secret
-    volumes:
-      - tangodb:/var/lib/mysql
-    build:
-      context: tango_mysql
-
-  tango_cs:
-    image: skasip/tango_cs
+  tango_db:
+    image: skasip/tango_db
+    build: tango_db
     ports:
       - 10000:10000
-    environment:
-      - TANGO_HOST=localhost:10000
-      - MYSQL_HOST=tango_mysql:3306
-      - MYSQL_USER=tango
-      - MYSQL_PASSWORD=tango
-      - MYSQL_DATABASE=tango_db
-    depends_on:
-      - tango_mysql
-    build:
-      context: tango_cs
 
-volumes:
-  tangodb:

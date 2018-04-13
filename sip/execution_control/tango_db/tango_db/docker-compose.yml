@@ -1,9 +1,0 @@
-version: '3.6'
-
-services:
-
-  tango_db:
-    image: skasip/tango_db
-    build: .
-    ports:
-      - 10000:10000
