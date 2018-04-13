@@ -18,6 +18,16 @@ import logging
 import sys
 from master_client import masterClient
 
+# db = masterClient()
+# name = ['execution_control', 'master_controller']
+# field = 'SDP_state'
+# value = db.get_value(name, field)
+# service_list_name = ['execution_control', 'master_controller',
+#                      'service_list']
+# element = db.get_service_from_list(service_list_name, 0)
+# print(element['enabled'])
+# print(type(element['enabled']))
+
 class DbClientTests(unittest.TestCase):
     def setUp(self):
         self._db = masterClient()
@@ -59,7 +69,7 @@ class DbClientTests(unittest.TestCase):
         self.assertEqual(element['name'],
                 'sdp_services.data_queue')
         #TODO: (NJT) Sort the boolean. Insead of using string
-        self.assertEqual(element['enabled'], 'False')
+        self.assertEqual(element['enabled'], False)
 
     def testLength(self):
         service_list_name = ['execution_control', 'master_controller',
@@ -89,13 +99,14 @@ class DbClientTests(unittest.TestCase):
         self.assertEqual(service, 'stopped')
 
     #TODO: (NJT) Get this working. Important
-    # def testBoolean(self):
-    #     enabled = ['execution_control', 'master_controller']
-    #     field = 'enabled'
-    #
-    #     self.assertEqual(enabled.get_state(enabled, field), False)
-    #     # enabled.set(True)
-    #     # self.assertEqual(enabled.get_eval(), True)
+    def testBoolean(self):
+        service_list_name = ['execution_control', 'master_controller',
+                             'service_list']
+        element = self._db.get_service_from_list(service_list_name, 0)
+        # TODO: (NJT) Sort the boolean. Insead of using string
+        self.assertEqual(element['enabled'], False)
+        # enabled.set(True)
+        # self.assertEqual(enabled.get_eval(), True)
 
 if __name__ == '__main__':
     logging.basicConfig( stream=sys.stderr )
