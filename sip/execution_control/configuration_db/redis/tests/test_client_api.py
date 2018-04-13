@@ -13,25 +13,91 @@ schema = {
 validate({'name': "myname", "price": 34.99}, schema)
 """
 
-import numpy as np
 import unittest
-from app.config_api import ConfigDB
+import logging
+import sys
+from master_client import masterClient
 
 class DbClientTests(unittest.TestCase):
-    def setup(self):
-        self._db = ConfigDB()
+    def setUp(self):
+        self._db = masterClient()
+        self._log = logging.getLogger("DbClientTests.testPath")
 
     def tearDown(self):
         """Executed after each test."""
+        #TODO: (NJT) Need to flushall the and run the python script
         pass
 
-    def testGetSDPState(self):
-
-        key = ['execution_control', 'master_controller']
+    def testSetState(self):
+        name = ['execution_control', 'master_controller']
         field = 'SDP_state'
-        value = self._db.get_state(key, field)
-        self.assertEqual(value, 'on')
+        value = "running"
+        self._db.update_state(name, field, value)
+        SDP_state_v = self._db.get_value(name, field)
+        self.assertEqual(SDP_state_v, "running")
 
+    def testGetState(self):
+        name = ['execution_control', 'master_controller']
+        field = 'TANGO_state'
+        TANGO_state_v = self._db.get_value(name, field)
+        self.assertEqual(TANGO_state_v, 'ON')
+
+    def testGetAllState(self):
+        name = ['execution_control', 'master_controller']
+        all = self._db.get_value_all(name)
+        self.assertNotEqual(all, None)
+
+    def testAddList(self):
+        service_list_name = ['execution_control', 'master_controller',
+                             'service_list']
+        dict = {
+                  'name': 'sdp_services.data_queue',
+                  'enabled': 'False'
+               }
+        self._db.add_service_to_list(service_list_name, dict)
+        element = self._db.get_service_from_list(service_list_name, 0)
+        self.assertEqual(element['name'],
+                'sdp_services.data_queue')
+        #TODO: (NJT) Sort the boolean. Insead of using string
+        self.assertEqual(element['enabled'], 'False')
+
+    def testLength(self):
+        service_list_name = ['execution_control', 'master_controller',
+                             'service_list']
+        self.assertEqual(self._db.get_service_list_length(service_list_name), 6)
+
+    def testListAccess(self):
+        service_list_name = ['execution_control', 'master_controller',
+                             'service_list']
+        element = self._db.get_service_from_list(service_list_name, 0)
+        self.assertEqual(element['name'],
+                'sdp_services.data_queue')
+        element = self._db.get_service_from_list(service_list_name, 1)
+        self.assertEqual(element['name'],
+                'sdp_services.local_sky_model')
+
+    def testPath(self):
+        service_list_name = ['execution_control', 'master_controller',
+                             'service_list']
+        element = self._db.get_service_from_list(service_list_name, 0)
+        # log.debug(element['name'])
+        field = 'state'
+        value = "stopped"
+        self._db.update_service(element['name'], field, value)
+        service_name = ['sdp_services', 'data_queue']
+        service = self._db.get_value(service_name, field)
+        self.assertEqual(service, 'stopped')
+
+    #TODO: (NJT) Get this working. Important
+    # def testBoolean(self):
+    #     enabled = ['execution_control', 'master_controller']
+    #     field = 'enabled'
+    #
+    #     self.assertEqual(enabled.get_state(enabled, field), False)
+    #     # enabled.set(True)
+    #     # self.assertEqual(enabled.get_eval(), True)
 
 if __name__ == '__main__':
+    logging.basicConfig( stream=sys.stderr )
+    logging.getLogger( "DbClientTests.testPath" ).setLevel( logging.DEBUG )
     unittest.main()

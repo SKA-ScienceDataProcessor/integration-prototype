@@ -3,7 +3,7 @@
 
 import simplejson as json
 
-from app.config_api import ConfigInit
+from config_api import ConfigInit
 
 
 def main():
