@@ -3,7 +3,7 @@ version: '3.6'
 services:
 
   tango_mysql:
-    image: skasip/tango_mysql
+    image: skasip/tango_mysql:test
     environment:
       - MYSQL_ROOT_PASSWORD=sip1
     volumes:
@@ -11,8 +11,8 @@ services:
     build:
       context: tango_mysql
 
-  tango_db:
-    image: skasip/tango_db
+  tango_host:
+    image: skasip/tango_host:test
     ports:
       - 10000:10000
     environment:
@@ -20,11 +20,21 @@ services:
       - MYSQL_HOST=tango_mysql:3306
       - MYSQL_USER=tango
       - MYSQL_PASSWORD=tango
-      - MYSQL_DATABASE=tango
+      - MYSQL_DATABASE=tango_db
     depends_on:
       - tango_mysql
     build:
-      context: tango_db
+      context: tango_host
+
+  tango_test:
+    image: skasip/tango_device:test
+    environment:
+      - TANGO_HOST=tango_host:10000
+    volumes:
+      # bind mount the test_device directory into '.' in the container.
+      - ./test_device:/app
+    build:
+      context: test_device
 
 volumes:
   tangodb:
