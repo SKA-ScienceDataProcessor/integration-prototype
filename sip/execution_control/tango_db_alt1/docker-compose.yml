@@ -27,14 +27,14 @@ services:
       context: tango_host
 
   tango_test:
-    image: skasip/tango_device:test
+    image: skasip/tango_device_server:test
     environment:
       - TANGO_HOST=tango_host:10000
     volumes:
       # bind mount the test_device directory into '.' in the container.
-      - ./test_device:/app
+      - ./test_device_server:/app
     build:
-      context: test_device
+      context: test_device_server
 
 volumes:
   tangodb:
