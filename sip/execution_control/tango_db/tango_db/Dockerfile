@@ -15,7 +15,7 @@ EXPOSE 10000
 # commands tie into its 'Run a daemon' scheme
 RUN mkdir /etc/service/mysqld
 COPY run_mysql.sh /etc/service/mysqld/run
-RUN mkdir /etc/service/tangodb
-COPY run_tangodb.sh /etc/service/tangodb/run
+RUN mkdir /etc/service/tango_databaseds
+COPY run_tango_databaseds.sh /etc/service/tango_databaseds/run
 
 CMD ["/sbin/my_init"]

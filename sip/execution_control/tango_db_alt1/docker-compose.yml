@@ -5,14 +5,14 @@ services:
   tango_mysql:
     image: skasip/tango_mysql
     environment:
-      - MYSQL_ROOT_PASSWORD=secret
+      - MYSQL_ROOT_PASSWORD=sip1
     volumes:
       - tangodb:/var/lib/mysql
     build:
       context: tango_mysql
 
-  tango_cs:
-    image: skasip/tango_cs
+  tango_db:
+    image: skasip/tango_db
     ports:
       - 10000:10000
     environment:
@@ -20,11 +20,11 @@ services:
       - MYSQL_HOST=tango_mysql:3306
       - MYSQL_USER=tango
       - MYSQL_PASSWORD=tango
-      - MYSQL_DATABASE=tango_db
+      - MYSQL_DATABASE=tango
     depends_on:
       - tango_mysql
     build:
-      context: tango_cs
+      context: tango_db
 
 volumes:
   tangodb:

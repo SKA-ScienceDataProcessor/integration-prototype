@@ -4,6 +4,8 @@ ENV MYSQL_DATABASE=tango_db
 ENV MYSQL_USER=tango
 ENV MYSQL_PASSWORD=tango
 
+EXPOSE 3306
+
 # Copy SQL Scripts to /scripts/ directory.
 COPY scripts/create_db_tables.sql \
      scripts/stored_procedures.sql \

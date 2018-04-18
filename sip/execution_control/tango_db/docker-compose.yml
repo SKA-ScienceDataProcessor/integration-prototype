@@ -2,9 +2,12 @@ version: '3.6'
 
 services:
 
+  tango_mysql_base:
+    image: skasip/tango_mysql_base
+    build: tango_mysql_base
+
   tango_db:
     image: skasip/tango_db
     build: tango_db
     ports:
       - 10000:10000
-

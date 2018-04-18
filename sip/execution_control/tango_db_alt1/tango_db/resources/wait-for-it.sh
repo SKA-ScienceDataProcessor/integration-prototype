@@ -3,13 +3,16 @@
 
 cmdname=$(basename $0)
 
-echoerr() { if [[ $QUIET -ne 1 ]]; then echo "$@" 1>&2; fi }
+echoerr()
+{
+    if [[ ${QUIET} -ne 1 ]]; then echo "$@" 1>&2; fi
+}
 
 usage()
 {
     cat << USAGE >&2
 Usage:
-    $cmdname host:port [-s] [-t timeout] [-- command args]
+    ${cmdname} host:port [-s] [-t timeout] [-- command args]
     -h HOST | --host=HOST       Host or IP under test
     -p PORT | --port=PORT       TCP port under test
                                 Alternatively, you specify the host and port as host:port
@@ -24,33 +27,33 @@ USAGE
 
 wait_for()
 {
-    if [[ $TIMEOUT -gt 0 ]]; then
-        echoerr "$cmdname: waiting $TIMEOUT seconds for $HOST:$PORT"
+    if [[ ${TIMEOUT} -gt 0 ]]; then
+        echoerr "$cmdname: waiting ${TIMEOUT} seconds for ${HOST}:${PORT}"
     else
-        echoerr "$cmdname: waiting for $HOST:$PORT without a timeout"
+        echoerr "${cmdname}: waiting for ${HOST}:${PORT} without a timeout"
     fi
     start_ts=$(date +%s)
     while :
     do
-        (echo > /dev/tcp/$HOST/$PORT) >/dev/null 2>&1
+        (echo > /dev/tcp/${HOST}/${PORT}) >/dev/null 2>&1
         result=$?
-        if [[ $result -eq 0 ]]; then
+        if [[ ${result} -eq 0 ]]; then
             end_ts=$(date +%s)
-            echoerr "$cmdname: $HOST:$PORT is available after $((end_ts - start_ts)) seconds"
+            echoerr "${cmdname}: ${HOST}:${PORT} is available after $((end_ts - start_ts)) seconds"
             break
         fi
         sleep 1
     done
-    return $result
+    return ${result}
 }
 
 wait_for_wrapper()
 {
     # In order to support SIGINT during timeout: http://unix.stackexchange.com/a/57692
-    if [[ $QUIET -eq 1 ]]; then
-        timeout $TIMEOUT $0 --quiet --child --host=$HOST --port=$PORT --timeout=$TIMEOUT &
+    if [[ ${QUIET} -eq 1 ]]; then
+        timeout ${TIMEOUT} $0 --quiet --child --host=${HOST} --port=${PORT} --timeout=${TIMEOUT} &
     else
-        timeout $TIMEOUT $0 --child --host=$HOST --port=$PORT --timeout=$TIMEOUT &
+        timeout ${TIMEOUT} $0 --child --host=${HOST} --port=${PORT} --timeout=${TIMEOUT} &
     fi
     PID=$!
     trap "kill -INT -$PID" INT

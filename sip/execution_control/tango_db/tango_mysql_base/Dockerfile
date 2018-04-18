@@ -1,4 +1,4 @@
-FROM phusion/baseimage
+FROM phusion/baseimage:0.10.1
 
 LABEL maintainer="Brian McIlwrath <brian.mcilwrath@stfc.ac.uk> (SKA Project)"
 
@@ -9,16 +9,17 @@ LABEL maintainer="Brian McIlwrath <brian.mcilwrath@stfc.ac.uk> (SKA Project)"
 
 # Use Ubuntu 17.10 repositories
 COPY sources.list /etc/apt/
-COPY trusted.gpg /etc/apt
+COPY trusted.gpg /etc/apt/
 COPY ubuntu-keyring-2012-archive.gpg /etc/apt/trusted.gpg.d/
 
 ENV DEBIAN_FRONTEND=noninteractive
 
 # Set mysql root password
 COPY mysql_root_password .
-RUN mv /usr/sbin/policy-rc.d .
-RUN apt-get update && \
+RUN mv /usr/sbin/policy-rc.d . && \
+    apt-get update && \
     debconf-set-selections mysql_root_password && \
+    apt-get update && \
     apt-get install -y mysql-server
 
 # mysqld fails without this
