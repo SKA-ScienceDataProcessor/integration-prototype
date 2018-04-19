@@ -16,3 +16,5 @@
 # Files created during testing
 /_build/
 test_reports.xml
+
+**/.cache
