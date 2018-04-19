@@ -18,15 +18,28 @@ import logging
 import sys
 from master_client import masterClient
 
-# db = masterClient()
-# name = ['execution_control', 'master_controller']
-# field = 'SDP_state'
-# value = db.get_value(name, field)
-# service_list_name = ['execution_control', 'master_controller',
-#                      'service_list']
+db = masterClient()
+name = ['execution_control', 'master_controller']
+field = 'SDP_state'
+value = db.get_value(name, field)
+service_list_name = ['execution_control', 'master_controller',
+                     'service_list']
 # element = db.get_service_from_list(service_list_name, 0)
 # print(element['enabled'])
 # print(type(element['enabled']))
+#
+# new = bool(element['enabled'])
+# print(new)
+# print(type(new))
+
+# new_element = db.get_service_from_list_bool(service_list_name, 0)
+# print(new_element['enabled'])
+# test = new_element['enabled']
+# print(type(test))
+
+#
+# for e in new_element:
+#     print(type(new_element[e]))
 
 class DbClientTests(unittest.TestCase):
     def setUp(self):
@@ -68,8 +81,8 @@ class DbClientTests(unittest.TestCase):
         element = self._db.get_service_from_list(service_list_name, 0)
         self.assertEqual(element['name'],
                 'sdp_services.data_queue')
-        #TODO: (NJT) Sort the boolean. Insead of using string
-        self.assertEqual(element['enabled'], False)
+        # Value in string
+        self.assertEqual(element['enabled'], 'False')
 
     def testLength(self):
         service_list_name = ['execution_control', 'master_controller',
@@ -102,13 +115,11 @@ class DbClientTests(unittest.TestCase):
     def testBoolean(self):
         service_list_name = ['execution_control', 'master_controller',
                              'service_list']
-        element = self._db.get_service_from_list(service_list_name, 0)
-        # TODO: (NJT) Sort the boolean. Insead of using string
-        self.assertEqual(element['enabled'], False)
-        # enabled.set(True)
-        # self.assertEqual(enabled.get_eval(), True)
+        element = self._db.get_service_from_list_bool(service_list_name, 0)
+        new_value = element['enabled']
+        self.assertTrue(element['enabled'], False)
 
 if __name__ == '__main__':
     logging.basicConfig( stream=sys.stderr )
-    logging.getLogger( "DbClientTests.testPath" ).setLevel( logging.DEBUG )
+    logging.getLogger("DbClientTests.testPath").setLevel(logging.DEBUG)
     unittest.main()

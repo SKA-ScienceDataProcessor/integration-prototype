@@ -58,13 +58,5 @@ class configDB():
         """Delete key"""
         self._db.delete(key)
 
-    # def string_to_bool(self, value):
-    #     if value == 'True':
-    #         return True
-    #     elif value == 'False':
-    #         return False
-    #     else:
-    #         return value
-
 
 

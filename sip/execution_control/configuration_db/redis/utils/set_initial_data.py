@@ -12,7 +12,6 @@ class ConfigInit():
         # Get Redis database object
         REDIS_HOST = os.getenv('REDIS_HOST', 'localhost')
         REDIS_DB_ID = os.getenv('REDIS_DB_ID', 0)
-
         self._db = redis.StrictRedis(host=REDIS_HOST, db=REDIS_DB_ID)
 
         # Initialising varibales

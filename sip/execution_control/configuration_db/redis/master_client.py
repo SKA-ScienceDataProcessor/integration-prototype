@@ -11,13 +11,18 @@ class masterClient():
         self._db = configDB()
 
     def get_value(self, name, field):
-        """Get """
+        """Get value in string """
         path = ':'.join(name)
         value = self._db.get_hash(path, field)
         if value:
             return value
         else:
             return None
+
+    def get_value_bool(self, name, field):
+        """ Get the value in boolean"""
+        value = self.get_value(name, field)
+        return bool(value)
 
     def get_value_all(self, name):
         """Get all the value in the name.
@@ -42,7 +47,7 @@ class masterClient():
             None
 
     def get_service_from_list(self, name, index):
-        """ Get the n'th element of the service list
+        """ Get the n'th element of the service list.
         If the does not point to an element 0 is return"""
         key = ':'.join(name)
         element = self._db.get_element(key, index)
@@ -51,6 +56,15 @@ class masterClient():
             return element_eval
         else:
             return 0
+
+    def get_service_from_list_bool(self, name, index):
+        """ Get the n'th element of the service list in boolean.
+        If the does not point to an element 0 is return"""
+        element = self.get_service_from_list(name, index)
+        for e in element:
+            if element[e] == 'true' or 'false' or 'True' or 'False':
+                bool(element[e])
+            return element
 
     def get_service_list_length(self, name):
         """ Returns the number of elements in a list
