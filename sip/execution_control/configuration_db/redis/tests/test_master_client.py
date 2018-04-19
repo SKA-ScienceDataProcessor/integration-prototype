@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""Unit tests for the configuration database mock API
+"""Unit tests for the master controller client
 # A sample schema, like what we'd get from json.load()
 schema = {
     "type": "object",
@@ -18,26 +18,22 @@ import logging
 import sys
 from master_client import masterClient
 
-db = masterClient()
-name = ['execution_control', 'master_controller']
-field = 'SDP_state'
-value = db.get_value(name, field)
-service_list_name = ['execution_control', 'master_controller',
-                     'service_list']
+# db = masterClient()
+# name = ['execution_control', 'master_controller']
+# field = 'SDP_state'
+# value = db.get_value(name, field)
+# service_list_name = ['execution_control', 'master_controller',
+#                      'service_list']
 # element = db.get_service_from_list(service_list_name, 0)
 # print(element['enabled'])
 # print(type(element['enabled']))
-#
 # new = bool(element['enabled'])
 # print(new)
 # print(type(new))
-
 # new_element = db.get_service_from_list_bool(service_list_name, 0)
 # print(new_element['enabled'])
 # test = new_element['enabled']
 # print(type(test))
-
-#
 # for e in new_element:
 #     print(type(new_element[e]))
 
