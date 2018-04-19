@@ -5,13 +5,10 @@ COPY resources/maxiv.repo /etc/yum.repos.d/
 COPY resources/wait-for-it.sh /usr/local/bin/
 
 RUN yum -y install epel-release \
-    && yum -y install supervisor zeromq \
+    && yum -y install zeromq \
     && yum-config-manager --save \
         --setopt=epel.includepkgs="zeromq libsodium openpgm" \
-    && yum -y install \
-        libtango9 \
-        tango-common \
-        tango-db
+    && yum -y install tango-db
 
 ENV ORB_PORT=10000
 ENV TANGO_HOST=127.0.0.1:${ORB_PORT}
