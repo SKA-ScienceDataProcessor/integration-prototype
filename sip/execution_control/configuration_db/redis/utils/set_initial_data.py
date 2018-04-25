@@ -28,7 +28,6 @@ class ConfigInit():
         self.split_init_data(init_data)
 
         # Add keys and values to the configuration database
-        # TODO: (NJT) Optimize the code
         master_controller_key = "execution_control:master_controller"
         print(self._master_controller_key)
         self._db.hmset(master_controller_key, self._master_controller_key)

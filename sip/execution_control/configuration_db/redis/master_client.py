@@ -86,7 +86,7 @@ class masterClient():
         key = ':'.join(name)
         self._db.add_element(key, element)
 
-    def update_state(self, name, field, value):
+    def update_value(self, name, field, value):
         """" """
         path = ':'.join(name)
         self._db.set_value(path, field, value)

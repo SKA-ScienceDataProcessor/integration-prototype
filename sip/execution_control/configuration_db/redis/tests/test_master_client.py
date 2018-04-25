@@ -41,17 +41,17 @@ class DbClientTests(unittest.TestCase):
     def setUp(self):
         self._db = masterClient()
         self._log = logging.getLogger("DbClientTests.testPath")
+        # TODO: (NJT) NEED TO FLUSHALL AND RUN INITIAL DATA SCRIPT
 
     def tearDown(self):
         """Executed after each test."""
-        #TODO: (NJT) Need to flushall the and run the python script
         pass
 
     def testSetState(self):
         name = ['execution_control', 'master_controller']
         field = 'SDP_state'
         value = "running"
-        self._db.update_state(name, field, value)
+        self._db.update_value(name, field, value)
         SDP_state_v = self._db.get_value(name, field)
         self.assertEqual(SDP_state_v, "running")
 

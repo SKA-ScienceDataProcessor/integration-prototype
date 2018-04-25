@@ -25,7 +25,9 @@ class DbClientTests(unittest.TestCase):
 
     def tearDown(self):
         """Executed after each test."""
-        #TODO: (NJT) Need to flushall the and run the python script
+        pass
+
+    def testGetSchema(self):
         pass
 
 if __name__ == '__main__':
