@@ -12,6 +12,9 @@ class controllerClient():
         print("Controller Client")
         self._db = configDB()
 
+        self.scheduling_event_name = 'scheduling_block_events'
+        self.processing_event_name = 'processing_block_events'
+
     def get_schema(self):
         """Get the schema for validation"""
         with open('schema/scheduling_block_schema.json', 'r') as f:
@@ -41,29 +44,27 @@ class controllerClient():
             updated_block)
 
         # Adding Scheduling block instance with id
-        block_name = "scheduling_block_instance:" + \
+        scheduling_block_name = "scheduling_block_instance:" + \
                        updated_block["sched_block_instance_id"]
 
-        self._db.set_hm_value(block_name, scheduling_blk)
+        self._db.set_hm_value(scheduling_block_name, scheduling_blk)
 
         # Add a event to the scheduling block event list to notify
         # of a new scheduling block being added to the db.
-        scheduling_event_name = 'scheduling_block_events'
-        self._db.push_event(scheduling_event_name, updated_block["status"],
+        self._db.push_event(self.scheduling_event_name, updated_block["status"],
                             updated_block["sched_block_instance_id"])
 
         # Adding Processing block with id
         for value in processing_blk:
-            processing_name = "scheduling_block_instance:" + \
+            processing_block_name = "scheduling_block_instance:" + \
                              updated_block["sched_block_instance_id"] + \
                              ":processing_block" + ":" + value['id']
             # self._db.hmset(processing_name, value)
-            self._db.set_hm_value(processing_name, value)
+            self._db.set_hm_value(processing_block_name, value)
 
             # Add a event to the processing block event list to notify
             # of a new processing block being added to the db.
-            processing_event_name = 'processing_block_events'
-            self._db.push_event(processing_event_name, value["status"],
+            self._db.push_event(self.processing_event_name, value["status"],
                                 value["id"])
 
     def get_scheduling_block(self, block_id):
@@ -85,7 +86,7 @@ class controllerClient():
 
     def delete_scheduling_block(self, block_id):
         """Removes the scheduling block instance and all processing blocks
-        associated with it. Any data associated withscheduling block instance
+        associated with it. Any data associated with scheduling block instance
         is removed from the database"""
         scheduling_blocks = self._db.get_all_blocks(block_id)
         if scheduling_blocks:
@@ -97,7 +98,7 @@ class controllerClient():
 
             # Add a event to the scheduling block event list to notify
             # of a deleting a scheduling block from the db
-            self._db.push_event('scheduling_block_events',"deleted", block_id)
+            self._db.push_event(self.scheduling_event_name, "deleted", block_id)
 
     def delete_processing_block(self, processing_block):
         """Delete processing block using processing block id
@@ -110,8 +111,7 @@ class controllerClient():
 
                     # Add a event to the processing block event list to notify
                     # about deleting from the db
-                    processing_event_name = 'processing_block_events'
-                    self._db.push_event(processing_event_name, "deleted",
+                    self._db.push_event(self.processing_event_name, "deleted",
                                         processing_id)
         else:
             split_key = processing_block.split(':')
@@ -119,8 +119,7 @@ class controllerClient():
 
             # Add a event to the processing block event list to notify
             # about deleting from the db
-            processing_event_name = 'processing_block_events'
-            self._db.push_event(processing_event_name, "deleted",split_key[3])
+            self._db.push_event(self.processing_event_name, "deleted", split_key[3])
 
     def add_status(self, scheduling_block):
         """This function adds status fields to all the section
