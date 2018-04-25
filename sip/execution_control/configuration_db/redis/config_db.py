@@ -76,7 +76,7 @@ class configDB():
         return keys
 
     def get_block(self, block_id):
-        """Search keys"""
+        """Search for the key"""
         key_search = '*' + block_id
         if key_search:
             key = self._db.keys(key_search)

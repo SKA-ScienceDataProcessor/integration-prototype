@@ -67,11 +67,14 @@ class controllerClient():
             self._db.push_event(self.processing_event_name, value["status"],
                                 value["id"])
 
-    def get_scheduling_block(self, block_id):
-        print("Placeholder")
-
-    def get_processing_block(self):
-        print("Placeholder")
+    def get_block_snapshot(self, block_id):
+        """Get a snapshot of scheduling or processing block"""
+        for id in block_id:
+            block_name = self._db.get_block(id)
+            for name in block_name:
+                blocks = self._db.get_hash_all(name)
+                yield blocks
+        return blocks
 
     def get_latest_event(self, event_block):
         """Get the latest event added"""
@@ -80,9 +83,11 @@ class controllerClient():
         event = self._db.get_event(block_event, block_history)
         return ast.literal_eval(event)
 
-    def update_status(self):
-        print("Placeholder")
-
+    def update_value(self, block_id, field, value):
+        """"Update the value of the given block id and field"""
+        block_name = self._db.get_block(block_id)
+        for name in block_name:
+            self._db.set_value(name, field, value)
 
     def delete_scheduling_block(self, block_id):
         """Removes the scheduling block instance and all processing blocks
