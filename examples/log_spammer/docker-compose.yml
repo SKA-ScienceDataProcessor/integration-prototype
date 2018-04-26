@@ -1,0 +1,11 @@
+version: "3.3"
+
+services:
+  log_spammer:
+    image: njthykkathu/log_spammer
+    logging:
+      driver: "json-file"
+      options:
+        max-size: 10m
+        max-file: "3"
+        labels: "testing_log_driver"
