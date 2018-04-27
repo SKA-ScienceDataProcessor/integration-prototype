@@ -108,6 +108,31 @@ def get_scheduling_block_event():
         event = json.loads(event.decode('utf-8'))
     return event
 
+# #############################################################################
+# Sub array functions
+# #############################################################################
+
+
+def get_sub_array_ids():
+    """Return list of sub-array Id's currently known to SDP"""
+    ids = set()
+    for key in sorted(DB.keys(pattern='scheduling_block/*')):
+        config = json.loads(DB.get(key))
+        ids.add(config['sub_array_id'])
+    return sorted(list(ids))
+
+
+def get_sub_array_scheduling_block_ids(sub_array_id):
+    """Return list of scheduling block Id's associated with the given
+    sub_array_id
+    """
+    ids = []
+    for key in sorted(DB.keys(pattern='scheduling_block/*')):
+        config = json.loads(DB.get(key))
+        if config['sub_array_id'] == sub_array_id:
+            ids.append(config['id'])
+    return ids
+
 
 # #############################################################################
 # Processing Block functions

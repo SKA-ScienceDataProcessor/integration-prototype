@@ -3,8 +3,8 @@
 from flask import Blueprint, request
 from flask_api import status
 
-# from ..mock_config_db_client import get_processing_block, \
-#                                     delete_processing_block
+from ..mock_config_db_client import get_sub_array_scheduling_block_ids, \
+                                    get_scheduling_block
 
 
 API = Blueprint('sub_array_api', __name__)
@@ -17,22 +17,17 @@ def get_sub_array_detail(sub_array_id):
     This method will list scheduling blocks and processing blocks
     in the specified sub-array.
     """
-    # try:
-    #     block = get_processing_block(block_id)
-    #     response = block
-    #     response['links'] = {
-    #         'self': '{}'.format(request.url),
-    #         'list': '{}processing-blocks'.format(request.url_root),
-    #         'home': '{}'.format(request.url_root)
-    #     }
-    #     return block
-    # except KeyError as error:
-    #     response = dict(message='Unable to GET Processing Block',
-    #                     id='{}'.format(block_id),
-    #                     reason=error.__str__())
-    #     response['links'] = {
-    #         'list': '{}processing-blocks'.format(request.url_root),
-    #         'home': '{}'.format(request.url_root)
-    #     }
-    #     return response, status.HTTP_400_BAD_REQUEST
+    block_ids = get_sub_array_scheduling_block_ids(sub_array_id)
+    response = dict(scheduling_blocks=[])
+    for block_id in block_ids:
+        block = get_scheduling_block(block_id)
+        block['links'] = {
+            'self': '{}scheduling-block/{}'.format(request.url_root, block_id)
+        }
+        response['scheduling_blocks'].append(block)
+    response['links'] = {
+        'home': '{}'.format(request.url_root),
+        'self': '{}'.format(request.url)
+    }
+    return response, status.HTTP_200_OK
 

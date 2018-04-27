@@ -81,3 +81,21 @@ export FLASK_APP=app/app.py
 export FLASK_DEBUG=True
 flask run
 ```
+
+### Utility Scripts
+
+#### Seeding the test Configuration Database Service
+
+In order to provide a set of test data in the test Configuration Database 
+service a utility script is provided in the `utils` folder called `init_db.py`.
+
+This will drop all existing data in the Configuration Database and replace 
+it with a set of randomly created Scheduling Block Instance data structures.
+
+This can be run with the command:
+
+```bash
+python3 -m utils.init_db
+```
+
+

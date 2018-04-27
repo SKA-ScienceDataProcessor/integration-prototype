@@ -30,7 +30,7 @@ def main():
     for block_id in generate_scheduling_block_id(4):
         config = {
             "id": block_id,
-            "sub_array_id": "",
+            "sub_array_id": str(random.choice(range(3))),
             "processing_blocks": []
         }
         for p in range(random.randint(1, 3)):
@@ -38,8 +38,8 @@ def main():
                 "id": "{}:pb{:03d}".format(block_id, p),
                 "workflow": {
                     "name": "{}".format(random.choice(['vis_ingest_01',
-                                                      'dask_ical_01',
-                                                      'dask_maps_01'])),
+                                                       'dask_ical_01',
+                                                       'dask_maps_01'])),
                     "template": {},
                     "stages": []
                 }
