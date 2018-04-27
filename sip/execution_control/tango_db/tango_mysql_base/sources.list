@@ -1,0 +1,4 @@
+deb http://gb.archive.ubuntu.com/ubuntu/ artful main restricted
+deb http://gb.archive.ubuntu.com/ubuntu/ artful-updates main restricted
+deb http://gb.archive.ubuntu.com/ubuntu/ artful universe
+deb http://gb.archive.ubuntu.com/ubuntu/ artful-updates universe
