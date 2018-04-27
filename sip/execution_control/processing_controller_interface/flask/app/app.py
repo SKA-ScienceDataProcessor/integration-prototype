@@ -4,7 +4,8 @@
 http://blog.subair.net/make-a-simple-modular-rest-api-using-flask-and-blueprint/
 """
 from flask import request
-from flask_api import FlaskAPI
+from flask_api import FlaskAPI, status
+import time
 
 from .scheduling_block_list.routes import API as SCHEDULING_BLOCK_LIST
 from .scheduling_block.routes import API as SCHEDULING_BLOCK
@@ -18,6 +19,8 @@ APP.register_blueprint(SCHEDULING_BLOCK)
 APP.register_blueprint(PROCESSING_BLOCK_LIST)
 APP.register_blueprint(PROCESSING_BLOCK)
 
+START_TIME = time.time()
+
 
 @APP.route('/')
 def root():
@@ -28,5 +31,14 @@ def root():
             {"href": "{}scheduling-blocks".format(request.url)},
             {"href": "{}processing-blocks".format(request.url)}
         ]
-    }}
+    }}, status.HTTP_200_OK
+
+
+@APP.route('/health')
+def health():
+    """."""
+    return {
+        "state": "ON",
+        "uptime": time.time() - START_TIME
+    }, status.HTTP_200_OK
 

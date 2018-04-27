@@ -32,7 +32,7 @@ def get_scheduling_block_list():
             pass
         block['links'] = {
             'detail': '{}scheduling-block/{}'.format(request.url_root,
-                                                   block_id)
+                                                     block_id)
         }
         blocks.append(block)
     return response, status.HTTP_200_OK
