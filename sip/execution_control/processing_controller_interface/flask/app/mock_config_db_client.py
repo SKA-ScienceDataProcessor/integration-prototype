@@ -58,7 +58,7 @@ def get_num_scheduling_blocks():
     return len(DB.keys(pattern='scheduling_block/*'))
 
 
-def add_scheduling_block(config):
+def add_scheduling_block(config, schema_path=None):
     """Add a Scheduling Block to the Configuration Database.
 
     The configuration dictionary must match the schema defined in
@@ -66,10 +66,14 @@ def add_scheduling_block(config):
 
     Args:
         config (dict): Scheduling Block instance request configuration.
+        schema_path (str): Path to schema file used to validate the
+                           Scheduling Block Instance request
     """
 
-    schema_path = os.path.join(os.path.dirname(__file__),
-                               'scheduling_block_list', 'post_request.json')
+    if schema_path is None:
+        schema_path = os.path.join(os.path.dirname(__file__),
+                                   'scheduling_block_list',
+                                   'post_request.json')
     schema = load_schema(schema_path)
     jsonschema.validate(config, schema)
 
