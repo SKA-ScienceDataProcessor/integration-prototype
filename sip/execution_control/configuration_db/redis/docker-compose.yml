@@ -1,0 +1,28 @@
+version: '3'
+
+services:
+
+  redis:
+    image: redis:4.0.6-alpine
+    ports:
+      - 6379:6379
+
+  configuration_database:
+    image: njthykkathu/configuration_db
+    # Need to initialise the master controller data
+    # Maybe this is can be by integrating redis image and client together
+
+  redis-commander-db0:
+    image: rediscommander/redis-commander:latest
+    environment:
+    - REDIS_HOSTS=config_db:redis:6379:0
+    ports:
+    - 8081:8081
+
+  master_controller_data:
+    image: njthykkathu/configuration_db
+
+
+
+    # build: ./mock_processing_block_controller
+

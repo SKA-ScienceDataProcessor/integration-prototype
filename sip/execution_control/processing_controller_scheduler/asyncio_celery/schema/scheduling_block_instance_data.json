@@ -1,0 +1,85 @@
+{
+  "sched_block_id": "180201-sch-bl0",
+  "name": "Optional name string",
+  "sched_block_instance_id": "180201-sched-blinst0",
+  "type": "Schedling Block Instance",
+  "date": "180201",
+  "sub_array_id": "180201-subarray-ant0",
+  "version": "0.2",
+  "project": "sip",
+  "processing_blocks": [
+    {
+      "id": "180201-sip-vis0",
+      "type": "vis_ingest",
+      "priority": 1,
+      "resources_requirement": {
+      "storage_type": "hot"
+      },
+      "workflow": {
+        "stages" : [
+          {
+            "processing_stage": {
+              "start_time": "",
+              "end_time": "",
+              "processing_component":{
+              },
+              "execution_engine": {
+                "framework": ""
+              }
+            },
+            "service_stage": {
+              "buffer":"",
+              "preservation":"",
+              "model_database":"",
+              "data_queue":"",
+              "delivery":""
+
+            },
+            "dependency" : {
+              "sky_model_tag_id": "optional",
+              "telescope_model_tag_id" :"optional",
+              "data_queue_id": "optional",
+              "buffer_object_id": "optional"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "180201-sip-vis1",
+      "type": "vis_ingest",
+      "priority": 2,
+      "resources_requirement": {
+      "storage_type": "hot"
+      },
+      "workflow": {
+        "stages" : [
+          {
+            "processing_stage": {
+              "start_time": "",
+              "end_time": "",
+              "processing_component":{
+              },
+              "execution_engine": {
+                "framework": ""
+              }
+            },
+            "service_stage": {
+              "preservation":"",
+              "model_database":"",
+              "data_queue":"",
+              "delivery":""
+
+            },
+            "dependency" : {
+              "sky_model_tag_id": "optional",
+              "telescope_model_tag_id" :"optional",
+              "data_queue_id": "optional",
+              "buffer_object_id": "optional"
+            }
+          }
+        ]
+      }
+    }
+  ]
+}
