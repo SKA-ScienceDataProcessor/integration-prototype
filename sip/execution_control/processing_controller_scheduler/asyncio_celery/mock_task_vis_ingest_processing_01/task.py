@@ -7,7 +7,7 @@ import time
 import enlighten
 
 
-LOG = logging.getLogger('sip.mock_workflow_task')
+LOG = logging.getLogger('sip.mock_task_vis_ingest_processing_01')
 
 
 def main():

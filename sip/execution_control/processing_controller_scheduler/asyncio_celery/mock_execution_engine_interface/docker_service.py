@@ -6,13 +6,18 @@ tasks from the Processing Block Controller.
 """
 
 
-def run():
-    pass
+class DockerService:
+
+    def __init__(self):
+        pass
+
+    def run(self):
+        pass
 
 
-def stop():
-    pass
+    def stop(self):
+        pass
 
 
-def info():
-    pass
+    def info(self):
+        pass
