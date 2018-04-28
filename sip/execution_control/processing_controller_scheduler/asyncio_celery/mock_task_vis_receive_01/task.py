@@ -21,7 +21,7 @@ def main():
     LOG.info('Received configuration: {0}'.format(config))
     LOG.info('Starting task')
 
-    num_blocks = 100
+    num_blocks = 400
 
     # Setup progress bar
     manager = enlighten.get_manager()
@@ -29,7 +29,7 @@ def main():
 
     for i in range(num_blocks):
         LOG.info("Receiving visibility block %s" % i)
-        time.sleep(5 / num_blocks)
+        time.sleep(60 / num_blocks)
         progress.update()
 
     LOG.info('Task complete!')
