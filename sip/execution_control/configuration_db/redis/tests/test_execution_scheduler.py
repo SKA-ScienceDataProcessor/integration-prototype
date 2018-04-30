@@ -2,23 +2,21 @@
 """Test for the execution scheduler"""
 
 import simplejson as json
-from app.config_api import ConfigDB
-
+from controller_client import controllerClient
 
 def main():
-    db = ConfigDB()
+    db = controllerClient()
 
     print("***Test Execution Scheduler***")
 
     with open('utils/scheduling_block_data.json', 'r') as f:
-        schema_data = f.read()
-    scheduling_block = json.loads(schema_data)
+        block_data = f.read()
+    scheduling_block = json.loads(block_data)
     db.set_scheduling_block(scheduling_block)
-    print("")
 
     # print("Delete scheduling block")
     # block_id = "180201-sched-blinst0"
-    # db.delete_block( block_id)
+    # db.delete_scheduling_block(block_id)
     # print("scheduling block deleted")
     # print("")
 
@@ -28,25 +26,45 @@ def main():
     # print("processing block deleted")
     # print("")
 
-    # print("Get Scheduling block Event")
-    # scheduling_block = "scheduling_block"
-    # event = db.get_event(scheduling_block)
-    # print(event)
-    # print("")
-    #
-    # print("Get Processing Block Event")
-    # processing_block = "processing_block"
-    # event = db.get_event(processing_block)
-    # print(event)
-    # print("")
+    print("Get Scheduling block Event")
+    event_block = "scheduling_block"
+    event = db.get_latest_event(event_block)
+    print(event)
+    print("")
 
-    print("Update Status")
-    scheduling_key = ["scheduling_block_instance", "180201-sched-blinst0"]
-    processing_key = ["processing_block", "180201-sip-vis0"]
-    value = "Testing"
+    print("Get Processing Block Event")
+    processing_block = "processing_block"
+    event = db.get_latest_event(processing_block)
+    print(event)
+    print("")
+
+    print("Get Scheduling block")
+    block_id = ["180201-sched-blinst0"]
+    scheduling_block_instance = db.get_block_snapshot(block_id)
+    for instance in scheduling_block_instance:
+        print(instance)
+    print("")
+
+    print("Get processing block")
+    processing_block_id = ["180201-sip-vis0", "180201-sip-vis1"]
+    processing_blocks = db.get_block_snapshot(processing_block_id)
+    for blocks in processing_blocks:
+        print(blocks)
+    print("")
+
+    print("Get scheduling block and processing blocks")
+    processing_block_id = ["180201-sched-blinst0", "180201-sip-vis0", "180201-sip-vis1"]
+    processing_blocks = db.get_block_snapshot(processing_block_id)
+    for blocks in processing_blocks:
+        print(blocks)
+    print("")
+
+    print("Update Value")
+    block_id = "180201-sched-blinst0"
     field = "status"
-    db.update_status(processing_key, field , value)
-    print("Status Updated")
+    value = "Testing"
+    db.update_value(block_id, field, value)
+    print("Value Updated")
 
 
 if __name__ == '__main__':

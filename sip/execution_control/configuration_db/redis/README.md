@@ -11,12 +11,17 @@ the top level `deploy` folder.
 
 ## Quickstart
 
+To set initial data to the configuration database
+python3 -m utils.set_initial_data
 
+To test master controller run the unittest
+python3 -m tests.test_master_client
 
-TO DO
+Note - For now, after the unittest is executed, flush out the database and re-run the initial data script
+       otherwise the unittest will fail
 
-Sort out the schema with the new structure
-Optimise master controller set function
-Add processing block update, remove functions
-Write notes in this file explaining properly both how to use the client and test done for the scheduler
-Write Unit test
+TODO:
+Fix the teardown function in the master controller unit test
+Sort how the connection needs to work in the client
+Start implementing the controller_client.py
+

@@ -15,6 +15,16 @@ class configDB():
                                     decode_responses=True)
         self._db = redis.StrictRedis(connection_pool=POOL)
 
+    def set_hm_value(self, name, value):
+        """Sets specified fields to their respective values in the
+        has stored at key"""
+        self._db.hmset(name, value)
+
+    def get_hm_value(self, key, field):
+        """ Get all the values associated with the
+        specified fields in the hash stored at key"""
+        pass
+
     def get_hash(self, key, field):
         """Get the value associated with the key and field"""
         value = self._db.hget(key, field)
@@ -54,17 +64,32 @@ class configDB():
         """Adds a new element to the end of the list"""
         self._db.lpush(key, element)
 
-    def delete_key(self, key):
+    def delete_block(self, key):
         """Delete key"""
         self._db.delete(key)
 
-    # def string_to_bool(self, value):
-    #     if value == 'True':
-    #         return True
-    #     elif value == 'False':
-    #         return False
-    #     else:
-    #         return value
+    def get_all_blocks(self, block_id):
+        """Search all keys associated with the block id"""
+        key_search = '*' + block_id + '*'
+        if key_search:
+            keys = self._db.keys(key_search)
+        return keys
+
+    def get_block(self, block_id):
+        """Search for the key"""
+        key_search = '*' + block_id
+        if key_search:
+            key = self._db.keys(key_search)
+        return key
+
+    def push_event(self, event_name, type, block_id):
+        """ """
+        self._db.rpush(event_name, dict(type=type, id=block_id))
+
+    def get_event(self, block_event, block_history):
+        event = self._db.rpoplpush(block_event, block_history)
+        if event:
+            return event
 
 
 
