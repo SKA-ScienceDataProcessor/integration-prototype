@@ -2,8 +2,8 @@ version: '3.4'
 
 services:
 
-  processing_controller:
-    image: skasip/processing_controller
+  processing_controller_scheduler:
+    image: skasip/processing_controller_scheduler
     environment:
       - REDIS_HOST=redis
       - REDIS_DB_ID=0

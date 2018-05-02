@@ -15,20 +15,27 @@ This is backed by an in memory store of Processing Blocks
 import asyncio
 import functools
 import os
-import pprint
 import random
 import signal
+import logging
+import json
 
 from .mock_config_db_client import get_processing_block, \
-    get_processing_block_event, get_scheduling_block, \
-    get_scheduling_block_event, get_scheduling_block_ids
+                                   get_processing_block_event, \
+                                   get_scheduling_block, \
+                                   get_scheduling_block_event, \
+                                   get_scheduling_block_ids
 from mock_processing_block_controller.tasks import execute_processing_block
 from .queue import ProcessingBlockQueue
 
 from app.config_client_api import ConfigClient
 
 
+LOG = logging.getLogger('sip.processing_block_scheduler')
+
+
 class ProcessingBlockScheduler:
+    """Processing Block Scheduler class."""
 
     def __init__(self, report_rate=5.0):
         """Initialise the Processing bock Scheduler.
@@ -44,9 +51,9 @@ class ProcessingBlockScheduler:
     def run(self):
         """Starts the Scheduler event loop."""
         loop = asyncio.get_event_loop()
-        print('Starting Processing Block Controller Scheduler, pid = %s.'
-              % os.getpid())
-        print('Send SIGINT (Ctrl-C) or SIGTERM to exit.')
+        LOG.info('Starting Processing Block Controller Scheduler, pid = %s.',
+                 os.getpid())
+        LOG.info('Send SIGINT (Ctrl-C) or SIGTERM to exit.')
         self._init()
         asyncio.ensure_future(self._watch_scheduling_blocks_events())
         asyncio.ensure_future(self._watch_processing_block_events())
@@ -76,11 +83,11 @@ class ProcessingBlockScheduler:
                 # TODO(BM) should also look for running Celery tasks here
                 # an check against the Configuration db.
                 self._queue.put(processing_block.get('id'), priority=priority)
-        print('Initialised Processing Queue, %d Processing Blocks registered.'
-              % len(self._queue))
+        LOG.info('Initialised Processing Queue, %d Processing Blocks '
+                 'registered.',len(self._queue))
 
     def _ask_exit(self, sig_name):
-        print('Signal %s received, cancelling tasks ...' % sig_name)
+        LOG.info('Signal %s received, cancelling tasks ...' % sig_name)
         for task in asyncio.Task.all_tasks():
             # print('---', task, task.cancel())
             task.cancel()
@@ -90,11 +97,11 @@ class ProcessingBlockScheduler:
     async def _exit():
         loop = asyncio.get_event_loop()
         loop.stop()
-        print('Event loop stopped!')
+        LOG.info('Event loop stopped!')
 
     async def _watch_scheduling_blocks_events(self):
         """Function to watch for scheduling block events."""
-        print('Starting watch for Scheduling Block events')
+        LOG.info('Starting watch for Scheduling Block events')
         while True:
             try:
                 # event = get_scheduling_block_event()
@@ -105,10 +112,10 @@ class ProcessingBlockScheduler:
                     elif event['type'] == 'deleted':  # == cancelled
                         await self._remove_scheduling_block(event['id'])
                     else:
-                        print('ERROR: Unknown event type!')
+                        LOG.info('ERROR: Unknown event type!')
                 await asyncio.sleep(0.25)  # Release control for >= VALUE
             except asyncio.CancelledError:
-                print('Cancelling watching for Scheduling Block events')
+                LOG.info('Cancelling watching for Scheduling Block events')
                 break
 
     async def _register_scheduling_block(self, block_id):
@@ -120,6 +127,7 @@ class ProcessingBlockScheduler:
         Args:
             block_id (str): Scheduling block id.
         """
+<<<<<<< HEAD
         print("Registering Scheduling Block: %s" % block_id)
         # TODO (NJT) Check with BM the logic of this function
         # config = self._redis_api.get_scheduling_block(block_id)
@@ -137,6 +145,22 @@ class ProcessingBlockScheduler:
         #         return
         # print('Added %d processing blocks to the queue'
         #       % len(processing_blocks))
+=======
+        LOG.info("Registering Scheduling Block: %s" % block_id)
+        config = get_scheduling_block(block_id)
+        processing_blocks = config.get('processing_blocks')
+        if not processing_blocks:
+            return
+        for processing_block in processing_blocks:
+            priority = random.randint(0, 5)
+            block_id = processing_block.get('id')
+            try:
+                self._queue.put(block_id, priority)
+            except KeyError:
+                return
+        LOG.info('Added %d processing blocks to the queue',
+                 len(processing_blocks))
+>>>>>>> 0cfa7f543cd64f975d70ff01e47bd377cc856dd4
 
     async def _remove_scheduling_block(self, block_id):
         """Remove a Scheduling Block from the queue.
@@ -144,19 +168,19 @@ class ProcessingBlockScheduler:
         Args:
             block_id (str): Scheduling Block id
         """
-        print("Removing Scheduling Block: %s ..." % block_id)
+        LOG.info("Removing Scheduling Block: %s ...", block_id)
         indexes = [i for i in range(len(self._queue))
                    if self._queue[i][2].startswith(block_id)]
         block_ids = [self._queue[i][2] for i in indexes]
         for i in range(len(block_ids)):
-            print("Removing Processing Block {:03d}: id = {}"
-                  .format(indexes[i], block_ids[i]))
+            LOG.info("Removing Processing Block %03d: id = %s", indexes[i],
+                     block_ids[i])
             # TODO(BM) Cancel Celery tasks
             self._queue.remove(block_ids[i])
 
     async def _watch_processing_block_events(self):
         """Function to watch for processing (delete) block events"""
-        print('Starting watch for Processing Block events')
+        LOG.info('Starting watch for Processing Block events')
         while True:
             try:
                 event = get_processing_block_event()
@@ -164,24 +188,24 @@ class ProcessingBlockScheduler:
                     if event['type'] == 'deleted':
                         await self._remove_processing_block(event['id'])
                     else:
-                        print('ERROR: Unknown event type!')
+                        LOG.info('ERROR: Unknown event type!')
                 await asyncio.sleep(0.25)
             except asyncio.CancelledError:
-                print('Cancelling watching for Processing Block events')
+                LOG.info('Cancelling watching for Processing Block events')
                 break
 
     async def _remove_processing_block(self, block_id):
         """Remove a processing block from the queue"""
         try:
             self._queue.remove(block_id)
-            print("Removed Processing Block: %s" % block_id)
+            LOG.info("Removed Processing Block: %s", block_id)
             # TODO(BM) Cancel Celery task
         except KeyError:
             return
 
     async def _schedule_processing_block(self):
         """Function to schedule a Processing block for execution."""
-        print('Starting to schedule Processing Block execution')
+        LOG.info('Starting to schedule Processing Block execution')
         while True:
             try:
                 # TODO(BM): check SDP state to determine if this should proceed.
@@ -197,14 +221,13 @@ class ProcessingBlockScheduler:
                         processing_block = self._queue.get()
                         # TODO(BM) Mark the status of the block as started
                         # executing
-                        print('Executing block', processing_block[2])
+                        LOG.info('Executing block %s', processing_block[2])
                         block_config = get_processing_block(block_id)
-                        print('Block Config:')
-                        pprint.pprint(block_config)
+                        LOG.debug('Block Config: %s', json.dumps(block_config))
                         execute_processing_block.apply_async((block_config,))
                 await asyncio.sleep(0.25)  # Release control for >= VALUE
             except asyncio.CancelledError:
-                print('Cancelling scheduling of Processing Block execution')
+                LOG.info('Cancelling scheduling of Processing Block execution')
                 break
 
     @staticmethod
@@ -221,37 +244,38 @@ class ProcessingBlockScheduler:
         """Updates the status of executing processing blocks."""
         # TODO(BM) Find out which celery tasks are currently executing
         # TODO(BM) update status of executing tasks in the configuration db.
-        print('Starting update of Processing Block status')
+        LOG.info('Starting update of Processing Block status')
         while True:
             try:
                 await asyncio.sleep(0.25)
             except asyncio.CancelledError:
-                print('Cancelling update of Processing Block status')
+                LOG.info('Cancelling update of Processing Block status')
                 break
 
     async def _report_queue_status(self):
         """Print the contents of the queue."""
-        print('Starting reporting on Processing Block queue')
+        LOG.info('Starting reporting on Processing Block queue')
         while True:
             try:
                 if len(self._queue) > 0:
-                    print("Processing Blocks: (index | priority | block_id)")
-                    print('-' * 60)
-                    print(self._queue)
-                    print('-' * 60)
+                    LOG.info("Processing Blocks: (index | priority | block_id)")
+                    LOG.info('-' * 60)
+                    LOG.info(self._queue)
+                    LOG.info('-' * 60)
                 else:
-                    print("Processing Block queue empty!")
+                    LOG.info("Processing Block queue empty!")
                 await asyncio.sleep(self._report_rate)
             except asyncio.CancelledError:
-                print('Cancelling reporting on Processing Block queue')
+                LOG.info('Cancelling reporting on Processing Block queue')
                 break
 
     async def _report_processing_block_controller_status(self):
         """Print the status of Processing Block Controllers."""
-        print('Starting reporting on Processing Block Controllers')
+        LOG.info('Starting reporting on Processing Block Controllers')
         while True:
             try:
                 await asyncio.sleep(self._report_rate)
             except asyncio.CancelledError:
-                print('Cancelling reporting on Processing Block Controllers')
+                LOG.info('Cancelling reporting on Processing Block '
+                         'Controllers')
                 break

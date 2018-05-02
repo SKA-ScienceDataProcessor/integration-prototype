@@ -4,7 +4,7 @@
 import os
 import redis
 
-class configDB():
+class ConfigDB():
     """ Configuration Client Interface"""
     def __init__(self):
         """ Create a connection to a configuration database"""
@@ -15,30 +15,30 @@ class configDB():
                                     decode_responses=True)
         self._db = redis.StrictRedis(connection_pool=POOL)
 
-    def set_hm_value(self, name, value):
+    def set_specified_values(self, name, value):
         """Sets specified fields to their respective values in the
         has stored at key"""
         self._db.hmset(name, value)
 
-    def get_hm_value(self, key, field):
+    def set_value(self, key, field, value):
+        """Add the state of the key and field"""
+        self._db.hset(key, field, value)
+
+    def get_specified_values(self, key, field):
         """ Get all the values associated with the
         specified fields in the hash stored at key"""
+        print("Placeholder")
         pass
 
-    def get_hash(self, key, field):
+    def get_value(self, key, field):
         """Get the value associated with the key and field"""
         value = self._db.hget(key, field)
         return value
 
-    def get_hash_all(self, key):
-        """Get all the field and value in the key"""
+    def get_all_field_value(self, key):
+        """Get all the fields and values stored at key"""
         value_all = self._db.hgetall(key)
         return value_all
-
-    def get_field(self, key):
-        """ """
-        field = self._db.hget(key)
-        return field
 
     def get_list(self, key):
         """Get all the value in the list"""
@@ -52,13 +52,9 @@ class configDB():
         return element
 
     def get_length(self, key):
-        """Get the length of a list"""
+        """Get the lenth of the list stored at key"""
         len = self._db.llen(key)
         return len
-
-    def set_value(self, key, field, value):
-        """Add the state of the key and field"""
-        self._db.hset(key, field, value)
 
     def add_element(self, key, element):
         """Adds a new element to the end of the list"""
@@ -68,6 +64,7 @@ class configDB():
         """Delete key"""
         self._db.delete(key)
 
+    # TODO(NJT): Might be better to combine the two functions or have a third function
     def get_all_blocks(self, block_id):
         """Search all keys associated with the block id"""
         key_search = '*' + block_id + '*'
@@ -76,20 +73,34 @@ class configDB():
         return keys
 
     def get_block(self, block_id):
-        """Search for the key"""
+        """Search for keys associated with the block id"""
         key_search = '*' + block_id
         if key_search:
             key = self._db.keys(key_search)
         return key
 
     def push_event(self, event_name, type, block_id):
-        """ """
+        """Push inserts all the specified values at the tail of the list
+        stored at the key"""
         self._db.rpush(event_name, dict(type=type, id=block_id))
 
     def get_event(self, block_event, block_history):
+        """Removes the last element of the list stored at the source,
+        and pushes the element at the first element of the list stored
+        at destination"""
+        print(block_event)
+        print(block_history)
         event = self._db.rpoplpush(block_event, block_history)
         if event:
             return event
 
+    def flush_db(self):
+        """Deletes all the data in the database"""
+        self._db.flushdb()
+
+    def get_ids(self, pattern):
+        key_search = self._db.keys(pattern)
+        if key_search:
+            return key_search
 
 

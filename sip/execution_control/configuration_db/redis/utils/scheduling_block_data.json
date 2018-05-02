@@ -1,15 +1,15 @@
 {
-  "sched_block_id": "180201-sch-bl0",
+  "sched_block_id": "20180201-test-sb000",
   "name": "Optional name string",
-  "sched_block_instance_id": "180201-sched-blinst0",
-  "type": "Schedling Block Instance",
-  "date": "180201",
-  "sub_array_id": "180201-subarray-ant0",
+  "sched_block_instance_id": "20180201-test-sbi000",
+  "type": "Scheduling Block Instance",
+  "date": "20180201",
+  "sub_array_id": "subarray000",
   "version": "0.2",
   "project": "sip",
   "processing_blocks": [
     {
-      "id": "180201-sip-vis0",
+      "id": "sip-vis000",
       "type": "vis_ingest",
       "priority": 1,
       "resources_requirement": {
@@ -19,7 +19,7 @@
       }
     },
     {
-      "id": "180201-sip-vis1",
+      "id": "sip-vis001",
       "type": "vis_ingest",
       "priority": 2,
       "resources_requirement": {

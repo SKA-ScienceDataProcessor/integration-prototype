@@ -7,7 +7,8 @@
     "properties": {
         "sched_block_id": {
             "description": "[date]-[project]-[type][id] for the scheduling block id",
-            "type": "string"
+            "type": "string",
+            "pattern": "^[0-9]{8}-[a-z]+-sb[0-9]+$"
         },
         "name": {
             "description": "Optional name string",
@@ -15,19 +16,22 @@
         },
         "sched_block_instance_id": {
             "description": "[date]-[project]-[type][id] for the scheduling block instance id",
-            "type": "string"
+            "type": "string",
+            "pattern": "^[0-9]{8}-[a-z]+-sbi[0-9]+$"
         },
         "type": {
             "description": "Type of scheduling block",
             "type": "string"
         },
         "date": {
-            "description": "YYmmdd for the date",
-            "type": "string"
+            "description": "YYYYmmdd for the date",
+            "type": "string",
+            "pattern": "^[0-9]{8}$"
         },
         "sub_array_id": {
-            "description": "[date]-[project]-[type][id] for the sub array id",
-            "type": "string"
+            "description": "[type][id] for the sub array id",
+            "type": "string",
+            "pattern": "^subarray[0-9]+$"
         },
         "status": {
             "description": "Status of the scheduling block instance",
@@ -55,8 +59,9 @@
                 "type": "object",
                 "properties": {
                     "id": {
-                        "description": "[date]-[project]-[type][id] for the processing block",
-                        "type": "string"
+                        "description": "[project]-[type][id] for the processing block",
+                        "type": "string",
+                        "pattern": "^[a-z]+-[a-z]+[0-9]+$"
                     },
                     "type": {
                         "description": "Type of the processing block",
