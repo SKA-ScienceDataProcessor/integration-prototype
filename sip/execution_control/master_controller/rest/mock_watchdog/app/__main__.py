@@ -1,23 +1,29 @@
 # -*- coding: utf-8 -*-
 """Mock services watchdog."""
 
-import os
-import redis
 import datetime
+import os
+import time
 
-DB = redis.Redis(host=os.getenv('DATABASE_HOST'))
+from .master_client import masterClient
 
 ROOT = 'execution_control:master_controller'
 
+db = masterClient()
 
 def main():
     """Application entry point."""
 
     while True:
-        target_state = DB.get(ROOT + ":target_state")
-        if target_state != None:
-            DB.set(ROOT + ":TANGO_state", target_state)
-            DB.set(ROOT + ':state_timestamp', str(datetime.datetime.now()))
+        time.sleep(1)
+        try:
+            target_state = db.get_value(ROOT, "target_state")
+            if target_state != None:
+                db.update_value(ROOT, "TANGO_state", target_state)
+                db.update_value(ROOT, 'state_timestamp',
+                        str(datetime.datetime.now()))
+        except:
+            pass
 
 
 if __name__ == '__main__':

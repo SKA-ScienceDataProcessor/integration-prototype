@@ -5,7 +5,7 @@ services:
   master:
     image: skasip/master_controller_rest
     environment:
-      DATABASE_HOST: "master_db"
+      REDIS_HOST: "master_db"
     ports:
       - 5000
     build: .
@@ -18,7 +18,7 @@ services:
   services_watchdog:
     image: skasip/mock_services_watchdog
     environment:
-      DATABASE_HOST: "master_db"
+      REDIS_HOST: "master_db"
     build: mock_watchdog
 
 volumes:

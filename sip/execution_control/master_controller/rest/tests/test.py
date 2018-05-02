@@ -3,13 +3,14 @@
 
 - http://flask.pocoo.org/docs/0.12/testing/
 """
+import datetime
 import unittest
 import json
 import os
-
-os.environ['UNIT_TESTING'] = 'yes'
+import time
 
 from app.app import APP
+from app.master_client import masterClient
 
 class MasterControllerTests(unittest.TestCase):
     """Tests of the Master Controller"""
@@ -21,7 +22,12 @@ class MasterControllerTests(unittest.TestCase):
         APP.config['JSONIFY_PRETTYPRINT_REGULAR'] = False
         self.app = APP.test_client()
         self.assertEqual(APP.debug, False)
-
+        db = masterClient()
+        mc_root = 'execution_control:master_controller'
+        db.update_value(mc_root, 'target_state', 'OFF')
+        db.update_value(mc_root, 'TANGO_state', 'OFF')
+        db.update_value(mc_root, 'state_timestamp',
+                str(datetime.datetime.now()))
     def tearDown(self):
         """Executed after each test."""
         pass
@@ -31,8 +37,7 @@ class MasterControllerTests(unittest.TestCase):
         states = ['OFF', 'INIT', 'STANDBY', 'ON', 'DISABLE', 'FAULT', 'ALARM',
                   'UNKNOWN']
         response = self.app.get('/state')
-        self.assertEqual(response.mimetype,
-                         'application/json')
+        self.assertEqual(response.mimetype, 'application/json')
         self.assertEqual(response.status_code, 200)
         data = json.loads(response.get_data().decode('utf-8'))
         self.assertTrue(data['state'] in states)
@@ -44,6 +49,7 @@ class MasterControllerTests(unittest.TestCase):
         self.assertEqual(response.mimetype,
                          'application/json')
         self.assertEqual(response.status_code, 200)
+        time.sleep(2)
         response = self.app.get('/state')
         data = json.loads(response.get_data().decode('utf-8'))
         self.assertEqual(data['state'], 'STANDBY' )
