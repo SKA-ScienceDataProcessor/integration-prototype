@@ -1,0 +1,180 @@
+<script src="{{ url_for('static', filename='js/src-noconflict/ace.js') }}"
+        type="text/javascript" charset="utf-8"></script>
+
+<!-- FORM -->
+<form>
+
+  <!-- -->
+  <div class="form-group">
+    <label>Template:</label>
+    <select class="form-control form-control-sm"
+            id="template" value="">
+      <option selected="selected" value="">Select template...
+      </option>
+      <option>example-1</option>
+      <option>example-2</option>
+      <option>example-3</option>
+    </select>
+  </div>
+
+  <div class="form-group">
+    <label>No processing blocks:</label>
+    <input class="form-control form-control-sm"
+           id="num_processing_blocks" type="number" min="0", value="1">
+  </div>
+
+  <div class="form-group">
+    <label for="project">Project:</label>
+    <input class="form-control form-control-sm"
+           id="project" type="text" value="sip">
+  </div>
+
+  <div class="form-group">
+    <button type="submit" class="btn btn-primary" id="submit">Submit</button>
+  </div>
+
+  <!-- Ace editor -->
+  <div class="form-group">
+      <div class="panel panel-default">
+        <div class="panel-body">
+          <style type="text/css" media="screen">
+            #editor { height: 500px; }
+          </style>
+          <div id="editor"></div>
+        </div>
+      </div>
+  </div>
+</form>
+
+
+<script>
+function zeroPad(num, places) {
+  var zero = places - num.toString().length + 1;
+  return Array(+(zero > 0 && zero)).join("0") + num;
+}
+</script>
+
+<script>
+function get_num_blocks() {
+    var host = window.location.origin
+    var url = `${host}/api/v1/scheduling-blocks`
+    var xhttp = new XMLHttpRequest();
+    xhttp.open("GET", "${url}/api/v1/scheduling-blocks", true);
+    xhttp.setRequestHeader("Content-type", "application/json");
+    xhttp.send();
+    var response = JSON.parse(xhttp.responseText);
+    console.log(response)
+}
+</script>
+
+<script>
+$("#template, #num_processing_blocks, #project").change(function() {
+
+  var editor = ace.edit("editor");
+
+  var index = $("#template")[0].selectedIndex;
+  console.log(index);
+
+  var num_blocks = $("#num_processing_blocks").val()
+  console.log(num_blocks);
+
+  var project = $("#project").val()
+  console.log(project);
+
+  <!--get_num_blocks()-->
+    var host = window.location.origin
+  var url = `${host}/api/v1/scheduling-blocks`
+  $.getJSON(url, function(data) {
+    var num_blocks_2 = data['scheduling_blocks'].length;
+    console.log(num_blocks_2)
+  });
+
+
+
+  var templates = [
+    undefined,
+    { id: '', sub_array_id: 1, processing_blocks: [] },
+  ];
+
+  template = templates[index];
+
+  if (template != undefined)
+  {
+    var date = new Date();
+    var year = date.getFullYear();
+    var month = zeroPad(date.getMonth(), 2);
+    var day = zeroPad(date.getDate(), 2);
+
+    template['id'] = `${year}${month}${day}-${project}-sbi001`;
+    for (i = 0; i < num_blocks; i++) {
+      template['processing_blocks'].push({id: 'pb-'+i})
+    }
+    var json_doc = JSON.stringify(template, null, 2);
+    console.log(json_doc);
+    editor.setValue(json_doc);
+    editor.selection.clearSelection();
+  }
+  else {
+    editor.setValue("");
+    editor.selection.clearSelection();
+  }
+
+});
+</script>
+
+<script>
+$("#submit").click(function() {
+  alert( "Handler for .click() called." );
+  var editor = ace.edit("editor");
+  var config = editor.getValue()
+  var host = window.location.origin
+  var url = `${host}/scheduling-blocks`
+  console.log(url)
+  console.log(config)
+  <!--$.post(url, config);-->
+});
+</script>
+
+<script>
+    var editor = ace.edit("editor");
+    editor.setTheme("ace/theme/clouds");
+    editor.session.setMode("ace/mode/json");
+    document.getElementById('editor').style.fontSize='14px';
+    editor.session.setTabSize(2);
+    editor.session.setUseSoftTabs(true);
+    editor.setHighlightActiveLine(true);
+    editor.setShowPrintMargin(false);
+    editor.selection.clearSelection();
+</script>
+
+<!--<script type='text/javascript'>-->
+<!--function apply_template(sel) {-->
+
+<!--var num_blocks = document.getElementById('num_processing_blocks').value-->
+<!--console.log(num_blocks)-->
+<!--var project = $('#project').val()-->
+<!--console.load(project)-->
+
+<!--var templates = [-->
+  <!--undefined,-->
+  <!--{ id: '', sub_array_id: 1, processing_blocks: [] }-->
+<!--];-->
+<!--template = templates[sel.selectedIndex];-->
+<!--for (i = 0; i < num_blocks; i++) {-->
+  <!--template['processing_blocks'].push({id: 'pb-'+i})-->
+<!--}-->
+
+<!--var editor = ace.edit("editor");-->
+<!--if (template != undefined)-->
+<!--{-->
+  <!--var json_doc = JSON.stringify(template, null, 2)-->
+  <!--editor.setValue(json_doc);-->
+<!--}-->
+<!--else {-->
+  <!--editor.setValue("")-->
+<!--}-->
+
+<!--}-->
+<!--</script>-->
+
+

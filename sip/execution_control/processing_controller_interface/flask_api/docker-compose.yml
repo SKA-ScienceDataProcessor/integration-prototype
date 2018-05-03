@@ -1,0 +1,22 @@
+version: '3.4'
+
+services:
+
+  processing_controller_interface:
+    image: skasip/processing_controller_interface_rest
+    environment:
+      REDIS_HOST: "redis://processing_controller_db"
+      REDIS_DB_ID: 0
+    ports:
+      - 5000:5000
+    build: .
+
+  processing_controller_db:
+    image:  redis:4.0.6-alpine
+    ports:
+      - 6379:6379
+    volumes:
+      - processing_controller_db:/data/db
+
+volumes:
+  processing_controller_db:
