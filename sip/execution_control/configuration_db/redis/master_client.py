@@ -2,40 +2,45 @@
 """High Level Master Controller Client API"""
 
 import ast
-from config_db import configDB
+from config_db import ConfigDB
 
-class masterClient():
+class MasterClient():
     """ Master Controller Client Interface"""
     def __init__(self):
         print("Master Client")
-        self._db = configDB()
+        self._db = ConfigDB()
+
+
+    # #############################################################################
+    # Get functions
+    # #############################################################################
+
 
     def get_value(self, name, field):
-        """Get value in string """
+        """Get value associated to the fiedl in string"""
         path = ':'.join(name)
-        value = self._db.get_hash(path, field)
+        value = self._db.get_value(path, field)
         if value:
             return value
         else:
             return None
 
     def get_value_bool(self, name, field):
-        """ Get the value in boolean"""
+        """ Get the value associated to the field in boolean"""
         value = self.get_value(name, field)
         return bool(value)
 
-    def get_value_all(self, name):
-        """Get all the value in the name.
-        Returned in dict"""
+    def get_all_value(self, name):
+        """Get all the value associated to the name, returned in dict"""
         path = ':'.join(name)
-        value = self._db.get_hash_all(path)
+        value = self._db.get_all_field_value(path)
         if value:
             return value
         else:
             return None
 
     def get_service_list(self, name):
-        """ Get all the service list"""
+        """ Get the service list from the database"""
         key = ':'.join(name)
         list = self._db.get_list(key)
         if list:
@@ -67,8 +72,8 @@ class masterClient():
             return element
 
     def get_service_list_length(self, name):
-        """ Returns the number of elements in a list
-        If the does not point to a list 0 is return"""
+        """ Get the length of the service list.If the does not point
+        to a list 0 is return"""
         key = ':'.join(name)
         list_length = self._db.get_length(key)
         if list_length:
@@ -76,23 +81,42 @@ class masterClient():
         else:
             return 0
 
-    def convert_path(self, name):
-        path = name.split('.')
-        service_path = ':'.join(path)
-        return service_path
+
+    # #############################################################################
+    # Add functions
+    # #############################################################################
+
 
     def add_service_to_list(self, name, element):
         """ Adds a new service to the end of the list"""
         key = ':'.join(name)
         self._db.add_element(key, element)
 
+
+    # #############################################################################
+    # Update functions
+    # #############################################################################
+
+
     def update_value(self, name, field, value):
-        """" """
+        """"Updates the value of the given name and field"""
         path = ':'.join(name)
         self._db.set_value(path, field, value)
 
     def update_service(self, v_path, field, value):
         """ Update the service"""
-        # Converts a value from the database to a service path list
-        path = self.convert_path(v_path)
+        # Converts the name format
+        path = self._convert_path(v_path)
         self._db.set_value(path, field, value)
+
+
+    # #############################################################################
+    # Private functions
+    # #############################################################################
+
+
+    def _convert_path(self, name):
+        """Converts the name format to the match the database."""
+        path = name.split('.')
+        service_path = ':'.join(path)
+        return service_path

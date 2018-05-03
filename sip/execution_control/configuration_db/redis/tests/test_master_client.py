@@ -16,7 +16,10 @@ validate({'name': "myname", "price": 34.99}, schema)
 import unittest
 import logging
 import sys
-from master_client import masterClient
+import os
+import redis
+from master_client import MasterClient
+
 
 # db = masterClient()
 # name = ['execution_control', 'master_controller']
@@ -39,13 +42,11 @@ from master_client import masterClient
 
 class DbClientTests(unittest.TestCase):
     def setUp(self):
-        self._db = masterClient()
+        self._db = MasterClient()
         self._log = logging.getLogger("DbClientTests.testPath")
-        # TODO: (NJT) NEED TO FLUSHALL AND RUN INITIAL DATA SCRIPT
 
     def tearDown(self):
         """Executed after each test."""
-        pass
 
     def testSetState(self):
         name = ['execution_control', 'master_controller']
@@ -63,7 +64,7 @@ class DbClientTests(unittest.TestCase):
 
     def testGetAllState(self):
         name = ['execution_control', 'master_controller']
-        all = self._db.get_value_all(name)
+        all = self._db.get_all_value(name)
         self.assertNotEqual(all, None)
 
     def testAddList(self):
@@ -107,7 +108,6 @@ class DbClientTests(unittest.TestCase):
         service = self._db.get_value(service_name, field)
         self.assertEqual(service, 'stopped')
 
-    #TODO: (NJT) Get this working. Important
     def testBoolean(self):
         service_list_name = ['execution_control', 'master_controller',
                              'service_list']
@@ -116,6 +116,13 @@ class DbClientTests(unittest.TestCase):
         self.assertTrue(element['enabled'], False)
 
 if __name__ == '__main__':
+    # Deletes all the data in the database
+    r = redis.Redis()
+    r.flushdb()
+
+    # Populates the database with initial data
+    os.system("python3 -m utils.set_initial_data")
+
     logging.basicConfig( stream=sys.stderr )
     logging.getLogger("DbClientTests.testPath").setLevel(logging.DEBUG)
     unittest.main()

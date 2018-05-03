@@ -4,75 +4,143 @@
 import json
 import ast
 from jsonschema import validate
-from config_db import configDB
+from config_db import ConfigDB
 
-class controllerClient():
+
+class SchedulingClient():
     """ Processing Controller Client Interface"""
-    def __init__(self):
-        print("Controller Client")
-        self._db = configDB()
 
+    def __init__(self):
+        self._db = ConfigDB()
+
+        # Initialise Variables
         self.scheduling_event_name = 'scheduling_block_events'
         self.processing_event_name = 'processing_block_events'
+        self.scheduling_block_data = {}
+        self.processing_block_data = {}
 
-    def get_schema(self):
-        """Get the schema for validation"""
-        with open('schema/scheduling_block_schema.json', 'r') as f:
-            schema_data = f.read()
-        schema = json.loads(schema_data)
-        return schema
+    # #############################################################################
+    # Set functions
+    # #############################################################################
 
     def set_scheduling_block(self, scheduling_block):
         """Set scheduling block and processing block to the database"""
         # Get schema for validation
-        schema = self.get_schema()
+        schema = self._get_schema()
         try:
             # Validates the schema
             validate(scheduling_block, schema)
+
+            json_dump = json.dumps(scheduling_block)
+            block_object = json.loads(json_dump)
+
+            # Add status field and value to the data
+            updated_block = self._add_status(block_object)
+
+            # Splitting into different names and fields before
+            # adding to the database
+            self._split_scheduling_block(updated_block)
+
+            # Adding Scheduling block instance with id
+            scheduling_block_name = "scheduling_block:" + \
+                                    updated_block["sched_block_instance_id"]
+            self._db.set_specified_values(scheduling_block_name, self.scheduling_block_data)
+
+            # Add a event to the scheduling block event list to notify
+            # of a new scheduling block being added to the db.
+            self._db.push_event(self.scheduling_event_name, updated_block["status"],
+                                updated_block["sched_block_instance_id"])
+
+            # Adding Processing block with id
+            for value in self.processing_block_data:
+                processing_block_name = "scheduling_block:" + \
+                                        updated_block["sched_block_instance_id"] + \
+                                        ":processing_block" + ":" + value['id']
+                self._db.set_specified_values(processing_block_name, value)
+
+                # Add a event to the processing block event list to notify
+                # of a new processing block being added to the db.
+                self._db.push_event(self.processing_event_name, value["status"],
+                                    value["id"])
         except:
             print("Schema Validation Error")
 
-        json_dump = json.dumps(scheduling_block)
-        block_object = json.loads(json_dump)
+    # #############################################################################
+    # Get functions
+    # #############################################################################
 
-        # Add status
-        updated_block = self.add_status(block_object)
+    def get_scheduling_block_ids(self):
+        """Get list of scheduling block ids"""
+        # Initialise empty list
+        scheduling_block_ids = []
 
-        # Splitting into different names and fields before
-        # adding to the database
-        scheduling_blk, processing_blk = self.split_scheduling_block(
-            updated_block)
+        # Pattern used to search scheduling block ids
+        pattern = 'scheduling_block:*'
 
-        # Adding Scheduling block instance with id
-        scheduling_block_name = "scheduling_block_instance:" + \
-                       updated_block["sched_block_instance_id"]
+        block_ids = self._db.get_ids(pattern)
+        for block_id in block_ids:
+            if 'processing_block' not in block_id:
+                id_split = block_id.split(':')[-1]
+                scheduling_block_ids.append(id_split)
+        return scheduling_block_ids
 
-        self._db.set_hm_value(scheduling_block_name, scheduling_blk)
+    def get_num_scheduling_block_ids(self):
+        """"Get number of scheduling blocks ids"""
+        num_block_ids = len(self.get_scheduling_block_ids())
+        return num_block_ids
 
-        # Add a event to the scheduling block event list to notify
-        # of a new scheduling block being added to the db.
-        self._db.push_event(self.scheduling_event_name, updated_block["status"],
-                            updated_block["sched_block_instance_id"])
+    def get_processing_block_ids(self):
+        """Get list of processing block ids using the processing block id"""
+        # Initialise empty list
+        processing_block_ids = []
 
-        # Adding Processing block with id
-        for value in processing_blk:
-            processing_block_name = "scheduling_block_instance:" + \
-                             updated_block["sched_block_instance_id"] + \
-                             ":processing_block" + ":" + value['id']
-            # self._db.hmset(processing_name, value)
-            self._db.set_hm_value(processing_block_name, value)
+        # Pattern used to search processing block ids
+        pattern = '*:processing_block:*'
 
-            # Add a event to the processing block event list to notify
-            # of a new processing block being added to the db.
-            self._db.push_event(self.processing_event_name, value["status"],
-                                value["id"])
+        block_ids = self._db.get_ids(pattern)
+        for block_id in block_ids:
+            id_split = block_id.split(':')[-1]
+            processing_block_ids.append(id_split)
+        return processing_block_ids
 
-    def get_block_snapshot(self, block_id):
-        """Get a snapshot of scheduling or processing block"""
+    def get_num_processing_block_ids(self):
+        """"Get number of processing block ids"""
+        num_block_ids = len(self.get_processing_block_ids())
+        return num_block_ids
+
+    def get_sub_array_ids(self):
+        """Get list of sub array ids"""
+        # Initialise empty list
+        scheduling_block_ids = []
+        sub_array_ids = []
+
+        for blocks_id in self.get_scheduling_block_ids():
+            scheduling_block_ids.append(blocks_id)
+        block_details = self.get_block_details(scheduling_block_ids)
+        for details in block_details:
+            sub_array_ids.append(details['sub_array_id'])
+        return sub_array_ids
+
+    def get_scheduling_block_id_using_sub_array_id(self, sub_array_id):
+        """Get scheduling block id (note the instance id) associated with
+         sub array id"""
+        # Initialise empty list
+        scheduling_block_ids = []
+
+        for block_id in self.get_scheduling_block_ids():
+            scheduling_block_ids.append(block_id)
+        block_details = self.get_block_details(scheduling_block_ids)
+        for details in block_details:
+            if details['sub_array_id'] == sub_array_id:
+                sched_blocks_id = details['sched_block_id']
+                return sched_blocks_id
+
+    def get_block_details(self, block_id):
+        """Get details of scheduling or processing block"""
         for id in block_id:
             block_name = self._db.get_block(id)
             for name in block_name:
-                blocks = self._db.get_hash_all(name)
+                blocks = self._db.get_all_field_value(name)
                 yield blocks
         return blocks
 
@@ -83,11 +151,19 @@ class controllerClient():
         event = self._db.get_event(block_event, block_history)
         return ast.literal_eval(event)
 
+    # #############################################################################
+    # Update functions
+    # #############################################################################
+
     def update_value(self, block_id, field, value):
         """"Update the value of the given block id and field"""
         block_name = self._db.get_block(block_id)
         for name in block_name:
             self._db.set_value(name, field, value)
+
+    # #############################################################################
+    # Delete functions
+    # #############################################################################
 
     def delete_scheduling_block(self, block_id):
         """Removes the scheduling block instance and all processing blocks
@@ -126,26 +202,33 @@ class controllerClient():
             # about deleting from the db
             self._db.push_event(self.processing_event_name, "deleted", split_key[3])
 
-    def add_status(self, scheduling_block):
+    # #############################################################################
+    # Private functions
+    # #############################################################################
+
+    def _get_schema(self):
+        """Get the schema for validation"""
+        with open('schema/scheduling_block_schema.json', 'r') as f:
+            schema_data = f.read()
+        schema = json.loads(schema_data)
+        return schema
+
+    def _add_status(self, scheduling_block):
         """This function adds status fields to all the section
         in the scheduling block instance"""
         scheduling_block['status'] = "created"
         for block in scheduling_block:
-            # print(type(scheduling_block[block]))
             if type(scheduling_block[block]) == list:
-                for p in scheduling_block[block]:
-                    p['status'] = 'created'
+                for field in scheduling_block[block]:
+                    field['status'] = 'created'
         return scheduling_block
 
-    def split_scheduling_block(self, scheduling_block):
+    def _split_scheduling_block(self, scheduling_block):
         """Split the scheduling block data into multiple names
         before adding to the configuration database"""
-        scheduling_blk = {}
-        processing_blk = {}
         for block in scheduling_block:
             values = scheduling_block[block]
             if type(scheduling_block[block]) != list:
-                scheduling_blk[block] = values
+                self.scheduling_block_data[block] = values
             else:
-                processing_blk = values
-        return scheduling_blk, processing_blk
+                self.processing_block_data = values
