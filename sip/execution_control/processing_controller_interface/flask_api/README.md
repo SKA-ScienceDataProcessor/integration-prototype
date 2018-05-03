@@ -95,7 +95,7 @@ it with a set of randomly created Scheduling Block Instance data structures.
 This can be run with the command:
 
 ```bash
-python3 -m utils.init_db
+python3 -m app.db.utils.init
 ```
 
 

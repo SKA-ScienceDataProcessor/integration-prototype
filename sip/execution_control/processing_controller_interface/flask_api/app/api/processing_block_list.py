@@ -5,7 +5,7 @@ from http import HTTPStatus
 from flask import Blueprint, request
 
 from .utils import get_root_url
-from ..db.mock_config_db_client import get_processing_block, \
+from ..db.mock.client import get_processing_block, \
     get_processing_block_ids
 
 BP = Blueprint('processing-blocks', __name__)
@@ -27,6 +27,6 @@ def get():
         response['processing_blocks'].append(block)
     response['links'] = {
         'self': '{}'.format(request.url),
-        'home': '{}'.format(request.url_root)
+        'home': '{}'.format(_url)
     }
     return response, HTTPStatus.OK

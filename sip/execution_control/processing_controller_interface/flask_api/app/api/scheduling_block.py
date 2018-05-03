@@ -5,7 +5,7 @@ from http import HTTPStatus
 from flask import Blueprint, request
 
 from .utils import get_root_url
-from ..db.mock_config_db_client import delete_scheduling_block, \
+from ..db.mock.client import delete_scheduling_block, \
     get_scheduling_block, get_scheduling_block_ids
 
 BP = Blueprint('scheduling-block', __name__)

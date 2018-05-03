@@ -7,14 +7,12 @@ database.
 Run with:
     python3 -m utils.init_db
 """
+import json
 import random
 import sys
 from time import gmtime, strftime
-import json
 
-
-from app.db.mock_config_db_client import add_scheduling_block, \
-                                         clear_db
+from ..client import add_scheduling_block, clear_db
 
 
 def generate_scheduling_block_id(num_blocks, project='test'):

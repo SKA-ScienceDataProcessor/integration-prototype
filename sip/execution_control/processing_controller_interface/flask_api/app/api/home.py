@@ -1,7 +1,8 @@
 # -*- coding: utf-8 -*-
 """Processing Controller API default route."""
-from flask import Blueprint, request
 from http import HTTPStatus
+
+from flask import Blueprint, request
 
 BP = Blueprint('Processing Controller:', __name__)
 

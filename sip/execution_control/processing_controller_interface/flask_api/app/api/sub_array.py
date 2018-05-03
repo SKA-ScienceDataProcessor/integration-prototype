@@ -8,7 +8,7 @@ from flask import Blueprint, request, abort
 from http import HTTPStatus
 
 from .utils import get_root_url
-from ..db.mock_config_db_client import add_scheduling_block, \
+from ..db.mock.client import add_scheduling_block, \
     get_scheduling_block, get_sub_array_scheduling_block_ids
 
 BP = Blueprint('sub-array', __name__)

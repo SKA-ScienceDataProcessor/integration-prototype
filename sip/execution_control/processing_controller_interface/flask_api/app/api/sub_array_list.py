@@ -4,7 +4,7 @@ from flask import Blueprint, request
 from flask_api import status
 
 from .utils import get_root_url
-from ..db.mock_config_db_client import get_sub_array_ids, \
+from ..db.mock.client import get_sub_array_ids, \
     get_sub_array_scheduling_block_ids
 
 BP = Blueprint('sub-array-list', __name__)

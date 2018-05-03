@@ -1,11 +1,11 @@
 # -*- coding: utf-8 -*-
 """Scheduling blocks route"""
-from flask import Blueprint, request
 from http import HTTPStatus
 
+from flask import Blueprint, request
+
 from .utils import get_root_url
-from ..db.mock_config_db_client import get_processing_block, \
-                                       delete_processing_block
+from ..db.mock.client import delete_processing_block, get_processing_block
 
 
 BP = Blueprint('processing-block', __name__)
