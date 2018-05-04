@@ -1,3 +1,4 @@
 # Configuration Database client.
 redis>=2.10.6
 jsonschema
+simplejson
