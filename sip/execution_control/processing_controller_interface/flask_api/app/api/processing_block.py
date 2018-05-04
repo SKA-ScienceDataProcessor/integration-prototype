@@ -5,10 +5,12 @@ from http import HTTPStatus
 from flask import Blueprint, request
 
 from .utils import get_root_url
-from ..db.mock.client import delete_processing_block, get_processing_block
+
+from ..db.client import ConfigDbClient
 
 
 BP = Blueprint('processing-block', __name__)
+DB = ConfigDbClient()
 
 
 @BP.route('/processing-block/<block_id>', methods=['GET'])
@@ -16,7 +18,7 @@ def get(block_id):
     """Processing block detail resource."""
     _url = get_root_url()
     try:
-        block = get_processing_block(block_id)
+        block = DB.get_block_details([block_id]).__next__()
         response = block
 
         response['links'] = {
@@ -40,7 +42,7 @@ def get(block_id):
 def delete(block_id):
     """Processing block detail resource."""
     try:
-        delete_processing_block(block_id)
+        DB.delete_processing_block(block_id)
         response = dict(message='Deleted block',
                         id='{}'.format(block_id))
         response['_links'] = {

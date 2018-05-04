@@ -7,13 +7,10 @@ from flask import Blueprint, request
 from jsonschema import ValidationError
 
 from .utils import get_root_url
-from ..db.mock.client import add_scheduling_block, \
-    get_scheduling_block, get_scheduling_block_ids
 
-# from ..db.client import ConfigDbClient
+from ..db.client import ConfigDbClient
 
-# DB = ConfigDbClient()
-
+DB = ConfigDbClient()
 BP = Blueprint("scheduling-blocks", __name__)
 
 
@@ -25,32 +22,22 @@ def get():
                     links=dict(self='{}'.format(request.url),
                                home='{}'.format(_url)))
     blocks = response['scheduling_blocks']
-    block_ids = get_scheduling_block_ids()
-    # block_ids = DB.get_scheduling_block_ids()
+    block_ids = DB.get_scheduling_block_ids()
+    _blocks = DB.get_block_details(block_ids)
 
-
-    # ## FIXME(BM) There seems to be a bug here
-    # for block_id in block_ids:
-    #     print('BLOCK_ID =', block_id)
-    #     sched_block = DB.get_block_details(block_id)
-    #     for block in sched_block:
-    #         print('   BLOCK =', block)
-
-    for block_id in block_ids:
-        block = get_scheduling_block(block_id)
-        block['num_processing_blocks'] = len(block['processing_blocks'])
+    for block in _blocks:
+        block_id = block['id']
         block['num_processing_blocks'] = 0
+        if 'processing_blocks' in block:
+            block['num_processing_blocks'] = len(block['processing_blocks'])
         temp = ['OK'] * 10 + ['WAITING'] * 4 + ['FAILED'] * 2
         block['status'] = choice(temp)
-
-        # Remove processing blocks key.
-        # Scheduling blocks list should just be a summary.
         try:
             del block['processing_blocks']
         except KeyError:
             pass
         block['links'] = {
-            'detail': '{}/scheduling-block/{}'.format(_url, block_id)
+            'detail': '{}/scheduling-block/{}' .format(_url, block_id)
         }
         blocks.append(block)
     return response, HTTPStatus.OK
@@ -61,8 +48,7 @@ def create():
     """Create / register a Scheduling Block instance with SDP."""
     config = request.data
     try:
-        # DB.set_scheduling_block(config)
-        add_scheduling_block(config)
+        DB.set_scheduling_block(config)
     except ValidationError as error:
         error_dict = error.__dict__
         for key in error_dict:
@@ -91,11 +77,9 @@ def get_table():
     """Provides table of scheduling block instance metadata for use with AJAX
     tables"""
     response = dict(blocks=[])
-    # block_ids = DB.get_scheduling_block_ids()
-    block_ids = get_scheduling_block_ids()
+    block_ids = DB.get_scheduling_block_ids()
     for ii, block_id in enumerate(block_ids):
-        block = get_scheduling_block(block_id)
-        # block = DB.get_block_details(block_id)
+        block = DB.get_block_details(block_id)
         info = [
             ii,
             block['id'],
@@ -104,7 +88,3 @@ def get_table():
         ]
         response['blocks'].append(info)
     return response, HTTPStatus.OK
-
-
-
-

@@ -45,21 +45,19 @@ class ConfigDbClient:
             self._split_scheduling_block(updated_block)
 
             # Adding Scheduling block instance with id
-            name = ("scheduling_block:" +
-                    updated_block["sched_block_instance_id"])
+            name = "scheduling_block:" + updated_block["id"]
             self._db.set_specified_values(name, self.scheduling_block_data)
 
             # Add a event to the scheduling block event list to notify
             # of a new scheduling block being added to the db.
             self._db.push_event(self.scheduling_event_name,
                                 updated_block["status"],
-                                updated_block["sched_block_instance_id"])
+                                updated_block["id"])
 
             # Adding Processing block with id
             for value in self.processing_block_data:
-                name = ("scheduling_block:" +
-                        updated_block["sched_block_instance_id"] +
-                        ":processing_block" + ":" + value['id'])
+                name = ("scheduling_block:" + updated_block["id"] +
+                        ":processing_block:" + value['id'])
                 self._db.set_specified_values(name, value)
 
                 # Add a event to the processing block event list to notify
@@ -102,9 +100,11 @@ class ConfigDbClient:
         pattern = '*:processing_block:*'
 
         block_ids = self._db.get_ids(pattern)
-        for block_id in block_ids:
-            id_split = block_id.split(':')[-1]
-            processing_block_ids.append(id_split)
+        if block_ids is not None:
+            for block_id in block_ids:
+                id_split = block_id.split(':')[-1]
+                processing_block_ids.append(id_split)
+
         return processing_block_ids
 
     def get_num_processing_block_ids(self):
@@ -138,8 +138,20 @@ class ConfigDbClient:
                 sched_blocks_id = details['sched_block_id']
                 return sched_blocks_id
 
+    def get_sub_array_scheduling_block_ids(self, sub_array_id):
+        """Get scheduling block ids for associated with the given sub array"""
+        sbi_ids = []
+        for block in self.get_block_details(self.get_scheduling_block_ids()):
+            if block['sub_array_id'] == sub_array_id:
+                sbi_ids.append(block['id'])
+        return sbi_ids
+
     def get_block_details(self, block_id):
-        """Get details of scheduling or processing block"""
+        """Get details of scheduling or processing block
+
+        Args:
+            block_id (list): List of block IDs
+        """
         for _id in block_id:
             block_name = self._db.get_block(_id)
             for name in block_name:

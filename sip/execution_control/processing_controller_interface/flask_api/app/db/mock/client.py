@@ -99,8 +99,7 @@ def delete_scheduling_block(block_id):
 
 def get_scheduling_block(block_id):
     """Return the Scheduling Block configuration for a specified ID"""
-    config = json.loads(DB.get('scheduling_block/{}'.format(block_id)))
-    return config
+    return json.loads(DB.get('scheduling_block/{}'.format(block_id)))
 
 
 def get_scheduling_block_event():

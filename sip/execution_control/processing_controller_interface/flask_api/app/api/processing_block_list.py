@@ -5,20 +5,25 @@ from http import HTTPStatus
 from flask import Blueprint, request
 
 from .utils import get_root_url
-from ..db.mock.client import get_processing_block, \
-    get_processing_block_ids
+
+from ..db.client import ConfigDbClient
 
 BP = Blueprint('processing-blocks', __name__)
+DB = ConfigDbClient()
 
 
 @BP.route('/processing-blocks', methods=['GET'])
 def get():
     """Return the list of Processing Blocks known to SDP."""
-    block_ids = get_processing_block_ids()
-    response = dict(processing_blocks=[])
     _url = get_root_url()
-    for block_id in block_ids:
-        block = get_processing_block(block_id)
+    block_ids = DB.get_processing_block_ids()
+    _blocks = [b for b in DB.get_block_details(sorted(block_ids))]
+    # FIXME(BM) BUG get_block_details seems not to work for processing blocks
+    # as its returning too many!
+    assert len(block_ids) == len(_blocks)
+    response = dict(num_blocks=len(_blocks), processing_blocks=[])
+    for block in _blocks:
+        block_id = block['id']
         block['links'] = {
             'detail': ('{}/processing-block/{}'.format(_url, block_id)),
             'scheduling_block': ('{}/scheduling-block/{}'

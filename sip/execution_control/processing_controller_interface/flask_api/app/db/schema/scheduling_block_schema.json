@@ -5,22 +5,22 @@
     "type": "object",
 
     "required": [
+        "id",
         "sched_block_id",
-        "sched_block_instance_id",
         "sub_array_id",
         "processing_blocks"
     ],
 
     "properties": {
+        "id": {
+            "description": "[date]-[project]-[type][id] for the scheduling block instance id",
+            "type": "string",
+            "pattern": "^[0-9]{8}-[\\w\\d]+-sbi[0-9]{3}$"
+        },
         "sched_block_id": {
             "description": "[date]-[project]-[type][id] for the scheduling block id",
             "type": "string",
             "pattern": "^[0-9]{8}-[\\w|\\d]+-sb[0-9]{3}$"
-        },
-        "sched_block_instance_id": {
-            "description": "[date]-[project]-[type][id] for the scheduling block instance id",
-            "type": "string",
-            "pattern": "^[0-9]{8}-[\\w\\d]+-sbi[0-9]{3}$"
         },
         "sub_array_id": {
             "description": "[type][id] for the sub array id",
@@ -28,7 +28,7 @@
             "pattern": "^subarray-[0-9]{2}$"
         },
         "processing_blocks" : {
-            "$ref": "#/definitions/blocks"
+            "$ref": "#/definitions/processing_blocks"
         },
         "name": {
             "description": "Optional name string",
@@ -57,19 +57,26 @@
         }
     },
 
-
     "definitions": {
-        "blocks": {
+        "processing_blocks": {
             "description": "Array of processing blocks associated with this scheduling block",
             "type": "array",
             "items": {
                 "description": "Processing block specification - description of required processing",
                 "type": "object",
+                
+                "required": ["id",
+                             "resources_requirement",
+                             "workflow"],
+                
                 "properties": {
                     "id": {
                         "description": "[project]-[type][id] for the processing block",
                         "type": "string",
                         "pattern": "^[a-z]+-[a-z]+[0-9]+$"
+                    },
+                    "resource_requirement" : {
+                        "$ref": "#/definitions/resources_requirement"
                     },
                     "type": {
                         "description": "Type of the processing block",
@@ -83,16 +90,19 @@
                         "description": "Status of the processing block",
                         "type": "string"
                     },
-                    "resources_requirement" : {"$ref": "#/definitions/resource_requirement"},
-                    "assigned_resources" : {"$ref": "#/definitions/assigned_resources"},
-                    "workflow" : {"$ref": "#/definitions/workflow"}
-                },
-                "required": ["id", "resources_requirement"]
+                    "assigned_resources" : {
+                        "$ref": "#/definitions/assigned_resources"
+                    },
+                    "workflow" : {
+                        "$ref": "#/definitions/workflow"
+                    }
+                }
+
             }
         },
 
-        "resource_requirement": {
-            "description": "Resource required for the processing block",
+        "resources_requirement": {
+            "description": "Resources required for the processing block",
             "type": "object",
             "properties": {
                 "storage_type": {

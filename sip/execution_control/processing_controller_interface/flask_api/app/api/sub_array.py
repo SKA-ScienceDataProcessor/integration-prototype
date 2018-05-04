@@ -8,10 +8,10 @@ from flask import Blueprint, request, abort
 from http import HTTPStatus
 
 from .utils import get_root_url
-from ..db.mock.client import add_scheduling_block, \
-    get_scheduling_block, get_sub_array_scheduling_block_ids
+from ..db.client import ConfigDbClient
 
 BP = Blueprint('sub-array', __name__)
+DB = ConfigDbClient()
 
 
 @BP.route('/sub-array/<sub_array_id>', methods=['GET'])
@@ -21,13 +21,13 @@ def _get(sub_array_id):
     This method will list scheduling blocks and processing blocks
     in the specified sub-array.
     """
-    block_ids = get_sub_array_scheduling_block_ids(sub_array_id)
+    block_ids = DB.get_sub_array_scheduling_block_ids(sub_array_id)
+    _blocks = [b for b in DB.get_block_details(block_ids)]
     response = dict(scheduling_blocks=[])
     _url = get_root_url()
-    for block_id in block_ids:
-        block = get_scheduling_block(block_id)
+    for block in _blocks:
         block['links'] = {
-            'self': '{}/scheduling-block/{}'.format(_url, block_id)
+            'self': '{}/scheduling-block/{}'.format(_url, block['id'])
         }
         response['scheduling_blocks'].append(block)
     response['links'] = {
@@ -42,11 +42,12 @@ def _get(sub_array_id):
 def _create(sub_array_id):
     """Create / register a Scheduling Block instance with SDP."""
     config = request.data
-    config['sub_array_id'] = sub_array_id
-    schema_path = os.path.dirname(os.path.abspath(__file__))
-    schema_path = os.path.join(schema_path, 'post_request.json')
+    config['sub_array_id'] = 'subarray-{:02d}'.format(sub_array_id)
+    # schema_path = os.path.dirname(os.path.abspath(__file__))
+    # schema_path = os.path.join(schema_path, 'post_request.json')
     try:
-        add_scheduling_block(config, schema_path)
+        # add_scheduling_block(config, schema_path)
+        DB.set_scheduling_block(config)
     except jsonschema.ValidationError as error:
         error_dict = error.__dict__
         for key in error_dict:
@@ -71,6 +72,7 @@ def _create(sub_array_id):
 @BP.route('/sub-array/<sub_array_id>/status', methods=['GET'])
 def _get_status(sub_array_id):
     """Return the status of the sub-array"""
+    # TODO(BM) Implement this properly
     return dict(sub_array_id=sub_array_id,
                 status=choice(['OK', 'INACTIVE'])), HTTPStatus.OK
 
@@ -79,7 +81,7 @@ def _get_status(sub_array_id):
 def _get_scheduling_blocks(sub_array_id):
     """Return the list of scheduling blocks instances associated with the sub
     array"""
-    block_ids = get_sub_array_scheduling_block_ids(sub_array_id)
+    block_ids = DB.get_sub_array_scheduling_block_ids(sub_array_id)
     return block_ids, HTTPStatus.OK
 
 
@@ -88,12 +90,12 @@ def _get_scheduling_blocks(sub_array_id):
 def _get_scheduling_block(sub_array_id, block_id):
     """Return the list of scheduling blocks instances associated with the sub
     array"""
-    block_ids = get_sub_array_scheduling_block_ids(sub_array_id)
+    block_ids = DB.get_sub_array_scheduling_block_ids(sub_array_id)
     if block_id in block_ids:
-        block = get_scheduling_block(block_id)
+        block = DB.get_block_details([block_id]).__next__()
         return block, HTTPStatus.OK
     else:
-        abort(HTTPStatus.BAD_REQUEST)
+        abort(HTTPStatus.NOT_FOUND)
 
 
 

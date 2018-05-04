@@ -5,27 +5,21 @@ from http import HTTPStatus
 from flask import Blueprint, request
 
 from .utils import get_root_url
-from ..db.mock.client import delete_scheduling_block, \
-    get_scheduling_block, get_scheduling_block_ids
+
+from ..db.client import ConfigDbClient
 
 BP = Blueprint('scheduling-block', __name__)
+DB = ConfigDbClient()
 
 
 @BP.route('/scheduling-block/<block_id>', methods=['GET'])
 def get(block_id):
     """Scheduling block detail resource."""
-    blocks = get_scheduling_block_ids()
-    block = get_scheduling_block(block_id)
-    this_index = blocks.index(block_id)
-    next_index = this_index + 1 if this_index + 1 < len(blocks) else 0
-    prev_index = this_index - 1 if this_index - 1 > 0 else len(blocks) - 1
+    block = DB.get_block_details([block_id]).__next__()
     response = block
     _url = get_root_url()
     print(_url)
     response['links'] = {
-        # 'self': '{}'.format(request.url),
-        # 'next': '{}/scheduling-block/{}'.format(_url, blocks[next_index]),
-        # 'prev': '{}/scheduling-block/{}'.format(_url, blocks[prev_index]),
         'list': '{}/scheduling-blocks'.format(_url),
         'home': '{}'.format(_url)
     }
@@ -36,7 +30,7 @@ def get(block_id):
 def delete(block_id):
     """Scheduling block detail resource."""
     try:
-        delete_scheduling_block(block_id)
+        DB.delete_scheduling_block(block_id)
         response = dict(message='Deleted block: _id = {}'.format(block_id))
         response['_links'] = {
             'list': '{}scheduling-blocks'.format(request.url_root)
