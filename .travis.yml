@@ -4,5 +4,13 @@ python:
 cache: pip
 install:
   - pip install pylint>=1.8.4
+branches:
+  only:
+    - master
+    - config_database
+    - processing_controller_interface_flask
+    - mc_rest
+    - processing_controller_celery
+    - logging_spammer_example
 script:
   - pylint sip
