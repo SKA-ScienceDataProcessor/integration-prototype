@@ -15,15 +15,20 @@ DB = ConfigDbClient()
 @BP.route('/scheduling-block/<block_id>', methods=['GET'])
 def get(block_id):
     """Scheduling block detail resource."""
-    block = DB.get_block_details([block_id]).__next__()
+    try:
+        block = DB.get_block_details([block_id]).__next__()
+    except KeyError:
+        return {'error': 'specified block id not found {}'.format(block_id)}, \
+               HTTPStatus.NOT_FOUND
     response = block
     _url = get_root_url()
     print(_url)
     response['links'] = {
-        'list': '{}/scheduling-blocks'.format(_url),
+        'scheduling-blocks': '{}/scheduling-blocks'.format(_url),
+        'sub-array': '{}/sub-array/{}'.format(_url, block['sub_array_id']),
         'home': '{}'.format(_url)
     }
-    return block
+    return block, HTTPStatus.OK
 
 
 @BP.route('/scheduling-block/<block_id>', methods=['DELETE'])

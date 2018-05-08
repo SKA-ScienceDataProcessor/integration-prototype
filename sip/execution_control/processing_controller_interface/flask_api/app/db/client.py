@@ -4,14 +4,15 @@
 import ast
 import json
 import os
+import logging
 
 from jsonschema import validate, ValidationError
 
 from .config_db_redis import ConfigDB
-
+LOG = logging.getLogger('SIP.PCI.DB')
 
 class ConfigDbClient:
-    """Configuration Database client API for the Processing Controller"""
+    """Configuration Database client API for the Processing Controller."""
 
     def __init__(self):
         self._db = ConfigDB()
@@ -79,12 +80,13 @@ class ConfigDbClient:
 
         # Pattern used to search scheduling block ids
         pattern = 'scheduling_block:*'
-
         block_ids = self._db.get_ids(pattern)
+
         for block_id in block_ids:
             if 'processing_block' not in block_id:
                 id_split = block_id.split(':')[-1]
                 scheduling_block_ids.append(id_split)
+
         return scheduling_block_ids
 
     def get_num_scheduling_block_ids(self):
@@ -157,7 +159,7 @@ class ConfigDbClient:
             for name in block_name:
                 blocks = self._db.get_all_field_value(name)
                 yield blocks
-        return blocks  # FIXME(BM) blocks can be never assigned!
+        # return blocks  # FIXME(BM) blocks can be never assigned!
 
     def get_latest_event(self, event_block):
         """Get the latest event added"""
@@ -201,6 +203,11 @@ class ConfigDbClient:
     def delete_processing_block(self, processing_block):
         """Delete processing block using processing block id
         and using scheduling block id if given"""
+        # FIXME(BM) Not sure why this can take a list as the name of the
+        # function is singular.
+        # FIXME(BM) fn argument? processing_block == block_id?
+        # -- it looks like this the argument should be 'SBI:PB'?
+        LOG.debug('Delete Processing block %s', processing_block)
         if type(processing_block) is list:
             for processing_id in processing_block:
                 processing_blocks = self._db.get_block(processing_id)

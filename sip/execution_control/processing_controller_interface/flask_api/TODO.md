@@ -4,19 +4,31 @@
 
 ### Client: Bugs
 
-- [ ] the function `get_processing_block_ids()` raises a type error
-      if no Processing Blocks are registered in the db. A temporary fix the
-      has been made to the local copy of the client in this service.
-- [ ] `get_block_details` fail for processing blocks where
+- [ ] `get_processing_block_ids()` raises
+        TypeError: NoneType object not iterable
+      if no scheduling blocks are found in the db.
+      A temporary fix the has been made to the local copy of the client 
+      in this service by modifying the low level client API to return an
+      empty list which is safe to iterate over. 
+- [ ] `get_block_details()` returns an undefined variable if the block_id
+      is invalid. This can be fixed by simply removing the return.
+      <https://stackoverflow.com/questions/13243766/python-empty-generator-function>
+- [ ] `get_block_details()` fails for processing blocks where
       when there are duplicate processing block ids
       in such a case the number of returned block details > the number
       of block_ids passed to the function. See `processing_block_list.py` 
-      ~line 23. This may be a 'feature' but if so adding processing 
+      ~line 23. This could be considered a 'feature' but if so, adding processing 
       blocks with duplicate ids needs to trigger an exception in the add 
       SBI method. 
+- [ ] `delete_processing_block` doesnt appear to work.
+       see `processing_block.py:delete()`
 
 ### Client: Suggestions / comments for review
 
+- [ ] How to I get the processing blocks in a scheduling block?
+        Should be part of `get_block_details()` ?
+- [ ] How to associate given processing block with its sub-array and 
+      SBI? (Would be useful for the processing block list / details display)
 - [x] Add function to drop / clear the db
 - [ ] Rename `set_scheduling_block` to 
       `add_scheduling_block`?
@@ -25,7 +37,7 @@
       client `set_scheduling_block()` method
 - [ ] Consider having non-generator version of `get_block_details()`
       for cases where only one block is required. This could be written as a
-      wrapper on the generator.
+      wrapper on the generator which calls `generator.__next__()`
 - [ ] Consider renaming argument of `get_block_details` from `block_id`
       to `block_ids` to hint that this needs to be a list
 - [ ] Add (debug) logging using python logging for key events / actions
@@ -37,6 +49,8 @@
       module multiple times and instantiating a client object for each of these.
       If this is too many (> few) we might be better off making the DB 
       connection a module variable.
+- [ ] Fixed low level `get_ids` function to prevent an exception in
+      `get_scheduling_block_ids` when this function returned `None`.
       
 ### Schema: suggestions / comments for review
 
@@ -64,5 +78,6 @@
 ### Tests
 
 - [ ] Check PB / SBI delete methods.
-- [ ] TODO or review scope of testing in current version of SIP
+- [ ] TODO or review scope of testing in current version of SIP.
+- [ ] Test behaviour with empty db.
 

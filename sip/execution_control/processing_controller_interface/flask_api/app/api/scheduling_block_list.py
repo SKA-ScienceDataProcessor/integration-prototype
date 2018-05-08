@@ -2,6 +2,8 @@
 """Scheduling Block Instance List API resource."""
 from http import HTTPStatus
 from random import choice
+import logging
+
 
 from flask import Blueprint, request
 from jsonschema import ValidationError
@@ -10,23 +12,29 @@ from .utils import get_root_url
 
 from ..db.client import ConfigDbClient
 
+
 DB = ConfigDbClient()
 BP = Blueprint("scheduling-blocks", __name__)
+LOG = logging.getLogger('SIP.PCI')
 
 
 @BP.route('/scheduling-blocks', methods=['GET'])
 def get():
     """Return list of Scheduling Blocks Instances known to SDP ."""
+    LOG.debug('GET list of SBIs.')
     _url = get_root_url()
     response = dict(scheduling_blocks=[],
                     links=dict(self='{}'.format(request.url),
                                home='{}'.format(_url)))
     blocks = response['scheduling_blocks']
-    block_ids = DB.get_scheduling_block_ids()
+    block_ids = sorted(DB.get_scheduling_block_ids())
+    LOG.debug('Current list of SBI IDs: {}'.format(block_ids))
     _blocks = DB.get_block_details(block_ids)
+    LOG.debug('Constructing list of processing blocks.')
 
     for block in _blocks:
         block_id = block['id']
+        LOG.debug('Requesting details of block: %s', block_id)
         block['num_processing_blocks'] = 0
         if 'processing_blocks' in block:
             block['num_processing_blocks'] = len(block['processing_blocks'])

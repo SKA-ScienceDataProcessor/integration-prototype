@@ -95,9 +95,7 @@ class ConfigDB:
         self._db.flushdb()
 
     def get_ids(self, pattern):
-        key_search = self._db.keys(pattern)
-        if key_search:
-            return key_search
+        return self._db.keys(pattern)
 
     def clear(self):
         """Clear the entire database."""

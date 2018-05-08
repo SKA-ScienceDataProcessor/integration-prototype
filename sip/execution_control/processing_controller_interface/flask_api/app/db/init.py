@@ -28,13 +28,13 @@ def _scheduling_block_ids(num_blocks, project):
               '{}-sbi{:03d}'.format(_root, ii)
 
 
-def _generate_processing_blocks(sbi_id, min_blocks=0, max_blocks=4):
+def _generate_processing_blocks(min_blocks=0, max_blocks=4):
     """Generate a number of Processing Blocks"""
     global COUNTER
     processing_blocks = []
     for ii in range(random.randint(min_blocks, max_blocks)):
-        id = 'sip-pb{:03d}'.format(COUNTER)
-        block = dict(id=id,
+        _id = 'sip-pb{:03d}'.format(COUNTER)
+        block = dict(id=_id,
                      resources_requirement={},
                      workflow={})
         processing_blocks.append(block)
@@ -49,7 +49,7 @@ def _scheduling_block_config(num_blocks=5, project='sip'):
         config = dict(id=sbi,
                       sched_block_id=sb,
                       sub_array_id=sub_array_id,
-                      processing_blocks=_generate_processing_blocks(sbi))
+                      processing_blocks=_generate_processing_blocks())
         yield config
 
 
@@ -65,8 +65,8 @@ def main():
     # Register Scheduling Blocks Instances with the DB
     try:
         for config in _scheduling_block_config(num_blocks):
-            print('Creating Scheduling Block Instance, ID = %s' %
-                  config['id'])
+            print('Creating Scheduling Block Instance, ID = %s (no. PBs)' %
+                  config['id'], len(config['processing_blocks']))
             db.set_scheduling_block(config)
     except ValidationError:
         raise

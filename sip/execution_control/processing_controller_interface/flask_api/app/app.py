@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 """SIP Processing Controller Interface (REST)"""
 from flask_api import FlaskAPI
+import logging
 
 from .api.home import BP as HOME
 from .api.health import BP as HEALTH
@@ -23,3 +24,14 @@ APP.register_blueprint(PROCESSING_BLOCK, url_prefix=PREFIX)
 APP.register_blueprint(SUB_ARRAY_LIST, url_prefix=PREFIX)
 APP.register_blueprint(SUB_ARRAY, url_prefix=PREFIX)
 
+LOG = logging.getLogger('SIP')
+_HANDLER = logging.StreamHandler()
+# _HANDLER.setFormatter(logging.Formatter('%(asctime)s.%(msecs)03d - '
+#                                         '%(name)s - '
+#                                         '%(levelname).1s - '
+#                                         '%(message)s',
+#                                         '%Y-%m-%d %H:%M:%S'))
+_HANDLER.setFormatter(logging.Formatter(
+    '%(name)s(%(levelname).6s) %(message)s'))
+LOG.addHandler(_HANDLER)
+LOG.setLevel(logging.DEBUG)
