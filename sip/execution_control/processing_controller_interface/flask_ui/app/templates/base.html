@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+
+  <head>
+    <!-- Required meta tags -->
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+
+    <!-- Bootstrap CSS -->
+    <link href="{{ url_for('static', filename='css/bootstrap.min.css') }}" rel="stylesheet">
+
+    <!-- Datatables CSS -->
+    <link href="{{ url_for('static', filename='css/datatables.css') }}" rel="stylesheet">
+
+
+    <!-- Custom styles -->
+    <!--<link href="{{ url_for('static', filename='css/main.css') }}" rel="stylesheet">-->
+
+    <title>SIP Processing Controller Interface</title>
+  </head>
+
+  <body>
+    <!-- jQuery (necessary for Bootstrap's JavaScript plugins) -->
+    <script src="{{ url_for('static', filename='js/jquery-3.3.1.min.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/bootstrap.min.js') }}"></script>
+
+    <!-- NAV BAR -->
+    <div class="navbar navbar-dark bg-dark navbar-fixed-top" role="navigation">
+      <div class="container">
+        <div class="navbar-header">
+          <a class="navbar-brand" href="{{ url_for('home.get')}}">Home</a>
+          <a class="navbar-brand" href="{{ url_for('scheduling-blocks._get')}}">Scheduling Block Instances</a>
+        </div>
+      </div>
+    </div>
+
+    <main role="main">
+      <div class="container">
+        {% block container %}{% endblock %}
+      </div>
+    </main>
+
+  </body>
+
+</html>
