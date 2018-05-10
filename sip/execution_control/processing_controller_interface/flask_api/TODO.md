@@ -4,33 +4,33 @@
 
 ### Client: Bugs
 
-- [ ] `get_processing_block_ids()` raises
+- [x] `get_processing_block_ids()` raises
         TypeError: NoneType object not iterable
       if no scheduling blocks are found in the db.
       A temporary fix the has been made to the local copy of the client 
       in this service by modifying the low level client API to return an
       empty list which is safe to iterate over. 
-- [ ] `get_block_details()` returns an undefined variable if the block_id
+- [x] `get_block_details()` returns an undefined variable if the block_id
       is invalid. This can be fixed by simply removing the return.
       <https://stackoverflow.com/questions/13243766/python-empty-generator-function>
-- [ ] `get_block_details()` fails for processing blocks where
+- [x] `get_block_details()` fails for processing blocks where
       when there are duplicate processing block ids
       in such a case the number of returned block details > the number
       of block_ids passed to the function. See `processing_block_list.py` 
       ~line 23. This could be considered a 'feature' but if so, adding processing 
       blocks with duplicate ids needs to trigger an exception in the add 
       SBI method. 
-- [ ] `delete_processing_block` doesnt appear to work.
+- [x] `delete_processing_block` doesnt appear to work.
        see `processing_block.py:delete()`
 
 ### Client: Suggestions / comments for review
 
-- [ ] How to I get the processing blocks in a scheduling block?
+- [x] How to I get the processing blocks in a scheduling block?
         Should be part of `get_block_details()` ?
-- [ ] How to associate given processing block with its sub-array and 
+- [x] How to associate given processing block with its sub-array and 
       SBI? (Would be useful for the processing block list / details display)
 - [x] Add function to drop / clear the db
-- [ ] Rename `set_scheduling_block` to 
+- [x] Rename `set_scheduling_block` to 
       `add_scheduling_block`?
 - [ ] Seed additional fields into the db 
       on adding a scheduling block instance?
@@ -38,7 +38,7 @@
 - [ ] Consider having non-generator version of `get_block_details()`
       for cases where only one block is required. This could be written as a
       wrapper on the generator which calls `generator.__next__()`
-- [ ] Consider renaming argument of `get_block_details` from `block_id`
+- [x] Consider renaming argument of `get_block_details` from `block_id`
       to `block_ids` to hint that this needs to be a list
 - [ ] Add (debug) logging using python logging for key events / actions
       in the client?
