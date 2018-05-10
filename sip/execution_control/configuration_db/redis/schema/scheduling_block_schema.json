@@ -2,6 +2,7 @@
     "$schema": "http://json-schema.org/draft-07/schema#",
     "title": "Scheduling Block Instance",
     "description": "Schema for an SKA Scheduling Block Instance",
+    "version":  "0.1",
     "type": "object",
 
     "properties": {

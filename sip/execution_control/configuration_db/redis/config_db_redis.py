@@ -32,29 +32,24 @@ class ConfigDB():
 
     def get_value(self, key, field):
         """Get the value associated with the key and field"""
-        value = self._db.hget(key, field)
-        return value
+        return self._db.hget(key, field)
 
     def get_all_field_value(self, key):
         """Get all the fields and values stored at key"""
-        value_all = self._db.hgetall(key)
-        return value_all
+        return self._db.hgetall(key)
 
     def get_list(self, key):
         """Get all the value in the list"""
-        list = self._db.lrange(key, 0, -1)
-        return list
+        return self._db.lrange(key, 0, -1)
 
     def get_element(self, key, index):
         """Get an element from a list by its index
         Returns the element at index in the list stored at key"""
-        element = self._db.lindex(key, index)
-        return element
+        return self._db.lindex(key, index)
 
     def get_length(self, key):
         """Get the lenth of the list stored at key"""
-        len = self._db.llen(key)
-        return len
+        return self._db.llen(key)
 
     def add_element(self, key, element):
         """Adds a new element to the end of the list"""
@@ -64,20 +59,15 @@ class ConfigDB():
         """Delete key"""
         self._db.delete(key)
 
-    # TODO(NJT): Might be better to combine the two functions or have a third function
     def get_all_blocks(self, block_id):
         """Search all keys associated with the block id"""
         key_search = '*' + block_id + '*'
-        if key_search:
-            keys = self._db.keys(key_search)
-        return keys
+        return self._db.keys(key_search)
 
     def get_block(self, block_id):
         """Search for keys associated with the block id"""
         key_search = '*' + block_id
-        if key_search:
-            key = self._db.keys(key_search)
-        return key
+        return self._db.keys(key_search)
 
     def push_event(self, event_name, type, block_id):
         """Push inserts all the specified values at the tail of the list
@@ -88,19 +78,17 @@ class ConfigDB():
         """Removes the last element of the list stored at the source,
         and pushes the element at the first element of the list stored
         at destination"""
-        print(block_event)
-        print(block_history)
         event = self._db.rpoplpush(block_event, block_history)
         if event:
             return event
 
+    def get_ids(self, pattern):
+        """Search for the key according to the pattern"""
+        return self._db.keys(pattern)
+
     def flush_db(self):
-        """Deletes all the data in the database"""
+        """Clear the entire database"""
         self._db.flushdb()
 
-    def get_ids(self, pattern):
-        key_search = self._db.keys(pattern)
-        if key_search:
-            return key_search
 
 

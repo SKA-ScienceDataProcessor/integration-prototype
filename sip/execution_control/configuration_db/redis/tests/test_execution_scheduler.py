@@ -2,7 +2,7 @@
 """Test for the execution scheduler"""
 
 import simplejson as json
-from controller_client import SchedulingClient
+from scheduling_client import SchedulingClient
 
 def main():
     db = SchedulingClient()
@@ -12,16 +12,16 @@ def main():
     with open('utils/scheduling_block_data.json', 'r') as f:
         block_data = f.read()
     scheduling_block = json.loads(block_data)
-    db.set_scheduling_block(scheduling_block)
+    db.add_scheduling_block(scheduling_block)
 
     # print("Delete scheduling block")
-    # block_id = "180201-sched-blinst0"
+    # block_id = "20180201-test-sbi000"
     # db.delete_scheduling_block(block_id)
     # print("scheduling block deleted")
     # print("")
     #
     # print("Delete processing blocks")
-    # processing_block_id = ["180201-sip-vis0", "180201-sip-vis1"]
+    # processing_block_id = "sip-vis001"
     # db.delete_processing_block(processing_block_id)
     # print("processing block deleted")
     # print("")
@@ -46,10 +46,11 @@ def main():
     print("")
 
     print("Get processing block")
-    processing_block_id = ["sip-vis000", "sip-vis001"]
-    processing_blocks = db.get_block_details(processing_block_id)
-    for blocks in processing_blocks:
-        print(blocks)
+    p_blk_ids = "sip-vis000", "sip-vis001", "sip-vis001"
+    block_ids = db.get_processing_block_ids()
+    _blocks = [b for b in db.get_block_details(sorted(p_blk_ids))]
+    print(_blocks)
+    assert len(block_ids) == len(_blocks)
     print("")
 
     print("Get scheduling block and processing blocks")
@@ -99,6 +100,17 @@ def main():
     sub_array_id = 'subarray000'
     sched_id = db.get_scheduling_block_id_using_sub_array_id(sub_array_id)
     print(sched_id)
+    print("")
+
+    print("Get Scheduling block id and Sub array id using processing block id")
+    processing_block_id = "sip-vis001"
+    ids = db.get_ids_using_processing_block_id(processing_block_id)
+    print(ids)
+    print("")
+
+    print("Clear the database")
+    db.clear()
+    print("")
 
 if __name__ == '__main__':
     main()
