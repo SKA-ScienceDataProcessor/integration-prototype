@@ -12,7 +12,9 @@ class ConfigInit():
         # Get Redis database object
         REDIS_HOST = os.getenv('REDIS_HOST', 'localhost')
         REDIS_DB_ID = os.getenv('REDIS_DB_ID', 0)
-        self._db = redis.StrictRedis(host=REDIS_HOST, db=REDIS_DB_ID)
+        POOL = redis.ConnectionPool(host=REDIS_HOST, db=REDIS_DB_ID,
+                                    decode_responses=True)
+        self._db = redis.StrictRedis(connection_pool=POOL)
 
         # Initialising varibales
         self._master_controller_key = {}

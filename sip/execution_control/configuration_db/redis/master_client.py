@@ -2,7 +2,7 @@
 """High Level Master Controller Client API"""
 
 import ast
-from config_db import ConfigDB
+from config_db_redis import ConfigDB
 
 class MasterClient():
     """ Master Controller Client Interface"""
@@ -47,7 +47,6 @@ class MasterClient():
             for service_list in list:
                 list_eval = ast.literal_eval(service_list)
                 yield list_eval
-            return list_eval
         else:
             None
 

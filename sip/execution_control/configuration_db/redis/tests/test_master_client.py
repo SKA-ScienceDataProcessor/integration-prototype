@@ -20,26 +20,6 @@ import os
 import redis
 from master_client import MasterClient
 
-
-# db = masterClient()
-# name = ['execution_control', 'master_controller']
-# field = 'SDP_state'
-# value = db.get_value(name, field)
-# service_list_name = ['execution_control', 'master_controller',
-#                      'service_list']
-# element = db.get_service_from_list(service_list_name, 0)
-# print(element['enabled'])
-# print(type(element['enabled']))
-# new = bool(element['enabled'])
-# print(new)
-# print(type(new))
-# new_element = db.get_service_from_list_bool(service_list_name, 0)
-# print(new_element['enabled'])
-# test = new_element['enabled']
-# print(type(test))
-# for e in new_element:
-#     print(type(new_element[e]))
-
 class DbClientTests(unittest.TestCase):
     def setUp(self):
         self._db = MasterClient()
