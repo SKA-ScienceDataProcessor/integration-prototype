@@ -3,13 +3,15 @@
 
 import ast
 import json
-import os
 import logging
+import os
 
-from jsonschema import validate, ValidationError
+from jsonschema import ValidationError, validate
 
 from .config_db_redis import ConfigDB
+
 LOG = logging.getLogger('SIP.PCI.DB')
+
 
 class ConfigDbClient:
     """Configuration Database client API for the Processing Controller."""
@@ -28,7 +30,7 @@ class ConfigDbClient:
     # #########################################################################
 
     def set_scheduling_block(self, scheduling_block):
-        """Set scheduling block and processing block to the database"""
+        """Set (add) a Scheduling Blocks Instance to the database"""
         # Get schema for validation
         schema = self._get_schema()
         try:
