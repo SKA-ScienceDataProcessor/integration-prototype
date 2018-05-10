@@ -1,7 +1,9 @@
 # -*- coding: utf-8 -*-
 """SIP Processing Controller Interface (REST)"""
 from flask_api import FlaskAPI
+from flask import request
 import logging
+from http import HTTPStatus
 
 from .api.home import BP as HOME
 from .api.health import BP as HEALTH
@@ -23,6 +25,14 @@ APP.register_blueprint(PROCESSING_BLOCK_LIST, url_prefix=PREFIX)
 APP.register_blueprint(PROCESSING_BLOCK, url_prefix=PREFIX)
 APP.register_blueprint(SUB_ARRAY_LIST, url_prefix=PREFIX)
 APP.register_blueprint(SUB_ARRAY, url_prefix=PREFIX)
+
+
+@APP.route('/')
+def processing_controller_interface_home():
+    """Temporary helper function to link to the API routes"""
+    return dict(links=dict(api='{}{}'.format(request.url, PREFIX[1:]))), \
+        HTTPStatus.OK
+
 
 LOG = logging.getLogger('SIP')
 _HANDLER = logging.StreamHandler()
