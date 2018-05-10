@@ -97,6 +97,7 @@ class ConfigDB:
     def get_ids(self, pattern):
         return self._db.keys(pattern)
 
+
     def clear(self):
         """Clear the entire database."""
         _db = self._db

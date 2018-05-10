@@ -1,4 +1,5 @@
-<table id="id" class="table">
+<!-- TODO(BM): replace with AJAX -->
+<table id="sbi_table" class="table">
   <thead>
     <tr>
       <th scope="col">#</th>
@@ -15,27 +16,27 @@
       <td><a href="/scheduling-block/{{ block['id'] }}">{{ block['id'] }}</a></td>
       <td>{{ block['sub_array_id'] }}</td>
       <td>{{ block['num_processing_blocks'] }}</td>
-      {% if 'OK' in block['status'] %}
-        <td><span class="badge badge-pill badge-success">{{ block['status'] }}</span></td>
-      {% elif 'FAILED' in block['status'] %}
-        <td><span class="badge badge-pill badge-danger">{{ block['status'] }}</span></td>
-      {% else %}
-        <td><span class="badge badge-pill badge-warning">{{ block['status'] }}</span></td>
-      {% endif %}
+      <td>{{ block['status'] }}</td>
     </tr>
   {% endfor %}
   </tbody>
 </table>
 
-<script src="{{ url_for('static', filename='js/datatables.js') }}"></script>
+
+<!-- Data Table functions [This has to be below tabletables.js] -->
 <script>
   $(document).ready( function () {
-    $('#id').DataTable( {
-      "lengthMenu": [[5, 10, 20, -1], [5, 10, 20, "All"]]
+    $('#sbi_table').DataTable( {
+      stateSave: true,
+      lengthMenu: [[5, 10, 20, -1], [5, 10, 20, "All"]]
     });
   });
 </script>
 
-
-
+<!-- Functions for status badges -->
+<script>
+    $("td:contains('OK'), td:contains('SUCCESS')").wrapInner("<span class='badge badge-pill badge-success'></span>");
+    $("td:contains('WAITING'), td:contains('WARNING')").wrapInner("<span class='badge badge-pill badge-warning'></span>");
+    $("td:contains('FAILED'), td:contains('ERROR')").wrapInner("<span class='badge badge-pill badge-danger'></span>");
+</script>
 

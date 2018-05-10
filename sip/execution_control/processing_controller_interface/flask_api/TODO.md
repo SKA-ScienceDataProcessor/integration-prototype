@@ -4,12 +4,12 @@
 
 ### Client: Bugs
 
-- [ ] `get_processing_block_ids()` raises
+- [x] `get_processing_block_ids()` raises
         TypeError: NoneType object not iterable
       if no scheduling blocks are found in the db.
       A temporary fix the has been made to the local copy of the client 
-      in this service by modifying the low level client API to return an
-      empty list which is safe to iterate over. 
+      in this service by modifying the low level client API `get_ids` to return 
+      an empty list which is safe to iterate over.
 - [ ] `get_block_details()` returns an undefined variable if the block_id
       is invalid. This can be fixed by simply removing the return.
       <https://stackoverflow.com/questions/13243766/python-empty-generator-function>
