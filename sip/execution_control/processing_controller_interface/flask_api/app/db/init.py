@@ -10,14 +10,14 @@ Run with:
 import random
 import sys
 from time import gmtime, strftime
-from pprint import pprint
+import logging
 
 from jsonschema import ValidationError
 
 from .client import ConfigDbClient
 
-
 COUNTER = 0
+LOG = logging.getLogger('SIP.PCI.DB.init')
 
 
 def _scheduling_block_ids(num_blocks, project):
@@ -55,8 +55,15 @@ def _scheduling_block_config(num_blocks=5, project='sip'):
 
 def main():
     """Main function"""
+    _log = logging.getLogger('SIP')
+    _handler = logging.StreamHandler()
+    _handler.setFormatter(logging.Formatter(
+        '%(name)-20s(%(levelname)-5s) %(message)s'))
+    _log.addHandler(_handler)
+    _log.setLevel(logging.DEBUG)
+
     db = ConfigDbClient()
-    print('Resetting database ...')
+    LOG.info('Resetting database ...')
     db.clear()
 
     # Get the number of Scheduling Block Instances to generate
@@ -65,15 +72,11 @@ def main():
     # Register Scheduling Blocks Instances with the DB
     try:
         for config in _scheduling_block_config(num_blocks):
-            print('Creating Scheduling Block Instance, ID = %s (no. PBs)' %
-                  config['id'], len(config['processing_blocks']))
-            db.set_scheduling_block(config)
+            LOG.info('Creating SBI %s with %i PBs.', config['id'],
+                     len(config['processing_blocks']))
+            db.add_scheduling_block(config)
     except ValidationError:
         raise
-
-    # db._db.set_specified_values('foo:bar:baz', dict(a=2, b='bar'))
-    # db._db.set_specified_values('foo:bar:bob', dict(a=3, b='zz'))
-    # db._db.set_specified_values('foo:bar', dict(xxx=3, yyy='zz'))
 
 
 if __name__ == '__main__':

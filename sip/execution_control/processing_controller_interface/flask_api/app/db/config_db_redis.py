@@ -60,20 +60,18 @@ class ConfigDB:
         """Delete key"""
         self._db.delete(key)
 
-    # TODO(NJT): Might be better to combine the two functions or have a third function
     def get_all_blocks(self, block_id):
         """Search all keys associated with the block id"""
         key_search = '*' + block_id + '*'
-        if key_search:
-            keys = self._db.keys(key_search)
-        return keys  # FIXME(BM) keys can be never assigned!
+        return self._db.keys(key_search)
 
+    # FIXME(BM): Name of this function should probably be plural unless
+    #            returning more than one key is invalid. If so enforce this?
+    # FIXME(BM): Review function name eg. get_block_keys()?
     def get_block(self, block_id):
         """Search for keys associated with the block id"""
         key_search = '*' + block_id
-        if key_search:
-            key = self._db.keys(key_search)
-        return key  # FIXME(BM) key can be never assigned!
+        return self._db.keys(key_search)
 
     def push_event(self, event_name, type, block_id):
         """Push inserts all the specified values at the tail of the list
@@ -84,25 +82,14 @@ class ConfigDB:
         """Removes the last element of the list stored at the source,
         and pushes the element at the first element of the list stored
         at destination"""
-        print(block_event)
-        print(block_history)
         event = self._db.rpoplpush(block_event, block_history)
         if event:
             return event
 
-    def flush_db(self):
-        """Deletes all the data in the database"""
-        self._db.flushdb()
-
     def get_ids(self, pattern):
+        """Search for the key according to the pattern"""
         return self._db.keys(pattern)
 
-
-    def clear(self):
-        """Clear the entire database."""
-        _db = self._db
-        cursor = '0'
-        while cursor != 0:
-            cursor, keys = _db.scan(cursor, match='*', count=5000)
-            if keys:
-                _db.delete(*keys)
+    def flush_db(self):
+        """Clear the entire database"""
+        self._db.flushdb()

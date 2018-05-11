@@ -4,6 +4,11 @@
 
 ### Client: Bugs
 
+- [ ] When adding scheduling blocks with no processing blocks
+      something strange goes on. The client appears to set the list 
+      to that of the values in the block with the last non zero length PB list.   
+      This seems to be a bug in 
+      `scheduling_client.py`, `_split_scheduling_block()`
 - [x] `get_processing_block_ids()` raises
         TypeError: NoneType object not iterable
       if no scheduling blocks are found in the db.
@@ -51,6 +56,8 @@
       connection a module variable.
 - [ ] Fixed low level `get_ids` function to prevent an exception in
       `get_scheduling_block_ids` when this function returned `None`.
+- [ ] Deleting a (Processing) block that doesnt exist should probably raise
+      an exception. 
       
 ### Schema: suggestions / comments for review
 
@@ -80,4 +87,5 @@
 - [ ] Check PB / SBI delete methods.
 - [ ] TODO or review scope of testing in current version of SIP.
 - [ ] Test behaviour with empty db.
+- [ ] Check behaviour with 0, 1 and 2+ SBIs
 

@@ -22,22 +22,27 @@ LOG = logging.getLogger('SIP.PCI')
 def get():
     """Return list of Scheduling Blocks Instances known to SDP ."""
     LOG.debug('GET list of SBIs.')
+
+    # Construct response object.
     _url = get_root_url()
     response = dict(scheduling_blocks=[],
                     links=dict(self='{}'.format(request.url),
                                home='{}'.format(_url)))
-    blocks = response['scheduling_blocks']
-    block_ids = sorted(DB.get_scheduling_block_ids())
-    LOG.debug('Current list of SBI IDs: {}'.format(block_ids))
-    _blocks = DB.get_block_details(block_ids)
-    LOG.debug('Constructing list of processing blocks.')
 
-    for block in _blocks:
+    # Get ordered list of SBI ID's.
+    block_ids = sorted(DB.get_scheduling_block_ids())
+
+    # Loop over SBIs and add summary of each to the list of SBIs in the
+    # response.
+    for block in DB.get_block_details(block_ids):
         block_id = block['id']
-        LOG.debug('Requesting details of block: %s', block_id)
+        LOG.debug('Adding SBI %s to list', block_id)
+
         block['num_processing_blocks'] = 0
         if 'processing_blocks' in block:
+            LOG.debug('SBI has processing blocks!')
             block['num_processing_blocks'] = len(block['processing_blocks'])
+
         temp = ['OK'] * 10 + ['WAITING'] * 4 + ['FAILED'] * 2
         block['status'] = choice(temp)
         try:
@@ -47,7 +52,7 @@ def get():
         block['links'] = {
             'detail': '{}/scheduling-block/{}' .format(_url, block_id)
         }
-        blocks.append(block)
+        response['scheduling_blocks'].append(block)
     return response, HTTPStatus.OK
 
 

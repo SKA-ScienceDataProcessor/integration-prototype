@@ -26,18 +26,20 @@ class ConfigDbClient:
         self.processing_block_data = {}
 
     # #########################################################################
-    # Set functions
+    # Add functions
     # #########################################################################
 
-    def set_scheduling_block(self, scheduling_block):
-        """Set (add) a Scheduling Blocks Instance to the database"""
+    def add_scheduling_block(self, config_dict):
+        """Add Scheduling Block to the database"""
         # Get schema for validation
         schema = self._get_schema()
+        LOG.debug('Adding SBI with config: %s', config_dict)
         try:
             # Validates the schema
-            validate(scheduling_block, schema)
+            validate(config_dict, schema)
 
-            json_dump = json.dumps(scheduling_block)
+            # FIXME(BM) These two lines seem redundant!?
+            json_dump = json.dumps(config_dict)
             block_object = json.loads(json_dump)
 
             # Add status field and value to the data
@@ -71,9 +73,9 @@ class ConfigDbClient:
             print("Schema Validation Error")
             raise
 
-    # #########################################################################
+    # ##########################################################################
     # Get functions
-    # #########################################################################
+    # ##########################################################################
 
     def get_scheduling_block_ids(self):
         """Get list of scheduling block ids"""
@@ -88,7 +90,6 @@ class ConfigDbClient:
             if 'processing_block' not in block_id:
                 id_split = block_id.split(':')[-1]
                 scheduling_block_ids.append(id_split)
-
         return scheduling_block_ids
 
     def get_num_scheduling_block_ids(self):
@@ -98,18 +99,16 @@ class ConfigDbClient:
     def get_processing_block_ids(self):
         """Get list of processing block ids using the processing block id"""
         # Initialise empty list
-        processing_block_ids = []
+        _processing_block_ids = []
 
         # Pattern used to search processing block ids
         pattern = '*:processing_block:*'
-
         block_ids = self._db.get_ids(pattern)
-        if block_ids is not None:
-            for block_id in block_ids:
-                id_split = block_id.split(':')[-1]
-                processing_block_ids.append(id_split)
 
-        return processing_block_ids
+        for block_id in block_ids:
+            id_split = block_id.split(':')[-1]
+            _processing_block_ids.append(id_split)
+        return _processing_block_ids
 
     def get_num_processing_block_ids(self):
         """"Get number of processing block ids"""
@@ -118,37 +117,36 @@ class ConfigDbClient:
     def get_sub_array_ids(self):
         """Get list of sub array ids"""
         # Initialise empty list
-        scheduling_block_ids = []
-        sub_array_ids = []
+        _scheduling_block_ids = []
+        _sub_array_ids = []
 
         for blocks_id in self.get_scheduling_block_ids():
-            scheduling_block_ids.append(blocks_id)
-        block_details = self.get_block_details(scheduling_block_ids)
+            _scheduling_block_ids.append(blocks_id)
+        block_details = self.get_block_details(_scheduling_block_ids)
         for details in block_details:
-            sub_array_ids.append(details['sub_array_id'])
-        return sub_array_ids
+            _sub_array_ids.append(details['sub_array_id'])
+        return _sub_array_ids
 
     def get_scheduling_block_id_using_sub_array_id(self, sub_array_id):
-        """Get scheduling block id (note the instance id) associated with
-         sub array id"""
-        # Initialise empty list
-        scheduling_block_ids = []
+        """Get Scheduling Block Instance ID associated with sub array id"""
+
+        _scheduling_block_ids = []
 
         for block_id in self.get_scheduling_block_ids():
-            scheduling_block_ids.append(block_id)
-        block_details = self.get_block_details(scheduling_block_ids)
+            _scheduling_block_ids.append(block_id)
+        block_details = self.get_block_details(_scheduling_block_ids)
+
         for details in block_details:
             if details['sub_array_id'] == sub_array_id:
-                sched_blocks_id = details['sched_block_id']
-                return sched_blocks_id
+                return details['id']
 
     def get_sub_array_scheduling_block_ids(self, sub_array_id):
         """Get scheduling block ids for associated with the given sub array"""
-        sbi_ids = []
+        _ids = []
         for block in self.get_block_details(self.get_scheduling_block_ids()):
             if block['sub_array_id'] == sub_array_id:
-                sbi_ids.append(block['id'])
-        return sbi_ids
+                _ids.append(block['id'])
+        return _ids
 
     def get_block_details(self, block_id):
         """Get details of scheduling or processing block
@@ -156,12 +154,21 @@ class ConfigDbClient:
         Args:
             block_id (list): List of block IDs
         """
-        for _id in block_id:
-            block_name = self._db.get_block(_id)
-            for name in block_name:
-                blocks = self._db.get_all_field_value(name)
-                yield blocks
-        # return blocks  # FIXME(BM) blocks can be never assigned!
+        # Check for any duplicates
+        block_ids = set([x for x in block_id if block_id.count(x) > 0])
+        block_ids = sorted(block_ids)
+
+        for _id in block_ids:
+            block_key = self._db.get_block(_id)[0]
+            block_data = self._db.get_all_field_value(block_key)
+            # FIXME(BM) unfortunately this doesnt quite work for keys where
+            # the value is an object. eg. processing_blocks.
+            # The following hack seems to work but is probably not infallible
+            for key in block_data:
+                for char in ['[', '{']:
+                    if char in block_data[key]:
+                        block_data[key] = ast.literal_eval(str(block_data[key]))
+            yield block_data
 
     def get_latest_event(self, event_block):
         """Get the latest event added"""
@@ -170,9 +177,9 @@ class ConfigDbClient:
         event = self._db.get_event(block_event, block_history)
         return ast.literal_eval(event)
 
-    # #############################################################################
+    # #########################################################################
     # Update functions
-    # #############################################################################
+    # #########################################################################
 
     def update_value(self, block_id, field, value):
         """"Update the value of the given block id and field"""
@@ -180,16 +187,15 @@ class ConfigDbClient:
         for name in block_name:
             self._db.set_value(name, field, value)
 
-    # #############################################################################
+    # #########################################################################
     # Delete functions
-    # #############################################################################
+    # #########################################################################
 
     def delete_scheduling_block(self, block_id):
         """Delete the specified Scheduling Block Instance.
 
-        Removes the scheduling block instance and all processing blocks
-        associated with it. Any data associated with scheduling block instance
-        is removed from the database"""
+        Removes the Scheduling Block Instance, and all Processing Blocks
+        that belong to it from the database"""
         scheduling_blocks = self._db.get_all_blocks(block_id)
         if scheduling_blocks:
             for blocks in scheduling_blocks:
@@ -197,44 +203,40 @@ class ConfigDbClient:
                     self._db.delete_block(blocks)
                 else:
                     self.delete_processing_block(blocks)
-
-            # Add a event to the scheduling block event list to notify
-            # of a deleting a scheduling block from the db
-            self._db.push_event(self.scheduling_event_name, "deleted", block_id)
-
-    def delete_processing_block(self, processing_block):
-        """Delete processing block using processing block id
-        and using scheduling block id if given"""
-        # FIXME(BM) Not sure why this can take a list as the name of the
-        # function is singular.
-        # FIXME(BM) fn argument? processing_block == block_id?
-        # -- it looks like this the argument should be 'SBI:PB'?
-        LOG.debug('Delete Processing block %s', processing_block)
-        if type(processing_block) is list:
-            for processing_id in processing_block:
-                processing_blocks = self._db.get_block(processing_id)
-                for blocks in processing_blocks:
+                    split_key = blocks.split(':')
                     self._db.delete_block(blocks)
 
                     # Add a event to the processing block event list to notify
                     # about deleting from the db
                     self._db.push_event(self.processing_event_name, "deleted",
-                                        processing_id)
-        else:
-            split_key = processing_block.split(':')
-            self._db.delete_block(processing_block)
+                                        split_key[3])
 
-            # Add a event to the processing block event list to notify
-            # about deleting from the db
-            self._db.push_event(self.processing_event_name, "deleted",
-                                split_key[3])
+            # Add a event to the scheduling block event list to notify
+            # of a deleting a scheduling block from the db
+            self._db.push_event(self.scheduling_event_name, "deleted", block_id)
+
+    def delete_processing_blocks(self, processing_block_ids):
+        """Delete Processing Block(s).
+
+        Uses Processing Block IDs and Scheduling Block IDs if given.
+        """
+        for _id in processing_block_ids:
+            processing_blocks = self._db.get_block(_id)
+            for blocks in processing_blocks:
+                if 'processing_block' in blocks:
+                    self._db.delete_block(blocks)
+                    # Add a event to the processing block event list to notify
+                    # about deleting from the db
+                    self._db.push_event(self.processing_event_name,
+                                        "deleted", _id)
 
     # #########################################################################
     # Utility functions
     # #########################################################################
+
     def clear(self):
         """Clear / drop the entire database."""
-        self._db.clear()
+        self._db.flush_db()
 
     # #########################################################################
     # Private functions
@@ -264,9 +266,24 @@ class ConfigDbClient:
     def _split_scheduling_block(self, scheduling_block):
         """Split the scheduling block data into multiple names
         before adding to the configuration database"""
+        _processing_block_id = []
         for block in scheduling_block:
             values = scheduling_block[block]
             if type(scheduling_block[block]) != list:
                 self.scheduling_block_data[block] = values
             else:
-                self.processing_block_data = values
+                # Check if there is a processing block that already exits in
+                # the database
+                processing_block_id = self.get_processing_block_ids()
+                for v in values:
+                    if v['id'] not in processing_block_id:
+                        self.processing_block_data = values
+                    else:
+                        raise RuntimeError("Processing block already exits",
+                                           v['id'])
+
+        # Adding processing block id to the scheduling block list
+        for block_id in self.processing_block_data:
+            _processing_block_id.append(block_id['id'])
+
+        self.scheduling_block_data['processing_blocks'] = _processing_block_id
