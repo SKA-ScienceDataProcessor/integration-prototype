@@ -1,13 +1,15 @@
 # -*- coding: utf-8 -*-
 """High Level Processing Controller Client API"""
 
-import json
 import ast
-from jsonschema import validate
-from config_db_redis import ConfigDB
+import json
+import os
+
+from jsonschema import ValidationError, validate
+from .config_db_redis import ConfigDB
 
 
-class SchedulingClient():
+class SchedulingClient:
     """ Processing Controller Client Interface"""
 
     def __init__(self):
@@ -19,12 +21,12 @@ class SchedulingClient():
         self.scheduling_block_data = {}
         self.processing_block_data = {}
 
-    # #############################################################################
+    # #########################################################################
     # Add functions
-    # ##########################################################################
+    # #########################################################################
 
     def add_scheduling_block(self, scheduling_block):
-        """Set scheduling block and processing block to the database"""
+        """Add Scheduling Block to the database"""
         # Get schema for validation
         schema = self._get_schema()
         try:
@@ -42,30 +44,28 @@ class SchedulingClient():
             self._split_scheduling_block(updated_block)
 
             # Adding Scheduling block instance with id
-            scheduling_block_name = "scheduling_block:" + \
-                                    updated_block["sched_block_instance_id"]
-            self._db.set_specified_values(scheduling_block_name,
-                                          self.scheduling_block_data)
+            name = "scheduling_block:" + updated_block["id"]
+            self._db.set_specified_values(name, self.scheduling_block_data)
 
             # Add a event to the scheduling block event list to notify
             # of a new scheduling block being added to the db.
             self._db.push_event(self.scheduling_event_name,
                                 updated_block["status"],
-                                updated_block["sched_block_instance_id"])
+                                updated_block["id"])
 
             # Adding Processing block with id
             for value in self.processing_block_data:
-                processing_block_name = "scheduling_block:" + \
-                                        updated_block["sched_block_instance_id"] + \
-                                        ":processing_block" + ":" + value['id']
-                self._db.set_specified_values(processing_block_name, value)
+                name = ("scheduling_block:" + updated_block["id"] +
+                        ":processing_block:" + value['id'])
+                self._db.set_specified_values(name, value)
 
                 # Add a event to the processing block event list to notify
                 # of a new processing block being added to the db.
                 self._db.push_event(self.processing_event_name, value["status"],
                                     value["id"])
-        except Exception as e:
-            print(e)
+        except ValidationError:
+            print("Schema Validation Error")
+            raise
 
     # ##########################################################################
     # Get functions
@@ -122,8 +122,8 @@ class SchedulingClient():
         return _sub_array_ids
 
     def get_scheduling_block_id_using_sub_array_id(self, sub_array_id):
-        """Get scheduling block id associated with sub array id"""
-        # Initialise empty list
+        """Get Scheduling Block Instance ID associated with sub array id"""
+
         _scheduling_block_ids = []
 
         for block_id in self.get_scheduling_block_ids():
@@ -132,8 +132,7 @@ class SchedulingClient():
 
         for details in block_details:
             if details['sub_array_id'] == sub_array_id:
-                sched_blocks_id = details['sched_block_instance_id']
-                return sched_blocks_id
+                return details['id']
 
     def get_ids_using_processing_block_id(self, processing_block_id):
         """ Get scheduling block and sub array id associated with
@@ -153,12 +152,16 @@ class SchedulingClient():
         return _ids
 
     def get_block_details(self, block_id):
-        """Get details of scheduling or processing block"""
+        """Get details of scheduling or processing block
+
+          Args:
+            block_id (list): List of block IDs
+        """
 
         # Check for any duplicates
         block_ids = set([x for x in block_id if block_id.count(x) > 0])
-        for id in block_ids:
-            block_name = self._db.get_block(id)
+        for _id in block_ids:
+            block_name = self._db.get_block(_id)
             for name in block_name:
                 blocks = self._db.get_all_field_value(name)
                 yield blocks
@@ -170,9 +173,9 @@ class SchedulingClient():
         event = self._db.get_event(block_event, block_history)
         return ast.literal_eval(event)
 
-    # ##########################################################################
+    # #########################################################################
     # Update functions
-    # ##########################################################################
+    # #########################################################################
 
     def update_value(self, block_id, field, value):
         """"Update the value of the given block id and field"""
@@ -180,13 +183,15 @@ class SchedulingClient():
         for name in block_name:
             self._db.set_value(name, field, value)
 
-    # ##########################################################################
+    # #########################################################################
     # Delete functions
-    # ##########################################################################
+    # #########################################################################
 
     def delete_scheduling_block(self, block_id):
-        """Delete the specified Scheduling Block Instance and all processing
-        blocks associated with it."""
+        """Delete the specified Scheduling Block Instance.
+
+        Removes the Scheduling Block Instance, and all Processing Blocks
+        that belong to it from the database"""
         scheduling_blocks = self._db.get_all_blocks(block_id)
         if scheduling_blocks:
             for blocks in scheduling_blocks:
@@ -206,11 +211,11 @@ class SchedulingClient():
             # of a deleting a scheduling block from the db
             self._db.push_event(self.scheduling_event_name, "deleted", block_id)
 
-    def delete_processing_block(self, processing_block_id):
+    def delete_processing_block(self, processing_block_ids):
         """Delete processing block using processing block id
         and using scheduling block id if given"""
-        for processing_id in processing_block_id:
-            processing_blocks = self._db.get_block(processing_id)
+        for _id in processing_block_ids:
+            processing_blocks = self._db.get_block(_id)
             for blocks in processing_blocks:
                 if 'processing_block' in blocks:
                     self._db.delete_block(blocks)
@@ -218,27 +223,26 @@ class SchedulingClient():
                     # Add a event to the processing block event list to notify
                     # about deleting from the db
                     self._db.push_event(self.processing_event_name, "deleted",
-                                        processing_id)
+                                        _id)
 
-
-    # ##########################################################################
+    # #########################################################################
     # Utility functions
-    # ##########################################################################
-
+    # #########################################################################
 
     def clear(self):
         """Clear / drop the entire database."""
         self._db.flush_db()
 
-
-    # ##########################################################################
+    # #########################################################################
     # Private functions
-    # ##########################################################################
+    # #########################################################################
 
     @staticmethod
     def _get_schema():
         """Get the schema for validation"""
-        with open('schema/scheduling_block_schema.json', 'r') as f:
+        schema_path = os.path.join(os.path.dirname(__file__),
+                                   'schema', 'scheduling_block_schema.json')
+        with open(schema_path, 'r') as f:
             schema_data = f.read()
         schema = json.loads(schema_data)
         return schema
@@ -257,7 +261,7 @@ class SchedulingClient():
     def _split_scheduling_block(self, scheduling_block):
         """Split the scheduling block data into multiple names
         before adding to the configuration database"""
-        _proccessing_block_id = []
+        _processing_block_id = []
         for block in scheduling_block:
             values = scheduling_block[block]
             if type(scheduling_block[block]) != list:
@@ -274,6 +278,6 @@ class SchedulingClient():
 
         # Adding processing block id to the scheduling block list
         for block_id in self.processing_block_data:
-            _proccessing_block_id.append(block_id['id'])
+            _processing_block_id.append(block_id['id'])
 
-        self.scheduling_block_data['processing_blocks'] = _proccessing_block_id
+        self.scheduling_block_data['processing_blocks'] = _processing_block_id
