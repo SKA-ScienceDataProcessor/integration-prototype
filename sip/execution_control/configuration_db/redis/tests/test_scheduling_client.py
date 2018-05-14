@@ -19,12 +19,13 @@ def main():
     # db.delete_scheduling_block(block_id)
     # print("scheduling block deleted")
     # print("")
-    #
-    # print("Delete processing blocks")
-    # processing_block_id = "sip-vis001"
-    # db.delete_processing_block(processing_block_id)
-    # print("processing block deleted")
+
+    # print("Delete scheduling block which has no processing block")
+    # block_id = "20180201-test-sbi001"
+    # db.delete_scheduling_block(block_id)
+    # print("scheduling block deleted")
     # print("")
+
 
     print("Get Scheduling block Event")
     event_block = "scheduling_block"
@@ -38,6 +39,12 @@ def main():
     print(event)
     print("")
 
+    print("Delete processing blocks")
+    processing_block_id = "sip-vis001"
+    db.delete_processing_block(processing_block_id)
+    print("processing block deleted")
+    print("")
+
     print("Get Scheduling block")
     block_id = ["20180201-test-sbi000"]
     scheduling_block_instance = db.get_block_details(block_id)
@@ -45,10 +52,18 @@ def main():
         print(instance)
     print("")
 
+    print("Get Scheduling block which has no processing block")
+    block_id = ["20180201-test-sbi001"]
+    scheduling_block_instance = db.get_block_details(block_id)
+    for instance in scheduling_block_instance:
+        print(instance)
+    print("")
+
+
     print("Get processing block")
-    p_blk_ids = "sip-vis000", "sip-vis001", "sip-vis001"
+    p_blk_ids = ["sip-vis000", "sip-vis001", "sip-vis001"]
     block_ids = db.get_processing_block_ids()
-    _blocks = [b for b in db.get_block_details(sorted(p_blk_ids))]
+    _blocks = [b for b in db.get_block_details(p_blk_ids, sort=True)]
     print(_blocks)
     assert len(block_ids) == len(_blocks)
     print("")
@@ -103,7 +118,7 @@ def main():
     print("")
 
     print("Get Scheduling block id and Sub array id using processing block id")
-    processing_block_id = "sip-vis001"
+    processing_block_id = "sip-vis000"
     ids = db.get_ids_using_processing_block_id(processing_block_id)
     print(ids)
     print("")

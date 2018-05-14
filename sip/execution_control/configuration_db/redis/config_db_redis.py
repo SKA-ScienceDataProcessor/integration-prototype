@@ -89,6 +89,3 @@ class ConfigDB():
     def flush_db(self):
         """Clear the entire database"""
         self._db.flushdb()
-
-
-

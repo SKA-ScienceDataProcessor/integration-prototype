@@ -1,7 +1,7 @@
 {
-  "sched_block_id": "20180201-test-sb000",
+  "scheduling_block_id": "20180201-test-sb000",
   "name": "Optional name string",
-  "sched_block_instance_id": "20180201-test-sbi000",
+  "id": "20180201-test-sbi000",
   "type": "Scheduling Block Instance",
   "date": "20180201",
   "sub_array_id": "subarray000",
