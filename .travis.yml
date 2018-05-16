@@ -1,8 +1,8 @@
-sudo: required
+#sudo: required
 
 language: python
 
-services: docker
+#services: docker
 
 python:
   - "3.6"
@@ -16,12 +16,14 @@ cache: pip
 install:
   - pip install pylint>=1.9.0
   - pip install pycodestyle>=2.4.0
+  - pip install spead2>=1.7.2
 
 before_script:
   - pycodestyle --exclude=receive_visibilities emulators
   - pylint --ignore=csp_pss_sender,csp_vis_sender_01,csp_vis_sender_02 emulators
   - pycodestyle --exclude=receive_visibilities sip
   - (cd sip && pylint --rcfile=../.pylintrc core_processing)
+  - ls
   - (cd sip && pylint --rcfile=../.pylintrc execution_control)
   - (cd sip && pylint --rcfile=../.pylintrc execution_framework_interface)
   - (cd sip && pylint --rcfile=../.pylintrc execution_frameworks)
