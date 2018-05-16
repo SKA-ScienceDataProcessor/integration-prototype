@@ -1,4 +1,4 @@
-#sudo: required
+sudo: required
 
 language: python
 
@@ -12,6 +12,13 @@ cache: pip
 # https://github.com/travis-ci/travis-ci/issues/5358
 #before_install:
 #  - docker pull $(REPO):$(TRAVIS_BRANCH)
+before_install:
+  - sudo apt-get -qq update
+  - sudo apt-get install -y gcc
+  - sudo apt-get install -y g++
+  - sudo apt-get install -y libboost-program-options-dev
+  - sudo apt-get install -y libboost-system-dev
+
 
 install:
   - pip install pylint>=1.9.0
