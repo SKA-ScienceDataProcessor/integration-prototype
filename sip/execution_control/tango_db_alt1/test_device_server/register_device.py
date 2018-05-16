@@ -15,4 +15,3 @@ print('Adding device: %s' % device_info.name)
 
 # NOTE: This also adds the server defined by device_info.server to the db
 db.add_device(device_info)
-

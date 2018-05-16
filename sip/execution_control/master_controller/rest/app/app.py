@@ -55,4 +55,3 @@ def state():
     except redis.exceptions.ConnectionError:
         return {'state': 'UNKNOWN',
                 'error': 'Unable to connect to database.'}
-
