@@ -3,14 +3,8 @@ python:
   - "3.6"
 cache: pip
 install:
-  - pip install pylint>=1.8.4
-branches:
-  only:
-    - master
-    - config_database
-    - processing_controller_interface_flask
-    - mc_rest
-    - processing_controller_celery
-    - logging_spammer_example
+  - pip install pylint>=1.9.0
+  - pip install pycodestyle>=2.4.0
 script:
   - pylint sip
+  - pycodestyle sip
