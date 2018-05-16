@@ -1,10 +1,40 @@
+sudo: required
+
 language: python
+
+services: docker
+
 python:
   - "3.6"
+
 cache: pip
+
+# https://github.com/travis-ci/travis-ci/issues/5358
+#before_install:
+#  - docker pull $(REPO):$(TRAVIS_BRANCH)
+
 install:
   - pip install pylint>=1.9.0
   - pip install pycodestyle>=2.4.0
-script:
+
+before_script:
+  - pycodestyle --exclude=receive_visibilities emulators
+  - pylint --ignore=csp_pss_sender,csp_vis_sender_01,csp_vis_sender_02 emulators
   - pycodestyle --exclude=receive_visibilities sip
-  - find . -iname "*.py" | xargs pylint
+  - (cd sip && pylint --rcfile=../.pylintrc core_processing)
+  - (cd sip && pylint --rcfile=../.pylintrc execution_control)
+  - (cd sip && pylint --rcfile=../.pylintrc execution_framework_interface)
+  - (cd sip && pylint --rcfile=../.pylintrc execution_frameworks)
+  - (cd sip && pylint --rcfile=../.pylintrc science_pipeline_workflows)
+
+script:
+  - echo "Build script goes here!"
+
+after_success:
+  - echo "Build successful! building docker containers ..."
+
+after_failure:
+  - echo "Build failed :("
+
+#https://docs.travis-ci.com/user/docker/
+#deploy:
