@@ -6,5 +6,5 @@ install:
   - pip install pylint>=1.9.0
   - pip install pycodestyle>=2.4.0
 script:
-  - pylint sip
-  - pycodestyle sip
+  - pycodestyle --exclude=receive_visibilities sip
+  - find . -iname "*.py" | xargs pylint

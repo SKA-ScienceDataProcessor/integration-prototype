@@ -51,4 +51,3 @@ def scheduling_block_detail(block_id):
         'list': '{}scheduling-blocks'.format(request.url_root)
     }
     return block
-

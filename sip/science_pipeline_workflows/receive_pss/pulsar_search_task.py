@@ -1,25 +1,21 @@
-#!/usr/bin/python3
 # -*- coding: utf-8 -*-
 """Pulsar search receiver task module.
 
 Implements C.1.2.1.2 from the product tree.
-"""
 
+.. moduleauthor:: Nijin Thykkathu
+"""
+import logging
 import os
+import signal
 import sys
 
-import signal
 import simplejson as json
 
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..'))
-
-from sip.processor_software.pulsar_search import PulsarStart
-from sip.common.logging_api import log
-
-__author__ = 'Nijin Thykkathu'
+from .pulsar_search import PulsarStart
 
 
-def _sig_handler(signum, frame):
+def _sig_handler(signum, frame):  # pylint: disable=W0613
     sys.exit(0)
 
 
@@ -28,13 +24,14 @@ def main():
     # Install handler to respond to SIGTERM
     signal.signal(signal.SIGTERM, _sig_handler)
 
-    with open(sys.argv[1]) as f:
-        config = json.load(f)
+    with open(sys.argv[1]) as fh:
+        config = json.load(fh)
 
     # Starts the pulsar search ftp server
     os.chdir(os.path.expanduser('~'))
-    receiver = PulsarStart(config, log)
+    receiver = PulsarStart(config, logging.getLogger())
     receiver.run()
+
 
 if __name__ == '__main__':
     main()
