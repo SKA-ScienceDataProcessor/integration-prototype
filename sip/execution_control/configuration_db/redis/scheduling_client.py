@@ -8,7 +8,7 @@ import logging
 
 from jsonschema import ValidationError, validate
 
-from config_db_redis import ConfigDB
+from .config_db_redis import ConfigDB
 
 LOG = logging.getLogger('SIP.PCI.DB')
 
