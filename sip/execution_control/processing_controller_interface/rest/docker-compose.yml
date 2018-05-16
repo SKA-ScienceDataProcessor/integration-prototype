@@ -1,0 +1,19 @@
+version: '3.4'
+
+services:
+
+  processing_controller:
+    image: skasip/processing_controller_interface_rest
+    environment:
+      DATABASE_URL: "mongodb://processing_controller_db"
+    ports:
+      - 5000
+    build: .
+
+  processing_controller_db:
+    image:  mongo:3.7.1-jessie
+    volumes:
+      - processing_controller_db:/data/db
+
+volumes:
+  processing_controller_db:
