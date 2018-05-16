@@ -1,8 +1,0 @@
-# For the Mock Configuration DB client.
-redis>=2.10.6
-
-# For the Mock Processing Block Controller
-celery>=4.1.0
-
-# For the configuration database
-jsonschema
