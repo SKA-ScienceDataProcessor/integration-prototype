@@ -2,7 +2,7 @@
 """High Level Master Controller Client API"""
 
 import ast
-from .config_db_redis import ConfigDB
+from config_db_redis import ConfigDB
 
 class MasterClient():
     """ Master Controller Client Interface"""

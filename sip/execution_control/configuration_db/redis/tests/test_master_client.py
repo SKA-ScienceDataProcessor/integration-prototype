@@ -20,6 +20,7 @@ import os
 import redis
 from master_client import MasterClient
 
+
 class DbClientTests(unittest.TestCase):
     def setUp(self):
         self._db = MasterClient()
