@@ -33,9 +33,9 @@ before_script:
   - pycodestyle --config=.pycodestyle --exclude=receive_visibilities sip || echo "FAIL"
   - (cd sip && pylint --rcfile=../.pylintrc core_processing || echo "FAIL")
   - (cd sip && pylint --rcfile=../.pylintrc execution_control || echo "FAIL")
-  - (cd sip && pylint --rcfile=../.pylintrc execution_framework_interface echo "FAIL")
+  - (cd sip && pylint --rcfile=../.pylintrc execution_framework_interface || echo "FAIL")
   - (cd sip && pylint --rcfile=../.pylintrc execution_frameworks || echo "FAIL")
-  - (cd sip && pylint --rcfile=../.pylintrc science_pipeline_workflows echo "FAIL")
+  - (cd sip && pylint --rcfile=../.pylintrc science_pipeline_workflows || echo "FAIL")
 
 script:
   - echo "Build script"
