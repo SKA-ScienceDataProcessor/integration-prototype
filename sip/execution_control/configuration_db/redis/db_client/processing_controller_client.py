@@ -13,7 +13,7 @@ from config_db_redis import ConfigDB
 LOG = logging.getLogger('SIP.PCI.DB')
 
 
-class SchedulingClient:
+class ProcessingControllerClient:
     """Configuration Database client API for the Processing Controller."""
 
     def __init__(self):
