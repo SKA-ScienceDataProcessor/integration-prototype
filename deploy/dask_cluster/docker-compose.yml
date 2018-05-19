@@ -1,0 +1,22 @@
+version: '3.6'
+
+services:
+
+    scheduler:
+        image: daskdev/dask
+        hostname: dask-scheduler
+        ports:
+            - 8786:8786
+            - 8787:8787
+        command: ["dask-scheduler"]
+
+    worker:
+        image: daskdev/dask
+        hostname: dask-worker
+        command: ["dask-worker", "scheduler:8786"]
+
+    notebook:
+        image: daskdev/dask-notebook
+        hostname: notebook
+        ports:
+            - 8888:8888
