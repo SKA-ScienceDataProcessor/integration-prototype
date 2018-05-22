@@ -1,6 +1,8 @@
 {
-  "execution_control": {
-    "master_controller": {
+  "execution_control":
+  {
+    "master_controller":
+    {
       "SDP_state": "on",
       "TANGO_state": "ON",
       "service_list": [
@@ -27,7 +29,9 @@
       ]
     }
   },
-  "sdp_services": {
+  
+  "sdp_services":
+  {
     "local_sky_model": {
       "address": "local_sky_model:8001",
       "state": "running"
@@ -41,7 +45,9 @@
       "state": "running"
     }
   },
-  "system_services": {
+  
+  "system_services":
+  {
     "logging": {
       "address": "logging:8004",
       "state": "running"

@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 """Unit tests for the master controller client
+
 # A sample schema, like what we'd get from json.load()
 schema = {
     "type": "object",
@@ -13,15 +14,19 @@ schema = {
 validate({'name': "myname", "price": 34.99}, schema)
 """
 
-import unittest
 import logging
 import sys
-import os
+import unittest
+
 import redis
-from master_client import MasterClient
+
+from ..master_client import MasterClient
+from ..utils.set_initial_data import main as init_db
 
 
 class DbClientTests(unittest.TestCase):
+    """Unit tests of the Master Controller Configuration database client."""
+
     def setUp(self):
         self._db = MasterClient()
         self._log = logging.getLogger("DbClientTests.testPath")
@@ -29,55 +34,57 @@ class DbClientTests(unittest.TestCase):
     def tearDown(self):
         """Executed after each test."""
 
-    def testSetState(self):
+    def test_set_state(self):
+        """TODO"""
         name = ['execution_control', 'master_controller']
         field = 'SDP_state'
         value = "running"
         self._db.update_value(name, field, value)
-        SDP_state_v = self._db.get_value(name, field)
-        self.assertEqual(SDP_state_v, "running")
+        sdp_state_v = self._db.get_value(name, field)
+        self.assertEqual(sdp_state_v, "running")
 
-    def testGetState(self):
+    def test_get_state(self):
+        """TODO"""
         name = ['execution_control', 'master_controller']
         field = 'TANGO_state'
-        TANGO_state_v = self._db.get_value(name, field)
-        self.assertEqual(TANGO_state_v, 'ON')
+        tango_state_v = self._db.get_value(name, field)
+        self.assertEqual(tango_state_v, 'ON')
 
-    def testGetAllState(self):
+    def test_get_all_states(self):
+        """TODO"""
         name = ['execution_control', 'master_controller']
-        all = self._db.get_all_value(name)
-        self.assertNotEqual(all, None)
+        values = self._db.get_all_value(name)
+        self.assertNotEqual(values, None)
 
-    def testAddList(self):
+    def test_add_to_list(self):
+        """TODO"""
         service_list_name = ['execution_control', 'master_controller',
                              'service_list']
-        dict = {
-                  'name': 'sdp_services.data_queue',
-                  'enabled': 'False'
-               }
-        self._db.add_service_to_list(service_list_name, dict)
+        service = {'name': 'sdp_services.data_queue', 'enabled': 'False'}
+        self._db.add_service_to_list(service_list_name, service)
         element = self._db.get_service_from_list(service_list_name, 0)
-        self.assertEqual(element['name'],
-                'sdp_services.data_queue')
+        self.assertEqual(element['name'], 'sdp_services.data_queue')
         # Value in string
         self.assertEqual(element['enabled'], 'False')
 
-    def testLength(self):
+    def test_length(self):
+        """TODO"""
         service_list_name = ['execution_control', 'master_controller',
                              'service_list']
-        self.assertEqual(self._db.get_service_list_length(service_list_name), 6)
+        self.assertEqual(self._db.get_service_list_length(service_list_name),
+                         6)
 
-    def testListAccess(self):
+    def test_list_access(self):
+        """TODO"""
         service_list_name = ['execution_control', 'master_controller',
                              'service_list']
         element = self._db.get_service_from_list(service_list_name, 0)
-        self.assertEqual(element['name'],
-                'sdp_services.data_queue')
+        self.assertEqual(element['name'], 'sdp_services.data_queue')
         element = self._db.get_service_from_list(service_list_name, 1)
-        self.assertEqual(element['name'],
-                'sdp_services.local_sky_model')
+        self.assertEqual(element['name'], 'sdp_services.local_sky_model')
 
-    def testPath(self):
+    def test_path(self):
+        """TODO"""
         service_list_name = ['execution_control', 'master_controller',
                              'service_list']
         element = self._db.get_service_from_list(service_list_name, 0)
@@ -89,21 +96,22 @@ class DbClientTests(unittest.TestCase):
         service = self._db.get_value(service_name, field)
         self.assertEqual(service, 'stopped')
 
-    def testBoolean(self):
+    def test_boolean(self):
+        """TODO"""
         service_list_name = ['execution_control', 'master_controller',
                              'service_list']
         element = self._db.get_service_from_list_bool(service_list_name, 0)
-        new_value = element['enabled']
         self.assertTrue(element['enabled'], False)
 
+
 if __name__ == '__main__':
-    # Deletes all the data in the database
-    r = redis.Redis()
-    r.flushdb()
+    # Delete all the data in the database
+    DB_CLIENT = redis.Redis()
+    DB_CLIENT.flushdb()
 
     # Populates the database with initial data
-    os.system("python3 -m utils.set_initial_data")
+    init_db()
 
-    logging.basicConfig( stream=sys.stderr )
-    logging.getLogger("DbClientTests.testPath").setLevel(logging.DEBUG)
+    logging.basicConfig(stream=sys.stderr)
+    logging.getLogger("SIP.EC.CBD.tests").setLevel(logging.DEBUG)
     unittest.main()

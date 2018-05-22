@@ -2,19 +2,19 @@ version: '3.3'
 
 services:
 
-  redis_configuration_database:
-    image: njthykkathu/init_db
-    environment:
-      REDIS_HOST: "redis://config_database"
-      REDIS_DB_ID: 0
-    ports:
-      - 5000
-    build: .
-
   config_database:
-    image:  redis:4.0.6-alpine
+    image: redis:4.0.6-alpine
+    ports:
+      - 6379:6379
     volumes:
       - config_database:/data/db
 
-volumes:
-  config_database:
+  # https://github.com/joeferner/redis-commander
+  # REDIS_HOSTS string format:
+  #    [label]:[hostname]:[port]:[dbIndex]:[password]
+  redis-commander-db0:
+    image: rediscommander/redis-commander:latest
+    environment:
+    - REDIS_HOSTS=config_db:config_database:6379:0
+    ports:
+    - 8081:8081

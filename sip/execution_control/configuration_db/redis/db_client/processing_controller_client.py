@@ -3,17 +3,18 @@
 
 import ast
 import json
-import os
 import logging
+import os
 
 from jsonschema import ValidationError, validate
 
-from config_db_redis import ConfigDB
-
-LOG = logging.getLogger('SIP.PCI.DB')
+from .config_db_redis import ConfigDB
 
 
-class ProcessingControllerClient:
+LOG = logging.getLogger('SIP.EC.CDB')
+
+
+class ProcessingControllerDbClient:
     """Configuration Database client API for the Processing Controller."""
 
     def __init__(self):
@@ -23,10 +24,9 @@ class ProcessingControllerClient:
         self.scheduling_event_name = 'scheduling_block_events'
         self.processing_event_name = 'processing_block_events'
 
-
-    # #########################################################################
+    ###########################################################################
     # Add functions
-    # #########################################################################
+    ###########################################################################
 
     def add_scheduling_block(self, config_dict):
         """Add Scheduling Block to the database"""
@@ -64,15 +64,16 @@ class ProcessingControllerClient:
 
                 # Add a event to the processing block event list to notify
                 # of a new processing block being added to the db.
-                self._db.push_event(self.processing_event_name, value["status"],
+                self._db.push_event(self.processing_event_name,
+                                    value["status"],
                                     value["id"])
         except ValidationError:
             print("Schema Validation Error")
             raise
 
-    # ##########################################################################
+    # #########################################################################
     # Get functions
-    # ##########################################################################
+    # #########################################################################
 
     def get_scheduling_block_ids(self):
         """Get list of scheduling block ids"""
@@ -127,39 +128,15 @@ class ProcessingControllerClient:
             _sub_array_ids.append(details['sub_array_id'])
         return _sub_array_ids
 
-    def get_scheduling_block_id_using_sub_array_id(self, sub_array_id):
+    def get_sub_array_sbi_ids(self, sub_array_id):
         """Get Scheduling Block Instance ID associated with sub array id"""
-
-        # Initialise empty list
-        _scheduling_block_ids = []
-
-        for block_id in self.get_scheduling_block_ids():
-            _scheduling_block_ids.append(block_id)
-        block_details = self.get_block_details(_scheduling_block_ids)
-
-        for details in block_details:
-            if details['sub_array_id'] == sub_array_id:
-                return details['id']
-
-    def get_ids_using_processing_block_id(self, processing_block_id):
-        """ Get scheduling block and sub array id associated with
-         processing block ids"""
-
-        # Initialise empty list
         _ids = []
-
-        processing_block_name = self._db.get_block(processing_block_id)
-
-        for block_name in processing_block_name:
-            block_id = block_name.split(':')
-        scheduling_block_details = self.get_block_details([block_id[1]])
-
-        for block_details in scheduling_block_details:
-            _ids.append(block_details['id'])
-            _ids.append(block_details['sub_array_id'])
+        for details in self.get_block_details(self.get_scheduling_block_ids()):
+            if details['sub_array_id'] == sub_array_id:
+                _ids.append(details['id'])
         return _ids
 
-    def get_block_details(self, block_id, sort = False):
+    def get_block_details(self, block_id, sort=False):
         """Get details of scheduling or processing block
 
           Args:
@@ -174,9 +151,8 @@ class ProcessingControllerClient:
             block_ids = sorted(block_ids)
             print("In here")
 
-        for id in block_ids:
-
-            block_name = self._db.get_block(id)
+        for _id in block_ids:
+            block_name = self._db.get_block(_id)
             for name in block_name:
                 blocks = self._db.get_all_field_value(name)
                 yield blocks
@@ -223,7 +199,8 @@ class ProcessingControllerClient:
 
             # Add a event to the scheduling block event list to notify
             # of a deleting a scheduling block from the db
-            self._db.push_event(self.scheduling_event_name, "deleted", block_id)
+            self._db.push_event(self.scheduling_event_name, "deleted",
+                                block_id)
 
     def delete_processing_block(self, processing_block_id):
         """Delete Processing Block(s).
@@ -270,8 +247,8 @@ class ProcessingControllerClient:
         """Get the schema for validation"""
         schema_path = os.path.join(os.path.dirname(__file__),
                                    'schema', 'scheduling_block_schema.json')
-        with open(schema_path, 'r') as f:
-            schema_data = f.read()
+        with open(schema_path, 'r') as file:
+            schema_data = file.read()
         schema = json.loads(schema_data)
         return schema
 
@@ -281,7 +258,7 @@ class ProcessingControllerClient:
         in the scheduling block instance"""
         scheduling_block['status'] = "created"
         for block in scheduling_block:
-            if type(scheduling_block[block]) == list:
+            if isinstance(scheduling_block[block], list):
                 for field in scheduling_block[block]:
                     field['status'] = 'created'
         return scheduling_block
@@ -305,12 +282,12 @@ class ProcessingControllerClient:
                 # the database
                 processing_block_id = self.get_processing_block_ids()
 
-                for v in values:
-                    if v['id'] not in processing_block_id:
+                for value in values:
+                    if value['id'] not in processing_block_id:
                         _processing_block_data = values
                     else:
                         raise Exception("Processing block already exits",
-                                        v['id'])
+                                        value['id'])
 
         # Adding processing block id to the scheduling block list
         for block_id in _processing_block_data:

@@ -20,23 +20,20 @@ Design notes for this service can be found in the
 
 ## Quickstart
 
-To build the Docker images needed to run this service use the following command
+To start Docker containers for a Redis Db instance (with a persistent volume)
+as well as a [Redis Commander](https://github.com/joeferner/redis-commander)
+instance (useful for debugging) issue the following command:  
 
 ```bash
-docker-compose build
+docker-compose up -d
 ```
 
-To start the Docker containers need to run this service during development on
-a local Docker engine
+This will deploy the containers to the local Docker installation. If 
+wanting to deploy to Docker Swarm instead use the following command: 
+
 
 ```bash
-docker-compose -f docker-compose.yml -f docker-compose-dev.yml up -d
-```
-
-or
-
-```bash
-docker stack deploy -c docker-compose.dev.yml [stack name]
+docker stack deploy -c docker-compose.yml [stack name]
 ```
 
 Once finished, to stop this service and remove its running containers, if
@@ -66,22 +63,23 @@ requirements.txt file
 
 ### Utility Scripts
 
-To set initial data to the configuration database run the following command
+To set initial data into the configuration database run the following command:
 
 ```bash
-python3 -m utils.set_initial_data
+python3 -m db_client.utils.set_initial_data
 ```
 
 ### Test Scripts
 
-To test the master controller client run the following command
+To test the Master Controller db client run the following command:
 
 ```bash
-python3 -m tests.test_master_client
+python3 -m db_client.tests.test_master_client
 ```
 
-To test scheduling controller client run the following command
+To run examples demonstrating the use of the Processing Controller client 
+run the following command
 
 ```bash
-python3 -m tests.test_scheduling_client
+python3 -m db_client.tests.processing_controller_client_example
 ```
