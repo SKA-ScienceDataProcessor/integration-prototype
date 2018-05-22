@@ -1,0 +1,52 @@
+sudo: required
+
+language: python
+
+#services: docker
+
+python:
+  - "3.6"
+
+cache: pip
+
+# https://github.com/travis-ci/travis-ci/issues/5358
+#before_install:
+#  - docker pull $(REPO):$(TRAVIS_BRANCH)
+before_install:
+  - sudo apt-get -qq update
+  - sudo apt-get install -y gcc
+  - sudo apt-get install -y g++
+  - sudo apt-get install -y libboost-program-options-dev
+  - sudo apt-get install -y libboost-system-dev
+
+install:
+  - pip install pylint>=1.9.0
+  - pip install pycodestyle>=2.4.0
+  - pip install spead2>=1.7.2
+  - pip install redis>=2.10.6
+  - pip install jsonschema>=2.6.0
+  - pip install simplejson>=3.15.0
+
+before_script:
+  # Run pycodestyle
+  - pycodestyle --config=.pycodestyle emulators
+  - pycodestyle --config=.pycodestyle --exclude=receive_visibilities sip
+  # Run PyLint
+  - pylint --ignore=csp_pss_sender,csp_vis_sender_01,csp_vis_sender_02 emulators
+  - (cd sip && pylint --rcfile=../.pylintrc core_processing || echo "FAIL")
+  - (cd sip && pylint --rcfile=../.pylintrc execution_control || echo "FAIL")
+  - (cd sip && pylint --rcfile=../.pylintrc execution_framework_interface || echo "FAIL")
+  - (cd sip && pylint --rcfile=../.pylintrc execution_frameworks || echo "FAIL")
+  - (cd sip && pylint --rcfile=../.pylintrc science_pipeline_workflows || echo "FAIL")
+
+script:
+  - echo "Build script"
+
+#after_success:
+#  - echo "Build successful! building docker containers ..."
+#
+#after_failure:
+#  - echo "Build failed :("
+
+#https://docs.travis-ci.com/user/docker/
+#deploy:

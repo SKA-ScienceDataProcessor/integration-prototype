@@ -1,0 +1,5 @@
+[pycodestyle]
+count = False
+statistics = False
+show-pep8 = False
+format = pylint

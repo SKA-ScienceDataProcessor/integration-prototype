@@ -21,9 +21,11 @@ class PulsarReceiver(io.BytesIO):
     """Receives Pulsar Search data."""
 
     def __init__(self):
+        io.BytesIO.__init__(self)
         self.name = 'pulsar timing buffer'
 
     def close(self):
+        """Add docstring!"""
 
         # Seek to the start of the buffer
         self.seek(0)
@@ -101,11 +103,13 @@ class PulsarFileSystem(AbstractedFS):
         super(PulsarFileSystem, self).__init__(root, cmd_channel)
 
     def open(self, filename, mode):
+        """Add docstring!"""
         self._buffer = PulsarReceiver()
         return self._buffer
 
 
 class PulsarStart:
+    """Add docstring!"""
 
     def __init__(self, config, log):
         """Constructor.

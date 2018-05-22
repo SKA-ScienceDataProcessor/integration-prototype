@@ -67,17 +67,20 @@ class SimpleSimulator:
                 c0 = self.sender_start_channel + j * self.stream_num_channels
                 c1 = c0 + self.stream_num_channels
                 stream, heap = streamer._streams[j]
-                vis_data = np.ones(self.frame_shape, dtype= \
-                    [('TCI', 'i8'), ('FD', 'u8'), ('VIS', 'c8', self.num_pol)])
+                vis_data = np.ones(self.frame_shape, dtype=[
+                    ('TCI', 'i8'), ('FD', 'u8'), ('VIS', 'c8', self.num_pol)])
                 self.log.debug('>> Channels = {} <<'.format(range(c0, c1)))
 
                 for c in range(c0, c1):
                     vis_data['TCI'] = np.ones(self.num_baselines, dtype="i8")
-                    vis_data['FD'] = 5 * np.ones(self.num_baselines, dtype="i8")
-                    vis_data['VIS'] = 10 * np.ones((self.num_baselines, self.num_pol), dtype="c8")
+                    vis_data['FD'] = 5 * np.ones(self.num_baselines,
+                                                 dtype="i8")
+                    vis_data['VIS'] = 10 * np.ones((self.num_baselines,
+                                                    self.num_pol), dtype="c8")
 
                 # Adding data to the heap
-                heap['visibility_channel_count'].value = (self.stream_num_channels,)
+                heap['visibility_channel_count'].value = \
+                    (self.stream_num_channels,)
                 heap['visibility_channel_id'].value = (c0,)
                 heap['correlator_output_data'].value = vis_data
                 streamer.send_heap(heap_index=t, stream_id=j)
