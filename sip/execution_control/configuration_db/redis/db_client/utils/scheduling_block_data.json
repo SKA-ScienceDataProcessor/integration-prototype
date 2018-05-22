@@ -1,0 +1,32 @@
+{
+  "scheduling_block_id": "20180201-test-sb000",
+  "name": "Optional name string",
+  "id": "20180201-test-sbi000",
+  "type": "Scheduling Block Instance",
+  "date": "20180201",
+  "sub_array_id": "subarray000",
+  "version": "0.2",
+  "project": "sip",
+  "processing_blocks": [
+    {
+      "id": "sip-vis000",
+      "type": "vis_ingest",
+      "priority": 1,
+      "resources_requirement": {
+      "storage_type": "hot"
+      },
+      "workflow": {
+      }
+    },
+    {
+      "id": "sip-vis001",
+      "type": "vis_ingest",
+      "priority": 2,
+      "resources_requirement": {
+      "storage_type": "hot"
+      },
+      "workflow": {
+      }
+    }
+  ]
+}
