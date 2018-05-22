@@ -3,4 +3,5 @@ version: "3.6"
 services:
   log_spammer:
     image: skasip/log_spammer
-    build: .
+    logging:
+      driver: "fluentd"
