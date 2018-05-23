@@ -1,0 +1,26 @@
+version: '3'
+
+services:
+
+  # Local development Configuration Database service
+  config_db:
+    image: redis:4.0.6-alpine
+    ports:
+      - 6379:6379
+    volumes:
+      - sip_config_db:/data/db
+
+  # Redis GUI (useful for debugging)
+  # https://github.com/joeferner/redis-commander
+  # REDIS_HOSTS string format:
+  #    [label]:[hostname]:[port]:[dbIndex]:[password]
+  redis-commander-db0:
+    image: rediscommander/redis-commander:latest
+    environment:
+    - REDIS_HOSTS=config_db:config_db:6379:0
+    ports:
+    - 8081:8081
+
+
+volumes:
+  sip_config_db:
