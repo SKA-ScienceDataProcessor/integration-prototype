@@ -1,6 +1,38 @@
 version: "3.6"
 
 services:
-  log_spammer:
-    image: skasip/log_spammer
-    build: .
+
+    fluentd:
+        image: fluent/fluentd:v0.12
+        volumes:
+            # bind mount the output directory to the container /fluend/log folder
+            - ./output:/fluentd/log
+        deploy:
+            replicas: 1
+        configs:
+            - source: fluentd
+              target: "/fluentd/etc/fluent.conf"
+              mode: 0644
+        networks:
+            - host
+
+    log_spammer:
+        image: skasip/log_spammer:latest
+        deploy:
+            replicas: 1
+        logging:
+            driver: fluentd
+        networks:
+            - host
+        depends_on:
+            - fluentd
+        build: .
+
+configs:
+    fluentd:
+        file: ./fluentd/fluent.conf
+
+networks:
+    host:
+        external: true
+        name: host

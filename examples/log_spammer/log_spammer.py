@@ -1,14 +1,12 @@
 # coding: utf-8
-"""Dummy app to spam a bunch of logs"""
+"""Dummy app to spam a log messages for testing the logging system."""
 import logging
-import random
-import socket
 import sys
 import time
 
 
 def main():
-    """."""
+    """Log to stdout using python logging in a while loop"""
     log = logging.getLogger('SIP.examples.log_spammer')
     log.setLevel(logging.DEBUG)
 
@@ -18,21 +16,13 @@ def main():
     handler.setFormatter(formatter)
     log.addHandler(handler)
 
-    host_name = socket.gethostname()
-    log.info('Starting Log Spammer! ...')
-    log.info('hostname = %s', host_name)
-    log.info('address  = %s', socket.gethostbyname(host_name))
-
     counter = 0
-    start_time = time.time()
     try:
         while True:
-            elapsed = time.time() - start_time
-            log.info('hello from %s. (elapsed = %.1f s, counter = %i)',
-                     host_name, elapsed, counter)
-            log.debug('this is a debug message from %s', host_name)
+            log.info('Hello %i', counter)
+            log.debug('Hello again %i', counter)
             counter += 1
-            time.sleep(random.uniform(0.001, 0.02))
+            time.sleep(0.001)
     except KeyboardInterrupt:
         log.info('Exiting...')
 
