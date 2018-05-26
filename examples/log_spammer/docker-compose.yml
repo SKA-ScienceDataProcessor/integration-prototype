@@ -22,6 +22,8 @@ services:
             replicas: 1
         logging:
             driver: fluentd
+            options:
+                tag: "{{.ImageName}}/{{.Name}}/{{.ID}}"
         networks:
             - host
         depends_on:
