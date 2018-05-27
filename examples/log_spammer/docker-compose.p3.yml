@@ -1,0 +1,21 @@
+version: "3.6"
+
+services:
+
+    log_spammer:
+        image: skasip/log_spammer:latest
+        deploy:
+            replicas: 1
+        logging:
+            driver: fluentd
+            options:
+                tag: "{{.ImageName}}/{{.Name}}/{{.ID}}"
+        networks:
+            - host
+        build: .
+
+
+networks:
+    host:
+        external: true
+        name: host
