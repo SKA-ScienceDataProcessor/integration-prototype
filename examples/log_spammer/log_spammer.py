@@ -22,7 +22,7 @@ def main():
             log.info('Hello %i', counter)
             log.debug('Hello again %i', counter)
             counter += 1
-            time.sleep(0.001)
+            time.sleep(0.1)
     except KeyboardInterrupt:
         log.info('Exiting...')
 
