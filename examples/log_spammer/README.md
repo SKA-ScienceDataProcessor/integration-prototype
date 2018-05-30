@@ -47,7 +47,7 @@ This assumes running on the SIP shared Docker Swarm platform on P3
 ```bash
 docker run -d --log-driver=fluentd \
     --log-opt tag="{{.ImageName}}/{{.Name}}/{{.ID}}" \
-    --name=log_test_1 skasip/log_spammer:latest
+    --name=log_test_1 skasip/log_spammer:latest 0.1
 ```
 
 To stop and remove the logger
