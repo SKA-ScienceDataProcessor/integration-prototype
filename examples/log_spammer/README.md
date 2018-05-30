@@ -12,6 +12,8 @@ which are bind mounted to the output directory.
 
 ## Quick-start
 
+### Running locally
+
 Build Docker `skasip/log_spammer` image with (this step can be skipped if using
 the [hub.docker.com](https://hub.docker.com/r/skasip/log_spammer/) image):
 
@@ -34,3 +36,36 @@ To stop the containers and clean up:
 docker stack rm test
 rm -f output/*.*
 ```
+
+### Running on P3
+
+This assumes running on the SIP shared Docker Swarm platform on P3
+(<https://confluence.ska-sdp.org/display/WBS/Available+Shared+Platforms>).
+
+#### Running on the Swarm leader node:
+
+```bash
+docker run -d --log-driver=fluentd \
+    --log-opt tag="{{.ImageName}}/{{.Name}}/{{.ID}}" \
+    --name=log_test_1 skasip/log_spammer:latest
+```
+
+To stop and remove the logger
+
+```bash
+docker rm -f log_test_1
+```
+
+#### Using Docker Swarm:
+
+
+```bash
+docker stack deploy -c docker-compose.p3.yml log_test_2
+```
+
+To stop and remove the stack
+
+```bash
+docker stack rm log_test_2
+```
+
