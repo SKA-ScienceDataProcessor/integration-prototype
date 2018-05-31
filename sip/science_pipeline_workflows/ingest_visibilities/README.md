@@ -120,8 +120,9 @@ docker service rm recv1
 ```bash
 docker service create -d --name=recv1 --restart-condition=none \
     --log-driver=fluentd --log-opt tag="{{.ImageName}}/{{.Name}}/{{.ID}}" \
-    --stop-signal=INT --network=host skasip/ingest_visibilities\
-     "$(< recv/spead_recv.json)"
+    --constraint='node.labels.recv == 01' \
+    --stop-signal=INT --network=host skasip/ingest_visibilities \
+    "$(< recv/spead_recv.json)"
 ```
 
 2\. Run the sender:
@@ -129,8 +130,9 @@ docker service create -d --name=recv1 --restart-condition=none \
 ```bash
 docker service create -d --name=send1 --restart-condition=none \
     --log-driver=fluentd --log-opt tag="{{.ImageName}}/{{.Name}}/{{.ID}}" \
+    --constraint='node.labels.send == 01' \
     --stop-signal=INT --network=host skasip/csp_vis_sender \
-     "$(< send/spead_send.json)"
+    "$(< send/spead_send.json)"
 ```
 
 3\. Remove the services:
@@ -153,3 +155,39 @@ docker push skasip/csp_vis_sender
 docker tag vis_recv skasip/ingest_visibilities
 docker push skasip/ingest_visibilities
 ```
+
+## Labeling nodes on Docker Swarm
+
+Nodes can be labeled with:
+
+```bash
+docker node update --label-add key=value <node id>
+```
+
+Node labels can be inspected with:
+
+```bash
+docker node inspect <node id>
+```
+
+Node labels can be removed with:
+
+```bash
+docker node update --label-rm key <node id>
+```
+
+In the current SIP shared swarm cluster on P3:
+
+- node 0, id=ssx7te87j0fbx1ufzihz5vti6, is labeled with `send=01` and,
+- node 1, id=y2mgesm65oqmjhrn4ejwg9k5v, is labeled with `recv=01`.
+
+The BDN IPs are:
+- node 0 is `10.11.0.11`
+- node 1 is `10.11.0.4`
+
+
+
+
+
+
+ 
