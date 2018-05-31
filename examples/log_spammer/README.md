@@ -34,7 +34,7 @@ To stop the containers and clean up:
 
 ```bash
 docker stack rm test
-rm -f output/*.*
+rm -f output/docker.*
 ```
 
 ### Running on P3
