@@ -11,13 +11,8 @@ import asyncio
 import concurrent.futures
 import json
 import logging
-import math
-import queue
-import threading
 import sys
-import time
 
-import numpy
 import spead2
 import spead2.recv
 import spead2.recv.asyncio
@@ -27,27 +22,11 @@ class SpeadReceiver(object):
     """Receives visibility data using SPEAD."""
     def __init__(self, spead_config):
         self._config = spead_config
-        self._buffer = []
         self._streams = []
+        self._item_group = spead2.ItemGroup()
         self._num_buffers = self._config['num_buffers']
         self._num_buffer_times = self._config['num_buffer_times']
         self._num_streams = self._config['num_streams']
-        self.q = queue.Queue(self._num_buffers)
-
-        # Create the buffers.
-        # self.buffer is a list of dictionaries.
-        # Each dictionary contains a reference to an array of visibility data,
-        # and an array to keep track of the number of free time slots
-        # in the buffer for each channel.
-        # When the total number of free slots in the buffer reaches zero,
-        # it is ready for processing.
-        # Each buffer also contains a flag to keep track of whether
-        # it has been queued for processing.
-        for _ in range(self._num_buffers):
-            counters = numpy.ones((self._num_streams,), 'i4') * \
-                    self._num_buffer_times
-            self._buffer.append(
-                {'vis_data': None, 'counters': counters, 'queued': False})
 
         # Create the streams.
         port_start = self._config['port_start']
@@ -61,52 +40,60 @@ class SpeadReceiver(object):
                 self._config['memory_pool']['initial'])
             stream.set_memory_allocator(pool)
             stream.add_udp_reader(port_start + i_stream)
-            self._streams.append((stream, spead2.ItemGroup()))
+            self._streams.append(stream)
+
+    def process_buffer(self, i_block, receive_buffer):
+        """Blocking function to process the received heaps.
+        This is run from an executor.
+        """
+        logging.info("Worker thread processing block %i", i_block)
+        for heap in receive_buffer.result():
+            if isinstance(heap, spead2.recv.Heap):
+                items = self._item_group.update(heap)
+                if 'correlator_output_data' in items:
+                    num_baselines = items['correlator_output_data'].value.shape[0]
+                    logging.info("Data: {}, Length: {}".format(
+                        items['correlator_output_data'].value[0],
+                        num_baselines))
+            else:
+                logging.info("Dropped incomplete heap %i!", heap.cnt + 1)
 
     async def _run_loop(self, executor):
         """Main loop."""
         loop = asyncio.get_event_loop()
 
         # Get first heap in each stream (should be empty).
-        for stream, item_group in self._streams:
-            heap = await stream.get(loop=loop)
-            item_group.update(heap)
+        for stream in self._streams:
+            await stream.get(loop=loop)
 
         i_block = 0
+        receive_buffer = [None, None]
         while True:
             logging.info("Receiving block %i", i_block)
-            # Launch asynchronous receive on all streams.
-            i_buffer = i_block % self._num_buffers
+
+            # Process the previous buffer, if available.
+            processing_tasks = None
+            if i_block > 0:
+                i_buffer_proc = (i_block - 1) % 2
+                processing_tasks = loop.run_in_executor(
+                    executor, self.process_buffer, i_block - 1,
+                    receive_buffer[i_buffer_proc])
+
+            # Set up asynchronous receive on all streams.
+            i_buffer_recv = i_block % 2
             receive_tasks = []
-            for (stream, _) in self._streams:
-                for i_time in range(self._num_buffer_times):
+            for stream in self._streams:
+                for _ in range(self._num_buffer_times):
                     # NOTE: loop.create_task() is needed to schedule these
                     # in the right order!
                     receive_tasks.append(
                         loop.create_task(stream.get(loop=loop)))
-            receive_results = asyncio.gather(*receive_tasks)
-            await receive_results
+            receive_buffer[i_buffer_recv] = asyncio.gather(*receive_tasks)
 
-            i = 0
-            for i_stream, (_, item_group) in enumerate(self._streams):
-                for i_time in range(self._num_buffer_times):
-                    heap = receive_results.result()[i]
-                    if isinstance(heap, spead2.recv.Heap):
-                        items = item_group.update(heap)
-                        if 'correlator_output_data' in items:
-                            num_baselines = items['correlator_output_data'].value.shape[0]
-                            logging.info("Data: {}, Length: {}".format(
-                                items['correlator_output_data'].value[0],
-                                num_baselines))
-                            expected = i_time + i_block * self._num_buffer_times + i_stream / 1000.0
-                            actual = items['correlator_output_data'].value['VIS'][0][0].real
-                            if abs(actual - expected) > 1e-5:
-                                msg = ">>>>>>>>>>>>>>>>>>>>>>>>> Argh! Expected %.3f, got %.3f" % (expected, actual)
-                                logging.warning(msg)
-                                # raise RuntimeError(msg)
-                    else:
-                        logging.info("Dropped incomplete heap %i on channel %i!", heap.cnt + 1, i_stream)
-                    i += 1
+            # Ensure asynchronous receives and previous processing tasks are done.
+            await receive_buffer[i_buffer_recv]
+            if processing_tasks:
+                await processing_tasks
 
             logging.info("Received block %i", i_block)
             i_block += 1
@@ -115,7 +102,7 @@ class SpeadReceiver(object):
         """Starts the receiver."""
         # Create the thread pool.
         executor = concurrent.futures.ThreadPoolExecutor(
-            max_workers=self._config['num_workers'])
+            max_workers=1)
 
         # Run the event loop.
         loop = asyncio.get_event_loop()
@@ -138,7 +125,7 @@ def main():
         raise RuntimeError('Usage: python3 async_recv.py <spead_recv.json>')
 
     # Set up logging.
-    logging.basicConfig(format='%(asctime)-15s %(threadName)-12s %(levelname)-10s %(message)s',
+    logging.basicConfig(format='%(asctime)-15s %(threadName)-22s %(message)s',
                         level=logging.INFO)
 
     # Load SPEAD configuration from JSON file.
