@@ -1,0 +1,15 @@
+version: '3.6'
+
+services:
+
+  spead_base:
+    image: skasip/spead_base:latest
+    build: ./spead_base
+
+  send:
+    image: vis_send:latest
+    build: ./send
+
+  recv:
+    image: vis_recv:latest
+    build: ./recv

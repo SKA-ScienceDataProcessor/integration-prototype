@@ -39,8 +39,10 @@ import json
 import logging
 import sys
 import time
+import os
 
 import numpy
+from jsonschema import ValidationError, validate
 import spead2
 import spead2.send
 import spead2.send.asyncio
@@ -83,6 +85,7 @@ class SpeadSender(object):
         # Write the data into the buffer.
         self._buffer[i_buffer][i_chan]['VIS'][:] = (i_time + i_chan / 1000.0)
 
+    # pylint: disable=too-many-locals
     async def _run_loop(self, executor):
         """Main loop."""
         # SPEAD heap descriptor.
@@ -228,16 +231,27 @@ class SpeadSender(object):
 def main():
     """Main function for SPEAD sender module."""
     # Check command line arguments.
-    if len(sys.argv) < 2:
-        raise RuntimeError('Usage: python3 async_send.py <spead_send.json>')
+    if len(sys.argv) != 2:
+        raise RuntimeError('Usage: python3 async_send.py <json config>')
 
     # Set up logging.
     logging.basicConfig(format='%(asctime)-15s %(threadName)-22s %(message)s',
                         level=logging.INFO)
 
     # Load SPEAD configuration from JSON file.
-    with open(sys.argv[-1]) as f:
-        spead_config = json.load(f)
+    # _path = os.path.dirname(os.path.abspath(__file__))
+    # with open(os.path.join(_path, 'spead_send.json')) as file_handle:
+    #     spead_config = json.load(file_handle)
+    spead_config = json.loads(sys.argv[1])
+    try:
+        _path = os.path.dirname(os.path.abspath(__file__))
+        schema_path = os.path.join(_path, 'config_schema.json')
+        with open(schema_path) as schema_file:
+            schema = json.load(schema_file)
+        validate(spead_config, schema)
+    except ValidationError as error:
+        print(error.cause)
+        raise
 
     # Set up the SPEAD sender and run it (see method, above).
     sender = SpeadSender(spead_config)

@@ -122,15 +122,16 @@ def main():
     """Main function for SPEAD receiver module."""
     # Check command line arguments.
     if len(sys.argv) < 2:
-        raise RuntimeError('Usage: python3 async_recv.py <spead_recv.json>')
+        raise RuntimeError('Usage: python3 async_recv.py <json config>')
 
     # Set up logging.
     logging.basicConfig(format='%(asctime)-15s %(threadName)-22s %(message)s',
                         level=logging.INFO)
 
     # Load SPEAD configuration from JSON file.
-    with open(sys.argv[-1]) as f:
-        spead_config = json.load(f)
+    # with open(sys.argv[-1]) as f:
+    #     spead_config = json.load(f)
+    spead_config = json.loads(sys.argv[1])
 
     # Set up the SPEAD receiver and run it (see method, above).
     receiver = SpeadReceiver(spead_config)
