@@ -6,10 +6,10 @@ from http import HTTPStatus
 from flask import Blueprint
 
 from .utils import get_root_url
-from ..db.client import ConfigDbClient
+from ..db.client import ConfigDb
 
 BP = Blueprint('scheduling-block', __name__)
-DB = ConfigDbClient()
+DB = ConfigDb()
 LOG = logging.getLogger('SIP.PCI')
 
 
@@ -41,7 +41,7 @@ def delete(block_id):
     """Scheduling block detail resource."""
     _url = get_root_url()
     LOG.debug('Requested delete of SBI %s', block_id)
-    DB.delete_scheduling_block(block_id)
+    DB.delete_sched_block_instance(block_id)
     response = dict(message='Deleted block: _id = {}'.format(block_id))
     response['_links'] = {
         'list': '{}/scheduling-blocks'.format(_url)

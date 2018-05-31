@@ -6,10 +6,10 @@ from http import HTTPStatus
 from flask import Blueprint, request
 
 from .utils import get_root_url
-from ..db.client import ConfigDbClient
+from ..db.client import ConfigDb
 
 BP = Blueprint('processing-blocks', __name__)
-DB = ConfigDbClient()
+DB = ConfigDb()
 LOG = logging.getLogger('SIP.PCI')
 
 

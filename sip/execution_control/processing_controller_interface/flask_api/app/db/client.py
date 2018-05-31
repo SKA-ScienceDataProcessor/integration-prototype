@@ -5,17 +5,16 @@ import ast
 import json
 import logging
 import os
-from collections import Counter
-from copy import copy
 
 from jsonschema import ValidationError, validate
 
 from .config_db_redis import ConfigDB
 
-LOG = logging.getLogger('SIP.EC.PCI.CDB')
+
+LOG = logging.getLogger('SIP.EC.CDB')
 
 
-class ConfigDbClient:
+class ConfigDb:
     """Configuration Database client API for the Processing Controller."""
 
     def __init__(self):
@@ -25,15 +24,16 @@ class ConfigDbClient:
         self.scheduling_event_name = 'scheduling_block_events'
         self.processing_event_name = 'processing_block_events'
 
-    # #########################################################################
+    ###########################################################################
     # Add functions
-    # #########################################################################
+    ###########################################################################
 
-    def add_scheduling_block(self, config_dict):
+    def add_sched_block_instance(self, config_dict):
         """Add Scheduling Block to the database"""
         # Get schema for validation
         schema = self._get_schema()
         LOG.debug('Adding SBI with config: %s', config_dict)
+
         try:
             # Validates the schema
             validate(config_dict, schema)
@@ -44,7 +44,7 @@ class ConfigDbClient:
             # Splitting into different names and fields before
             # adding to the database
             scheduling_block_data, processing_block_data = \
-                self._split_scheduling_block(updated_block)
+                self._split_sched_block_instance(updated_block)
 
             # Adding Scheduling block instance with id
             name = "scheduling_block:" + updated_block["id"]
@@ -65,17 +65,19 @@ class ConfigDbClient:
                 # Add a event to the processing block event list to notify
                 # of a new processing block being added to the db.
                 self._db.push_event(self.processing_event_name,
-                                    value["status"], value["id"])
+                                    value["status"],
+                                    value["id"])
         except ValidationError:
             print("Schema Validation Error")
             raise
 
-    # ##########################################################################
+    # #########################################################################
     # Get functions
-    # ##########################################################################
+    # #########################################################################
 
-    def get_scheduling_block_ids(self):
-        """Get list of scheduling block ids"""
+    def get_sched_block_instance_ids(self):
+        """Get unordered list of scheduling block ids"""
+
         # Initialise empty list
         scheduling_block_ids = []
 
@@ -89,12 +91,9 @@ class ConfigDbClient:
                 scheduling_block_ids.append(id_split)
         return scheduling_block_ids
 
-    def get_num_scheduling_block_ids(self):
-        """"Get number of scheduling blocks ids"""
-        return len(self.get_scheduling_block_ids())
-
     def get_processing_block_ids(self):
         """Get list of processing block ids using the processing block id"""
+
         # Initialise empty list
         _processing_block_ids = []
 
@@ -113,41 +112,47 @@ class ConfigDbClient:
 
     def get_sub_array_ids(self):
         """Get list of sub array ids"""
-        _sub_array_ids = set()
-        for block in self.get_block_details(self.get_scheduling_block_ids()):
-            _sub_array_ids.add(block['sub_array_id'])
-        return list(_sub_array_ids)
+
+        # Initialise empty list
+        _scheduling_block_ids = []
+        _sub_array_ids = []
+
+        for blocks_id in self.get_sched_block_instance_ids():
+            _scheduling_block_ids.append(blocks_id)
+        block_details = self.get_block_details(_scheduling_block_ids)
+        for details in block_details:
+            _sub_array_ids.append(details['sub_array_id'])
+        return _sub_array_ids
 
     def get_sub_array_sbi_ids(self, sub_array_id):
-        """Get scheduling block ids for associated with the given sub-array"""
+        """Get Scheduling Block Instance ID associated with sub array id"""
         _ids = []
-        for block in self.get_block_details(self.get_scheduling_block_ids()):
-            if block['sub_array_id'] == sub_array_id:
-                _ids.append(block['id'])
+        sbi_ids = self.get_sched_block_instance_ids()
+        for details in self.get_block_details(sbi_ids):
+            if details['sub_array_id'] == sub_array_id:
+                _ids.append(details['id'])
         return _ids
 
-    def get_block_details(self, block_ids):
+    def get_block_details(self, block_id, sort=False):
         """Get details of scheduling or processing block
 
-        Args:
-            block_ids (list): List of block IDs
+          Args:
+            block_id (list): List of block IDs
+            sort (bool): Set to True to sort the list
         """
-        # Convert input to list if needed
-        if not hasattr(block_ids, "__iter__"):
-            block_ids = [block_ids]
+
+        # Check for any duplicates
+        block_ids = set([x for x in block_id if block_id.count(x) > 0])
+
+        if sort:
+            block_ids = sorted(block_ids)
+            print("In here")
 
         for _id in block_ids:
-            block_key = self._db.get_block(_id)[0]
-            block_data = self._db.get_all_field_value(block_key)
-            # NOTE(BM) unfortunately this doesn't quite work for keys where \
-            # the value is a python type (list, dict etc) \
-            # The following hack works for now but is probably not infallible
-            for key in block_data:
-                for char in ['[', '{']:
-                    if char in block_data[key]:
-                        block_data[key] = ast.literal_eval(
-                            str(block_data[key]))
-            yield block_data
+            block_name = self._db.get_block(_id)
+            for name in block_name:
+                blocks = self._db.get_all_field_value(name)
+                yield blocks
 
     def get_latest_event(self, event_block):
         """Get the latest event added"""
@@ -170,7 +175,7 @@ class ConfigDbClient:
     # Delete functions
     # #########################################################################
 
-    def delete_scheduling_block(self, block_id):
+    def delete_sched_block_instance(self, block_id):
         """Delete the specified Scheduling Block Instance.
 
         Removes the Scheduling Block Instance, and all Processing Blocks
@@ -181,7 +186,6 @@ class ConfigDbClient:
                 if "processing_block" not in blocks:
                     self._db.delete_block(blocks)
                 else:
-                    # self.delete_processing_blocks(blocks)
                     split_key = blocks.split(':')
                     self._db.delete_block(blocks)
 
@@ -195,20 +199,33 @@ class ConfigDbClient:
             self._db.push_event(self.scheduling_event_name, "deleted",
                                 block_id)
 
-    def delete_processing_blocks(self, processing_block_ids):
+    def delete_processing_block(self, processing_block_id):
         """Delete Processing Block(s).
 
-        Uses Processing Block IDs and Scheduling Block IDs if given.
+        Uses Processing Block IDs
         """
-        for _id in processing_block_ids:
-            processing_blocks = self._db.get_block(_id)
-            for blocks in processing_blocks:
-                if 'processing_block' in blocks:
-                    self._db.delete_block(blocks)
-                    # Add a event to the processing block event list to notify
-                    # about deleting from the db
-                    self._db.push_event(self.processing_event_name,
-                                        "deleted", _id)
+        processing_block = self._db.get_block(processing_block_id)
+        for block in processing_block:
+            print("")
+            if 'processing_block' in block:
+                self._db.delete_block(block)
+
+                # Remove processing block id from scheduling block id
+                scheduling_block_id = block.split(':')
+                scheduling_block_details = self.get_block_details(
+                    [scheduling_block_id[1]])
+                for block_details in scheduling_block_details:
+                    block_list = ast.literal_eval(
+                        block_details['processing_blocks'])
+                    if processing_block_id in block_list:
+                        block_list.remove(processing_block_id)
+                    self.update_value(scheduling_block_id[1],
+                                      'processing_blocks', block_list)
+
+                # Add a event to the processing block event list to notify
+                # about deleting from the db
+                self._db.push_event(self.processing_event_name, "deleted",
+                                    id)
 
     # #########################################################################
     # Utility functions
@@ -227,8 +244,8 @@ class ConfigDbClient:
         """Get the schema for validation"""
         schema_path = os.path.join(os.path.dirname(__file__),
                                    'schema', 'scheduling_block_schema.json')
-        with open(schema_path, 'r') as file_handle:
-            schema_data = file_handle.read()
+        with open(schema_path, 'r') as file:
+            schema_data = file.read()
         schema = json.loads(schema_data)
         return schema
 
@@ -243,50 +260,35 @@ class ConfigDbClient:
                     field['status'] = 'created'
         return scheduling_block
 
-    @staticmethod
-    def _get_duplicates(values):
-        """Return a list of any duplicates found in the specified list
+    def _split_sched_block_instance(self, scheduling_block):
+        """Split the scheduling block data into multiple names
+        before adding to the configuration database"""
 
-        Args:
-            values (list): List of values to search for duplicates
-        """
-        return [value for value, count in Counter(values).items() if count > 1]
+        # Initialise empty list
+        _scheduling_block_data = {}
+        _processing_block_data = {}
+        _processing_block_id = []
 
-    def _split_scheduling_block(self, config):
-        """Generate internal representation of an SBI configuration dict.
+        for block in scheduling_block:
+            values = scheduling_block[block]
 
-        Generate a Scheduling Block Instance Configuration dictionary
-        suitable for storing in the database.
+            if block != 'processing_blocks':
+                _scheduling_block_data[block] = values
+            else:
+                # Check if there is a processing block that already exits in
+                # the database
+                processing_block_id = self.get_processing_block_ids()
 
-        Args:
-            config (dict): Scheduling Block Instance configuration dictionary.
-        """
-        LOG.debug('Generating internal (DB) SBI representation.')
+                for value in values:
+                    if value['id'] not in processing_block_id:
+                        _processing_block_data = values
+                    else:
+                        raise Exception("Processing block already exits",
+                                        value['id'])
 
-        # Get list of Processing Block id's in the SBI
-        pb_ids = [block['id'] for block in config['processing_blocks']]
+        # Adding processing block id to the scheduling block list
+        for block_id in _processing_block_data:
+            _processing_block_id.append(block_id['id'])
+        _scheduling_block_data['processing_blocks'] = _processing_block_id
 
-        # Check for duplicate PB ids in SBI configuration.
-        duplicates = self._get_duplicates(pb_ids)
-        if duplicates:
-            raise RuntimeError("Duplicate Processing Block ID's {} found in "
-                               "new Scheduling Block Instance config.".
-                               format(duplicates))
-
-        # Check for duplicates of PB ids with PBs already in the DB
-        known_pb_ids = self.get_processing_block_ids()
-        duplicates = self._get_duplicates(pb_ids + known_pb_ids)
-        if duplicates:
-            raise RuntimeError("Processing Block ID's {} already in the "
-                               "database.".format(duplicates))
-
-        # Save a copy of the internal SBI configuration and PB configuration
-        # as variables on the instance of this class in order that they can
-        # be later added to the database using the `set_specified_values()`
-        # method.
-        scheduling_block_config = copy(config)
-        scheduling_block_config['processing_block_ids'] = pb_ids
-        del scheduling_block_config['processing_blocks']
-        processing_block_config = config['processing_blocks']
-
-        return scheduling_block_config, processing_block_config
+        return _scheduling_block_data, _processing_block_data

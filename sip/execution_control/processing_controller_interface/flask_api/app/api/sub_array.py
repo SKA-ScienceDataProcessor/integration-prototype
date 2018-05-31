@@ -5,10 +5,10 @@ from http import HTTPStatus
 from flask import Blueprint, request
 
 from .utils import add_scheduling_block, get_root_url
-from ..db.client import ConfigDbClient
+from ..db.client import ConfigDb
 
 BP = Blueprint('sub-array', __name__)
-DB = ConfigDbClient()
+DB = ConfigDb()
 
 
 @BP.route('/sub-array/<sub_array_id>', methods=['GET'])

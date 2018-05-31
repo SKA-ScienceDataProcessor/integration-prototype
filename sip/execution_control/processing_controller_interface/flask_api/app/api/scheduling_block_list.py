@@ -7,9 +7,9 @@ from random import choice
 from flask import Blueprint, request
 
 from .utils import add_scheduling_block, get_root_url
-from ..db.client import ConfigDbClient
+from ..db.client import ConfigDb
 
-DB = ConfigDbClient()
+DB = ConfigDb()
 BP = Blueprint("scheduling-blocks", __name__)
 LOG = logging.getLogger('SIP.PCI')
 
@@ -25,7 +25,7 @@ def get():
                     links=dict(home='{}'.format(_url)))
 
     # Get ordered list of SBI ID's.
-    block_ids = sorted(DB.get_scheduling_block_ids())
+    block_ids = sorted(DB.get_sched_block_instance_ids())
 
     # Loop over SBIs and add summary of each to the list of SBIs in the
     # response.
@@ -61,7 +61,7 @@ def get_table():
     """Provides table of scheduling block instance metadata for use with AJAX
     tables"""
     response = dict(blocks=[])
-    block_ids = DB.get_scheduling_block_ids()
+    block_ids = DB.get_sched_block_instance_ids()
     for index, block_id in enumerate(block_ids):
         block = DB.get_block_details([block_id]).__next__()
         info = [

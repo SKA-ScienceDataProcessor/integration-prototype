@@ -2,18 +2,36 @@
 """Low Level Configuration Service Client API"""
 
 import os
+from functools import wraps
+
 import redis
+import redis.exceptions
+
+REDIS_HOST = os.getenv('REDIS_HOST', 'localhost')
+REDIS_DB_ID = os.getenv('REDIS_DB_ID', 0)
+
+
+def check_connection(func):
+    """Decorator to check connection exceptions"""
+    @wraps(func)
+    def with_exception_handling(*args, **kwargs):
+        """Wrapper to check for connection failures"""
+        try:
+            return func(*args, **kwargs)
+        except redis.exceptions.ConnectionError:
+            raise ConnectionError("Unable to connect to the Redis "
+                                  "Configuration Database. host = {}, id = {}."
+                                  .format(REDIS_HOST, REDIS_DB_ID))
+    return with_exception_handling
 
 
 class ConfigDB:
-    """Configuration Client Interface"""
+    """Low level Configuration Database client"""
 
     def __init__(self):
-        """Create a connection to a configuration database"""
-        # Get Redis database object
-        host = os.getenv('REDIS_HOST', 'localhost')
-        db = os.getenv('REDIS_DB_ID', 0)
-        pool = redis.ConnectionPool(host=host, db=db, decode_responses=True)
+        """ Create a connection to a configuration database"""
+        pool = redis.ConnectionPool(host=REDIS_HOST, db=REDIS_DB_ID,
+                                    decode_responses=True)
         self._db = redis.StrictRedis(connection_pool=pool)
 
     def set_specified_values(self, name, value):
@@ -80,6 +98,7 @@ class ConfigDB:
         at destination"""
         return self._db.rpoplpush(block_event, block_history)
 
+    @check_connection
     def get_ids(self, pattern):
         """Search for the key according to the pattern"""
         return self._db.keys(pattern)

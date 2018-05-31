@@ -1,4 +1,4 @@
-version: '3'
+version: '3.6'
 
 services:
 
@@ -10,10 +10,7 @@ services:
     volumes:
       - sip_config_db:/data/db
 
-  # Redis GUI (useful for debugging)
-  # https://github.com/joeferner/redis-commander
-  # REDIS_HOSTS string format:
-  #    [label]:[hostname]:[port]:[dbIndex]:[password]
+  # Redis Commander UI
   redis-commander-db0:
     image: rediscommander/redis-commander:latest
     environment:

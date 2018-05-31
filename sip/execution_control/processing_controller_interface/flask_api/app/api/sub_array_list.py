@@ -4,10 +4,10 @@ from flask import Blueprint, request
 from flask_api import status
 
 from .utils import get_root_url
-from ..db.client import ConfigDbClient
+from ..db.client import ConfigDb
 
 BP = Blueprint('sub-array-list', __name__)
-DB = ConfigDbClient()
+DB = ConfigDb()
 
 
 @BP.route('/sub-arrays', methods=['GET'])

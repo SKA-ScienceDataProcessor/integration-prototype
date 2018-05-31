@@ -81,7 +81,7 @@ def test_get_ids(db_client):
     print(num_blocks)
 
     print("Get scheduling block ids")
-    for _id in db_client.get_scheduling_block_ids():
+    for _id in db_client.get_sched_block_instance_ids():
         print(_id)
 
     print("Get processing block ids")

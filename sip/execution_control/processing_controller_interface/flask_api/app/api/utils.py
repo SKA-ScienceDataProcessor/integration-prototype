@@ -5,9 +5,9 @@ from http import HTTPStatus
 import jsonschema
 from flask import request
 
-from ..db.client import ConfigDbClient
+from ..db.client import ConfigDb
 
-DB = ConfigDbClient()
+DB = ConfigDb()
 
 
 def get_root_url():
@@ -21,7 +21,7 @@ def get_root_url():
 def add_scheduling_block(config):
     """Adds a scheduling block to the database, returning a response object"""
     try:
-        DB.add_scheduling_block(config)
+        DB.add_sched_block_instance(config)
     except jsonschema.ValidationError as error:
         error_dict = error.__dict__
         for key in error_dict:
