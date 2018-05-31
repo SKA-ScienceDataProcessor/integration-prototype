@@ -82,13 +82,12 @@ docker run --rm --name=recv1 --restart=no --network=host vis_recv "$(< recv/spea
 docker run --rm --name=send1 --restart=no --network=host vis_send "$(< send/spead_send.json)"
 ```
 
-### Single sender and receiver using Docker Swarm
+### Single sender and receiver using Docker Swarm (local install)
 
 1\. Run the receiver:
 
 ```bash
 docker service create -d --name=recv1 --restart-condition=none \
-    --log-driver=fluentd --log-opt tag="{{.ImageName}}/{{.Name}}/{{.ID}}" \
     --stop-signal=INT --network=host vis_recv "$(< recv/spead_recv.json)"
 ```
 
@@ -96,11 +95,10 @@ docker service create -d --name=recv1 --restart-condition=none \
 
 ```bash
 docker service create -d --name=send1 --restart-condition=none \
-    --log-driver=fluentd --log-opt tag="{{.ImageName}}/{{.Name}}/{{.ID}}" \
     --stop-signal=INT --network=host vis_send "$(< send/spead_send.json)"
 ```
 
-3\. Check the logs (if not using the fluentd log driver):
+3\. Check the logs:
 
 ```bash
 docker service logs recv1
@@ -113,6 +111,35 @@ docker service logs send1
 docker service rm send1
 docker service rm recv1
 ```
+
+### Single sender and receiver using Docker Swarm (P3)
+
+
+1\. Run the receiver:
+
+```bash
+docker service create -d --name=recv1 --restart-condition=none \
+    --log-driver=fluentd --log-opt tag="{{.ImageName}}/{{.Name}}/{{.ID}}" \
+    --stop-signal=INT --network=host skasip/ingest_visibilities\
+     "$(< recv/spead_recv.json)"
+```
+
+2\. Run the sender:
+
+```bash
+docker service create -d --name=send1 --restart-condition=none \
+    --log-driver=fluentd --log-opt tag="{{.ImageName}}/{{.Name}}/{{.ID}}" \
+    --stop-signal=INT --network=host skasip/csp_vis_sender \
+     "$(< send/spead_send.json)"
+```
+
+3\. Remove the services:
+
+```bash
+docker service rm send1
+docker service rm recv1
+```
+
 
 ### Multiple senders and receivers using Docker Swarm
 
