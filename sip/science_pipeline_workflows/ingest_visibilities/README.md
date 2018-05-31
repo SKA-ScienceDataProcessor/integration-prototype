@@ -132,7 +132,7 @@ docker service create -d --name=send1 --restart-condition=none \
     --log-driver=fluentd --log-opt tag="{{.ImageName}}/{{.Name}}/{{.ID}}" \
     --constraint='node.labels.send == 01' \
     --stop-signal=INT --network=host skasip/csp_vis_sender \
-    "$(< send/spead_send.json)"
+    "$(< send/spead_send.P3.json)"
 ```
 
 3\. Remove the services:
