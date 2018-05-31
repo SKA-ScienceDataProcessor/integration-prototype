@@ -1,0 +1,19 @@
+{
+    "destination_host": "10.11.0.4",
+    "destination_port_start": 41000,
+    "heap":
+    {
+        "num_stations": 512,
+        "num_pols": 4
+    },
+    "num_streams": 10,
+    "num_workers": 4,
+    "start_channel": 0,
+    "stream_config":
+    {
+        "max_packet_size": 9172,
+        "rate": 10e6,
+        "burst_size": 1472,
+        "max_heaps": 1
+    }
+}
