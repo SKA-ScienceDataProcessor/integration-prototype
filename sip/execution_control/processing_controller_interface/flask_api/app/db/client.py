@@ -133,22 +133,17 @@ class ConfigDb:
                 _ids.append(details['id'])
         return _ids
 
-    def get_block_details(self, block_id, sort=False):
+    def get_block_details(self, block_ids):
         """Get details of scheduling or processing block
 
           Args:
-            block_id (list): List of block IDs
-            sort (bool): Set to True to sort the list
+            block_ids (list): List of block IDs
         """
 
         # Check for any duplicates
-        block_ids = set([x for x in block_id if block_id.count(x) > 0])
+        _block_ids = set([x for x in block_ids if block_ids.count(x) > 0])
 
-        if sort:
-            block_ids = sorted(block_ids)
-            print("In here")
-
-        for _id in block_ids:
+        for _id in _block_ids:
             block_name = self._db.get_block(_id)
             for name in block_name:
                 blocks = self._db.get_all_field_value(name)
