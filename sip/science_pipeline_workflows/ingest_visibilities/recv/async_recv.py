@@ -52,9 +52,12 @@ class SpeadReceiver(object):
                 items = self._item_group.update(heap)
                 if 'correlator_output_data' in items:
                     num_baselines = items['correlator_output_data'].value.shape[0]
+                    val = int(items['correlator_output_data'].value['VIS'][0][0].real)
                     logging.info("Data: {}, Length: {}".format(
                         items['correlator_output_data'].value[0],
                         num_baselines))
+                    if val >= i_block * self._config['num_buffer_times'] + self._config['num_buffer_times']:
+                        raise RuntimeError('Got time index %i - this should never happen!' % val)
             else:
                 logging.info("Dropped incomplete heap %i!", heap.cnt + 1)
 
@@ -125,7 +128,7 @@ def main():
         raise RuntimeError('Usage: python3 async_recv.py <json config>')
 
     # Set up logging.
-    logging.basicConfig(format='%(asctime)-15s %(threadName)-22s %(message)s',
+    logging.basicConfig(format='%(asctime)-15s %(name)s %(threadName)-22s %(message)s',
                         level=logging.INFO)
 
     # Load SPEAD configuration from JSON file.
