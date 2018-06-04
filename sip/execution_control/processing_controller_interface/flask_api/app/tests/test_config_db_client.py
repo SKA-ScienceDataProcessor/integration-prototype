@@ -37,11 +37,15 @@ def test_scheduling_block_list():
     assert len(DB.get_sched_block_instance_ids()) == 9
     assert sbi_id not in DB.get_sched_block_instance_ids()
 
+    # Test deleting an invalid scheduling block instance
+    with pytest.raises(RuntimeError, match=r'^Scheduling block not found'):
+        DB.delete_sched_block_instance('foo')
+    assert len(DB.get_sched_block_instance_ids()) == 9
+
     # Add a scheduling block instance with invalid config
     with pytest.raises(jsonschema.ValidationError,
-                       match="^'id' is a required"):
-        config = {}
-        DB.add_sched_block_instance(config)
+                       match=r'^\'id\' is a required'):
+        DB.add_sched_block_instance({})
     assert len(DB.get_sched_block_instance_ids()) == 9
 
     # Add a scheduling block instance with valid config
@@ -62,7 +66,7 @@ def test_scheduling_block():
     sbi_ids = DB.get_sched_block_instance_ids()
 
     # Get the block details for the first SBI
-    # FIXME(BM) Consider replacing this function with one that isnt a generator
+    # FIXME(BM) Replace this function with one that isn't a generator?
     sbi_id = sbi_ids[0]
     block = DB.get_block_details([sbi_id]).__next__()
 
@@ -70,10 +74,9 @@ def test_scheduling_block():
     assert block['id'] == sbi_id
 
     # Check that the SBI contains a list of processing blocks.
-    assert 'processing_blocks' in block
+    assert 'processing_block_ids' in block
 
-    # FIXME(BM) Sort out the types - this should be a list!
-    assert isinstance(block['processing_blocks'], str)
+    assert isinstance(block['processing_block_ids'], list)
 
 
 def test_processing_block_list():

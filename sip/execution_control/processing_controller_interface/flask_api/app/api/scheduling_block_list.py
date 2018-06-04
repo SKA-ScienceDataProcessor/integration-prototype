@@ -11,7 +11,7 @@ from ..db.client import ConfigDb
 
 DB = ConfigDb()
 BP = Blueprint("scheduling-blocks", __name__)
-LOG = logging.getLogger('SIP.PCI')
+LOG = logging.getLogger('SIP.EC.PCI')
 
 
 @BP.route('/scheduling-blocks', methods=['GET'])
@@ -25,21 +25,21 @@ def get():
                     links=dict(home='{}'.format(_url)))
 
     # Get ordered list of SBI ID's.
-    block_ids = sorted(DB.get_sched_block_instance_ids())
+    block_ids = DB.get_sched_block_instance_ids()
 
     # Loop over SBIs and add summary of each to the list of SBIs in the
     # response.
     for block in DB.get_block_details(block_ids):
         block_id = block['id']
         LOG.debug('Adding SBI %s to list', block_id)
+        LOG.debug(block)
 
         block['num_processing_blocks'] = len(block['processing_block_ids'])
-        del block['processing_block_ids']
 
         temp = ['OK'] * 10 + ['WAITING'] * 4 + ['FAILED'] * 2
         block['status'] = choice(temp)
         try:
-            del block['processing_blocks']
+            del block['processing_block_ids']
         except KeyError:
             pass
         block['links'] = {

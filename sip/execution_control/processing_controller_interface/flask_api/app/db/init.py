@@ -16,7 +16,7 @@ from jsonschema import ValidationError
 
 from .client import ConfigDb
 
-LOG = logging.getLogger('SIP.PCI.DB.utils')
+LOG = logging.getLogger('SIP.EC.PCI.DB.utils')
 
 
 def _scheduling_block_ids(num_blocks, start_id, project):

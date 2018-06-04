@@ -11,7 +11,7 @@ from jsonschema import ValidationError, validate
 from .config_db_redis import ConfigDB
 
 
-LOG = logging.getLogger('SIP.EC.CDB')
+LOG = logging.getLogger('SIP.EC.PCI.DB')
 
 
 class ConfigDb:
@@ -136,18 +136,25 @@ class ConfigDb:
     def get_block_details(self, block_ids):
         """Get details of scheduling or processing block
 
-          Args:
+        Args:
             block_ids (list): List of block IDs
         """
+        # Convert input to list if needed
+        if not hasattr(block_ids, "__iter__"):
+            block_ids = [block_ids]
 
-        # Check for any duplicates
-        _block_ids = set([x for x in block_ids if block_ids.count(x) > 0])
-
-        for _id in _block_ids:
-            block_name = self._db.get_block(_id)
-            for name in block_name:
-                blocks = self._db.get_all_field_value(name)
-                yield blocks
+        for _id in block_ids:
+            block_key = self._db.get_block(_id)[0]
+            block_data = self._db.get_all_field_value(block_key)
+            # NOTE(BM) unfortunately this doesn't quite work for keys where \
+            # the value is a python type (list, dict etc) \
+            # The following hack works for now but is probably not infallible
+            for key in block_data:
+                for char in ['[', '{']:
+                    if char in block_data[key]:
+                        block_data[key] = ast.literal_eval(
+                            str(block_data[key]))
+            yield block_data
 
     def get_latest_event(self, event_block):
         """Get the latest event added"""
@@ -175,7 +182,13 @@ class ConfigDb:
 
         Removes the Scheduling Block Instance, and all Processing Blocks
         that belong to it from the database"""
+        LOG.debug('Deleting SBI %s', block_id)
+
         scheduling_blocks = self._db.get_all_blocks(block_id)
+        if not scheduling_blocks:
+            raise RuntimeError('Scheduling block not found: {}'.
+                               format(block_id))
+
         if scheduling_blocks:
             for blocks in scheduling_blocks:
                 if "processing_block" not in blocks:
@@ -199,9 +212,9 @@ class ConfigDb:
 
         Uses Processing Block IDs
         """
+        LOG.debug("Deleting Processing Block %s ...", processing_block_id)
         processing_block = self._db.get_block(processing_block_id)
         for block in processing_block:
-            print("")
             if 'processing_block' in block:
                 self._db.delete_block(block)
 
@@ -210,12 +223,11 @@ class ConfigDb:
                 scheduling_block_details = self.get_block_details(
                     [scheduling_block_id[1]])
                 for block_details in scheduling_block_details:
-                    block_list = ast.literal_eval(
-                        block_details['processing_blocks'])
+                    block_list = block_details['processing_block_ids']
                     if processing_block_id in block_list:
                         block_list.remove(processing_block_id)
                     self.update_value(scheduling_block_id[1],
-                                      'processing_blocks', block_list)
+                                      'processing_block_ids', block_list)
 
                 # Add a event to the processing block event list to notify
                 # about deleting from the db
@@ -284,6 +296,6 @@ class ConfigDb:
         # Adding processing block id to the scheduling block list
         for block_id in _processing_block_data:
             _processing_block_id.append(block_id['id'])
-        _scheduling_block_data['processing_blocks'] = _processing_block_id
+        _scheduling_block_data['processing_block_ids'] = _processing_block_id
 
         return _scheduling_block_data, _processing_block_data

@@ -10,7 +10,7 @@ from ..db.client import ConfigDb
 
 BP = Blueprint('processing-blocks', __name__)
 DB = ConfigDb()
-LOG = logging.getLogger('SIP.PCI')
+LOG = logging.getLogger('SIP.EC.PCI')
 
 
 @BP.route('/processing-blocks', methods=['GET'])

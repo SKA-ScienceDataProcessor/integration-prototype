@@ -10,7 +10,7 @@ from ..db.client import ConfigDb
 
 BP = Blueprint('scheduling-block', __name__)
 DB = ConfigDb()
-LOG = logging.getLogger('SIP.PCI')
+LOG = logging.getLogger('SIP.EC.PCI')
 
 
 @BP.route('/scheduling-block/<block_id>', methods=['GET'])
@@ -41,9 +41,13 @@ def delete(block_id):
     """Scheduling block detail resource."""
     _url = get_root_url()
     LOG.debug('Requested delete of SBI %s', block_id)
-    DB.delete_sched_block_instance(block_id)
-    response = dict(message='Deleted block: _id = {}'.format(block_id))
-    response['_links'] = {
-        'list': '{}/scheduling-blocks'.format(_url)
-    }
-    return response, HTTPStatus.OK
+    try:
+        DB.delete_sched_block_instance(block_id)
+        response = dict(message='Deleted block: _id = {}'.format(block_id))
+        response['_links'] = {
+            'list': '{}/scheduling-blocks'.format(_url)
+        }
+        return response, HTTPStatus.OK
+    except RuntimeError as error:
+        return dict(error=str(error)), HTTPStatus.BAD_REQUEST
+

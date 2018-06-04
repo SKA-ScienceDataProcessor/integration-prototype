@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 """Scheduling blocks route"""
+import logging
 from http import HTTPStatus
 
 from flask import Blueprint, request
@@ -11,6 +12,7 @@ from ..db.client import ConfigDb
 
 BP = Blueprint('processing-block', __name__)
 DB = ConfigDb()
+LOG = logging.getLogger('SIP.EC.PCI')
 
 
 @BP.route('/processing-block/<block_id>', methods=['GET'])

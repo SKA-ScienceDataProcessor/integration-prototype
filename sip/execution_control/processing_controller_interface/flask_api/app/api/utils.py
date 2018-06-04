@@ -30,14 +30,13 @@ def add_scheduling_block(config):
                               reason="JSON validation error",
                               details=error_dict)
         return error_response, HTTPStatus.BAD_REQUEST
-    response = config
+    response = dict(config=config,
+                    message='Successfully registered scheduling block ' 
+                            'instance with ID: {}'.format(config['id']))
     response['links'] = {
         'self': '{}scheduling-block/{}'.format(request.url_root,
                                                config['id']),
-        'next': 'TODO',
-        'previous': 'TODO',
         'list': '{}'.format(request.url),
         'home': '{}'.format(request.url_root)
     }
-    response = []
     return response, HTTPStatus.ACCEPTED

@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 """Sub array route"""
+import logging
 from http import HTTPStatus
+import re
 
 from flask import Blueprint, request
 
@@ -9,6 +11,7 @@ from ..db.client import ConfigDb
 
 BP = Blueprint('sub-array', __name__)
 DB = ConfigDb()
+LOG = logging.getLogger('SIP.EC.PCI')
 
 
 @BP.route('/sub-array/<sub_array_id>', methods=['GET'])
@@ -18,6 +21,18 @@ def _get(sub_array_id):
     This method will list scheduling blocks and processing blocks
     in the specified sub-array.
     """
+    if not re.match(r'^subarray-0[0-9]|subarray-1[0-5]$', sub_array_id):
+        response = dict(error='Invalid sub-array ID specified "{}" does not '
+                              'match sub-array ID naming convention '
+                              '(ie. subarray-[00-15]).'.
+                        format(sub_array_id))
+        return response, HTTPStatus.BAD_REQUEST
+    if sub_array_id not in DB.get_sub_array_ids():
+        response = dict(error='Sub-array "{}" does not currently exist. '
+                              'Known sub-arrays = {}'
+                        .format(sub_array_id, DB.get_sub_array_ids()))
+        return response, HTTPStatus.NOT_FOUND
+
     block_ids = DB.get_sub_array_sbi_ids(sub_array_id)
     _blocks = [b for b in DB.get_block_details(block_ids)]
     response = dict(scheduling_blocks=[])
