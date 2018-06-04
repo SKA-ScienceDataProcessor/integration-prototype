@@ -101,8 +101,6 @@ def test_processing_block():
     assert pb_config['id'] == pb_id
 
 
-
-
 def test_sub_array_list():
     """Test functions getting information on the current set of sub-arrays."""
 

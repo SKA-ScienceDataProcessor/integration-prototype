@@ -68,7 +68,6 @@ class ConfigDb:
                                     value["status"],
                                     value["id"])
         except ValidationError:
-            print("Schema Validation Error")
             raise
 
     # #########################################################################
