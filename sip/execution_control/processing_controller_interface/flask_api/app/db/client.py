@@ -88,7 +88,7 @@ class ConfigDb:
             if 'processing_block' not in block_id:
                 id_split = block_id.split(':')[-1]
                 scheduling_block_ids.append(id_split)
-        return scheduling_block_ids
+        return sorted(scheduling_block_ids)
 
     def get_processing_block_ids(self):
         """Get list of processing block ids using the processing block id"""
@@ -103,7 +103,7 @@ class ConfigDb:
         for block_id in block_ids:
             id_split = block_id.split(':')[-1]
             _processing_block_ids.append(id_split)
-        return _processing_block_ids
+        return sorted(_processing_block_ids)
 
     def get_num_processing_block_ids(self):
         """"Get number of processing block ids"""
@@ -121,6 +121,7 @@ class ConfigDb:
         block_details = self.get_block_details(_scheduling_block_ids)
         for details in block_details:
             _sub_array_ids.append(details['sub_array_id'])
+        _sub_array_ids = sorted(list(set(_sub_array_ids)))
         return _sub_array_ids
 
     def get_sub_array_sbi_ids(self, sub_array_id):
@@ -130,7 +131,7 @@ class ConfigDb:
         for details in self.get_block_details(sbi_ids):
             if details['sub_array_id'] == sub_array_id:
                 _ids.append(details['id'])
-        return _ids
+        return sorted(_ids)
 
     def get_block_details(self, block_ids):
         """Get details of scheduling or processing block

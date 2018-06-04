@@ -42,7 +42,8 @@ def _scheduling_block_config(num_blocks=5, start_sbi_id=0, start_pb_id=0,
                              project='sip'):
     """Return a Scheduling Block Configuration dictionary"""
     pb_id = start_pb_id
-    for sb_id, sbi_id in _scheduling_block_ids(num_blocks, start_sbi_id, project):
+    for sb_id, sbi_id in _scheduling_block_ids(num_blocks, start_sbi_id,
+                                               project):
         sub_array_id = 'subarray-{:02d}'.format(random.choice(range(5)))
         config = dict(id=sbi_id,
                       sched_block_id=sb_id,
