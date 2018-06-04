@@ -172,7 +172,7 @@ class SpeadSender(object):
             send_tasks = None
             if self._i_time > 0:
                 i_buffer = (self._i_time - 1) % 2
-                #logging.info('Sending buffer %i', i_buffer)
+                # logging.info('Sending buffer %i', i_buffer)
                 sends = []
                 for i_stream, (stream, item_group) in enumerate(self._streams):
                     item_group['correlator_output_data'].value = \
@@ -187,7 +187,8 @@ class SpeadSender(object):
                                 for i_stream in range(num_streams)]
 
             # Ensure processing tasks and previous asynchronous sends are done.
-            #logging.info('Filling buffer %i (time %i)', i_buffer, self._i_time)
+            # logging.info('Filling buffer %i (time %i)', i_buffer,
+            #              self._i_time)
             await asyncio.wait(processing_tasks)
             if send_tasks:
                 await send_tasks
@@ -203,7 +204,7 @@ class SpeadSender(object):
 
         # Run the event loop.
         loop = asyncio.get_event_loop()
-        t1 = time.time()
+        timer1 = time.time()
         try:
             loop.run_until_complete(self._run_loop(executor))
         except KeyboardInterrupt:
@@ -217,15 +218,15 @@ class SpeadSender(object):
             logging.info('... finished.')
             executor.shutdown()
             # loop.close()  # Not required.
-        t2 = time.time()
+        timer2 = time.time()
 
         # Report time taken and number of heaps sent.
         if self._i_time > 0:
             num_heaps_sent = (self._i_time + 1) * len(self._streams)
             heap_size = 1e-6 * (self._num_baselines * self._num_pols * 10)
             logging.info('Sent %i heaps in %.3f sec (%.3f MB/s)',
-                         num_heaps_sent, t2 - t1,
-                         num_heaps_sent * heap_size / (t2 - t1))
+                         num_heaps_sent, timer2 - timer1,
+                         num_heaps_sent * heap_size / (timer2 - timer1))
 
 
 def main():

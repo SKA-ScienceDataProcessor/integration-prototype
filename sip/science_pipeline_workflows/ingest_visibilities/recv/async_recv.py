@@ -51,13 +51,18 @@ class SpeadReceiver(object):
             if isinstance(heap, spead2.recv.Heap):
                 items = self._item_group.update(heap)
                 if 'correlator_output_data' in items:
-                    num_baselines = items['correlator_output_data'].value.shape[0]
-                    val = int(items['correlator_output_data'].value['VIS'][0][0].real)
+                    num_baselines = items['correlator_output_data'] \
+                        .value.shape[0]
+                    val = int(items['correlator_output_data']
+                              .value['VIS'][0][0].real)
+                    # pylint: disable=logging-format-interpolation
                     logging.info("Data: {}, Length: {}".format(
                         items['correlator_output_data'].value[0],
                         num_baselines))
-                    if val >= i_block * self._config['num_buffer_times'] + self._config['num_buffer_times']:
-                        raise RuntimeError('Got time index %i - this should never happen!' % val)
+                    if (val >= i_block * self._config['num_buffer_times'] +
+                            self._config['num_buffer_times']):
+                        raise RuntimeError('Got time index %i - this '
+                                           'should never happen!' % val)
             else:
                 logging.info("Dropped incomplete heap %i!", heap.cnt + 1)
 
@@ -93,7 +98,8 @@ class SpeadReceiver(object):
                         loop.create_task(stream.get(loop=loop)))
             receive_buffer[i_buffer_recv] = asyncio.gather(*receive_tasks)
 
-            # Ensure asynchronous receives and previous processing tasks are done.
+            # Ensure asynchronous receives and previous processing tasks are
+            # done.
             await receive_buffer[i_buffer_recv]
             if processing_tasks:
                 await processing_tasks
@@ -128,7 +134,8 @@ def main():
         raise RuntimeError('Usage: python3 async_recv.py <json config>')
 
     # Set up logging.
-    logging.basicConfig(format='%(asctime)-15s %(name)s %(threadName)-22s %(message)s',
+    logging.basicConfig(format='%(asctime)-15s %(name)s %(threadName)-22s'
+                               ' %(message)s',
                         level=logging.INFO)
 
     # Load SPEAD configuration from JSON file.
