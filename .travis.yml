@@ -4,7 +4,7 @@ language: python
 
 env:
   - SIP_PCI_LOG_LEVEL=NOTSET
-  - DOCKER_COMPOSE_VERSION=1.4.2
+  - DOCKER_COMPOSE_VERSION=1.21.2
 
 services:
   - docker
