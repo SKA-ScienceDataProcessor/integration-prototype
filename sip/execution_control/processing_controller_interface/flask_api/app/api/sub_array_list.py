@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 """Sub array route"""
 import logging
-from http import HTTPStatus
 
 from flask import Blueprint, request
 from flask_api import status
