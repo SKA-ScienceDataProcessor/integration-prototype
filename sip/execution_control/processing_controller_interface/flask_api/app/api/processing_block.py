@@ -5,7 +5,7 @@ from http import HTTPStatus
 
 from flask import Blueprint, request
 
-from .utils import get_root_url
+from .utils import get_root_url, missing_db_response
 from ..db.client import ConfigDb
 
 
@@ -15,6 +15,7 @@ LOG = logging.getLogger('SIP.EC.PCI')
 
 
 @BP.route('/processing-block/<block_id>', methods=['GET'])
+@missing_db_response
 def get(block_id):
     """Processing block detail resource."""
     _url = get_root_url()
@@ -40,6 +41,7 @@ def get(block_id):
 
 
 @BP.route('/processing-block/<block_id>', methods=['DELETE'])
+@missing_db_response
 def delete(block_id):
     """Processing block detail resource."""
     _url = get_root_url()

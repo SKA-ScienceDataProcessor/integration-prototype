@@ -6,7 +6,7 @@ from random import choice
 
 from flask import Blueprint, request
 
-from .utils import add_scheduling_block, get_root_url
+from .utils import add_scheduling_block, get_root_url, missing_db_response
 from ..db.client import ConfigDb
 
 
@@ -16,6 +16,7 @@ DB = ConfigDb()
 
 
 @BP.route('/scheduling-blocks', methods=['GET'])
+@missing_db_response
 def get():
     """Return list of Scheduling Blocks Instances known to SDP ."""
     LOG.debug('GET list of SBIs.')
@@ -26,36 +27,32 @@ def get():
                     links=dict(home='{}'.format(_url)))
 
     # Get ordered list of SBI ID's.
-    try:
-        block_ids = DB.get_sched_block_instance_ids()
+    block_ids = DB.get_sched_block_instance_ids()
 
-        # Loop over SBIs and add summary of each to the list of SBIs in the
-        # response.
-        for block in DB.get_block_details(block_ids):
-            block_id = block['id']
-            LOG.debug('Adding SBI %s to list', block_id)
-            LOG.debug(block)
+    # Loop over SBIs and add summary of each to the list of SBIs in the
+    # response.
+    for block in DB.get_block_details(block_ids):
+        block_id = block['id']
+        LOG.debug('Adding SBI %s to list', block_id)
+        LOG.debug(block)
 
-            block['num_processing_blocks'] = len(block['processing_block_ids'])
+        block['num_processing_blocks'] = len(block['processing_block_ids'])
 
-            temp = ['OK'] * 10 + ['WAITING'] * 4 + ['FAILED'] * 2
-            block['status'] = choice(temp)
-            try:
-                del block['processing_block_ids']
-            except KeyError:
-                pass
-            block['links'] = {
-                'detail': '{}/scheduling-block/{}' .format(_url, block_id)
-            }
-            response['scheduling_blocks'].append(block)
-        return response, HTTPStatus.OK
-    except ConnectionError as error:
-        return dict(error='Unable to connect to Configuration Db.',
-                    error_message=str(error)), \
-               HTTPStatus.NOT_FOUND
+        temp = ['OK'] * 10 + ['WAITING'] * 4 + ['FAILED'] * 2
+        block['status'] = choice(temp)
+        try:
+            del block['processing_block_ids']
+        except KeyError:
+            pass
+        block['links'] = {
+            'detail': '{}/scheduling-block/{}' .format(_url, block_id)
+        }
+        response['scheduling_blocks'].append(block)
+    return response, HTTPStatus.OK
 
 
 @BP.route('/scheduling-blocks', methods=['POST'])
+@missing_db_response
 def create():
     """Create / register a Scheduling Block instance with SDP."""
     config = request.data
@@ -63,6 +60,7 @@ def create():
 
 
 @BP.route('/scheduling-blocks/table')
+@missing_db_response
 def get_table():
     """Provides table of scheduling block instance metadata for use with AJAX
     tables"""

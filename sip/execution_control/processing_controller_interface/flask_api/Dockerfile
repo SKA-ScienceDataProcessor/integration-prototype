@@ -20,10 +20,4 @@ EXPOSE 5000
 HEALTHCHECK --interval=15s --timeout=2s --start-period=5s --retries=2 \
     CMD curl -f http://localhost:5000/api/v1/health || exit 1
 
-ENV FLASK_APP app/app.py
-ENV FLASK_DEBUG True
-ENV SIP_PCI_LOG_LEVEL DEBUG
-ENTRYPOINT ["flask", "run", "--host=0.0.0.0", "--port=5000"]
-
-# ENTRYPOINT ["gunicorn", "-b", "0.0.0.0:5000", "app.app:APP"]
-
+ENTRYPOINT ["gunicorn", "-b", "0.0.0.0:5000", "app.app:APP"]

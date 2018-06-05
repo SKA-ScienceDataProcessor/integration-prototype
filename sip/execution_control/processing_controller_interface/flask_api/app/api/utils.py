@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 """Utility functions used for the Flask Processing Controller Interface"""
 from http import HTTPStatus
+from functools import wraps
 
 import jsonschema
 from flask import request
@@ -40,3 +41,18 @@ def add_scheduling_block(config):
         'home': '{}'.format(request.url_root)
     }
     return response, HTTPStatus.ACCEPTED
+
+
+def missing_db_response(func):
+    """Decorator to check connection exceptions"""
+    @wraps(func)
+    def with_exception_handling(*args, **kwargs):
+        """Wrapper to check for connection failures"""
+        try:
+            return func(*args, **kwargs)
+        except ConnectionError as error:
+            return (dict(error='Unable to connect to Configuration Db.',
+                         error_message=str(error),
+                         links=dict(api_root='{}'.format(get_root_url()))),
+                    HTTPStatus.NOT_FOUND)
+    return with_exception_handling

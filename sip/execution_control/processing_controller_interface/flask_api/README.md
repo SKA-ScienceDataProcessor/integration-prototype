@@ -155,8 +155,9 @@ python3 -m app.db.init [number of scheduling blocks, default==3]
 
 ## Testing
 
-A number of unit tests are provided with this module, these can be run with 
-the following commands:
+A number of unit tests are provided with this module. These assume that a 
+Redis Database container exists (see instructions above). Unit tests can then
+be run with the following commands:
 
 ```bash
 virtualenv -p python3 venv

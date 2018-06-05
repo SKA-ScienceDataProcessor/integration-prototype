@@ -89,6 +89,7 @@ class ConfigDB:
         key_search = '*' + block_id + '*'
         return self._db.keys(key_search)
 
+    @check_connection
     def get_block(self, block_id):
         """Search for keys associated with the block id"""
         key_search = '*' + block_id

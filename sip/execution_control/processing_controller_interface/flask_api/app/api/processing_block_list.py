@@ -5,7 +5,7 @@ from http import HTTPStatus
 
 from flask import Blueprint, request
 
-from .utils import get_root_url
+from .utils import get_root_url, missing_db_response
 from ..db.client import ConfigDb
 
 BP = Blueprint('processing-blocks', __name__)
@@ -14,16 +14,18 @@ LOG = logging.getLogger('SIP.EC.PCI')
 
 
 @BP.route('/processing-blocks', methods=['GET'])
+@missing_db_response
 def get():
     """Return the list of Processing Blocks known to SDP."""
 
+    LOG.debug('GET Processing Block list')
+    _url = get_root_url()
+
     # Get list of Processing block Ids
     block_ids = sorted(DB.get_processing_block_ids())
-    LOG.debug('GET Processing Block list')
     LOG.debug('Processing Block IDs: %s', block_ids)
 
     # Construct response object
-    _url = get_root_url()
     response = dict(num_processing_blocks=len(block_ids),
                     processing_blocks=list())
 

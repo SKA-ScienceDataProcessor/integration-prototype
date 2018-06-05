@@ -17,6 +17,7 @@ def root():
         "links": {
             "message": "Welcome to the SIP Processing Controller interface",
             "items": [
+                {"href": "{}health".format(request.url)},
                 {"href": "{}scheduling-blocks".format(request.url)},
                 {"href": "{}processing-blocks".format(request.url)},
                 {"href": "{}sub-arrays".format(request.url)}

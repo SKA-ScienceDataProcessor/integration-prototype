@@ -6,7 +6,7 @@ import re
 
 from flask import Blueprint, request
 
-from .utils import add_scheduling_block, get_root_url
+from .utils import add_scheduling_block, get_root_url, missing_db_response
 from ..db.client import ConfigDb
 
 BP = Blueprint('sub-array', __name__)
@@ -15,6 +15,7 @@ LOG = logging.getLogger('SIP.EC.PCI')
 
 
 @BP.route('/sub-array/<sub_array_id>', methods=['GET'])
+@missing_db_response
 def _get(sub_array_id):
     """Sub array detail resource.
 
@@ -51,6 +52,7 @@ def _get(sub_array_id):
 
 
 @BP.route('/sub-array/<sub_array_id>', methods=['POST'])
+@missing_db_response
 def _create(sub_array_id):
     """Create / register a Scheduling Block instance with SDP."""
     config = request.data
@@ -59,6 +61,7 @@ def _create(sub_array_id):
 
 
 @BP.route('/sub-array/<sub_array_id>/scheduling-blocks', methods=['GET'])
+@missing_db_response
 def _get_scheduling_blocks(sub_array_id):
     """Return the list of scheduling blocks instances associated with the sub
     array"""
@@ -68,6 +71,7 @@ def _get_scheduling_blocks(sub_array_id):
 
 @BP.route('/sub-array/<sub_array_id>/scheduling-block/<block_id>',
           methods=['GET'])
+@missing_db_response
 def _get_scheduling_block(sub_array_id, block_id):
     """Return the list of scheduling blocks instances associated with the sub
     array"""

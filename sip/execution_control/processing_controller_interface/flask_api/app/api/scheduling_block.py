@@ -5,7 +5,7 @@ from http import HTTPStatus
 
 from flask import Blueprint
 
-from .utils import get_root_url
+from .utils import get_root_url, missing_db_response
 from ..db.client import ConfigDb
 
 BP = Blueprint('scheduling-block', __name__)
@@ -14,6 +14,7 @@ LOG = logging.getLogger('SIP.EC.PCI')
 
 
 @BP.route('/scheduling-block/<block_id>', methods=['GET'])
+@missing_db_response
 def get(block_id):
     """Scheduling block detail resource."""
     try:
@@ -37,6 +38,7 @@ def get(block_id):
 
 
 @BP.route('/scheduling-block/<block_id>', methods=['DELETE'])
+@missing_db_response
 def delete(block_id):
     """Scheduling block detail resource."""
     _url = get_root_url()
