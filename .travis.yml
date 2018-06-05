@@ -60,7 +60,7 @@ before_script:
   - (cd sip && pylint --rcfile=../.pylintrc execution_frameworks || echo "FAIL")
   - (cd sip && pylint --rcfile=../.pylintrc science_pipeline_workflows || echo "FAIL")
   # Run pytest with pylint and pycodestyle for the PCI flask app
-  - py.test --pylint --codestyle -s -v --durations=3 --pylint-rcfile=.pylintrc sip/execution_control/processing_controller_interface/flask_api
+  - SIP_PCI_LOG_LEVEL=NOTSET && py.test --pylint --codestyle -s -v --durations=3 --pylint-rcfile=.pylintrc sip/execution_control/processing_controller_interface/flask_api
 
 script:
   - echo "Build script"
