@@ -13,6 +13,7 @@ import pytest
 from ..db.client import ConfigDb
 from ..db.init import add_scheduling_blocks
 
+
 DB = ConfigDb()
 
 
@@ -137,7 +138,7 @@ def test_processing_block_list():
 
 def test_processing_block():
     """Test functions getting details of a Processing Block."""
-    add_scheduling_blocks(50, clear=True)
+    add_scheduling_blocks(20, clear=True)
     pb_ids = DB.get_processing_block_ids()
     assert pb_ids
     pb_id = random.choice(pb_ids)
@@ -155,7 +156,7 @@ def test_processing_block():
 def test_sub_array_list():
     """Test functions getting information on the current set of sub-arrays."""
     # Reset the database adding 100 SBIs
-    add_scheduling_blocks(50, clear=True)
+    add_scheduling_blocks(20, clear=True)
 
     # Get the list of sub-array ids
     subarray_ids = DB.get_sub_array_ids()

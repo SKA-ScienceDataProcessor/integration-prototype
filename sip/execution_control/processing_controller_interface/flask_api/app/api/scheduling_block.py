@@ -50,4 +50,3 @@ def delete(block_id):
         return response, HTTPStatus.OK
     except RuntimeError as error:
         return dict(error=str(error)), HTTPStatus.BAD_REQUEST
-

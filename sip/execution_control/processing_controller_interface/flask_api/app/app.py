@@ -2,6 +2,7 @@
 """SIP Processing Controller Interface (REST)"""
 import logging
 from http import HTTPStatus
+import os
 
 from flask import request
 from flask_cors import CORS
@@ -36,9 +37,17 @@ def home():
         HTTPStatus.OK
 
 
+@APP.route('/<path:path>')
+def catch_all(path):
+    """Catch all path - return a JSON 404 """
+    return (dict(error='Invalid URL: /{}'.format(path),
+                 links=dict(api='{}{}'.format(request.url_root, PREFIX[1:]))),
+            HTTPStatus.NOT_FOUND)
+
+
 LOG = logging.getLogger('SIP')
 _HANDLER = logging.StreamHandler()
 _HANDLER.setFormatter(logging.Formatter(
     '%(name)s(%(levelname).6s) %(message)s'))
 LOG.addHandler(_HANDLER)
-LOG.setLevel(logging.DEBUG)
+LOG.setLevel(os.getenv('SIP_PCI_LOG_LEVEL', 'WARN'))

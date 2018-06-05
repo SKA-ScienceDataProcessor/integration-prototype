@@ -7,6 +7,7 @@ services:
     environment:
       REDIS_HOST: "redis://config_db"
       REDIS_DB_ID: 0
+      SIP_PCI_LOG_LEVEL: 'DEBUG'
     ports:
       - 5000
     build: .

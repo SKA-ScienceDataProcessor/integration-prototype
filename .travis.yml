@@ -22,10 +22,17 @@ before_install:
 install:
   - pip install pylint>=1.9.0
   - pip install pycodestyle>=2.4.0
+  - pip install pytest>=3.5.1
+  - pip install pytest-codestyle>=1.2.2
+  - pip install pytest-pylint>=0.9.0
   - pip install spead2>=1.7.2
   - pip install redis>=2.10.6
   - pip install jsonschema>=2.6.0
   - pip install simplejson>=3.15.0
+
+
+env:
+  - SIP_PCI_LOG_LEVEL=NOTSET
 
 before_script:
   # Run pycodestyle
@@ -38,6 +45,8 @@ before_script:
   - (cd sip && pylint --rcfile=../.pylintrc execution_framework_interface || echo "FAIL")
   - (cd sip && pylint --rcfile=../.pylintrc execution_frameworks || echo "FAIL")
   - (cd sip && pylint --rcfile=../.pylintrc science_pipeline_workflows || echo "FAIL")
+  # Run pytest with pylint and pycodestyle for the PCI flask app
+  - py.test --pylint --codestyle -s -v --durations=3 --pylint-rcfile=.pylintrc sip/execution_control/processing_controller_interface/flask_api
 
 script:
   - echo "Build script"

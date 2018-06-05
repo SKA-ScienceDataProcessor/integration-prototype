@@ -214,6 +214,10 @@ class ConfigDb:
         """
         LOG.debug("Deleting Processing Block %s ...", processing_block_id)
         processing_block = self._db.get_block(processing_block_id)
+        if not processing_block:
+            raise RuntimeError('Invalid Processing Block ID: {}'
+                               .format(processing_block_id))
+
         for block in processing_block:
             if 'processing_block' in block:
                 self._db.delete_block(block)

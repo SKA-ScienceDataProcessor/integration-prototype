@@ -9,7 +9,10 @@ BP = Blueprint('Processing Controller:', __name__)
 
 @BP.route('/', methods=['GET'])
 def root():
-    """."""
+    """Placeholder root url for the PCI.
+
+    Ideally this should never be called!
+    """
     response = {
         "links": {
             "message": "Welcome to the SIP Processing Controller interface",

@@ -46,7 +46,7 @@ To start the Docker Containers needed to run this service during development on
 a local Docker engine:
 
 ```bash
-docker-compose -f docker-compose.yml -f docker-compose.dev.yml up -d
+docker-compose -f docker-compose.dev.yml up -d
 ```
 
 This can also be run using Docker Swarm mode with the following command:
@@ -79,7 +79,8 @@ using the following commands:
 ```bash
 export FLASK_APP=app/app.py
 export FLASK_DEBUG=True
-flask run --host=0.0.0.0 --port=5001
+export SIP_PCI_LOG_LEVEL='DEBUG'
+flask run --host=0.0.0.0 --port=5000
 ```
 
 ### Utility Scripts
@@ -95,7 +96,21 @@ it with a set of randomly created Scheduling Block Instance data structures.
 This can be run with the command:
 
 ```bash
-python3 -m app.db.init
+python3 -m app.db.init [number of scheduling blocks, default==3]
 ```
 
 
+## Unit tests
+
+Run with:
+
+```bash
+export SIP_PCI_LOG_LEVEL='NOTSET'
+pytest [-s] [-vv] app/tests [-k filer]
+```
+
+```bash
+export SIP_PCI_LOG_LEVEL='NOTSET'
+pip3 install pytest-pylint
+py.test --pylint --codestyle -s -vv --pylint-rcfile=../../../../.pylintrc
+```
