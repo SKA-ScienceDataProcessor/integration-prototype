@@ -3,6 +3,7 @@
 import logging
 from http import HTTPStatus
 import os
+import sys
 
 from flask import request
 from flask_cors import CORS
@@ -16,6 +17,16 @@ from .api.scheduling_block import BP as SCHEDULING_BLOCK
 from .api.scheduling_block_list import BP as SCHEDULING_BLOCK_LIST
 from .api.sub_array import BP as SUB_ARRAY
 from .api.sub_array_list import BP as SUB_ARRAY_LIST
+
+
+LOG = logging.getLogger('SIP.EC.PCI')
+HANDLER = logging.StreamHandler(stream=sys.stdout)
+HANDLER.setFormatter(logging.Formatter(
+    '%(name)s(%(levelname).6s) %(message)s'))
+HANDLER.setLevel(os.getenv('SIP_PCI_LOG_LEVEL', 'WARN'))
+LOG.addHandler(HANDLER)
+LOG.setLevel(os.getenv('SIP_PCI_LOG_LEVEL', 'WARN'))
+
 
 APP = FlaskAPI(__name__)
 CORS(APP, resources={r"/api/*": {"origins": "*"}})
@@ -43,11 +54,3 @@ def catch_all(path):
     return (dict(error='Invalid URL: /{}'.format(path),
                  links=dict(api='{}{}'.format(request.url_root, PREFIX[1:]))),
             HTTPStatus.NOT_FOUND)
-
-
-LOG = logging.getLogger('SIP')
-_HANDLER = logging.StreamHandler()
-_HANDLER.setFormatter(logging.Formatter(
-    '%(name)s(%(levelname).6s) %(message)s'))
-LOG.addHandler(_HANDLER)
-LOG.setLevel(os.getenv('SIP_PCI_LOG_LEVEL', 'WARN'))

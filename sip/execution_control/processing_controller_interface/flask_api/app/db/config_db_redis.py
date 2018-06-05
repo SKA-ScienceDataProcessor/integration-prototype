@@ -3,12 +3,16 @@
 
 import os
 from functools import wraps
+import logging
 
 import redis
 import redis.exceptions
 
+
+LOG = logging.getLogger('SIP.EC.PCI.DB')
 REDIS_HOST = os.getenv('REDIS_HOST', 'localhost')
 REDIS_DB_ID = os.getenv('REDIS_DB_ID', 0)
+REDIS_PORT = os.getenv('REDIS_PORT', 6379)
 
 
 def check_connection(func):
@@ -20,8 +24,9 @@ def check_connection(func):
             return func(*args, **kwargs)
         except redis.exceptions.ConnectionError:
             raise ConnectionError("Unable to connect to the Redis "
-                                  "Configuration Database. host = {}, id = {}."
-                                  .format(REDIS_HOST, REDIS_DB_ID))
+                                  "Configuration Database. host = {}, "
+                                  "port = {}, id = {}."
+                                  .format(REDIS_HOST, REDIS_PORT, REDIS_DB_ID))
     return with_exception_handling
 
 
@@ -30,8 +35,10 @@ class ConfigDB:
 
     def __init__(self):
         """ Create a connection to a configuration database"""
+        LOG.debug("Creating connection pool with host = [%s], id = [%s], "
+                  "port= %s", REDIS_HOST, REDIS_DB_ID, REDIS_PORT)
         pool = redis.ConnectionPool(host=REDIS_HOST, db=REDIS_DB_ID,
-                                    decode_responses=True)
+                                    port=REDIS_PORT, decode_responses=True)
         self._db = redis.StrictRedis(connection_pool=pool)
 
     def set_specified_values(self, name, value):

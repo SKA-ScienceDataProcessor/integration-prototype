@@ -12,6 +12,7 @@ services:
   redis-commander-db0:
     image: rediscommander/redis-commander:latest
     environment:
-    - REDIS_HOSTS=config_db:config_db:6379:0
+    # REDIS_HOSTS=label:hostname:port:db_index
+    - REDIS_HOSTS=db:config_db:6379:0
     ports:
     - 8081:8081

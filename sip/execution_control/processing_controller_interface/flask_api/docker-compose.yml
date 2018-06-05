@@ -2,13 +2,25 @@ version: '3.6'
 
 services:
 
+  # PCI service
   pci_flask:
-    image: skasip/pci_flask
+    image: skasip/pci_flask:latest
     environment:
-      REDIS_HOST: "redis://config_db"
-      REDIS_DB_ID: 0
-      SIP_PCI_LOG_LEVEL: 'DEBUG'
+      - SIP_PCI_LOG_LEVEL=DEBUG
+      - REDIS_HOST=config_db
+      - REDIS_PORT=6379
+      - REDIS_DB_ID=0
     ports:
-      - 5000
+      - 5000:5000
+    volumes:
+      - sip_config_db:/data/db
     build: .
 
+  # Local development Configuration Database service
+  config_db:
+    image: redis:4.0.6-alpine
+    ports:
+      - 6379:6379
+
+volumes:
+  sip_config_db:

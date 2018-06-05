@@ -9,9 +9,10 @@ from flask import Blueprint, request
 from .utils import add_scheduling_block, get_root_url
 from ..db.client import ConfigDb
 
-DB = ConfigDb()
+
 BP = Blueprint("scheduling-blocks", __name__)
 LOG = logging.getLogger('SIP.EC.PCI')
+DB = ConfigDb()
 
 
 @BP.route('/scheduling-blocks', methods=['GET'])
@@ -25,28 +26,33 @@ def get():
                     links=dict(home='{}'.format(_url)))
 
     # Get ordered list of SBI ID's.
-    block_ids = DB.get_sched_block_instance_ids()
+    try:
+        block_ids = DB.get_sched_block_instance_ids()
 
-    # Loop over SBIs and add summary of each to the list of SBIs in the
-    # response.
-    for block in DB.get_block_details(block_ids):
-        block_id = block['id']
-        LOG.debug('Adding SBI %s to list', block_id)
-        LOG.debug(block)
+        # Loop over SBIs and add summary of each to the list of SBIs in the
+        # response.
+        for block in DB.get_block_details(block_ids):
+            block_id = block['id']
+            LOG.debug('Adding SBI %s to list', block_id)
+            LOG.debug(block)
 
-        block['num_processing_blocks'] = len(block['processing_block_ids'])
+            block['num_processing_blocks'] = len(block['processing_block_ids'])
 
-        temp = ['OK'] * 10 + ['WAITING'] * 4 + ['FAILED'] * 2
-        block['status'] = choice(temp)
-        try:
-            del block['processing_block_ids']
-        except KeyError:
-            pass
-        block['links'] = {
-            'detail': '{}/scheduling-block/{}' .format(_url, block_id)
-        }
-        response['scheduling_blocks'].append(block)
-    return response, HTTPStatus.OK
+            temp = ['OK'] * 10 + ['WAITING'] * 4 + ['FAILED'] * 2
+            block['status'] = choice(temp)
+            try:
+                del block['processing_block_ids']
+            except KeyError:
+                pass
+            block['links'] = {
+                'detail': '{}/scheduling-block/{}' .format(_url, block_id)
+            }
+            response['scheduling_blocks'].append(block)
+        return response, HTTPStatus.OK
+    except ConnectionError as error:
+        return dict(error='Unable to connect to Configuration Db.',
+                    error_message=str(error)), \
+               HTTPStatus.NOT_FOUND
 
 
 @BP.route('/scheduling-blocks', methods=['POST'])

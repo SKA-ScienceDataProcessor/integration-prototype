@@ -79,12 +79,13 @@ def add_scheduling_blocks(num_blocks, clear=True):
 
 def main():
     """Main function"""
-    _log = logging.getLogger('SIP.EC.PCI.CDB')
-    _handler = logging.StreamHandler()
-    _handler.setFormatter(logging.Formatter(
+    # Configure the logger
+    log = logging.getLogger('SIP.EC.PCI.DB')
+    handler = logging.StreamHandler()
+    handler.setFormatter(logging.Formatter(
         '%(name)-20s | %(filename)-15s | %(levelname)-5s | %(message)s'))
-    _log.addHandler(_handler)
-    _log.setLevel(os.getenv('SIP_PCI_LOG_LEVEL', 'WARN'))
+    log.addHandler(handler)
+    log.setLevel(os.getenv('SIP_PCI_LOG_LEVEL', 'INFO'))
 
     # Get the number of Scheduling Block Instances to generate
     num_blocks = int(sys.argv[1]) if len(sys.argv) == 2 else 3
