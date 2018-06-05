@@ -8,6 +8,7 @@ Run with:
 """
 
 import logging
+import os
 import random
 import sys
 from time import gmtime, strftime
@@ -83,7 +84,7 @@ def main():
     _handler.setFormatter(logging.Formatter(
         '%(name)-20s | %(filename)-15s | %(levelname)-5s | %(message)s'))
     _log.addHandler(_handler)
-    _log.setLevel(logging.DEBUG)
+    _log.setLevel(os.getenv('SIP_PCI_LOG_LEVEL', 'WARN'))
 
     # Get the number of Scheduling Block Instances to generate
     num_blocks = int(sys.argv[1]) if len(sys.argv) == 2 else 3
