@@ -1,6 +1,7 @@
 # Docker (Swarm) Dask cluster deployment
 
-Experimental [Docker Compose file](https://docs.docker.com/compose/compose-file/)
+Extremely experimental 
+[Docker Compose file](https://docs.docker.com/compose/compose-file/)
 to deploy a test [Dask](https://dask.pydata.org/en/latest/) cluster.
 
 Based on: <https://github.com/dask/dask-docker>
@@ -25,16 +26,35 @@ To destroy the cluster:
 docker-compose rm -s -f
 ```
 
-The cluster creates three services
+The cluster creates three services:
 
--   **scheduler**: Published on <http://localhost:8787>
-
--   **worker**:
-
--   **notebook**: Published on <http://localhost:8888> but must log in with the
-token printed in the logs when starting this container
-(eg. `docker logs dask_cluster_notebook_1`)
+- **scheduler**: The Dask scheduler daemon, published on
+  <http://localhost:8787>
+- **worker**: A Dask worker.
+- **notebook**: A Jupyter notebook that can be used for interacting with the
+  Dask Cluster. Published on <http://localhost:8888>. In order to use this
+  an access token is required. This is found in the log of the notebook
+  container which can be viewed with `docker logs dask_cluster_notebook_1`.
 
 ### Docker Swarm
 
-TODO
+To deploy to Docker Swarm:
+
+```bash
+docker stack deploy -c docker-compose.yml dask
+```
+
+To remove the stack:
+
+```bash
+docker stack rm dask
+```
+
+In order to run a very simple test script using this cluster:
+
+```bash
+virtualenv -p python3 venv
+source venv/bin/activate
+pip install -r dask distributed
+python3 quickstart01.py
+```

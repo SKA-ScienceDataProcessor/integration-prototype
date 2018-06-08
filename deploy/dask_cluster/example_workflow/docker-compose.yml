@@ -3,7 +3,7 @@ version: '3.6'
 services:
 
     scheduler:
-        image: daskdev/dask
+        image: sip_dask_workflow_example
         hostname: dask-scheduler
         ports:
             - 8787:8787  # Bokeh Dask UI?
@@ -18,7 +18,7 @@ services:
                     memory: 1024M
 
     worker:
-        image: daskdev/dask
+        image: sip_dask_workflow_example
         hostname: dask-worker
         command: ["dask-worker", "scheduler:8786"]
         deploy:
@@ -28,14 +28,3 @@ services:
                 limits:
                     cpus: '1.0'
                     memory: 1024M
-
-    # notebook:
-    #     image: daskdev/dask-notebook
-    #     hostname: notebook
-    #     ports:
-    #         - 8888:8888
-    #     deploy:
-    #         mode: replicated
-    #         replicas: 1
-    #     volumes:
-    #         - ./output:/home/jovyan/new

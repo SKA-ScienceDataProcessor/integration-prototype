@@ -1,0 +1,6 @@
+logging:
+  root: info
+  distributed: info
+  distributed.client: info
+  bokeh: info
+
