@@ -168,29 +168,26 @@ class SpeadSender(object):
         loop = asyncio.get_event_loop()
         num_streams = self._config['num_streams']
         while True:
-            # Send the previous buffer, if available.
-            send_tasks = None
+            # Schedule sends for the previous buffer, if available.
+            tasks = []
             if self._i_time > 0:
                 i_buffer = (self._i_time - 1) % 2
                 #logging.info('Sending buffer %i', i_buffer)
-                sends = []
                 for i_stream, (stream, item_group) in enumerate(self._streams):
                     item_group['correlator_output_data'].value = \
                         self._buffer[i_buffer][i_stream]
-                    sends.append(stream.async_send_heap(item_group.get_heap()))
-                send_tasks = asyncio.gather(*sends)
+                    tasks.append(stream.async_send_heap(item_group.get_heap()))
 
             # Fill a buffer by distributing it among worker threads.
             i_buffer = self._i_time % 2
-            processing_tasks = [loop.run_in_executor(
-                executor, self.fill_buffer, i_buffer, self._i_time, i_stream)
-                                for i_stream in range(num_streams)]
+            for i_stream in range(num_streams):
+                tasks.append(loop.run_in_executor(
+                    executor, self.fill_buffer,
+                    i_buffer, self._i_time, i_stream))
 
             # Ensure processing tasks and previous asynchronous sends are done.
             #logging.info('Filling buffer %i (time %i)', i_buffer, self._i_time)
-            await asyncio.wait(processing_tasks)
-            if send_tasks:
-                await send_tasks
+            await asyncio.gather(*tasks)
 
             # Increment time index.
             self._i_time += 1
