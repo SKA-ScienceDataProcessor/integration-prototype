@@ -32,7 +32,7 @@ class SpeadReceiver(object):
         port_start = self._config['port_start']
         for i_stream in range(self._num_streams):
             stream = spead2.recv.asyncio.Stream(
-                spead2.ThreadPool(), contiguous_only=False)
+                spead2.ThreadPool(), max_heaps=1, contiguous_only=False)
             pool = spead2.MemoryPool(
                 self._config['memory_pool']['lower'],
                 self._config['memory_pool']['upper'],

@@ -9,6 +9,5 @@
     },
     "num_buffers": 2,
     "num_buffer_times": 4,
-    "num_streams": 10,
-    "num_workers": 4
+    "num_streams": 10
 }
