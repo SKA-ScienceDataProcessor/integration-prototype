@@ -50,14 +50,14 @@ pip intstall -r recv/requirements.txt
 3\. Run the receiver:
 
 ```bash
-python3 send/async_recv "$(< recv/spead_recv.json)"
+python3 recv/async_recv.py "$(< recv/spead_recv.json)"
 ```
 
 4\. Run the sender:
 
 
 ```bash
-python3 send/async_send "$(< send/spead_send.json)"
+python3 send/async_send.py "$(< send/spead_send.json)"
 ```
 
 ### Single sender and receiver on a local Docker engine
@@ -122,7 +122,7 @@ docker service create -d --name=recv1 --restart-condition=none \
     --log-driver=fluentd --log-opt tag="{{.ImageName}}/{{.Name}}/{{.ID}}" \
     --constraint='node.labels.recv == 01' \
     --stop-signal=INT --network=host skasip/ingest_visibilities \
-    "$(< recv/spead_recv.json)"
+    "$(< recv/spead_recv.P3.json)"
 ```
 
 2\. Run the sender:
