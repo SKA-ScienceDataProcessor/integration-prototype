@@ -1,6 +1,56 @@
 # Docker (Swarm) Dask cluster deployment
 
-Extremely experimental 
+## Quick-start
+
+```bash
+docker stack deploy -c docker-compose.yml dask
+```
+
+```bash
+virtualenv -p python3 venv
+source venv/bin/activate
+pip install -r dask distributed
+python3 quickstart01.py
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+## old notes .....................
+
+Extremely experimental
 [Docker Compose file](https://docs.docker.com/compose/compose-file/)
 to deploy a test [Dask](https://dask.pydata.org/en/latest/) cluster.
 

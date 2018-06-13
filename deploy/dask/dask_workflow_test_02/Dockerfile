@@ -1,9 +1,6 @@
-FROM daskdev/dask:latest
+FROM skasip/dask_worker_base
 
-RUN conda install --yes \
-    astropy \
-    && conda clean -tipsy
-
+RUN pip3 install astropy
 
 WORKDIR /app
 
@@ -11,7 +8,6 @@ WORKDIR /app
 # https://stackoverflow.com/questions/41475239/how-to-set-up-logging-on-dask-distributed-workers
 # COPY config.yaml /app/config.yaml
 # ENV DASK_CONFIG /app/config.yaml
-
 
 COPY workflow /app/workflow
 ENV PYTHONPATH ${PYTHONPATH}:/app

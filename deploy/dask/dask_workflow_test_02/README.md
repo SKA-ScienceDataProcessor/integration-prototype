@@ -1,3 +1,37 @@
+#
+
+## Quickstart
+
+```bash
+docker build skasip/dask_workflow_test_02 .
+```
+
+```bash
+docker stack deploy -c docker-compose.yml dask
+```
+
+
+```bash
+python3 -m workflow
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 # Placeholder for containerised Dask workflow example
 
 This can probably be based on the official Dask Dockerfile found at
