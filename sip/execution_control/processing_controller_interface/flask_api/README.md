@@ -123,14 +123,14 @@ Once finished the commands `docker-compose rm -s -f` or
 Tag the local image and push it to the hub.docker.com registry.
 In order to do this you will need:
 
-1. a hub.docker.com account
-1. to be part of the [`skasip` organisation](https://hub.docker.com/u/skasip)
-   on hub.docker.com
+1. a working hub.docker.com account
+1. to be a member of the
+   [`skasip` organisation  account](https://hub.docker.com/u/skasip)
 1. to be logged into your hub.docker.com account (eg. with the
    `docker login` command)
 
-Once these steps are complete, in order to build and push any changes to
-this the hub.docker.com registry use the following commands.
+Given these condidtions are met, in order to build an updated image and push
+changes to this the `skasip` registry use the following commands.
 
 ```bash
 docker build -t skasip/pci_flask .
