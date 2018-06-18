@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""."""
+"""Test workflow for playing around with Dask deployment options"""
 import logging
 import time
 from dask.distributed import Client, progress
@@ -45,7 +45,9 @@ def print_values(x):
 
 def main():
     """."""
-    client = Client('localhost:8786')
+    host = os.getenv('DASK_SCHEDULER_HOST', default='localhost')
+    port = os.getenv('DASK_SCHEDULER_PORT', default=8786)
+    client = Client('{}:{}'.format(host, port))
     # client.run(init_logging)
     # client.run_on_scheduler(init_logging)
 
@@ -71,4 +73,3 @@ def main():
     progress(total)
     print(total.result())
     print('here F')
-

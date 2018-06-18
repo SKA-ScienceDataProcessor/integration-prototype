@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""."""
+"""Some experiments to put together an EE interface for Dask."""
 import time
 import logging
 import sys
@@ -8,33 +8,14 @@ from dask.distributed import Client, progress, Scheduler, Executor, Future
 import distributed.scheduler
 import subprocess
 
-# <http://distributed.readthedocs.io/en/latest/api.html#distributed.client.Client.get>
-# https://stackoverflow.com/questions/41111889/how-to-terminate-workers-started-by-dask-multiprocessing-scheduler?utm_medium=organic&utm_source=google_rich_qa&utm_campaign=google_rich_qa
-
-def init_logging():
-    """."""
-    # TODO(BM) prevent loggers from being defined more than once \
-    # if this function is called several times.
-    log = logging.getLogger('')
-    handler = logging.StreamHandler(sys.stdout)
-    handler.setLevel('DEBUG')
-    handler.setFormatter(logging.Formatter('[%(name)s] -- %(message)s'))
-    log.addHandler(handler)
-    log.setLevel('DEBUG')
-
-    log = logging.getLogger('SIP')
-    handler = logging.StreamHandler(sys.stdout)
-    handler.setLevel('DEBUG')
-    handler.setFormatter(logging.Formatter('[%(name)s] -- %(message)s'))
-    log.addHandler(handler)
-    log.setLevel('DEBUG')
-
-    log.info('Initialised ROOT logger')
-    log.info('Initialised SIP logger')
-
 
 def start(config):
-    """Start the workflow stage"""
+    """Start the workflow
+
+    1. Deploy Docker containers for the scheduler and workers
+    2. Deploy a container to initialise logging with restart mode = False
+    3. Deploy a container to run the workflow (or workflow stage).
+    """
     # Probably just have to perform a syscall to run the python script and get a
     # processes handle to kill it?
     pid = subprocess.Popen(['python3', '-m', 'workflow'])
@@ -57,14 +38,21 @@ def start(config):
 
 
 def stop(config):
-    """Stop the workflow stage"""
+    """Stop the workflow stage
+
+    Tear down the Dask containers.
+    """
+
     # While it is possible to call cancel on the client that requires that the
     # list of futures is known to the wrapper.
     # Therefore just kill the process?
 
 
 def status(config):
-    """Get the status of the workflow stage"""
+    """Get the status of the workflow stage
+
+    Query the status of the workflow from the scheduler container?
+    """
     # This can be queried more easily by various client functions.
     # 'PENDING', 'RUNNING', ' FINISHED', 'ERROR', 'WARNING' ?
     # This can be defined by the adapter
