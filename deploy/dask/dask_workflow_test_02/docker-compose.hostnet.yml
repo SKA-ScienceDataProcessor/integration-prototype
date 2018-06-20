@@ -15,7 +15,7 @@ services:
                 limits:
                     cpus: '1.0'
                     memory: 1024M
-
+        # healthcheck based curl of boken interface
         networks:
             hostnet: {}
 

@@ -14,10 +14,16 @@ services:
                 limits:
                     cpus: '1.0'
                     memory: 1024M
+        # healthcheck based curl of boken interface
+        networks:
+            - workflow_02
 
     worker:
         image: skasip/dask_workflow_test_02
+        entrypoint: dask-worker
         command: --nprocs 1 --nthreads 2 --memory-limit 2GB scheduler:8786
+        depends_on:
+            - scheduler
         deploy:
             mode: replicated
             replicas: 1
@@ -25,3 +31,9 @@ services:
                 limits:
                     cpus: '1.0'
                     memory: 1024M
+        networks:
+            - workflow_02
+
+networks:
+    workflow_02:
+        external: true

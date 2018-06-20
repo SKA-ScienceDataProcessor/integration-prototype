@@ -51,3 +51,28 @@ docker stack rm workflow
 ```
 
 ### Deploy to Docker Swarm using overlay networking
+
+Create a overlay network:
+
+```bash
+docker network create --driver overlay --attachable workflow_02
+```
+
+Start the dask cluster:
+
+```bash
+docker stack deploy -c docker-compose.overlay.yml dask
+```
+
+Start the workflow:
+
+```bash
+docker stack deploy -c docker-compose.run.overlay.yml workflow
+```
+
+Clean up:
+
+```bash
+docker stack rm dask workflow
+docker network prune -f
+```
