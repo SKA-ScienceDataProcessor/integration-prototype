@@ -2,12 +2,14 @@ version: '3.6'
 
 services:
 
-    run_workflow:
+    workflow:
         image: skasip/dask_workflow_test_02
         entrypoint: python3
         command: -m workflow
+        # If running using host networking the scheduler hostname / IP
+        # cannot use overlay service discovery
         environment:
-            - DASK_SCHEDULER_HOST=scheduler
+            - DASK_SCHEDULER_HOST=localhost
             - DASK_SCHEDULER_PORT=8786
         deploy:
             mode: replicated
@@ -16,13 +18,13 @@ services:
                 limits:
                     cpus: '1.0'
                     memory: 1024M
+            restart_policy:
+                condition: none
         networks:
-            - workflow_02
-            - host
+            - hostnet
 
 
 networks:
-    host:
+    hostnet:
+        external: true
         name: host
-    workflow_02:
-        driver: overlay

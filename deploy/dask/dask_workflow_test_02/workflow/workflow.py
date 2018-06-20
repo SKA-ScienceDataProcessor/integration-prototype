@@ -47,6 +47,7 @@ def main():
     """."""
     host = os.getenv('DASK_SCHEDULER_HOST', default='localhost')
     port = os.getenv('DASK_SCHEDULER_PORT', default=8786)
+    print(host, port)
     client = Client('{}:{}'.format(host, port))
     # client.run(init_logging)
     # client.run_on_scheduler(init_logging)

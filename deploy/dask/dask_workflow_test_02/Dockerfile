@@ -11,3 +11,5 @@ WORKDIR /app
 
 COPY workflow /app/workflow
 ENV PYTHONPATH ${PYTHONPATH}:/app
+
+ENTRYPOINT [ "" ]

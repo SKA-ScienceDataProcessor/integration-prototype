@@ -1,4 +1,5 @@
-# coding=utf-8
+# -*- coding=utf-8 -*-
+"""Workflow executable script."""
 from .workflow import main
 
 

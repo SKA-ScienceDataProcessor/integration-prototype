@@ -1,0 +1,33 @@
+version: '3.6'
+
+services:
+
+    workflow:
+        image: skasip/dask_workflow_test_02
+        entrypoint: sleep 3600
+        # entrypoint: python3
+        # command: -m workflow
+        # https://docs.docker.com/docker-cloud/apps/service-links/#discovering-services-or-containers-on-another-stack
+        # https://forums.docker.com/t/service-discovery-name-resolving-between-stacks-fails-on-docker-cloud-dockercloud-agent/6747
+        environment:
+            - DASK_SCHEDULER_HOST=scheduler.dask
+            - DASK_SCHEDULER_PORT=8786
+        deploy:
+            mode: replicated
+            replicas: 1
+            resources:
+                limits:
+                    cpus: '1.0'
+                    memory: 1024M
+            restart_policy:
+                condition: none
+        networks:
+            # - workflow_02
+            - host
+
+
+networks:
+    host:
+        name: host
+    # workflow_02:
+    #     driver: overlay
