@@ -98,6 +98,11 @@ class SpeadReceiver(object):
         """Main loop."""
         loop = asyncio.get_event_loop()
 
+        if self._config['filename']:
+            with open(self._config['filename'] + '.txt', "w") as text_file:
+                text_file.write(
+                    "Waiting for %d streams to start..." % self._num_streams)
+
         # Get first heap in each stream (should be empty).
         self._log.info("Waiting for %d streams to start...", self._num_streams)
         for stream in self._streams:
