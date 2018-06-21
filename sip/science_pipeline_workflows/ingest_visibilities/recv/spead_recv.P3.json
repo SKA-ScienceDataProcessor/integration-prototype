@@ -10,5 +10,7 @@
     "num_buffers": 2,
     "num_buffer_times": 4,
     "num_streams": 40,
-    "num_workers": 8
+    "process_data": true,
+    "write_data": false,
+    "filename": "test.pickle"
 }
