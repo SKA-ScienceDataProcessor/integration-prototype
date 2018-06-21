@@ -8,12 +8,13 @@
     },
     "num_streams": 10,
     "num_workers": 4,
+    "reporting_interval": 10,
     "start_channel": 0,
     "stream_config":
     {
         "max_packet_size": 9172,
-        "rate": 50e6,
+        "rate": 20e6,
         "burst_size": 1472,
-        "max_heaps": 1
+        "max_heaps": 2
     }
 }

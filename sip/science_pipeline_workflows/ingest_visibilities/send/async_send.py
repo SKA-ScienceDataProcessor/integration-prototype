@@ -17,15 +17,16 @@ An example SPEAD configuration JSON file could be:
             "num_stations": 512,
             "num_pols": 4
         },
-        "num_streams": 30,
+        "num_streams": 10,
         "num_workers": 4,
+        "reporting_interval": 10,
         "start_channel": 0,
         "stream_config":
         {
             "max_packet_size": 9172,
-            "rate": 0.0,
+            "rate": 20e6,
             "burst_size": 1472,
-            "max_heaps": 4
+            "max_heaps": 2
         }
     }
 
@@ -52,11 +53,9 @@ class SpeadSender(object):
     """Sends dummy visibility data using SPEAD."""
     def __init__(self, spead_config):
         self._config = spead_config
+        self._log = logging.getLogger('sip.sender')
         self._streams = []
         self._buffer = []
-        self._num_pols = 0
-        self._num_baselines = 0
-        self._i_time = 0
 
         # Construct UDP streams and associated item groups.
         stream_config = spead2.send.StreamConfig(
@@ -69,7 +68,7 @@ class SpeadSender(object):
             port = self._config['destination_port_start'] + i_stream
             # It's much faster to have a thread pool of one thread per stream!
             thread_pool = spead2.ThreadPool(threads=1)
-            logging.info('Creating SPEAD stream on %s:%i ...', host, port)
+            self._log.info('Creating SPEAD stream on %s:%i ...', host, port)
             udp_stream = spead2.send.asyncio.UdpStream(
                 thread_pool, host, port, stream_config)
             # FIXME The ICD specifies SPEAD-64-48 flavour,
@@ -80,7 +79,7 @@ class SpeadSender(object):
 
     def fill_buffer(self, i_buffer, i_time, i_chan):
         """Blocking function to populate the visibility data array.
-        This is run from an executor.
+        This is run in an executor.
         """
         # Write the data into the buffer.
         self._buffer[i_buffer][i_chan]['VIS'][:] = (i_time + i_chan / 1000.0)
@@ -91,10 +90,10 @@ class SpeadSender(object):
         # SPEAD heap descriptor.
         # One channel per stream and one time index per heap.
         num_stations = self._config['heap']['num_stations']
-        self._num_pols = self._config['heap']['num_pols']
-        self._num_baselines = num_stations * (num_stations + 1) // 2
+        num_pols = self._config['heap']['num_pols']
+        num_baselines = num_stations * (num_stations + 1) // 2
         start_chan = self._config['start_channel']
-        dtype = [('TCI', 'i1'), ('FD', 'u1'), ('VIS', '<c8', self._num_pols)]
+        dtype = [('TCI', 'i1'), ('FD', 'u1'), ('VIS', '<c8', num_pols)]
         descriptor = {
             'visibility_timestamp_count': {
                 'id': 0x8000,
@@ -139,7 +138,7 @@ class SpeadSender(object):
             'correlator_output_data': {
                 'id': 0x800A,
                 'dtype': dtype,
-                'shape': (self._num_baselines,)
+                'shape': (num_baselines,)
             }
         }
 
@@ -148,7 +147,7 @@ class SpeadSender(object):
             self._buffer.append([])
             for _ in range(len(self._streams)):
                 self._buffer[i_buffer].append(
-                    numpy.zeros((self._num_baselines,), dtype=dtype))
+                    numpy.zeros((num_baselines,), dtype=dtype))
 
         # Add items to the item group of each stream.
         for i_stream, (stream, item_group) in enumerate(self._streams):
@@ -160,38 +159,47 @@ class SpeadSender(object):
 
             # Write the header information.
             # Send the start of stream message to each stream.
-            item_group['visibility_baseline_count'].value = self._num_baselines
+            item_group['visibility_baseline_count'].value = num_baselines
             item_group['visibility_channel_id'].value = i_stream + start_chan
             await stream.async_send_heap(item_group.get_start())
 
+        # Calculate the total data size being sent.
+        num_streams = self._config['num_streams']
+        reporting_interval = self._config['reporting_interval']
+        data_size = (num_baselines * (num_pols * 8 + 2)) / 1e6
+        data_size *= (reporting_interval * num_streams)
+
         # Enter the main loop over time samples.
         loop = asyncio.get_event_loop()
-        num_streams = self._config['num_streams']
+        i_time = 0
+        timer1 = time.time()
         while True:
             # Schedule sends for the previous buffer, if available.
             tasks = []
-            if self._i_time > 0:
-                i_buffer = (self._i_time - 1) % 2
-                # logging.info('Sending buffer %i', i_buffer)
+            if i_time > 0:
+                i_buffer = (i_time - 1) % 2
                 for i_stream, (stream, item_group) in enumerate(self._streams):
                     item_group['correlator_output_data'].value = \
                         self._buffer[i_buffer][i_stream]
                     tasks.append(stream.async_send_heap(item_group.get_heap()))
 
             # Fill a buffer by distributing it among worker threads.
-            i_buffer = self._i_time % 2
+            i_buffer = i_time % 2
             for i_stream in range(num_streams):
                 tasks.append(loop.run_in_executor(
-                    executor, self.fill_buffer,
-                    i_buffer, self._i_time, i_stream))
+                    executor, self.fill_buffer, i_buffer, i_time, i_stream))
 
             # Ensure processing tasks and previous asynchronous sends are done.
-            # logging.info('Filling buffer %i (time %i)',
-            #              i_buffer, self._i_time)
             await asyncio.gather(*tasks)
 
             # Increment time index.
-            self._i_time += 1
+            i_time += 1
+
+            # Periodically report the sender data rate.
+            if i_time % reporting_interval == 0:
+                self._log.info('Sender data rate (aggregated): %.1f MB/s',
+                               data_size / (time.time() - timer1))
+                timer1 = time.time()
 
     def run(self):
         """Starts the sender."""
@@ -201,29 +209,18 @@ class SpeadSender(object):
 
         # Run the event loop.
         loop = asyncio.get_event_loop()
-        timer1 = time.time()
         try:
             loop.run_until_complete(self._run_loop(executor))
         except KeyboardInterrupt:
             pass
         finally:
             # Send the end of stream message to each stream.
-            logging.info('Shutting down, closing streams...')
+            self._log.info('Shutting down, closing streams...')
             for stream, item_group in self._streams:
-                asyncio.ensure_future(
-                    stream.async_send_heap(item_group.get_end()))
-            logging.info('... finished.')
+                asyncio.wait(stream.async_send_heap(item_group.get_end()))
+            self._log.info('... finished.')
             executor.shutdown()
             # loop.close()  # Not required.
-        timer2 = time.time()
-
-        # Report time taken and number of heaps sent.
-        if self._i_time > 0:
-            num_heaps_sent = (self._i_time + 1) * len(self._streams)
-            heap_size = 1e-6 * (self._num_baselines * self._num_pols * 10)
-            logging.info('Sent %i heaps in %.3f sec (%.3f MB/s)',
-                         num_heaps_sent, timer2 - timer1,
-                         num_heaps_sent * heap_size / (timer2 - timer1))
 
 
 def main():
@@ -233,8 +230,9 @@ def main():
         raise RuntimeError('Usage: python3 async_send.py <json config>')
 
     # Set up logging.
-    logging.basicConfig(format='%(asctime)-15s %(threadName)-22s %(message)s',
-                        level=logging.INFO)
+    logging.basicConfig(format='%(asctime)-23s %(name)-12s %(threadName)-22s '
+                               '%(message)s',
+                        level=logging.INFO, stream=sys.stdout)
 
     # Load SPEAD configuration from JSON file.
     # _path = os.path.dirname(os.path.abspath(__file__))

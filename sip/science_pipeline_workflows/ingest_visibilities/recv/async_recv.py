@@ -11,8 +11,10 @@ import asyncio
 import concurrent.futures
 import json
 import logging
+import pickle
 import sys
 
+import numpy
 import spead2
 import spead2.recv
 import spead2.recv.asyncio
@@ -22,6 +24,7 @@ class SpeadReceiver(object):
     """Receives visibility data using SPEAD."""
     def __init__(self, spead_config):
         self._config = spead_config
+        self._log = logging.getLogger('sip.receiver')
         self._streams = []
         self._item_group = spead2.ItemGroup()
         self._num_buffers = self._config['num_buffers']
@@ -44,41 +47,65 @@ class SpeadReceiver(object):
 
     def process_buffer(self, i_block, receive_buffer):
         """Blocking function to process the received heaps.
-        This is run from an executor.
+        This is run in an executor.
         """
-        logging.info("Worker thread processing block %i", i_block)
-        for heap in receive_buffer.result():
-            if isinstance(heap, spead2.recv.Heap):
-                items = self._item_group.update(heap)
-                if 'correlator_output_data' in items:
-                    num_baselines = items['correlator_output_data'] \
-                        .value.shape[0]
-                    val = int(items['correlator_output_data']
-                              .value['VIS'][0][0].real)
-                    # pylint: disable=logging-format-interpolation
-                    logging.info("Data: {}, Length: {}".format(
-                        items['correlator_output_data'].value[0],
-                        num_baselines))
-                    if (val >= i_block * self._config['num_buffer_times'] +
-                            self._config['num_buffer_times']):
-                        raise RuntimeError('Got time index %i - this '
-                                           'should never happen!' % val)
-            else:
-                logging.info("Dropped incomplete heap %i!", heap.cnt + 1)
+        self._log.info("Worker thread processing block %i", i_block)
+        block = None
+        for i_heap, heap in enumerate(receive_buffer.result()):
+            # Skip and log any incomplete heaps.
+            if isinstance(heap, spead2.recv.IncompleteHeap):
+                self._log.info("Dropped incomplete heap %i", heap.cnt + 1)
+                continue
+
+            # Update the item group from this heap.
+            items = self._item_group.update(heap)
+
+            # Get the time and channel indices from the heap index.
+            i_chan = i_heap // self._num_buffer_times
+            i_time = i_heap % self._num_buffer_times
+
+            if 'correlator_output_data' in items:
+                vis_data = items['correlator_output_data'].value['VIS']
+                if block is None:
+                    num_baselines = vis_data.shape[0]
+                    num_pols = vis_data[0].shape[0]
+                    block = numpy.zeros((self._num_buffer_times,
+                                         self._num_streams, num_baselines),
+                                        dtype=('c8', num_pols))
+
+                # Unpack data from the heap into the block to be processed.
+                block[i_time, i_chan, :] = vis_data
+
+                # Check the data for debugging!
+                val = block[i_time, i_chan, -1][-1].real
+                self._log.info("Data: %.3f", val)
+                if int(val) >= self._num_buffer_times * (i_block + 1):
+                    raise RuntimeError('Got time index %i - this '
+                                       'should never happen!' % int(val))
+
+        if block is not None:
+            # Process the buffered data here.
+            if self._config['process_data']:
+                pass
+
+            # Write the buffered data to storage as a binary pickle.
+            if self._config['write_data']:
+                with open(self._config['filename'], 'ab') as f:
+                    pickle.dump(block, f, protocol=2)
+
 
     async def _run_loop(self, executor):
         """Main loop."""
         loop = asyncio.get_event_loop()
 
         # Get first heap in each stream (should be empty).
+        self._log.info("Waiting for %d streams to start...", self._num_streams)
         for stream in self._streams:
             await stream.get(loop=loop)
 
         i_block = 0
         receive_buffer = [None, None]
         while True:
-            logging.info("Receiving block %i", i_block)
-
             # Process the previous buffer, if available.
             processing_tasks = None
             if i_block > 0:
@@ -100,11 +127,17 @@ class SpeadReceiver(object):
 
             # Ensure asynchronous receives and previous processing tasks are
             # done.
-            await receive_buffer[i_buffer_recv]
+            self._log.info("Receiving block %i", i_block)
+            try:
+                await receive_buffer[i_buffer_recv]
+                self._log.info("Received block %i", i_block)
+            except spead2.Stopped:
+                # Not sure why this exception is never raised!
+                self._log.info("Stream Stopped")
+                break
             if processing_tasks:
                 await processing_tasks
 
-            logging.info("Received block %i", i_block)
             i_block += 1
 
     def run(self):
@@ -116,13 +149,12 @@ class SpeadReceiver(object):
         # Run the event loop.
         loop = asyncio.get_event_loop()
         try:
-            # Asynchronously receive and process data on all channels.
             loop.run_until_complete(self._run_loop(executor))
         except KeyboardInterrupt:
             pass
         finally:
             # Shut down.
-            logging.info('Shutting down...')
+            self._log.info('Shutting down...')
             executor.shutdown()
             # loop.close()  # Not required.
 
@@ -134,9 +166,9 @@ def main():
         raise RuntimeError('Usage: python3 async_recv.py <json config>')
 
     # Set up logging.
-    logging.basicConfig(format='%(asctime)-15s %(name)s %(threadName)-22s'
-                               ' %(message)s',
-                        level=logging.INFO)
+    logging.basicConfig(format='%(asctime)-23s %(name)-12s %(threadName)-22s '
+                               '%(message)s',
+                        level=logging.INFO, stream=sys.stdout)
 
     # Load SPEAD configuration from JSON file.
     # with open(sys.argv[-1]) as f:
