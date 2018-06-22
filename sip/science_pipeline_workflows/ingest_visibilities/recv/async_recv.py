@@ -13,6 +13,7 @@ import json
 import logging
 import pickle
 import sys
+import time
 
 import numpy
 import spead2
@@ -51,6 +52,10 @@ class SpeadReceiver(object):
         """
         self._log.info("Worker thread processing block %i", i_block)
         block = None
+        time_overall0 = time.time()
+        time_unpack = 0.0
+        time_process = 0.0
+        time_write = 0.0
         for i_heap, heap in enumerate(receive_buffer.result()):
             # Skip and log any incomplete heaps.
             if isinstance(heap, spead2.recv.IncompleteHeap):
@@ -74,7 +79,9 @@ class SpeadReceiver(object):
                                         dtype=('c8', num_pols))
 
                 # Unpack data from the heap into the block to be processed.
+                time_unpack0 = time.time()
                 block[i_time, i_chan, :] = vis_data
+                time_unpack += time.time() - time_unpack0
 
                 # Check the data for debugging!
                 val = block[i_time, i_chan, -1][-1].real
@@ -90,9 +97,16 @@ class SpeadReceiver(object):
 
             # Write the buffered data to storage as a binary pickle.
             if self._config['write_data']:
+                time_write0 = time.time()
                 with open(self._config['filename'], 'ab') as f:
                     pickle.dump(block, f, protocol=2)
+                time_write += time.time() - time_write0
 
+        # Report time taken.
+        time_overall = time.time() - time_overall0
+        self._log.info("Total processing time: %.1f ms", 1000 * time_overall)
+        self._log.info("Unpack was %.1f %%", 100 * time_unpack / time_overall)
+        self._log.info("Write was %.1f %%", 100 * time_write / time_overall)
 
     async def _run_loop(self, executor):
         """Main loop."""
