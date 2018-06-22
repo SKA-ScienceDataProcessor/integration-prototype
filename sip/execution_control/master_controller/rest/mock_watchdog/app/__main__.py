@@ -21,10 +21,14 @@ def main():
             if target_state != None:
                 db.update_value(ROOT, "TANGO_state", target_state)
                 db.update_value(ROOT, 'state_timestamp',
-                        str(datetime.datetime.now()))
+                        str(datetime.datetime.utcnow()))
         except:
             pass
 
 
 if __name__ == '__main__':
-    main()
+   try:
+      main()
+   except KeyboardInterrupt as err:
+      print(err)
+      print('bye!')

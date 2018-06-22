@@ -6,7 +6,7 @@ WORKDIR /app
 COPY requirements.txt .
 RUN apk update && \
     pip install --no-cache-dir -r requirements.txt
-ENV TZ=-1
+#ENV TZ=-1
 
 COPY app app
 
