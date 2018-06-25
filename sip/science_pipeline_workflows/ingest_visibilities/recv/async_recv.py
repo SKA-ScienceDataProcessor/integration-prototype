@@ -11,7 +11,6 @@ import asyncio
 import concurrent.futures
 import json
 import logging
-import pickle
 import sys
 import time
 
@@ -54,7 +53,6 @@ class SpeadReceiver(object):
         block = None
         time_overall0 = time.time()
         time_unpack = 0.0
-        time_process = 0.0
         time_write = 0.0
         for i_heap, heap in enumerate(receive_buffer.result()):
             # Skip and log any incomplete heaps.
@@ -99,7 +97,8 @@ class SpeadReceiver(object):
             if self._config['write_data']:
                 time_write0 = time.time()
                 with open(self._config['filename'], 'ab') as f:
-                    pickle.dump(block, f, protocol=2)
+                    # Don't use pickle, it's really slow (even protocol 4)!
+                    numpy.save(f, block, allow_pickle=False)
                 time_write += time.time() - time_write0
 
         # Report time taken.
@@ -107,6 +106,9 @@ class SpeadReceiver(object):
         self._log.info("Total processing time: %.1f ms", 1000 * time_overall)
         self._log.info("Unpack was %.1f %%", 100 * time_unpack / time_overall)
         self._log.info("Write was %.1f %%", 100 * time_write / time_overall)
+        if time_write != 0.0:
+            self._log.info("Write speed %.1f MB/s",
+                           (block.nbytes * 1e-6)  / time_write)
 
     async def _run_loop(self, executor):
         """Main loop."""

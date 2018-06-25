@@ -13,7 +13,7 @@
     "stream_config":
     {
         "max_packet_size": 9172,
-        "rate": 20e6,
+        "rate": 10e6,
         "burst_size": 1472,
         "max_heaps": 2
     }
