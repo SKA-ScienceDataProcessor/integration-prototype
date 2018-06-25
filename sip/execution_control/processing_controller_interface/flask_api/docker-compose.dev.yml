@@ -1,0 +1,18 @@
+version: '3.6'
+
+services:
+
+  # Local development Configuration Database service
+  config_db:
+    image: redis:4.0.6-alpine
+    ports:
+      - 6379:6379
+
+  # Redis Commander UI
+  redis-commander-db0:
+    image: rediscommander/redis-commander:latest
+    environment:
+    # REDIS_HOSTS=label:hostname:port:db_index
+    - REDIS_HOSTS=db:config_db:6379:0
+    ports:
+    - 8081:8081
