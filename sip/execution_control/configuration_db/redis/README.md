@@ -22,15 +22,14 @@ Design notes for this service can be found in the
 
 To start Docker containers for a Redis Db instance (with a persistent volume)
 as well as a [Redis Commander](https://github.com/joeferner/redis-commander)
-instance (useful for debugging) issue the following command:  
+instance (useful for debugging) issue the following command:
 
 ```bash
 docker-compose up -d
 ```
 
-This will deploy the containers to the local Docker installation. If 
-wanting to deploy to Docker Swarm instead use the following command: 
-
+This will deploy the containers to the local Docker installation. If
+wanting to deploy to Docker Swarm instead use the following command:
 
 ```bash
 docker stack deploy -c docker-compose.yml [stack name]
@@ -54,6 +53,7 @@ It is also possible to run redis server natively (without Docker). This is
 useful for development and debugging.
 
 Start redis server
+
 ```bash
 redis-server
 ```
@@ -77,7 +77,7 @@ To test the Master Controller db client run the following command:
 python3 -m db_client.tests.test_master_client
 ```
 
-To run examples demonstrating the use of the Processing Controller client 
+To run examples demonstrating the use of the Processing Controller client
 run the following command
 
 ```bash
