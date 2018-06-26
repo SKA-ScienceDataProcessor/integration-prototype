@@ -16,3 +16,4 @@
 # Files created during testing
 /_build/
 test_reports.xml
+**/.pytest_cache

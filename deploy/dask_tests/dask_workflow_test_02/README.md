@@ -24,17 +24,17 @@ Notes:
 To deploy the Dask cluster (1 scheduler + 1 worker):
 
 ```bash
-docker stack deploy -c docker-compose.hostnet.yml dask
+docker stack deploy -c docker-compose.hostnet.ee.yml dask
 ```
 
 And to run the workflow:
 
 ```bash
-docker stack deploy -c docker-compose.run.hostnet.yml workflow
+docker stack deploy -c docker-compose.hostnet.workflow.yml workflow
 ```
 
 This could also be run on a control node natively using, as long as this
-script invocation can connect to the scheduler deamon.
+script invocation can connect to the Dask scheduler deamon.
 
 ```bash
 python3 -m workflow
@@ -61,13 +61,13 @@ docker network create --driver overlay --attachable workflow_02
 Start the dask cluster:
 
 ```bash
-docker stack deploy -c docker-compose.overlay.yml dask
+docker stack deploy -c docker-compose.overlay.ee.yml dask
 ```
 
 Start the workflow:
 
 ```bash
-docker stack deploy -c docker-compose.run.overlay.yml workflow
+docker stack deploy -c docker-compose.overlay.workflow.yml workflow
 ```
 
 Clean up:

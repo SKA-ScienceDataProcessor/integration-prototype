@@ -1,7 +1,8 @@
 # -*- coding: utf-8 -*-
 """Test Workflow for playing with deployment options."""
-from dask.distributed import Client, progress
 import time
+
+from dask.distributed import Client, progress
 
 
 def set_value(value):

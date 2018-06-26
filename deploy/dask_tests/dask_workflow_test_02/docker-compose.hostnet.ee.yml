@@ -17,7 +17,7 @@ services:
                     memory: 1024M
         # healthcheck based curl of boken interface
         networks:
-            hostnet: {}
+            - hostnet
 
     worker:
         image: skasip/dask_workflow_test_02
@@ -38,7 +38,7 @@ services:
                     cpus: '1.0'
                     memory: 1024M
         networks:
-            hostnet: {}
+            - hostnet
 
 networks:
     hostnet:
