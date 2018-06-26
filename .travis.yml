@@ -2,7 +2,12 @@ sudo: required
 
 language: python
 
-#services: docker
+env:
+  global:
+    - SIP_PCI_LOG_LEVEL=NOTSET
+
+services:
+  - docker
 
 python:
   - "3.6"
@@ -10,34 +15,54 @@ python:
 cache: pip
 
 # https://github.com/travis-ci/travis-ci/issues/5358
-#before_install:
-#  - docker pull $(REPO):$(TRAVIS_BRANCH)
 before_install:
+  # Add Docker repo to apt.
+  - curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add -
+  - sudo add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable"
+  # Install API packages
   - sudo apt-get -qq update
   - sudo apt-get install -y gcc
   - sudo apt-get install -y g++
   - sudo apt-get install -y libboost-program-options-dev
   - sudo apt-get install -y libboost-system-dev
-
-install:
+  - sudo apt-get install -y docker-ce
+  # Install Python Packages
+  # --> Linting and unit tests
   - pip install pylint>=1.9.0
   - pip install pycodestyle>=2.4.0
+  - pip install pytest>=3.5.1
+  - pip install pytest-codestyle>=1.2.2
+  - pip install pytest-pylint>=0.9.0
+  # --> Spead2
   - pip install spead2>=1.7.2
+  # --> ??
   - pip install redis>=2.10.6
   - pip install jsonschema>=2.6.0
   - pip install simplejson>=3.15.0
+  # Install PCI flask requirements
+  - pip install -r sip/execution_control/processing_controller_interface/flask_api/requirements.txt
+  # Start Docker containers needed for unit tests
+  - docker run -d -p 6379:6379 --name=config_db redis:4.0.6-alpine
+  - docker ps -a
+
+install:
+  - echo "Install step..."
 
 before_script:
   # Run pycodestyle
   - pycodestyle --config=.pycodestyle emulators
+  - pycodestyle --config=.pycodestyle --exclude=zookeeper examples
   - pycodestyle --config=.pycodestyle --exclude=receive_visibilities sip
   # Run PyLint
   - pylint --ignore=csp_pss_sender,csp_vis_sender_01,csp_vis_sender_02 emulators
+  - pylint examples/*/*.py || echo "FAIL"
   - (cd sip && pylint --rcfile=../.pylintrc core_processing || echo "FAIL")
   - (cd sip && pylint --rcfile=../.pylintrc execution_control || echo "FAIL")
   - (cd sip && pylint --rcfile=../.pylintrc execution_framework_interface || echo "FAIL")
   - (cd sip && pylint --rcfile=../.pylintrc execution_frameworks || echo "FAIL")
   - (cd sip && pylint --rcfile=../.pylintrc science_pipeline_workflows || echo "FAIL")
+  # Run pytest with pylint and pycodestyle for the PCI flask app
+  - SIP_PCI_LOG_LEVEL="WARN" && py.test --pylint --codestyle -s -v --durations=3 --pylint-rcfile=.pylintrc sip/execution_control/processing_controller_interface/flask_api
 
 script:
   - echo "Build script"
