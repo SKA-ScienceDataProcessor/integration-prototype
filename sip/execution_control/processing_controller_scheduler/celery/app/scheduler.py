@@ -20,16 +20,12 @@ import signal
 import logging
 import json
 
-from .db import get_processing_block, \
-                get_processing_block_event, \
-                get_scheduling_block, \
-                get_scheduling_block_event, \
-                get_scheduling_block_ids
-from mock_processing_block_controller.tasks import execute_processing_block
+from .db.client import ConfigDb
 from .queue import ProcessingBlockQueue
 
 
-LOG = logging.getLogger('sip.processing_block_scheduler')
+LOG = logging.getLogger('sip.ec.pbc.scheduler')
+DB = ConfigDb()
 
 
 class ProcessingBlockScheduler:
@@ -46,7 +42,7 @@ class ProcessingBlockScheduler:
         self._report_rate = report_rate
 
     def run(self):
-        """Starts the Scheduler event loop."""
+        """Start the Scheduler event loop."""
         loop = asyncio.get_event_loop()
         LOG.info('Starting Processing Block Controller Scheduler, pid = %s.',
                  os.getpid())
@@ -67,10 +63,10 @@ class ProcessingBlockScheduler:
             loop.close()
 
     def _init(self):
-        """"Initialise the queue from the configuration database"""
-        block_ids = get_scheduling_block_ids()
+        """"Initialise the queue from the configuration database."""
+        block_ids = DB.get_sched_block_instance_ids()
         for block_id in block_ids:
-            scheduling_block = get_scheduling_block(block_id)
+            scheduling_block = DB.get_block_details(block_id)
             for processing_block in scheduling_block.get('processing_blocks'):
                 processing_block['scheduling_block_id'] = block_id
                 priority = random.randint(0, 5)

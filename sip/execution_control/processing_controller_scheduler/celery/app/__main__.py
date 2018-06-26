@@ -6,7 +6,7 @@ from .scheduler import ProcessingBlockScheduler
 
 def _init_logger():
     """Initialise the logger."""
-    _log = logging.getLogger('sip.ec.scheduler')
+    _log = logging.getLogger('sip')
     _log.setLevel(logging.DEBUG)
     _handler = logging.StreamHandler()
     _handler.setFormatter(logging.Formatter('%(asctime)s.%(msecs)03d - '
