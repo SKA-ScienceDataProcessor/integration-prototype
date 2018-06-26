@@ -12,5 +12,5 @@
     "num_streams": 40,
     "process_data": true,
     "write_data": false,
-    "filename": "test.pickle"
+    "filename": "test_receive.dat"
 }
