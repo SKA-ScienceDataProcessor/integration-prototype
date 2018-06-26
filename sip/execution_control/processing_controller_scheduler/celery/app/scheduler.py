@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""Processing Controller Scheduler main function
+"""Processing Controller Scheduler.
 
 This provides the Scheduler event loop, implemented using a set of
 asynchronous coroutines which provide the following functionality
@@ -20,11 +20,11 @@ import signal
 import logging
 import json
 
-from .mock_config_db_client import get_processing_block, \
-                                   get_processing_block_event, \
-                                   get_scheduling_block, \
-                                   get_scheduling_block_event, \
-                                   get_scheduling_block_ids
+from .db import get_processing_block, \
+                get_processing_block_event, \
+                get_scheduling_block, \
+                get_scheduling_block_event, \
+                get_scheduling_block_ids
 from mock_processing_block_controller.tasks import execute_processing_block
 from .queue import ProcessingBlockQueue
 

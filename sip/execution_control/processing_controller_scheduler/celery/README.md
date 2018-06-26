@@ -1,17 +1,22 @@
 # Processing Controller Scheduler (Celery variant)
 
-This module implements the Processing Controller Scheduler using the asyncio 
-event loop which spawns a Celery task to each execute Processing Block.
+This is an extremely lightweight prototype of a Processing Controller
+Scheduler which offloads the execution of Processing Blocks to Processing
+Block Controllers implemented as a set of
+[Celery](http://www.celeryproject.org/) tasks.
 
-## Quickstart
+For testing and stand-alone operation a number of mock components are provided.
 
-Start a containerised Redis instance used for the Celery broker, Celery 
+## Quick-start
+
+Start a containerised Redis instance used for the Celery broker, Celery
 backend, and mock Configuration database.
 
 ```bash
 docker-compose -f docker-compose.dev.yml up -d
-``` 
-*Note: that the Redis service is not backed by a docker volume in this 
+```
+
+*Note: that the Redis service is not backed by a docker volume in this
 compose file as this is not needed during testing*
 
 Create a virtualenv for application dependencies:
@@ -34,8 +39,8 @@ blocks from the mock Configuration database.
 ```bash
 python3 -m utils.create_scheduling_block
 python3 -m utils.delete_scheduling_block
-python3 -m utils.delete_processing_block 
-``` 
+python3 -m utils.delete_processing_block
+```
 
 Clean up:
 
@@ -51,5 +56,3 @@ Run with:
 pytest -m tests/test_queue.py
 pytest -m test/test_celery_task.py
 ```
-
-
