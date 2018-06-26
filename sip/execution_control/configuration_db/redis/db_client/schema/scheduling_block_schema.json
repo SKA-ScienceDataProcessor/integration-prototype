@@ -5,20 +5,35 @@
     "version":  "0.2",
     "type": "object",
 
+    "required": [
+        "id",
+        "scheduling_block_id",
+        "sub_array_id",
+        "processing_blocks"
+    ],
+
     "properties": {
+        "id": {
+            "description": "[date]-[project]-[type][id] for the scheduling block instance id",
+            "type": "string",
+            "pattern": "^[0-9]{8}-[a-z]+-sbi[0-9]+$"
+        },
         "scheduling_block_id": {
             "description": "[date]-[project]-[type][id] for the scheduling block id",
             "type": "string",
             "pattern": "^[0-9]{8}-[a-z]+-sb[0-9]+$"
         },
+        "sub_array_id": {
+            "description": "[type][id] for the sub array id",
+            "type": "string",
+            "pattern": "^subarray[0-9]+$"
+        },
+        "processing_blocks" : {
+            "$ref": "#/definitions/blocks"
+        },
         "name": {
             "description": "Optional name string",
             "type": "string"
-        },
-        "id": {
-            "description": "[date]-[project]-[type][id] for the scheduling block instance id",
-            "type": "string",
-            "pattern": "^[0-9]{8}-[a-z]+-sbi[0-9]+$"
         },
         "type": {
             "description": "Type of scheduling block",
@@ -28,11 +43,6 @@
             "description": "YYYYmmdd for the date",
             "type": "string",
             "pattern": "^[0-9]{8}$"
-        },
-        "sub_array_id": {
-            "description": "[type][id] for the sub array id",
-            "type": "string",
-            "pattern": "^subarray[0-9]+$"
         },
         "status": {
             "description": "Status of the scheduling block instance",
@@ -45,11 +55,8 @@
         "project": {
             "description": "Project of the scheduling block instance",
             "type": "string"
-        },
-        "processing_blocks" : {"$ref": "#/definitions/blocks"}
+        }
     },
-
-    "required": ["scheduling_block_id", "id", "sub_array_id", "processing_blocks"],
 
     "definitions": {
         "blocks": {
