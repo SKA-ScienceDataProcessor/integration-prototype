@@ -1,17 +1,15 @@
 # -*- coding: utf-8 -*-
-"""Low Level Configuration Service Client API"""
-
+"""Low Level Configuration Service Client API."""
 import os
 
 import redis
 
 
-class ConfigDB:
-    """Low level Configuration Database client"""
+class ConfigDbRedis:
+    """Low level Configuration Database client."""
 
     def __init__(self):
-        """ Create a connection to a configuration database"""
-        # Get Redis database object
+        """Create a connection to a configuration database."""
         redis_host = os.getenv('REDIS_HOST', 'localhost')
         redis_db_id = os.getenv('REDIS_DB_ID', 0)
         pool = redis.ConnectionPool(host=redis_host, db=redis_db_id,

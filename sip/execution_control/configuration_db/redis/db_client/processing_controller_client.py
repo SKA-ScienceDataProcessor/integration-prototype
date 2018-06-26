@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
-"""High Level Processing Controller Client API"""
-
+"""High Level Processing Controller Client API."""
 import ast
 import json
 import logging
@@ -8,7 +7,7 @@ import os
 
 from jsonschema import ValidationError, validate
 
-from .config_db_redis import ConfigDB
+from .config_db_redis import ConfigDbRedis
 
 
 LOG = logging.getLogger('SIP.EC.CDB')
@@ -18,9 +17,8 @@ class ProcessingControllerDbClient:
     """Configuration Database client API for the Processing Controller."""
 
     def __init__(self):
-        self._db = ConfigDB()
-
-        # Initialise Variables
+        """Initialise the client."""
+        self._db = ConfigDbRedis()
         self.scheduling_event_name = 'scheduling_block_events'
         self.processing_event_name = 'processing_block_events'
 
@@ -29,7 +27,7 @@ class ProcessingControllerDbClient:
     ###########################################################################
 
     def add_scheduling_block(self, config_dict):
-        """Add Scheduling Block to the database"""
+        """Add Scheduling Block to the database."""
         # Get schema for validation
         schema = self._get_schema()
         LOG.debug('Adding SBI with config: %s', config_dict)
@@ -92,7 +90,7 @@ class ProcessingControllerDbClient:
         return scheduling_block_ids
 
     def get_num_scheduling_block_ids(self):
-        """"Get number of scheduling blocks ids"""
+        """Get number of scheduling blocks ids"""
         return len(self.get_scheduling_block_ids())
 
     def get_processing_block_ids(self):
