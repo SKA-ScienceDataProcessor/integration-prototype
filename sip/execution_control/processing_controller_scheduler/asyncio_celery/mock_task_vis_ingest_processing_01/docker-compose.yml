@@ -1,0 +1,7 @@
+version: '3'
+
+services:
+
+  mock_task_vis_ingest_processing:
+    image: skasip/mock_task_vis_ingest_processing_01
+    build: .

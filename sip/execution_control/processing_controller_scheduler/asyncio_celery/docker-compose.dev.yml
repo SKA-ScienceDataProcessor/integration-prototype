@@ -1,0 +1,27 @@
+version: '3.4'
+
+services:
+
+  mock_configuration_db:
+    image: redis:4.0.6-alpine
+    ports:
+      - 6379:6379
+
+  mock_processing_block_controller:
+    image: skasip/mock_processing_block_controller
+    environment:
+      - CELERY_BROKER=redis://mock_configuration_db/1
+      - CELERY_BACKEND=redis://mock_configuration_db/2
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    build: ./mock_processing_block_controller
+
+  # https://github.com/joeferner/redis-commander
+  # REDIS_HOSTS string format:
+  #    [label]:[hostname]:[port]:[dbIndex]:[password]
+  redis-commander-db0:
+    image: rediscommander/redis-commander:latest
+    environment:
+    - REDIS_HOSTS=config_db:mock_configuration_db:6379:0
+    ports:
+    - 8081:8081
