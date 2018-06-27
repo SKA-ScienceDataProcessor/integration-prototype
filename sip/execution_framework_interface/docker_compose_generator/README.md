@@ -34,3 +34,9 @@ To remove the stack (and its services ... and the service containers)
 ```bash
 stack stack rm <stack name>
 ```
+
+## Running the linter and unit tests
+
+```bash
+py.test --pylint --codestyle -s -v --pylint-rcfile=../../../.pylintrc .
+```
