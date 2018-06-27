@@ -37,7 +37,7 @@ class DockerClient:
 
         Args:
         """
-        
+
         # Raise an exception if we are not a manager
         if not self._manager:
             raise RuntimeError('Services can only be run on swarm manager nodes')
@@ -45,92 +45,19 @@ class DockerClient:
         with open(docker_stack_file, 'r') as file:
             try:
                 s_config = yaml.load(file)
-                # self.start_service(s_config)
-
-                # TODO:(NJT) Need to figure out to empty list and
-                # dictionary after every loop
-                service_spec = {}
-                endpoints = {}
-                mode = {}
-                networks = []
-
-                # TODO: (NJT) Simply Looping the Dictionary
                 for config in s_config['services']:
                     service_exist = self._client.services.list(
                         filters={'name': config})
                     if not service_exist:
-                        service_spec['name'] = config
-                        for key, value in s_config['services'][config].items():
-                            time.sleep(2)
-                            if 'ports' in key:
-                                for port_element in value:
-                                    target_port = port_element.split(':')
-                                    for port in target_port:
-                                        endpoints[int(port)] = int(port)
-                                        # #TODO:(NJT) Need to rename new variable
-                                        #  to something useful
-                                        # new = endpoints.copy()
-                                        # new[int(port)] = int(port)
-                                endpoint_spec = docker.types.EndpointSpec(
-                                    ports=endpoints)
-                                service_spec['endpoint_spec'] = endpoint_spec
-
-                            else:
-                                if 'volumes' in key:
-                                    for volume_element in value:
-                                        service_spec[
-                                            'mounts'] = volume_element.split()
-                                else:
-                                    if 'deploy' in key:
-                                        for deploy_value in value:
-                                            if 'resources' in deploy_value:
-                                                resource_spec = DockerClient. \
-                                                    parse_resources(value,
-                                                                    deploy_value)
-                                                service_spec[
-                                                    'resources'] = resource_spec
-                                            else:
-                                                mode[deploy_value] = value[
-                                                    deploy_value]
-                                                mode_spec = docker.types. \
-                                                    ServiceMode(**mode)
-                                                service_spec['mode'] = mode_spec
-
-                                    else:
-                                        if 'networks' in key:
-                                            for n_key, n_value in \
-                                                    s_config['networks'].items():
-                                                for k, v in n_value.items():
-                                                    if 'name' in k:
-                                                        networks.append(v)
-                                            service_spec['networks'] = networks
-                                        else:
-                                            service_spec[key] = value
-
-                        print("Service spec")
-                        print(service_spec)
-
-                        # Creating Service
-                        self._client.services.create(**service_spec)
-
-                        # Clearing all the dict and list
-                        networks[:] = []
-                        service_spec.clear()
-                        endpoints.clear()
-                        mode.clear()
+                        service_spec = self.parse_service(s_config, config)
+                        for s_spec in service_spec:
+                            print("Service Spec: ", s_spec)
+                            self._client.services.create(**s_spec)
                     else:
                         print("Services already exists")
 
             except yaml.YAMLError as exc:
                 print(exc)
-
-    # DONT DELETE NOW, USEFUL CODE
-    # def print_keyword_args(self, **kwargs):
-    #     list = []
-    #     # kwargs is a dict of the keyword args passed to the function
-    #     for key, value in kwargs.items():
-    #         print("%s = %s" % (key, value))
-    #         list.append("%s = %s" % (key, value))
 
     def create_volume(self):
         """
@@ -272,7 +199,65 @@ class DockerClient:
     #     :param config_file:
     #     :return:
     #     """
-    #
+
+    ###########################################################################
+    # Parsing functions
+    ###########################################################################
+
+    def parse_service(self, s_config, config):
+        """
+
+        :param config:
+        :return:
+        """
+        # Initialising empty dictionary and list
+        service_spec = {}
+        endpoints = {}
+        mode = {}
+        networks = []
+
+        service_spec['name'] = config
+        for key, value in s_config['services'][config].items():
+            # time.sleep(2)
+            if 'ports' in key:
+                for port_element in value:
+                    target_port = port_element.split(':')
+                    for port in target_port:
+                        endpoints[int(port)] = int(port)
+                endpoint_spec = docker.types.EndpointSpec(ports=endpoints)
+                service_spec['endpoint_spec'] = endpoint_spec
+
+            else:
+                if 'volumes' in key:
+                    for volume_element in value:
+                        service_spec[
+                            'mounts'] = volume_element.split()
+                else:
+                    if 'deploy' in key:
+                        for deploy_value in value:
+                            if 'resources' in deploy_value:
+                                resource_spec = DockerClient.parse_resources(
+                                    value, deploy_value)
+                                service_spec[
+                                    'resources'] = resource_spec
+                            else:
+                                mode[deploy_value] = value[deploy_value]
+                                mode_spec = docker.types.ServiceMode(**mode)
+                                service_spec['mode'] = mode_spec
+
+                    else:
+                        if 'networks' in key:
+                            for n_key, n_value in s_config['networks'].items():
+                                for k, v in n_value.items():
+                                    if 'name' in k:
+                                        networks.append(v)
+                            service_spec['networks'] = networks
+                        else:
+                            service_spec[key] = value
+        yield service_spec
+
+        # Creating Service
+        #self._client.services.create(**service_spec)
 
     ###########################################################################
     # Methods
@@ -300,3 +285,13 @@ class DockerClient:
                         resources[mem_key] = int(mem_value)*1048576
         resource_spec = docker.types.Resources(**resources)
         return resource_spec
+
+
+    # DONT DELETE NOW, USEFUL CODE
+    # def print_keyword_args(self, **kwargs):
+    #     list = []
+    #     # kwargs is a dict of the keyword args passed to the function
+    #     for key, value in kwargs.items():
+    #         print("%s = %s" % (key, value))
+    #         list.append("%s = %s" % (key, value))
+
