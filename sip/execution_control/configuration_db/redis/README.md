@@ -28,8 +28,8 @@ instance (useful for debugging) issue the following command:
 docker-compose up -d
 ```
 
-This will deploy the containers to the local Docker installation. If
-wanting to deploy to Docker Swarm instead use the following command:
+This will deploy the containers to the local Docker installation. If wanting
+to deploy to Docker Swarm instead use the following command:
 
 ```bash
 docker stack deploy -c docker-compose.yml [stack name]
@@ -71,15 +71,12 @@ python3 -m db_client.utils.set_initial_data
 
 ### Test Scripts
 
-To test the Master Controller db client run the following command:
+While unit tests are run autmatically the [SIP CI/CD service](https://travis-ci.com/SKA-ScienceDataProcessor/integration-prototype),
+it is possible to run them manually with the following command:
+
+***Note**: a Redis db container must be started first in order for most of
+these tests to pass*
 
 ```bash
-python3 -m db_client.tests.test_master_client
-```
-
-To run examples demonstrating the use of the Processing Controller client
-run the following command
-
-```bash
-python3 -m db_client.tests.processing_controller_client_example
+py.test --pylint --codestyle -s -v --pylint-rcfile=../../../../.pylintrc .
 ```
