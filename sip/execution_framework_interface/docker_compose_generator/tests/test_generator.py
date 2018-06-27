@@ -24,17 +24,16 @@ def test_generate_sender_compose_file():
     assert 'docker_compose_template' in vis_send_config
     assert 'app_config_template' in vis_send_config
 
+    _dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '..',
+                                        'example_templates'))
+    template_loader = jinja2.FileSystemLoader(searchpath=_dir,
+                                              followlinks=True)
+    template_env = jinja2.Environment(loader=template_loader)
     path = vis_send_config['docker_compose_template']
-    path = os.path.abspath(path)
-    assert os.path.exists(path)
-    with open(os.path.abspath(path), 'r') as _file:
-        compose_template = jinja2.Template(_file.read())
+    compose_template = template_env.get_template(path)
 
     path = vis_send_config['app_config_template']
-    path = os.path.abspath(path)
-    assert os.path.exists(path)
-    with open(os.path.abspath(path), 'r') as _file:
-        app_config_template = jinja2.Template(_file.read())
+    app_config_template = template_env.get_template(path)
 
     senders = []
     for i in range(vis_send_config['num_senders']):

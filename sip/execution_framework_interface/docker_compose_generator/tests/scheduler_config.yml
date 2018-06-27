@@ -6,8 +6,8 @@ scheduler_config:
   - type: vis_send
     config:
       num_senders: 2
-      docker_compose_template: ./example_templates/docker-compose.send.j2.yml
-      app_config_template: ./example_templates/send.j2.json
+      docker_compose_template: docker-compose.send.j2.yml
+      app_config_template: send.j2.json
       destination_hosts:
       - ip1
       - ip2
@@ -16,5 +16,5 @@ scheduler_config:
   - type: vis_recv
     config:
       num_receivers: 2
-      docker_compose_template: ./docker-compose.recv.j2.yml
+      docker_compose_template: docker-compose.recv.j2.yml
       app_config: ./recv.json
