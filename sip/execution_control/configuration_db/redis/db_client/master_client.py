@@ -18,7 +18,7 @@ class MasterClient:
     def get_value(self, name, field):
         """Get value associated to the field in string"""
         path = ':'.join(name)
-        value = self._db.get_value(path, field)
+        value = self._db.get_hash_value(path, field)
         if value:
             return value
         return None
@@ -31,7 +31,7 @@ class MasterClient:
     def get_all_value(self, name):
         """Get all the value associated to the name, returned in dict"""
         path = ':'.join(name)
-        value = self._db.get_all_field_value(path)
+        value = self._db.get_hash_dict(path)
         if value:
             return value
         return None
@@ -49,7 +49,7 @@ class MasterClient:
         """Get the n'th element of the service list.
         If the does not point to an element 0 is return"""
         key = ':'.join(name)
-        element = self._db.get_element(key, index)
+        element = self._db.get_list_value(key, index)
         if element:
             element_eval = ast.literal_eval(element)
             return element_eval
@@ -68,7 +68,7 @@ class MasterClient:
         """Get the length of the service list.If the does not point
         to a list 0 is return"""
         key = ':'.join(name)
-        list_length = self._db.get_length(key)
+        list_length = self._db.get_list_length(key)
         if list_length:
             return list_length
         return 0
@@ -80,7 +80,7 @@ class MasterClient:
     def add_service_to_list(self, name, element):
         """Adds a new service to the end of the list"""
         key = ':'.join(name)
-        self._db.add_element(key, element)
+        self._db.prepend_to_list(key, element)
 
     ###########################################################################
     # Update functions
@@ -89,13 +89,13 @@ class MasterClient:
     def update_value(self, name, field, value):
         """"Updates the value of the given name and field"""
         path = ':'.join(name)
-        self._db.set_value(path, field, value)
+        self._db.set_hash_value(path, field, value)
 
     def update_service(self, v_path, field, value):
         """Update the service"""
         # Converts the name format
         path = self._convert_path(v_path)
-        self._db.set_value(path, field, value)
+        self._db.set_hash_value(path, field, value)
 
     ###########################################################################
     # Private functions

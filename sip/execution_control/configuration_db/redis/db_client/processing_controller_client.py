@@ -46,7 +46,7 @@ class ProcessingControllerDbClient:
 
             # Adding Scheduling block instance with id
             name = "scheduling_block:" + updated_block["id"]
-            self._db.set_specified_values(name, scheduling_block_data)
+            self._db.set_hash_values(name, scheduling_block_data)
 
             # Add a event to the scheduling block event list to notify
             # of a new scheduling block being added to the db.
@@ -58,7 +58,7 @@ class ProcessingControllerDbClient:
             for value in processing_block_data:
                 name = ("scheduling_block:" + updated_block["id"] +
                         ":processing_block:" + value['id'])
-                self._db.set_specified_values(name, value)
+                self._db.set_hash_values(name, value)
 
                 # Add a event to the processing block event list to notify
                 # of a new processing block being added to the db.
@@ -81,7 +81,7 @@ class ProcessingControllerDbClient:
 
         # Pattern used to search scheduling block ids
         pattern = 'scheduling_block:*'
-        block_ids = self._db.get_ids(pattern)
+        block_ids = self._db.get_keys(pattern)
 
         for block_id in block_ids:
             if 'processing_block' not in block_id:
@@ -101,7 +101,7 @@ class ProcessingControllerDbClient:
 
         # Pattern used to search processing block ids
         pattern = '*:processing_block:*'
-        block_ids = self._db.get_ids(pattern)
+        block_ids = self._db.get_keys(pattern)
 
         for block_id in block_ids:
             id_split = block_id.split(':')[-1]
@@ -152,7 +152,7 @@ class ProcessingControllerDbClient:
         for _id in block_ids:
             block_name = self._db.get_block(_id)
             for name in block_name:
-                blocks = self._db.get_all_field_value(name)
+                blocks = self._db.get_hash_dict(name)
                 yield blocks
 
     def get_latest_event(self, event_block):
@@ -170,7 +170,7 @@ class ProcessingControllerDbClient:
         """"Update the value of the given block id and field"""
         block_name = self._db.get_block(block_id)
         for name in block_name:
-            self._db.set_value(name, field, value)
+            self._db.set_hash_value(name, field, value)
 
     # #########################################################################
     # Delete functions
@@ -181,14 +181,14 @@ class ProcessingControllerDbClient:
 
         Removes the Scheduling Block Instance, and all Processing Blocks
         that belong to it from the database"""
-        scheduling_blocks = self._db.get_all_blocks(block_id)
+        scheduling_blocks = self._db.get_keys(block_id)
         if scheduling_blocks:
             for blocks in scheduling_blocks:
                 if "processing_block" not in blocks:
-                    self._db.delete_block(blocks)
+                    self._db.delete_key(blocks)
                 else:
                     split_key = blocks.split(':')
-                    self._db.delete_block(blocks)
+                    self._db.delete_key(blocks)
 
                     # Add a event to the processing block event list to notify
                     # about deleting from the db
@@ -209,7 +209,7 @@ class ProcessingControllerDbClient:
         for block in processing_block:
             print("")
             if 'processing_block' in block:
-                self._db.delete_block(block)
+                self._db.delete_key(block)
 
                 # Remove processing block id from scheduling block id
                 scheduling_block_id = block.split(':')
