@@ -5,6 +5,7 @@ import docker
 import logging
 import yaml
 import time
+import re
 
 from ast import literal_eval
 
@@ -36,97 +37,100 @@ class DockerClient:
 
         Args:
         """
-
-
+        
         # Raise an exception if we are not a manager
         if not self._manager:
             raise RuntimeError('Services can only be run on swarm manager nodes')
 
-        with open(docker_stack_file, 'r') as config:
+        with open(docker_stack_file, 'r') as file:
             try:
-                stack_config = yaml.load(config)
-                service_list = self.parse_config(stack_config)
-                for service_spec in service_list:
-                    print(service_spec)
-                    # self._client.services.create(**service_spec)
-                    # time.sleep(2)
-                # for name in stack_config['services']:
-                #     service_exist = self._client.services.list(
-                #         filters={'name': name})
-                #     if not service_exist:
-                #         service_list = self.parse_config(stack_config)
-                #
-                #         for service_spec in service_list:
-                #             print(service_spec)
-                           # self._client.services.create(**service_spec)
-                           # time.sleep(2)
+                s_config = yaml.load(file)
+                # self.start_service(s_config)
 
+                # TODO:(NJT) Need to figure out to empty list and
+                # dictionary after every loop
+                service_spec = {}
+                endpoints = {}
+                mode = {}
+                networks = []
 
+                # TODO: (NJT) Simply Looping the Dictionary
+                for config in s_config['services']:
+                    service_exist = self._client.services.list(
+                        filters={'name': config})
+                    if not service_exist:
+                        service_spec['name'] = config
+                        for key, value in s_config['services'][config].items():
+                            time.sleep(2)
+                            if 'ports' in key:
+                                for port_element in value:
+                                    target_port = port_element.split(':')
+                                    for port in target_port:
+                                        endpoints[int(port)] = int(port)
+                                        # #TODO:(NJT) Need to rename new variable
+                                        #  to something useful
+                                        # new = endpoints.copy()
+                                        # new[int(port)] = int(port)
+                                endpoint_spec = docker.types.EndpointSpec(
+                                    ports=endpoints)
+                                service_spec['endpoint_spec'] = endpoint_spec
 
+                            else:
+                                if 'volumes' in key:
+                                    for volume_element in value:
+                                        service_spec[
+                                            'mounts'] = volume_element.split()
+                                else:
+                                    if 'deploy' in key:
+                                        for deploy_value in value:
+                                            if 'resources' in deploy_value:
+                                                resource_spec = DockerClient. \
+                                                    parse_resources(value,
+                                                                    deploy_value)
+                                                service_spec[
+                                                    'resources'] = resource_spec
+                                            else:
+                                                mode[deploy_value] = value[
+                                                    deploy_value]
+                                                mode_spec = docker.types. \
+                                                    ServiceMode(**mode)
+                                                service_spec['mode'] = mode_spec
 
-                    #print_keyword_args(first_name="John", last_name="Doe")
+                                    else:
+                                        if 'networks' in key:
+                                            for n_key, n_value in \
+                                                    s_config['networks'].items():
+                                                for k, v in n_value.items():
+                                                    if 'name' in k:
+                                                        networks.append(v)
+                                            service_spec['networks'] = networks
+                                        else:
+                                            service_spec[key] = value
 
-                    # for key, value in service_spec.items():
-                    #     list.append(value)
-                    #
-                    # print(list)
+                        print("Service spec")
+                        print(service_spec)
 
-                  #  print("%s=%s" %(*service_spec, ' ')
+                        # Creating Service
+                        self._client.services.create(**service_spec)
 
-                   #print(list)
-
-                   # self._client.services.create(*service_spec, endpoint_spec)
-
-                    #volumes = stack_config['services'][name]['volumes']
-
-                    # self._client.services.create(
-                    #     name='config_database',
-                    #     image='redis:4.0.6-alpine', endpoint_spec = endpoint_spec, mounts = ['config_database1:/data/db'])
-
-                    # task = stack_config['services'][name]['image']
-                    # ports = stack_config['services'][name]['ports']
-                    # volumes = stack_config['services'][name]['volumes']
-                    #
-                    #
-                    # for element in ports:
-                    #     target_port = element.split(':')
-                    #     for port in target_port:
-                    #         endpoints[int(port)] = int(port)
-                    #
-                    # # Add the port to the endpoint spec
-                    # endpoint_spec = docker.types.EndpointSpec(
-                    #     ports=endpoints)
-                    #
-                    #
-                    #
-                    # print(task)
-                    # print(endpoint_spec)
-                    #print(volumes)
-
-                        #
-                        # self._client.services.create(
-                        #     image=task, endpoint_spec=endpoint_spec,
-                        #     name=name, mounts=volumes)
+                        # Clearing all the dict and list
+                        networks[:] = []
+                        service_spec.clear()
+                        endpoints.clear()
+                        mode.clear()
+                    else:
+                        print("Services already exists")
 
             except yaml.YAMLError as exc:
                 print(exc)
 
+    # DONT DELETE NOW, USEFUL CODE
     # def print_keyword_args(self, **kwargs):
     #     list = []
     #     # kwargs is a dict of the keyword args passed to the function
     #     for key, value in kwargs.items():
     #         print("%s = %s" % (key, value))
     #         list.append("%s = %s" % (key, value))
-
-
-        # # Check if there is a service running in this name
-        # service_exist = self._client.services.list(filters={'name': name})
-        # if not service_exist:
-        #     #TODO(NJT): NEED TO MODIFY THIS
-        #     service = self._client.services.create(image='busybox', command=[
-        #         'echo', 'hello'], name="testing_service")
-
-            # If the service isn't already running start the task as a service
 
     def create_volume(self):
         """
@@ -263,47 +267,36 @@ class DockerClient:
         #TODO: function. Probably best to do it inside the function
         pass
 
-    def parse_config(self, config_file):
-        """
-        :param config_file:
-        :return:
-        """
-        service_spec = {}
-        endpoints = {}
-        list = []
+    # def start_service(self, config_file):
+    #     """
+    #     :param config_file:
+    #     :return:
+    #     """
+    #
 
-        #TODO: (NJT) Simply Looping the Dictionary
-        output = yaml.dump(config_file)
-        print(output)
-        for config in config_file['services']:
-            service_spec['name'] = config
-            for key, value in config_file['services'][config].items():
-                time.sleep(2)
-                if 'ports' in key:
-                    for port_element in value:
-                        target_port = port_element.split(':')
-                        for port in target_port:
-                            #TODO:(NJT) Need to rename new variable to something useful
-                            new = endpoints.copy()
-                            new[int(port)] = int(port)
-                else:
-                    if 'volumes' in key:
-                        for volume_element in value:
-                            # print(elements)
-                            service_spec['mounts'] = volume_element.split()
+    ###########################################################################
+    # Methods
+    ###########################################################################
 
-                    else:
-                        service_spec[key] = value
+    @staticmethod
+    def parse_resources(value, deploy_value):
+        """ Parse resources key
+        Rename the key
+        Return resources_spec"""
 
-            # Add the port to the endpoint spec
-            endpoint_spec = docker.types.EndpointSpec(
-                ports=new)
-            service_spec['endpoint_spec'] = endpoint_spec
+        resources = {}
 
-            print(service_spec)
-
-            # TODO:(NJT) Need to figure out to layout the function, service create function needs to be here
-
-            self._client.services.create(**service_spec)
-
-        return list
+        for r in value[deploy_value]:
+            if 'limits' in r:
+                #TODO:(NJT) Need to check if there is a better way to do this
+                for r_key, r_value in value[deploy_value][r].items():
+                    if 'cpu' in r_key:
+                        cpu_value = float(r_value) * 10**9
+                        cpu_key = r_key[:3] + '_limit'
+                        resources[cpu_key] = int(cpu_value)
+                    if 'mem' in r_key:
+                        mem_value = re.sub('M', '', r_value)
+                        mem_key = r_key[:3] + '_limit'
+                        resources[mem_key] = int(mem_value)*1048576
+        resource_spec = docker.types.Resources(**resources)
+        return resource_spec
