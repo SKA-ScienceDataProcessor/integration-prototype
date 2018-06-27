@@ -1,0 +1,23 @@
+version: '3.6'
+
+services:
+
+  recv:
+    image: skasip/ingest_visibilities
+    command: {{ json_config }}
+    volumes:
+      - type: bind
+        source: {{ buffer_path }}
+        target: /app/output
+    deploy:
+        mode: replicated
+        replicas: {{ num_receivers }}
+        placement:
+          constraints: [node.labels.recv == true]
+    networks:
+      - hostnet
+
+networks:
+      hostnet:
+        external: true
+        name: host

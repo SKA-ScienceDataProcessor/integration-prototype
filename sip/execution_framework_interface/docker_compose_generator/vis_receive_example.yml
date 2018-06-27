@@ -1,0 +1,39 @@
+version: '3.6'
+
+services:
+
+  recv:
+    image: skasip/ingest_visibilities
+    command: >
+      ['{
+        "port_start": 41000,
+        "memory_pool":
+        {
+            "lower": 4465152,
+            "upper": 26214400,
+            "max_free": 16,
+            "initial": 8
+        },
+        "num_buffers": 2,
+        "num_buffer_times": 4,
+        "num_streams": 10,
+        "process_data": true,
+        "write_data": false,
+        "filename": "test_receive.dat"
+      }']
+    volumes:
+      - type: bind
+        source: .
+        target: /app/output
+    deploy:
+        mode: replicated
+        replicas: 1
+        placement:
+          constraints: [node.labels.recv == true]
+    networks:
+      - hostnet
+
+networks:
+      hostnet:
+        external: true
+        name: host
