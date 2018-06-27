@@ -5,7 +5,7 @@ services:
   recv:
     image: skasip/ingest_visibilities
     command: >
-      ['{
+      '{
         "port_start": 41000,
         "memory_pool":
         {
@@ -20,7 +20,7 @@ services:
         "process_data": true,
         "write_data": false,
         "filename": "test_receive.dat"
-      }']
+      }'
     volumes:
       - type: bind
         source: .
