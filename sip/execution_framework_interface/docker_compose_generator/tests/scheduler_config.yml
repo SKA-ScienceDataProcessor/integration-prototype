@@ -2,18 +2,19 @@
 
 scheduler_config:
 
-    # Visibility sender workflow stage configuration.
-    - type: vis_send
-      config:
-        - num_senders: 5
-          docker_compose_template: ./docker-compose.send.j2.yml
-          app_config_template: ./send.j2.json,
-          receiver_hosts:
-            - ip1
-            - ip2
+  # Visibility sender mock workflow stage configuration.
+  - type: vis_send
+    config:
+      num_senders: 2
+      docker_compose_template: ./example_templates/docker-compose.send.j2.yml
+      app_config_template: ./example_templates/send.j2.json
+      destination_hosts:
+      - ip1
+      - ip2
 
-    - type: vis_recv
-      config:
-        - num_receivers: 5
-          docker_compose_template: ./docker-compose.recv.j2.yml
-          app_config: ./recv.json
+  # Visibility receiver workflow stage configuration.
+  - type: vis_recv
+    config:
+      num_receivers: 2
+      docker_compose_template: ./docker-compose.recv.j2.yml
+      app_config: ./recv.json
