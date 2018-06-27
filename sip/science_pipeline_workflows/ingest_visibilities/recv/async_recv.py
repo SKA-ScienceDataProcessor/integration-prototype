@@ -30,6 +30,7 @@ class SpeadReceiver(object):
         self._num_buffers = self._config['num_buffers']
         self._num_buffer_times = self._config['num_buffer_times']
         self._num_streams = self._config['num_streams']
+        self._block = None
 
         # Create the streams.
         port_start = self._config['port_start']
@@ -50,7 +51,6 @@ class SpeadReceiver(object):
         This is run in an executor.
         """
         self._log.info("Worker thread processing block %i", i_block)
-        block = None
         time_overall0 = time.time()
         time_unpack = 0.0
         time_write = 0.0
@@ -69,36 +69,38 @@ class SpeadReceiver(object):
 
             if 'correlator_output_data' in items:
                 vis_data = items['correlator_output_data'].value['VIS']
-                if block is None:
+                if self._block is None:
                     num_baselines = vis_data.shape[0]
                     num_pols = vis_data[0].shape[0]
-                    block = numpy.zeros((self._num_buffer_times,
-                                         self._num_streams, num_baselines),
-                                        dtype=('c8', num_pols))
+                    self._block = numpy.zeros((self._num_buffer_times,
+                                               self._num_streams,
+                                               num_baselines),
+                                              dtype=('c8', num_pols))
+                    self._block[:, :, :] = 0  # To make the copies faster.
 
                 # Unpack data from the heap into the block to be processed.
                 time_unpack0 = time.time()
-                block[i_time, i_chan, :] = vis_data
+                self._block[i_time, i_chan, :] = vis_data
                 time_unpack += time.time() - time_unpack0
 
                 # Check the data for debugging!
-                val = block[i_time, i_chan, -1][-1].real
-                self._log.info("Data: %.3f", val)
+                val = self._block[i_time, i_chan, -1][-1].real
+                # self._log.info("Data: %.3f", val)
                 if int(val) >= self._num_buffer_times * (i_block + 1):
                     raise RuntimeError('Got time index %i - this '
                                        'should never happen!' % int(val))
 
-        if block is not None:
+        if self._block is not None:
             # Process the buffered data here.
             if self._config['process_data']:
                 pass
 
-            # Write the buffered data to storage as a binary pickle.
+            # Write the buffered data to storage.
             if self._config['write_data']:
                 time_write0 = time.time()
                 with open(self._config['filename'], 'ab') as f:
                     # Don't use pickle, it's really slow (even protocol 4)!
-                    numpy.save(f, block, allow_pickle=False)
+                    numpy.save(f, self._block, allow_pickle=False)
                 time_write += time.time() - time_write0
 
         # Report time taken.
@@ -108,10 +110,10 @@ class SpeadReceiver(object):
         self._log.info("Write was %.1f %%", 100 * time_write / time_overall)
         if time_unpack != 0.0:
             self._log.info("Memory speed %.1f MB/s",
-                           (block.nbytes * 1e-6)  / time_unpack)
+                           (self._block.nbytes * 1e-6)  / time_unpack)
         if time_write != 0.0:
             self._log.info("Write speed %.1f MB/s",
-                           (block.nbytes * 1e-6)  / time_write)
+                           (self._block.nbytes * 1e-6)  / time_write)
 
     async def _run_loop(self, executor):
         """Main loop."""
@@ -193,6 +195,8 @@ def main():
     logging.basicConfig(format='%(asctime)-23s %(name)-12s %(threadName)-22s '
                                '%(message)s',
                         level=logging.INFO, stream=sys.stdout)
+
+    print(sys.argv[1])
 
     # Load SPEAD configuration from JSON file.
     # with open(sys.argv[-1]) as f:
