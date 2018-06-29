@@ -5,26 +5,58 @@ import os
 import redis
 import signal
 import json
-from logging.config import dictConfig
+import logging.config
 
 from flask import request
 from flask_api import FlaskAPI, status
 
-dictConfig({
-    'version': 1,
-    'formatters': {'default': {
-        'format': '[%(asctime)s] %(levelname)s in %(module)s: %(message)s',
-    }},
-    'handlers': {'wsgi': {
-        'class': 'logging.StreamHandler',
-        'stream': 'ext://flask.logging.wsgi_errors_stream',
-        'formatter': 'default'
-    }},
-    'root': {
-        'level': 'INFO',
-        'handlers': ['wsgi']
-    }
-})
+
+logConfigAsJSON = '''{
+   "version": 1, 
+   "formatters": 
+   {
+      "default": 
+      {
+         "format": "[%(asctime)s] %(levelname)s in %(module)s: %(message)s"
+      },
+      "flask_style":
+      {
+         "format": "[%(asctime)s] [%(process)s] [%(levelname)s] in %(module)s: %(message)s",
+         "datefmt": "%Y-%m-%d %H:%M:%S %z"
+      }
+   }, 
+   "handlers": 
+   {
+      "wsgi": 
+      {
+         "class": "logging.StreamHandler", 
+         "stream": "ext://flask.logging.wsgi_errors_stream",
+         "formatter": "flask_style" 
+      }
+   }, 
+   "root": 
+   { 
+      "level": "INFO",
+      "handlers": ["wsgi"]
+   }
+}
+'''
+logging.config.dictConfig(json.loads(logConfigAsJSON))
+#~ logging.config.dictConfig({
+    #~ 'version': 1,
+    #~ 'formatters': {'default': {
+        #~ 'format': '[%(asctime)s] %(levelname)s in %(module)s: %(message)s',
+    #~ }},
+    #~ 'handlers': {'wsgi': {
+        #~ 'class': 'logging.StreamHandler',
+        #~ 'stream': 'ext://flask.logging.wsgi_errors_stream',
+        #~ 'formatter': 'default'
+    #~ }},
+    #~ 'root': {
+        #~ 'level': 'INFO',
+        #~ 'handlers': ['wsgi']
+    #~ }
+#~ })
 
 APP = FlaskAPI(__name__)
 
@@ -96,14 +128,14 @@ def state():
             return {'state': 'UNKNOWN',
                     'reason': 'services watchdog has died.'}
         else:
-            APP.logger.debug(timestamp)
-            APP.logger.debug(datetime.utcnow())
+            APP.logger.debug("timestamp in DB: {}".format(timestamp))
+            APP.logger.debug("current time:    {}".format(datetime.utcnow()))
             timestamp = datetime.strptime(timestamp, '%Y-%m-%d %H:%M:%S.%f')
             if (datetime.utcnow() - timestamp).seconds < 10:
                 APP.logger.debug('timestamp okay')
                 return {'state': current_state}
             else:
-                APP.logger.debug('timestamp stale')
+                APP.logger.warning('timestamp stale')
                 return {'state': 'UNKNOWN',
                         'reason': 'services watchdog has died.'}
     except redis.exceptions.ConnectionError:
