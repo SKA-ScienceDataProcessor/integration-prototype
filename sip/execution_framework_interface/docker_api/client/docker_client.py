@@ -4,10 +4,8 @@
 import docker
 import logging
 import yaml
-import time
 import re
-
-from ast import literal_eval
+import os
 
 LOG = logging.getLogger('SIP.EFI.DC')
 
@@ -32,17 +30,17 @@ class DockerClient:
     # Create functions
     ###########################################################################
 
-    def create_service(self, docker_stack_file):
-        """
+    def create_services(self, compose_file):
+        """ Create new services
 
         Args:
+            compose_file (file): Docker compose file
         """
-
         # Raise an exception if we are not a manager
         if not self._manager:
             raise RuntimeError('Services can only be run on swarm manager nodes')
 
-        with open(docker_stack_file, 'r') as file:
+        with open(compose_file, 'r') as file:
             try:
                 s_config = yaml.load(file)
                 for config in s_config['services']:
@@ -59,30 +57,46 @@ class DockerClient:
             except yaml.YAMLError as exc:
                 print(exc)
 
-    def create_volume(self):
+    def create_volume(self, volume_name, driver_spec=None):
+        """ Create new volumes
+        Args:
+            volume_name (string): Name to create docker volume
+            driver_spec (string): Driver for the docker volume
         """
 
-        Args:
-        """
-        pass
+        # Default values
+        if driver_spec:
+            _driver = driver_spec
+        else:
+            _driver = 'local'
+
+        # Raise an exception if we are not a manager
+        if not self._manager:
+            raise RuntimeError('Services can only be deleted '
+                               'on swarm manager nodes')
+
+        self._client.volumes.create(name=volume_name, driver=_driver)
 
     ###########################################################################
     # Delete functions
     ###########################################################################
 
-    def delete_service(self, name):
+    def delete_service(self, service_name):
         """ Removes/stops a service
 
         Only the manager nodes can delete a service
+
+        Args:
+            service_name (string): Name of the service
         """
 
         # Raise an exception if we are not a manager
         if not self._manager:
-            raise RuntimeError(\
-                'Services can only be deleted on swarm manager nodes')
+            raise RuntimeError('Services can only be deleted '
+                               'on swarm manager nodes')
 
         # Remove the service
-        self._api_client.remove_service(name)
+        self._api_client.remove_service(service_name)
 
     def delete_all_services(self):
         """ Removes/stops a service
@@ -92,8 +106,8 @@ class DockerClient:
 
         # Raise an exception if we are not a manager
         if not self._manager:
-            raise RuntimeError(\
-                'Services can only be deleted on swarm manager nodes')
+            raise RuntimeError('Services can only be deleted '
+                               'on swarm manager nodes')
 
         _service_list = self.get_service_list()
         for _services in _service_list:
@@ -108,30 +122,32 @@ class DockerClient:
         """ Get a list of nodes
 
         Only the manager nodes can retrieve all the services
-        Args:
         """
         # Initialise variables
-        nodes = []
+        _nodes = []
 
         # Raise an exception if we are not a manager
         if not self._manager:
-            raise RuntimeError(\
-                'Services can only be deleted on swarm manager nodes')
+            raise RuntimeError('Only the Swarm manager node '
+                               'can retrieve all the nodes.')
 
         _list = self._client.nodes.list()
+
         for _node_list in _list:
-            nodes.append(_node_list.id)
-        return nodes
+            _nodes.append(_node_list.id)
+        return _nodes
 
     def get_node_details(self, node_id):
         """ Get details of a node
 
         Args:
+            node_id (list): List of node ID
         """
+
         # Raise an exception if we are not a manager
         if not self._manager:
-            raise RuntimeError(\
-                'Services can only be deleted on swarm manager nodes')
+            raise RuntimeError('Only the Swarm manager node can '
+                               'retrieve node details.')
 
         _node = self._client.nodes.get(node_id)
         return _node.attrs
@@ -140,13 +156,12 @@ class DockerClient:
         """ Get a list of service
 
         Only the manager nodes can retrieve all the services
-        Args:
         """
 
         # Raise an exception if we are not a manager
         if not self._manager:
-            raise RuntimeError(\
-                'Services can only be deleted on swarm manager nodes')
+            raise RuntimeError('Only the Swarm manager node can retrieve'
+                               ' all the services.')
 
         _service_list = self._client.services.list()
         return _service_list
@@ -155,21 +170,26 @@ class DockerClient:
         """ Get details of a service
 
         Args:
+            service_id (list): List of service ID
         """
+
         # Raise an exception if we are not a manager
         if not self._manager:
-            raise RuntimeError(\
-                'Services can only be deleted on swarm manager nodes')
+            raise RuntimeError('Only the Swarm manager node can retrieve all'
+                               ' the services details.')
 
         _service = self._client.services.get(service_id)
         return _service.attrs
 
-    def get_volume(self):
-        """ Get a volume
+    def get_volume_details(self, volume_name):
+        """ Get details of the volume
 
         Args:
+            volume_name (string): Name of the volume
         """
-        pass
+
+        _volume = self._client.volumes.get(volume_name)
+        return _volume.attrs
 
     ###########################################################################
     # Update functions
@@ -180,7 +200,11 @@ class DockerClient:
 
         Args:
         """
-        pass
+
+        # Raise an exception if we are not a manager
+        if not self._manager:
+            raise RuntimeError('Only the Swarm manager node can update '
+                               'services details.')
 
     def update_node(self, name, labels):
         """Update node's configuration
@@ -190,60 +214,88 @@ class DockerClient:
             labels (dict): Label to add to the node
         """
 
+        # Raise an exception if we are not a manager
+        if not self._manager:
+            raise RuntimeError('Only the Swarm manager node can update '
+                               'node details.')
+
         #TODO:(NJT) Need to think about wether to create the spec inside this
         #TODO: function. Probably best to do it inside the function
         pass
-
-    # def start_service(self, config_file):
-    #     """
-    #     :param config_file:
-    #     :return:
-    #     """
 
     ###########################################################################
     # Parsing functions
     ###########################################################################
 
     def parse_service(self, s_config, config):
-        """
+        """Parsing the docker compose file
 
-        :param config:
-        :return:
+        Args:
+            s_config ():
+            config ():
         """
         # Initialising empty dictionary and list
-        service_spec = {}
-        endpoints = {}
-        mode = {}
+        _service_spec = {}
+        _endpoints = {}
+        _mode = {}
+
         networks = []
 
-        service_spec['name'] = config
+        _service_spec['name'] = config
         for key, value in s_config['services'][config].items():
             # time.sleep(2)
             if 'ports' in key:
                 for port_element in value:
                     target_port = port_element.split(':')
                     for port in target_port:
-                        endpoints[int(port)] = int(port)
-                endpoint_spec = docker.types.EndpointSpec(ports=endpoints)
-                service_spec['endpoint_spec'] = endpoint_spec
-
+                        _endpoints[int(port)] = int(port)
+                endpoint_spec = docker.types.EndpointSpec(ports=_endpoints)
+                _service_spec['endpoint_spec'] = endpoint_spec
             else:
                 if 'volumes' in key:
                     for volume_element in value:
-                        service_spec[
-                            'mounts'] = volume_element.split()
+                        for v_key, v_value in volume_element.items():
+                            if v_key == 'source':
+                                if v_value == '.':
+                                    source = os.path.dirname(
+                                        os.path.abspath(__file__))
+                                else:
+                                    source = v_value
+                            if v_key == 'target':
+                                target = v_value
+                        volume = [source + ':' + target]
+                        _service_spec['mounts'] = volume
+
+                        #Don't delete this now
+                        #service_spec['mounts'] = volume_element.split()
                 else:
                     if 'deploy' in key:
-                        for deploy_value in value:
-                            if 'resources' in deploy_value:
+                        for d_value in value:
+                            if 'restart_policy' in d_value:
+                                restart_spec = docker.types.RestartPolicy(
+                                    **value[d_value])
+                                _service_spec['restart_policy'] = restart_spec
+
+                            if 'mode' in d_value:
+                                if 'replicas' in d_value:
+                                    _mode[d_value] = value[d_value]
+                                else:
+                                    _mode[d_value] = value[d_value]
+
+                            #TODO: (NJT) Need to sort this out, better with the TAsk Template
+                            # if 'placement' in d_value:
+                            #     placement_spec = docker.types.Placement(
+                            #         **value[d_value])
+                            #     print(placement_spec)
+
+                            if 'resources' in d_value:
                                 resource_spec = DockerClient.parse_resources(
-                                    value, deploy_value)
-                                service_spec[
-                                    'resources'] = resource_spec
-                            else:
-                                mode[deploy_value] = value[deploy_value]
-                                mode_spec = docker.types.ServiceMode(**mode)
-                                service_spec['mode'] = mode_spec
+                                    value, d_value)
+                                _service_spec['resources'] = resource_spec
+
+                        # Setting the types
+                        mode_spec = docker.types.ServiceMode(**_mode)
+                        _service_spec['mode'] = mode_spec
 
                     else:
                         if 'networks' in key:
@@ -251,10 +303,10 @@ class DockerClient:
                                 for k, v in n_value.items():
                                     if 'name' in k:
                                         networks.append(v)
-                            service_spec['networks'] = networks
+                            _service_spec['networks'] = networks
                         else:
-                            service_spec[key] = value
-        yield service_spec
+                            _service_spec[key] = value
+        yield _service_spec
 
         # Creating Service
         #self._client.services.create(**service_spec)
@@ -264,27 +316,71 @@ class DockerClient:
     ###########################################################################
 
     @staticmethod
-    def parse_resources(value, deploy_value):
+    def parse_resources(value, d_value):
         """ Parse resources key
         Rename the key
-        Return resources_spec"""
+        Return resources_spec
 
-        resources = {}
+        Args:
+            value
+            d_value
+        """
 
-        for r in value[deploy_value]:
+        # Initialising empty dictionary
+        _resources = {}
+
+        for r in value[d_value]:
             if 'limits' in r:
                 #TODO:(NJT) Need to check if there is a better way to do this
-                for r_key, r_value in value[deploy_value][r].items():
+                for r_key, r_value in value[d_value][r].items():
                     if 'cpu' in r_key:
                         cpu_value = float(r_value) * 10**9
                         cpu_key = r_key[:3] + '_limit'
-                        resources[cpu_key] = int(cpu_value)
+                        _resources[cpu_key] = int(cpu_value)
                     if 'mem' in r_key:
                         mem_value = re.sub('M', '', r_value)
                         mem_key = r_key[:3] + '_limit'
-                        resources[mem_key] = int(mem_value)*1048576
-        resource_spec = docker.types.Resources(**resources)
-        return resource_spec
+                        _resources[mem_key] = int(mem_value)*1048576
+        _resource_spec = docker.types.Resources(**_resources)
+        return _resource_spec
+
+    # def create_task_template(self, value):
+    #     """" Create task template which can be used when creating or updaing
+    #     a service
+    #     """
+    #
+    #     for d_value in value:
+    #         print(d_value)
+    #         if 'resources' in d_value:
+    #             print("In HERE")
+    #             resource_spec = DockerClient.parse_resources(value, d_value)
+    #
+    #         #     service_spec[
+    #         #         'resources'] = resource_spec
+    #         # print(deploy_value)
+    #         #
+    #         # if 'placement' in deploy_value:
+    #         #     for p_key in value[deploy_value]:
+    #         #         # service_spec[p_key] = value[deploy_value][p_key]
+    #         #     # print()
+    #         #     # for p_key in value[deploy_value]:
+    #         #     #     print(value[deploy_value][p_key])
+    #
+    #         print(d_value)
+    #         if 'restart_policy' in d_value:
+    #             for r_value in value:
+    #                 print(value[r_value])
+    #         #         r_new = value[r_value]
+    #         #         print(r_new)
+    #         #         restart_spec = docker.types.RestartPolicy(**r_new)
+    #         #         print(restart_spec)
+    #
+    #         # else:
+    #         #     mode[deploy_value] = value[deploy_value]
+    #         #     mode_spec = docker.types.ServiceMode(**mode)
+    #         #     service_spec['mode'] = mode_spec
+    #
+    #         return 0
 
 
     # DONT DELETE NOW, USEFUL CODE

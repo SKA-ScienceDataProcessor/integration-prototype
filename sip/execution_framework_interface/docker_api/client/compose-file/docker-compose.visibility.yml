@@ -4,8 +4,6 @@ services:
 
     recv1:
         image: skasip/ingest_visibilities
-        ports:
-          - 6379:6379
         volumes:
           - type: bind
             source: /var/mnt/ceph/fred/
