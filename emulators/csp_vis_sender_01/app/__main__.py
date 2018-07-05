@@ -49,7 +49,8 @@ def main():
     log.info('Loading config: %s', args.config_file.name)
     config = json.load(args.config_file)
     if args.print_settings:
-        log.info('Settings:\n %s', json.dumps(config, indent=2, sort_keys=True))
+        log.info('Settings:\n %s', json.dumps(config, indent=2,
+                                              sort_keys=True))
     sim = SimpleSimulator(config)
     sim.simulate_heaps(HeapStreamer(config, sim.frame_shape))
 

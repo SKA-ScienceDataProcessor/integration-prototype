@@ -13,7 +13,7 @@ import time
 
 
 class HeapStreamer:
-    """Class for sending SPEAD heaps to one or more SPEAD streams (UDP sockets).
+    """Class for sending SPEAD heaps to one or more SPEAD streams.
 
     Streams are configured according to a python dictionary passed to the
     constructor. The content of the data sent in each heap
