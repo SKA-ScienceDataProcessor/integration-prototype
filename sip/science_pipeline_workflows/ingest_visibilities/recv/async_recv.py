@@ -110,10 +110,10 @@ class SpeadReceiver(object):
         self._log.info("Write was %.1f %%", 100 * time_write / time_overall)
         if time_unpack != 0.0:
             self._log.info("Memory speed %.1f MB/s",
-                           (self._block.nbytes * 1e-6)  / time_unpack)
+                           (self._block.nbytes * 1e-6) / time_unpack)
         if time_write != 0.0:
             self._log.info("Write speed %.1f MB/s",
-                           (self._block.nbytes * 1e-6)  / time_write)
+                           (self._block.nbytes * 1e-6) / time_write)
 
     async def _run_loop(self, executor):
         """Main loop."""
