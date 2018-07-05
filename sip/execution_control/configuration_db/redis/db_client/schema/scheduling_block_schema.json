@@ -2,7 +2,7 @@
     "$schema": "http://json-schema.org/draft-07/schema#",
     "title": "Scheduling Block Instance",
     "description": "Schema for an SKA Scheduling Block Instance",
-    "version":  "0.2",
+    "version":  "0.3",
     "type": "object",
 
     "properties": {
@@ -68,6 +68,10 @@
                         "description": "Type of the processing block",
                         "type": "string"
                     },
+                    "template": {
+                        "description": "Template for processing block",
+                        "type": "string"
+                    },
                     "priority": {
                         "description": "The Priority of the processing block",
                         "type": "number"
@@ -76,11 +80,11 @@
                         "description": "Status of the processing block",
                         "type": "string"
                     },
-                    "resources_requirement" : {"$ref": "#/definitions/resource_requirement"},
-                    "assigned_resources" : {"$ref": "#/definitions/assigned_resources"},
-                    "workflow" : {"$ref": "#/definitions/workflow"}
+                    "workflow": {
+                        "$ref": "#/definitions/workflow"
+                    }
                 },
-                "required": ["id", "resources_requirement"]
+                "required": ["id"]
             }
         },
 
@@ -107,14 +111,25 @@
         },
 
         "workflow": {
-            "description": "Workflow stages",
+            "description": "Workflow stage",
             "type": "object",
             "properties": {
+                "type": {
+                    "description": "[stage, data, recv, vis, ical, vl]",
+                    "type": "string"
+                },
                 "status": {
-                "description": "Status of the workflow stage",
-                "type": "string"
+                    "description": "Status of the workflow stage",
+                    "type": "string"
+                },
+                "resources_requirement": {
+                    "$ref": "#/definitions/resource_requirement"
+                },
+                "assigned_resources": {
+                    "$ref": "#/definitions/assigned_resources"
                 }
-            }
+            },
+            "required": ["type", "resources_requirement"]
         }
     }
 }
