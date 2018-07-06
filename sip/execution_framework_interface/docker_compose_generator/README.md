@@ -52,7 +52,7 @@ stack stack rm <stack name>
 ## Running the linter and unit tests
 
 Linting and unit tests are run automatically by the SIP CI/CD system but can
-also be run manually with:
+also be run manually from the `docker_compose_generator` code directory with:
 
 ```bash
 py.test --pylint --codestyle -s -v --pylint-rcfile=../../../.pylintrc .

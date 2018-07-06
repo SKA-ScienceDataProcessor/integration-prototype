@@ -1,4 +1,5 @@
 ---
+# Example of configuration of workflow stage.
 
 scheduler_config:
 
@@ -16,5 +17,6 @@ scheduler_config:
   - type: vis_recv
     config:
       num_receivers: 2
+      buffer_path: .
       docker_compose_template: docker-compose.recv.j2.yml
-      app_config: ./recv.json
+      app_config: recv.json
