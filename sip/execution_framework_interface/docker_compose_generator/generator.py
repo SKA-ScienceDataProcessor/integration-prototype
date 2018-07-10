@@ -67,9 +67,3 @@ def generate_compose_file(config):
         raise ValueError('Unknown workflow stage type {}'.format(stage_type))
 
     return compose_file
-
-
-def render_compose_template(template, **kwargs):
-    """Render a docker compose template."""
-    template = jinja2.Template(template)
-    return template.render(kwargs)
