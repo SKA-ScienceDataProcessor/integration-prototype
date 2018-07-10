@@ -5,7 +5,7 @@ services:
 {% for sender in senders %}
   {{ sender.service_name }}:
     image: skasip/csp_vis_sender
-    command: '{{ sender.config }}'
+    command: '{{ sender.command }}'
     deploy:
       mode: replicated
       replicas: 1

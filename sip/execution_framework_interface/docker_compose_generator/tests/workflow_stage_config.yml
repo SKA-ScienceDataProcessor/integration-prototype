@@ -1,0 +1,45 @@
+---
+# Example of configuration of workflow stages.
+
+workflow:
+
+  # Minimal fields
+  - type: test
+    status:
+    reqesources_required:
+    resources_assigned:
+    ee_config:
+    app_config:
+
+  # Visibility sender mock workflow stage configuration.
+  - type: csp_vis_emulator
+    status:
+    resources_required:
+      nodes: 2
+    resorces_assigned:
+    ee_config:
+      type: docker_swarm
+      compose_template: docker-compose.send.j2.yml
+      num_senders: 2
+    app_config:
+      command_args:
+        template: send.j2.json
+      destination_hosts:
+        - ip1
+        - ip2
+      destination_port_start: 41000
+
+  # Visibility receiver workflow stage configuration.
+  - type: vis_recv
+    status:
+    resources_required:
+      nodes: 2
+    resources_assigned:
+    ee_config:
+      type: docker_swarm
+      compose_template: docker-compose.recv.j2.yml
+      num_receivers: 2
+      buffer_path: .
+    app_config:
+      command_args:
+        json_file: recv.json
