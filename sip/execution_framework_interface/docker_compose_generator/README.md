@@ -1,53 +1,48 @@
 # Docker Compose generator library
 
 Library for generating
-[Docker Compose](https://docs.docker.com/compose/compose-file/) format files
-for use with Docker Swarm based on [Jinja2](http://jinja.pocoo.org/docs/2.10/)
-templates.
+[Docker Compose](https://docs.docker.com/compose/compose-file/) files
+for use with Docker Swarm based on workflow stage configuration data
+and [Jinja2](http://jinja.pocoo.org/docs/2.10/) templates.
 
-This is intended to be used when executing Processing Block workflow stages
-by the Processing Controller (Scheduler) and / or Processing Block Controller
-when the SIP Docker Swarm Python API is being used. The SIP Docker Swarm
-Python client API uses Docker Compose format files in order to run
-Docker Services on a Swarm Cluster providing an API equivialent to the
-`docker stack deploy` command. This library can be used to dynamically
-create the Docker Compose files based on Jinja2 templates and Processing Block
-workflow configuration information.
+This library is intended to be used when executing Processing Block workflow
+stages from Processing Block Controller when Docker Swarm is used
+to deploy the runtime containers via the SIP Docker Swarm Python API which
+operates using the Docker compose format to define services and their
+configuration. This has been chosen to not have to invent a new way of
+specifiying services and allows a programatic API with the equivalent function
+of the `docker stack deploy` Docker CLI function.
+
+This library assumes that the workflow stage configuration adheres to a the
+data model described on SDP confluence at
+<https://confluence.ska-sdp.org/display/WBS/SIP%3A+Configuration+Database+Data+Model>.
+
+In this model each workflow stage is an object of a well defined type and
+a set of conifuration objects describing the resource requirements,
+execution engine configuration and workflow application configuration.
+According to the specified type, this library parses these configuration
+objects to generate a Docker compose file format string which can be
+saved or passed to the SIP Docker Swarm Python API.
 
 ## Quick-start
 
-**TODO(BM) Move this quickstart info somewhere else as is more about testing
-a docker compose example that the final end product of this library.?**
+In order to use the library, import the `generator` module and call the
+`generate_compose_file` method which takes a workflow stage configuration
+dictionary described by the SIP workflow stage configuration data model.
 
-To test the 'generated' recevive compose file
+This function returns a string containing a Docker Compose file which can
+be used to run the workflow stage.
 
-```bash
-docker stack deploy -c vis_receive_example.yml <stack name>
-```
+Currently this library handles the following types of workflow stage:
 
-This should generate a recv servive which can be inspected with:
+- vis_ingest
+- csp_vis_emulator
 
-```bash
-docker service ls
-```
-
-or:
-
-```bash
-docker stack services <stack name>
-```
-
-To check what stacks are running:
-
-```bash
-docker stack ls
-```
-
-To remove the stack (and its services ... and the service containers)
-
-```bash
-stack stack rm <stack name>
-```
+In order to add additional workflow stage types, a new module should be added
+to the `generators` folder which includes a function that interprets the
+workflow stage configuration and generates a Docker Compose file. How this
+function is written will be dependenent on the workflow type but may make
+use of templates and static configuration files loaded from a data store.
 
 ## Running the linter and unit tests
 

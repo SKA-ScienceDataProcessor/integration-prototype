@@ -48,7 +48,7 @@ def load_template(file_path, search_paths=None):
     # Set the default search path, if not defined in the function argument.
     if not search_paths:
         cwd = os.path.abspath(os.path.dirname(__file__))
-        search_paths = os.path.join(cwd, '..', 'example_templates')
+        search_paths = os.path.join(cwd, 'static')
 
     # Load the template
     loader = jinja2.FileSystemLoader(searchpath=search_paths)
@@ -74,7 +74,7 @@ def load_json_file(file_path, search_paths=None):
     # Set the default search path, if not defined in the function argument.
     if not search_paths:
         cwd = os.path.abspath(os.path.dirname(__file__))
-        search_paths = os.path.join(cwd, '..', 'example_templates')
+        search_paths = os.path.join(cwd, 'static')
 
     if not isinstance(search_paths, list):
         search_paths = [search_paths]
