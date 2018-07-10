@@ -6,8 +6,6 @@ Generates Docker compose files for use with Docker Swarm
 """
 import logging
 
-import jinja2
-
 from .generators.csp_vis_emulator import generate as generate_vis_send
 from .generators.vis_ingest import generate as generate_vis_recv
 

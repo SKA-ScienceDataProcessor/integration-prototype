@@ -26,7 +26,7 @@ saved or passed to the SIP Docker Swarm Python API.
 
 ## Quick-start
 
-In order to use the library, import the `generator` module and call the
+In order to use the library, import the `compose_generator` module and call the
 `generate_compose_file` method which takes a workflow stage configuration
 dictionary described by the SIP workflow stage configuration data model.
 
@@ -43,6 +43,9 @@ to the `generators` folder which includes a function that interprets the
 workflow stage configuration and generates a Docker Compose file. How this
 function is written will be dependenent on the workflow type but may make
 use of templates and static configuration files loaded from a data store.
+Once the new generator module and function has been added it should also be
+added to the set of if statement in the `compose_generator.py`
+`generate_compose_file` method which handle each workflow stage type.
 
 ## Running the linter and unit tests
 
