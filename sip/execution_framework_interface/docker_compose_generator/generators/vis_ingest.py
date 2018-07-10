@@ -7,7 +7,7 @@ from .utils import load_template, validate_config, load_json_file
 
 
 def generate(config):
-    """Generate a Docker compose file for the Visibility ingest workflow stage
+    """Generate Docker compose file for the visibility ingest workflow stage.
 
     This is expected to be run using Docker Swarm as an Execution Engine.
 
@@ -19,20 +19,21 @@ def generate(config):
 
     """
     # Validate the workflow stage configuration
-    validate_config(config, stage_type='vis_recv', ee_type='docker_swarm')
+    validate_config(config, stage_type='vis_ingest', ee_type='docker_swarm')
 
     # Get local configuration object references
     ee_config = config['ee_config']
     app_config = config['app_config']
 
+    # TODO(BM) Validate the ee and app configuration schema
+
     app_args_file = app_config['command_args']['json_file']
     json_args = json.dumps(load_json_file(app_args_file))
 
-    # TODO(BM): Get this from the configuration.
     template_params = dict(
         json_config=json_args,
-        buffer_path='.',
-        num_receivers=2
+        buffer_path=ee_config['buffer_path'],
+        num_receivers=ee_config['num_receivers']
     )
 
     # Render the compose template for the ingest serivce configuraion

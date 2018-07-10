@@ -10,7 +10,7 @@ import jinja2
 import pytest
 
 from ..generator import generate_compose_file
-from ..compose_generators.utils import load_template
+from ..generators.utils import load_template
 
 
 logging.basicConfig(level='DEBUG')
@@ -62,7 +62,7 @@ def test_generate_ingest_compose_file():
 
     # Generate and verify the compose file
     stage_index = 2
-    assert config['workflow'][stage_index]['type'] == 'vis_recv'
+    assert config['workflow'][stage_index]['type'] == 'vis_ingest'
     compose_file = generate_compose_file(config['workflow'][stage_index])
     compose_dict = yaml.load(compose_file)
     assert 'services' in compose_dict

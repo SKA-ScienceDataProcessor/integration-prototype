@@ -28,6 +28,8 @@ def generate(config):
     ee_config = config['ee_config']
     app_config = config['app_config']
 
+    # TODO(BM) Validate the ee and app configuration schema
+
     # Load the application command line args template
     app_template = app_config['command_args']['template']
     app_template = load_template(app_template)
@@ -40,8 +42,8 @@ def generate(config):
 
     # Generate configuration for each sender service.
     senders = []
-    # FIXME(BM) need service names to be (globally) unique? \
-    #           (if so may need to include the PB id?)
+    # FIXME(BM) may need service names to be (globally) unique? \
+    # (if so will have to pass in extra information such as the PB id)
     for i in range(ee_config['num_senders']):
         app_template_vars = dict(
             destination_host=app_config['destination_hosts'][i],

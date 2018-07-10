@@ -29,8 +29,8 @@ workflow:
         - ip2
       destination_port_start: 41000
 
-  # Visibility receiver workflow stage configuration.
-  - type: vis_recv
+  # Visibility ingest workflow stage configuration.
+  - type: vis_ingest
     status:
     resources_required:
       nodes: 2

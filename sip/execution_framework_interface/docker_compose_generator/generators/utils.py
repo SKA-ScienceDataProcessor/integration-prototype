@@ -32,7 +32,7 @@ def validate_config(config, stage_type, ee_type):
 
 
 def load_template(file_path, search_paths=None):
-    """Load a Jinja2 template.
+    """Load a Jinja2 template file.
 
     Args:
         file_path (str): Path of the template file to be loaded. This path
@@ -54,19 +54,23 @@ def load_template(file_path, search_paths=None):
     loader = jinja2.FileSystemLoader(searchpath=search_paths)
     env = jinja2.Environment(loader=loader)
     template = env.get_template(file_path)
-    # template_ast = env.parse(template)
-    # template_vars = jinja2.meta.find_undeclared_variables(template_ast)
-    # template_refs = jinja2.meta.find_referenced_templates(template_ast)
-    # LOG.debug('Template file: %s', template.filename)
-    # LOG.debug('Template vars: %s', template_vars)
-    # LOG.debug('Template refs: %s', template_refs)
-    # print(template.stream().dump(sys.stdout))
-    # print('XX', jinja2schema.infer(template))
     return template
 
 
 def load_json_file(file_path, search_paths=None):
-    """."""
+    """Load a json file.
+
+    Args:
+        file_path (str): Path of the json file to be loaded. This path
+                         should be relative to a path specified in the
+                         search_paths list.
+        search_paths (list, optional): List of search paths where templates
+                                       are located.
+
+    Returns:
+        dict, Python dictionary representation of the JSON.
+
+    """
     # Set the default search path, if not defined in the function argument.
     if not search_paths:
         cwd = os.path.abspath(os.path.dirname(__file__))

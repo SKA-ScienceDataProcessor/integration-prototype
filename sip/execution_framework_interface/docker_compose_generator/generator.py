@@ -8,8 +8,8 @@ import logging
 
 import jinja2
 
-from .compose_generators.vis_send import generate as generate_vis_send
-from .compose_generators.vis_recv import generate as generate_vis_recv
+from .generators.csp_vis_emulator import generate as generate_vis_send
+from .generators.vis_ingest import generate as generate_vis_recv
 
 
 LOG = logging.getLogger('sip.ee_interface.docker_compose_generator')
@@ -23,6 +23,7 @@ def _validate_workflow_config(config):
 
     Raises:
         RuntimeError, if the configuration is invalid.
+
     """
     # Validate the configuration.
     if 'type' not in config:
@@ -51,12 +52,13 @@ def generate_compose_file(config):
     """
     _validate_workflow_config(config)
 
+    # TODO(BM) dynamically import module based on type?
     # Swtich on the type of the workflow stage
     stage_type = config['type']
     if stage_type == 'csp_vis_emulator':
         LOG.debug('Generating CSP visibility emulator Docker configuration')
         compose_file = generate_vis_send(config)
-    elif stage_type == 'vis_recv':
+    elif stage_type == 'vis_ingest':
         LOG.debug('Generating visibility ingest Docker configuration')
         compose_file = generate_vis_recv(config)
     elif stage_type == 'test':
