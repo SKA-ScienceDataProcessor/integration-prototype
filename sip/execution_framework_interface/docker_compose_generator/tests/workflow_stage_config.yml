@@ -16,7 +16,7 @@ workflow:
     status:
     resources_required:
       nodes: 2
-    resorces_assigned:
+    resources_assigned:
     ee_config:
       type: docker_swarm
       compose_template: docker-compose.send.j2.yml
