@@ -18,7 +18,7 @@ data model described on SDP confluence at
 <https://confluence.ska-sdp.org/display/WBS/SIP%3A+Configuration+Database+Data+Model>.
 
 In this model each workflow stage is an object of a well defined type and
-a set of conifuration objects describing the resource requirements,
+a set of configuration objects describing the resource requirements,
 execution engine configuration and workflow application configuration.
 According to the specified type, this library parses these configuration
 objects to generate a Docker compose file format string which can be
