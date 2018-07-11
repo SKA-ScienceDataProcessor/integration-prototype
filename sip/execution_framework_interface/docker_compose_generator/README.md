@@ -13,7 +13,7 @@ configuration. This has been chosen to not have to invent a new way of
 specifiying services and allows a programatic API with the equivalent function
 of the `docker stack deploy` Docker CLI function.
 
-This library assumes that the workflow stage configuration adheres to a the
+This library assumes that the workflow stage configuration adheres to the
 data model described on SDP confluence at
 <https://confluence.ska-sdp.org/display/WBS/SIP%3A+Configuration+Database+Data+Model>.
 
