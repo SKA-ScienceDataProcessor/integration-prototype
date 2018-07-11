@@ -28,7 +28,7 @@ def validate_config(config, stage_type, ee_type):
 
     # Make sure the ee_config and app_config sections exist
     if 'ee_config' not in config or 'app_config' not in config:
-        raise RuntimeError('Ivalid configuration.')
+        raise RuntimeError('Invalid configuration.')
 
 
 def load_template(file_path, search_paths=None):
