@@ -1,0 +1,3 @@
+#!/bin/sh
+# stop and destroy containers for mc_rest
+docker-compose rm -s -f
