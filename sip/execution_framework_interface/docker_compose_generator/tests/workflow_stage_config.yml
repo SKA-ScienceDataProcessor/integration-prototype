@@ -6,7 +6,7 @@ workflow:
   # Minimal fields
   - type: test
     status:
-    reqesources_required:
+    resources_required:
     resources_assigned:
     ee_config:
     app_config:
