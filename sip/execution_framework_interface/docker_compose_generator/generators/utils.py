@@ -7,7 +7,7 @@ import jinja2
 
 
 def validate_config(config, stage_type, ee_type):
-    """Check that the specifed config is of the expected type and ee_type.
+    """Check that the specified config is of the expected type and ee_type.
 
     Args:
         config (dict): Workflow stage configuration dictionary.
