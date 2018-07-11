@@ -56,7 +56,7 @@ def generate(config):
             command=json.dumps(command))
         senders.append(sender)
 
-    # Render the compose template for the generated sender service configuration
+    # Render compose template for the generated sender service configuration
     compose_template = load_template(ee_config['compose_template'])
     compose_file = compose_template.render(senders=senders)
 
