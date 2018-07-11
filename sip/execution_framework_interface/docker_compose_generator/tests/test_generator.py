@@ -27,7 +27,7 @@ def test_generate_compose_file_invalid_config():
 def test_load_template():
     """Try to load a jinja template using the load_template utility method.
 
-    If the file exits this should work correctly, otherwise an execption
+    If the file exits this should work correctly, otherwise an exception
     should be raised.
     """
     template = load_template('docker-compose.recv.j2.yml')
