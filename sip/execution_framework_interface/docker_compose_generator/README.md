@@ -41,7 +41,7 @@ Currently this library handles the following types of workflow stage:
 In order to add additional workflow stage types, a new module should be added
 to the `generators` folder which includes a function that interprets the
 workflow stage configuration and generates a Docker Compose file. How this
-function is written will be dependenent on the workflow type but may make
+function is written will be dependent on the workflow type but may make
 use of templates and static configuration files loaded from a data store.
 Once the new generator module and function has been added it should also be
 added to the set of if statement in the `compose_generator.py`
