@@ -18,7 +18,7 @@ logging.basicConfig(level='DEBUG')
 def test_generate_compose_file_invalid_config():
     """Generate a compose file with invalid configuration.
 
-    This should raise an exeception.
+    This should raise an exception.
     """
     with pytest.raises(RuntimeError):
         _ = generate_compose_file(dict())
