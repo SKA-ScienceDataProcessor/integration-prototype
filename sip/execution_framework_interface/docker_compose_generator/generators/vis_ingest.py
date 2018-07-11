@@ -12,7 +12,7 @@ def generate(config):
     This is expected to be run using Docker Swarm as an Execution Engine.
 
     Args:
-        config (dict): Workflow stage configuraion.
+        config (dict): Workflow stage configuration.
 
     Return:
         string, Docker compose file string for use with Docker Swarm.
