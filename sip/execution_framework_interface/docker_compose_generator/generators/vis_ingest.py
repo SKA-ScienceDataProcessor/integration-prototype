@@ -36,7 +36,7 @@ def generate(config):
         num_receivers=ee_config['num_receivers']
     )
 
-    # Render the compose template for the ingest serivce configuraion
+    # Render the compose template for the ingest serivce configuration
     compose_template = load_template(ee_config['compose_template'])
     compose_file = compose_template.render(**template_params)
 
