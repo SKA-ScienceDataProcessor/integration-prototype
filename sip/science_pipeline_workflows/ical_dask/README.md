@@ -87,7 +87,7 @@ scheduler.1.6ahfnu8tzehk7by4jy4izevn0
 distributed.scheduler - INFO -   Scheduler at:     tcp://172.18.0.3:8786
 ```
 
-8. Check if the same IP is exported in *dockerfiles/Dockerfile.pipeline_bind* in a string
+8. Check if the same IP is exported in *dockerfiles/Dockerfile.pipeline_bind* and in *dockerfiles/Dockerfile.worker_bind* in a string
 ```
 ENV ARL_DASK_SCHEDULER=172.18.0.3:8786
 ```
