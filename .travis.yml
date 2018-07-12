@@ -56,7 +56,7 @@ before_script:
   # Run pycodestyle
   - pycodestyle --config=.pycodestyle emulators
   - pycodestyle --config=.pycodestyle --exclude=zookeeper examples
-  - pycodestyle --config=.pycodestyle --exclude=receive_visibilities sip
+  - pycodestyle --config=.pycodestyle --exclude=receive_visibilities,ical_dask sip 
   # Run PyLint
   - pylint --ignore=csp_pss_sender,csp_vis_sender_01,csp_vis_sender_02 emulators
   - pylint examples/*/*.py || echo "FAIL"
