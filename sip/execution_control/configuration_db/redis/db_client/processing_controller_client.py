@@ -74,8 +74,7 @@ class ProcessingControllerDbClient:
     # #########################################################################
 
     def get_scheduling_block_ids(self):
-        """Get list of scheduling block ids"""
-
+        """Get list of scheduling block ids."""
         # Initialise empty list
         scheduling_block_ids = []
 
@@ -90,12 +89,11 @@ class ProcessingControllerDbClient:
         return scheduling_block_ids
 
     def get_num_scheduling_block_ids(self):
-        """Get number of scheduling blocks ids"""
+        """Get number of scheduling blocks ids."""
         return len(self.get_scheduling_block_ids())
 
     def get_processing_block_ids(self):
-        """Get list of processing block ids using the processing block id"""
-
+        """Get list of processing block ids using the processing block id."""
         # Initialise empty list
         _processing_block_ids = []
 
@@ -109,12 +107,11 @@ class ProcessingControllerDbClient:
         return _processing_block_ids
 
     def get_num_processing_block_ids(self):
-        """"Get number of processing block ids"""
+        """Get number of processing block ids."""
         return len(self.get_processing_block_ids())
 
     def get_sub_array_ids(self):
-        """Get list of sub array ids"""
-
+        """Get list of sub array ids."""
         # Initialise empty list
         _scheduling_block_ids = []
         _sub_array_ids = []
@@ -127,7 +124,7 @@ class ProcessingControllerDbClient:
         return _sub_array_ids
 
     def get_sub_array_sbi_ids(self, sub_array_id):
-        """Get Scheduling Block Instance ID associated with sub array id"""
+        """Get Scheduling Block Instance ID associated with sub array id."""
         _ids = []
         for details in self.get_block_details(self.get_scheduling_block_ids()):
             if details['sub_array_id'] == sub_array_id:
@@ -135,13 +132,12 @@ class ProcessingControllerDbClient:
         return _ids
 
     def get_block_details(self, block_id, sort=False):
-        """Get details of scheduling or processing block
+        """Get details of scheduling or processing block.
 
-          Args:
+        Args:
             block_id (list): List of block IDs
             sort (bool): Set to True to sort the list
         """
-
         # Check for any duplicates
         block_ids = set([x for x in block_id if block_id.count(x) > 0])
 
@@ -156,7 +152,7 @@ class ProcessingControllerDbClient:
                 yield blocks
 
     def get_latest_event(self, event_block):
-        """Get the latest event added"""
+        """Get the latest event added."""
         block_event = event_block + '_events'
         block_history = event_block + '_event_history'
         event = self._db.get_event(block_event, block_history)
@@ -167,7 +163,7 @@ class ProcessingControllerDbClient:
     # #########################################################################
 
     def update_value(self, block_id, field, value):
-        """"Update the value of the given block id and field"""
+        """Update the value of the given block id and field."""
         block_name = self._db.get_block(block_id)
         for name in block_name:
             self._db.set_hash_value(name, field, value)
@@ -180,7 +176,8 @@ class ProcessingControllerDbClient:
         """Delete the specified Scheduling Block Instance.
 
         Removes the Scheduling Block Instance, and all Processing Blocks
-        that belong to it from the database"""
+        that belong to it from the database
+        """
         scheduling_blocks = self._db.get_keys(block_id)
         if scheduling_blocks:
             for blocks in scheduling_blocks:
@@ -242,7 +239,7 @@ class ProcessingControllerDbClient:
 
     @staticmethod
     def _get_schema():
-        """Get the schema for validation"""
+        """Get the schema for validation."""
         schema_path = os.path.join(os.path.dirname(__file__),
                                    'schema', 'scheduling_block_schema.json')
         with open(schema_path, 'r') as file:
@@ -252,8 +249,7 @@ class ProcessingControllerDbClient:
 
     @staticmethod
     def _add_status(scheduling_block):
-        """This function adds status fields to all the section
-        in the scheduling block instance"""
+        """Add status fields to all sections in the SBI."""
         scheduling_block['status'] = "created"
         for block in scheduling_block:
             if isinstance(scheduling_block[block], list):
@@ -262,9 +258,7 @@ class ProcessingControllerDbClient:
         return scheduling_block
 
     def _split_scheduling_block(self, scheduling_block):
-        """Split the scheduling block data into multiple names
-        before adding to the configuration database"""
-
+        """Split the scheduling block data into multiple names."""
         # Initialise empty list
         _scheduling_block_data = {}
         _processing_block_data = {}
