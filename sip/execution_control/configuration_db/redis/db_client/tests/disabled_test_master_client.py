@@ -1,6 +1,11 @@
 # -*- coding: utf-8 -*-
 """Unit tests for the master controller client
 
+***************************************************************************
+FIXME(BM): I've disabled these tests as they need to be rewritten to not
+fail depending on the order they are run or commands in __main__!
+**************************************************************************
+
 # A sample schema, like what we'd get from json.load()
 schema = {
     "type": "object",
