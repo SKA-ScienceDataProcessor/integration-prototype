@@ -30,9 +30,11 @@ before_install:
   # --> Linting and unit tests
   - pip install pylint>=1.9.0
   - pip install pycodestyle>=2.4.0
+  - pip install pydocstyle>=2.1.1
   - pip install pytest>=3.5.1
-  - pip install pytest-codestyle>=1.2.2
   - pip install pytest-pylint>=0.9.0
+  - pip install pytest-codestyle>=1.2.2
+  - pip install pytest-docstyle>=1.3.2
   # --> Spead2
   - pip install spead2>=1.7.2
   # --> ??
@@ -41,6 +43,8 @@ before_install:
   - pip install simplejson>=3.15.0
   # Install PCI flask requirements
   - pip install -r sip/execution_control/processing_controller_interface/flask_api/requirements.txt
+  # Install EF / EE interface requirements
+  - pip install -r sip/execution_framework_interface/docker_compose_generator/requirements.txt
   # Start Docker containers needed for unit tests
   - docker run -d -p 6379:6379 --name=config_db redis:4.0.6-alpine
   - docker ps -a
@@ -52,7 +56,7 @@ before_script:
   # Run pycodestyle
   - pycodestyle --config=.pycodestyle emulators
   - pycodestyle --config=.pycodestyle --exclude=zookeeper examples
-  - pycodestyle --config=.pycodestyle --exclude=receive_visibilities sip
+  - pycodestyle --config=.pycodestyle --exclude=receive_visibilities,ical_dask sip 
   # Run PyLint
   - pylint --ignore=csp_pss_sender,csp_vis_sender_01,csp_vis_sender_02 emulators
   - pylint examples/*/*.py || echo "FAIL"
@@ -63,6 +67,8 @@ before_script:
   - (cd sip && pylint --rcfile=../.pylintrc science_pipeline_workflows || echo "FAIL")
   # Run pytest with pylint and pycodestyle for the PCI flask app
   - SIP_PCI_LOG_LEVEL="WARN" && py.test --pylint --codestyle -s -v --durations=3 --pylint-rcfile=.pylintrc sip/execution_control/processing_controller_interface/flask_api
+  # Run pytest with pylint and pycodestyle for the Docker Compose file generator library
+  - py.test --pylint --codestyle -s -v --pylint-rcfile=./.pylintrc sip/execution_framework_interface/docker_compose_generator
 
 script:
   - echo "Build script"
