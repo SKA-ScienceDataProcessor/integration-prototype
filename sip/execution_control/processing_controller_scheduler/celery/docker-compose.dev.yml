@@ -1,27 +1,39 @@
-version: '3.4'
+# Docker compose script for starting a set of mock services used to develop
+# the Processing Controller Scheduler.
+version: '3.6'
 
 services:
 
-  mock_configuration_db:
+  config_db:
     image: redis:4.0.6-alpine
     ports:
       - 6379:6379
+    deploy:
+      mode: replicated
+      replicas: 1
 
-  mock_processing_block_controller:
-    image: skasip/mock_processing_block_controller
+  pbc:
+    image: skasip/mock_pbc
     environment:
-      - CELERY_BROKER=redis://mock_configuration_db/1
-      - CELERY_BACKEND=redis://mock_configuration_db/2
+      - CELERY_BROKER=redis://config_db/1
+      - CELERY_BACKEND=redis://config_db/2
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
-    build: ./mock_processing_block_controller
+    deploy:
+      mode: replicated
+      replicas: 1
+    depends_on:
+      - conf_db
 
-  # https://github.com/joeferner/redis-commander
-  # REDIS_HOSTS string format:
-  #    [label]:[hostname]:[port]:[dbIndex]:[password]
-  redis-commander-db0:
+  redis_ui:
     image: rediscommander/redis-commander:latest
     environment:
-    - REDIS_HOSTS=config_db:mock_configuration_db:6379:0
+      - REDIS_HOSTS=config_db:config_db:6379:0
     ports:
-    - 8081:8081
+      - 8081:8081
+    deploy:
+      mode: replicated
+      replicas: 1
+    depends_on:
+      - conf_db
+
