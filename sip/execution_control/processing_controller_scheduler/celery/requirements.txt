@@ -1,5 +1,8 @@
-# For the Mock Configuration DB client.
+# For the Configuration database client.
 redis>=2.10.6
+jsonschema>=2.6.0
 
 # For the Mock Processing Block Controller
 celery>=4.1.0
+
+
