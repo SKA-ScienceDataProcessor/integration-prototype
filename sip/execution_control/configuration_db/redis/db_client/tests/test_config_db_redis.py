@@ -28,7 +28,7 @@ def test_get_client_object():
 def test_hash_methods():
     """Test methods for handling values stored in a Redis hash type.
 
-    This is used exensively as a way of storing hierarhical structures in the
+    This is used extensively as a way of storing hierarchical structures in the
     configuration database.
     """
     db_client = ConfigDbRedis()
@@ -47,7 +47,7 @@ def test_hash_methods():
 
     # Test setting and getting single values in a Redis Hash.
     db_client.set_hash_value(key="hash", field="key3", value=2)
-    # Note has values are stored and returned as strings.
+    # NOTE(BM) hash values are stored and returned as strings!
     assert db_client.get_hash_value(key='hash', field='key3') == '2'
 
     values = db_client.get_hash_dict(key="hash")
@@ -73,7 +73,7 @@ def test_set_get_list():
     db_client.append_to_list(key="my_list", value=2)
     db_client.prepend_to_list(key="my_list", value='a')
 
-    # Note values are returned as strings.
+    # NOTE(BM) values are returned as strings!
     assert db_client.get_list_value('my_list', 0) == 'a'
     assert db_client.get_list_value('my_list', 1) == '0'
     assert db_client.get_list_value('my_list', 2) == '1'
@@ -89,7 +89,7 @@ def test_set_get_list():
     assert not db_client.key_exists('my_list')
 
     # Asking for a list that doesnt exist returns a list with no entries.
-    # NOTE(BM) Not sure this is ideal behaviour.
+    # NOTE(BM) Not sure this is ideal behaviour - needs review.
     values = db_client.get_list('my_list')
     assert not values
 
@@ -98,8 +98,8 @@ def test_events():
     """Test methods for handling events stored in the database.
 
     NOTE(BM):
-        These fuctions need some work or moving to a higher level in the client
-        library.
+        These functions need some work or moving to a higher level in the
+        client library.
     """
     db_client = ConfigDbRedis()
     try:
