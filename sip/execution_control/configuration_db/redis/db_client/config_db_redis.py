@@ -9,8 +9,8 @@ import redis.exceptions
 
 LOG = logging.getLogger('SIP.EC.CDB')
 REDIS_HOST = os.getenv('REDIS_HOST', 'localhost')
-REDIS_PORT = os.getenv('REDIS_PORT', 6379)
-REDIS_DB_ID = os.getenv('REDIS_DB_ID', 0)
+REDIS_PORT = os.getenv('REDIS_PORT', '6379')
+REDIS_DB_ID = os.getenv('REDIS_DB_ID', '0')
 
 
 def check_connection(func):
