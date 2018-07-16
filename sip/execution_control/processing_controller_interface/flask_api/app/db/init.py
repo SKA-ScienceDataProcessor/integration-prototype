@@ -13,7 +13,6 @@ import random
 import sys
 from time import gmtime, strftime
 
-from jsonschema import ValidationError
 
 from .client import ConfigDb
 
@@ -67,15 +66,11 @@ def add_scheduling_blocks(num_blocks, clear=True):
         start_pb_id = len(db_client.get_processing_block_ids())
 
     LOG.info("Adding %i SBIs to the db", num_blocks)
-    try:
-        for config in _scheduling_block_config(num_blocks, start_sbi_id,
-                                               start_pb_id):
-            LOG.info('Creating SBI %s with %i PBs.', config['id'],
-                     len(config['processing_blocks']))
-            db_client.add_sched_block_instance(config)
-    except ValidationError:
-        LOG.critical('Invalid SBI configuration!')
-        raise
+    for config in _scheduling_block_config(num_blocks, start_sbi_id,
+                                           start_pb_id):
+        LOG.info('Creating SBI %s with %i PBs.', config['id'],
+                 len(config['processing_blocks']))
+        db_client.add_sched_block_instance(config)
 
 
 def main():
