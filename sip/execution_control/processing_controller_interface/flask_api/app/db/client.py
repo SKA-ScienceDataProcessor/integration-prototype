@@ -68,6 +68,7 @@ class ConfigDb:
                                     value["status"],
                                     value["id"])
         except ValidationError:
+            LOG.critical('Invalid SBI configuration!')
             raise
 
     # #########################################################################

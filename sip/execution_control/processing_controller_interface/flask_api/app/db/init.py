@@ -74,6 +74,7 @@ def add_scheduling_blocks(num_blocks, clear=True):
                      len(config['processing_blocks']))
             db_client.add_sched_block_instance(config)
     except ValidationError:
+        LOG.critical('Invalid SBI configuration!')
         raise
 
 
