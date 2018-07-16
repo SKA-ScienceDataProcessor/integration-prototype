@@ -76,10 +76,12 @@ python3 -m db_client.utils.set_initial_data
 
 While unit tests are run automatically the 
 [SIP CI/CD service](https://travis-ci.com/SKA-ScienceDataProcessor/integration-prototype),
-it is possible to run them manually with the following command:
+it is possible to run them manually with the following command from the
+`sip/execution_control/configuration_db/redis` folder:
 
 ***Note**: a Redis db container must be started first in order for most of
 these tests to pass*
+
 
 ```bash
 py.test --pylint --codestyle -s -v --pylint-rcfile=../../../../.pylintrc .
