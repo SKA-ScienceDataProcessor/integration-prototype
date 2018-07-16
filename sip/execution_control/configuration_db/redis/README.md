@@ -21,7 +21,7 @@ depend on this library.
 Design notes for this service can be found in the
 [SIP Execution Control Confluence pages](https://confluence.ska-sdp.org/display/WBS/SIP%3A+%5BEC%5D+Configuration+Database+Service)
 
-## Quick-start
+## Quickstart
 
 To start Docker containers for a Redis Db instance (with a persistent volume)
 as well as a [Redis Commander](https://github.com/joeferner/redis-commander)
