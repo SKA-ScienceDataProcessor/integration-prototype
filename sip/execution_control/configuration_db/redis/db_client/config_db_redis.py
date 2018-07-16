@@ -34,10 +34,10 @@ class ConfigDbRedis:
 
     def __init__(self):
         """Create a connection to a configuration database."""
-        redis_host = os.getenv('REDIS_HOST', 'localhost')
-        redis_db_id = os.getenv('REDIS_DB_ID', 0)
-        pool = redis.ConnectionPool(host=redis_host, db=redis_db_id,
-                                    decode_responses=True)
+        LOG.debug("Creating connection pool with host = [%s], id = [%s], "
+                  "port= %s", REDIS_HOST, REDIS_DB_ID, REDIS_PORT)
+        pool = redis.ConnectionPool(host=REDIS_HOST, db=REDIS_DB_ID,
+                                    port=REDIS_PORT, decode_responses=True)
         self._db = redis.StrictRedis(connection_pool=pool)
 
     @check_connection
@@ -216,7 +216,7 @@ class ConfigDbRedis:
         return self._db.keys(key_search)
 
     def push_event(self, event_name, event_type, block_id):
-        """Adds an event to the database.
+        """Add an event to the database.
 
         An event is a list entry stored at a list with key event_name.
         The list entry is a dictionary with two fields: event_type and block_id
@@ -232,7 +232,7 @@ class ConfigDbRedis:
         self._db.rpush(event_name, dict(type=event_type, id=block_id))
 
     def get_event(self, event_name, event_history=None):
-        """Gets an event from the database.
+        """Get an event from the database.
 
         Gets an event from the named event list removing the event and
         adding it to the event history.
