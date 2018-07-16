@@ -52,7 +52,7 @@ before_install:
 install:
   - echo "Install step..."
 
-before_script:
+script:
   # Run pycodestyle
   - pycodestyle --config=.pycodestyle emulators
   - pycodestyle --config=.pycodestyle --exclude=zookeeper examples
@@ -60,11 +60,11 @@ before_script:
   # Run PyLint
   - pylint --ignore=csp_pss_sender,csp_vis_sender_01,csp_vis_sender_02 emulators
   - pylint examples/*/*.py || echo "FAIL"
-  - (cd sip && pylint --rcfile=../.pylintrc core_processing || echo "FAIL")
-  - (cd sip && pylint --rcfile=../.pylintrc execution_control || echo "FAIL")
-  - (cd sip && pylint --rcfile=../.pylintrc execution_framework_interface || echo "FAIL")
-  - (cd sip && pylint --rcfile=../.pylintrc execution_frameworks || echo "FAIL")
-  - (cd sip && pylint --rcfile=../.pylintrc science_pipeline_workflows || echo "FAIL")
+  - (cd sip && pylint --rcfile=../.pylintrc core_processing)
+  - (cd sip && pylint --rcfile=../.pylintrc execution_control)
+  - (cd sip && pylint --rcfile=../.pylintrc execution_framework_interface)
+  - (cd sip && pylint --rcfile=../.pylintrc execution_frameworks)
+  - (cd sip && pylint --rcfile=../.pylintrc science_pipeline_workflows)
   # Run pytest with pylint and pycodestyle for the PCI flask app
   - SIP_PCI_LOG_LEVEL="WARN" && py.test --pylint --codestyle -s -v --durations=3 --pylint-rcfile=.pylintrc sip/execution_control/processing_controller_interface/flask_api
   # Run pydocstyle for the PCI flask app
@@ -72,12 +72,10 @@ before_script:
   # Run pytest with pylint and pycodestyle for the Redis Configuration DB client
   - py.test --pylint --codestyle -s -v --durations=3 --pylint-rcfile=.pylintrc sip/execution_control/configuration_db/redis
   # Run pycodestyle for the Redis Configuration DB client
-  - pydocstyle sip/execution_control/configuration_db/redis
+  # - pydocstyle sip/execution_control/configuration_db/redis
   # Run pytest with pylint and pycodestyle for the Docker Compose file generator library
   - py.test --pylint --codestyle -s -v --pylint-rcfile=./.pylintrc sip/execution_framework_interface/docker_compose_generator
 
-script:
-  - echo "Build script"
 
 #after_success:
 #  - echo "Build successful! building docker containers ..."
