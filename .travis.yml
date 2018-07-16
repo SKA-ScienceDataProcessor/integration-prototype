@@ -70,7 +70,7 @@ before_script:
   # Run pydocstyle for the PCI flask app
   # - pydocstyle sip/execution_control/processing_controller_interface/flask_api
   # Run pytest with pylint and pycodestyle for the Redis Configuration DB client
-   - py.test --pylint --codestyle -s -v --durations=3 --pylint-rcfile=.pylintrc sip/execution_control/configuration_db/redis
+  - py.test --pylint --codestyle -s -v --durations=3 --pylint-rcfile=.pylintrc sip/execution_control/configuration_db/redis
   # Run pycodestyle for the Redis Configuration DB client
   - pydocstyle sip/execution_control/configuration_db/redis
   # Run pytest with pylint and pycodestyle for the Docker Compose file generator library
