@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""Unit tests for the master controller client
+"""Unit tests for the master controller client.
 
 ***************************************************************************
 FIXME(BM): I've disabled these tests as they need to be rewritten to not
@@ -33,14 +33,15 @@ class DbClientTests(unittest.TestCase):
     """Unit tests of the Master Controller Configuration database client."""
 
     def setUp(self):
+        """Execute before each test."""
         self._db = MasterDbClient()
         self._log = logging.getLogger("DbClientTests.testPath")
 
     def tearDown(self):
-        """Executed after each test."""
+        """Execute after each test."""
 
     def test_set_state(self):
-        """TODO"""
+        """TODO test description."""
         name = ['execution_control', 'master_controller']
         field = 'SDP_state'
         value = "running"
@@ -49,20 +50,20 @@ class DbClientTests(unittest.TestCase):
         self.assertEqual(sdp_state_v, "running")
 
     def test_get_state(self):
-        """TODO"""
+        """TODO test description."""
         name = ['execution_control', 'master_controller']
         field = 'TANGO_state'
         tango_state_v = self._db.get_value(name, field)
         self.assertEqual(tango_state_v, 'ON')
 
     def test_get_all_states(self):
-        """TODO"""
+        """TODO test description."""
         name = ['execution_control', 'master_controller']
         values = self._db.get_all_value(name)
         self.assertNotEqual(values, None)
 
     def test_add_to_list(self):
-        """TODO"""
+        """TODO test description."""
         service_list_name = ['execution_control', 'master_controller',
                              'service_list']
         service = {'name': 'sdp_services.data_queue', 'enabled': 'False'}
@@ -73,14 +74,14 @@ class DbClientTests(unittest.TestCase):
         self.assertEqual(element['enabled'], 'False')
 
     def test_length(self):
-        """TODO"""
+        """TODO test description."""
         service_list_name = ['execution_control', 'master_controller',
                              'service_list']
         self.assertEqual(self._db.get_service_list_length(service_list_name),
                          6)
 
     def test_list_access(self):
-        """TODO"""
+        """TODO test description."""
         service_list_name = ['execution_control', 'master_controller',
                              'service_list']
         element = self._db.get_service_from_list(service_list_name, 0)
@@ -89,7 +90,7 @@ class DbClientTests(unittest.TestCase):
         self.assertEqual(element['name'], 'sdp_services.local_sky_model')
 
     def test_path(self):
-        """TODO"""
+        """TODO test description."""
         service_list_name = ['execution_control', 'master_controller',
                              'service_list']
         element = self._db.get_service_from_list(service_list_name, 0)
@@ -102,7 +103,7 @@ class DbClientTests(unittest.TestCase):
         self.assertEqual(service, 'stopped')
 
     def test_boolean(self):
-        """TODO"""
+        """TODO test description."""
         service_list_name = ['execution_control', 'master_controller',
                              'service_list']
         element = self._db.get_service_from_list_bool(service_list_name, 0)
