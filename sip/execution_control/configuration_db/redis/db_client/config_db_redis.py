@@ -29,7 +29,7 @@ def check_connection(func):
     return with_exception_handling
 
 
-class ConfigDbRedis:
+class ConfigDb:
     """Low level Configuration Database client."""
 
     def __init__(self):

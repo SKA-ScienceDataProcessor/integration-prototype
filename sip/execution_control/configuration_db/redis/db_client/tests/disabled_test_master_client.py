@@ -25,7 +25,7 @@ import unittest
 
 import redis
 
-from ..master_client import MasterClient
+from ..master_client import MasterDbClient
 from ..utils.set_initial_data import main as init_db
 
 
@@ -33,7 +33,7 @@ class DbClientTests(unittest.TestCase):
     """Unit tests of the Master Controller Configuration database client."""
 
     def setUp(self):
-        self._db = MasterClient()
+        self._db = MasterDbClient()
         self._log = logging.getLogger("DbClientTests.testPath")
 
     def tearDown(self):

@@ -2,14 +2,14 @@
 """High Level Master Controller Client API."""
 import ast
 
-from .config_db_redis import ConfigDbRedis
+from .config_db_redis import ConfigDb
 
 
-class MasterClient:
+class MasterDbClient:
     """Master Controller Client Interface"""
 
     def __init__(self):
-        self._db = ConfigDbRedis()
+        self._db = ConfigDb()
 
     ###########################################################################
     # Get functions

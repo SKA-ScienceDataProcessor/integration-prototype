@@ -8,7 +8,7 @@ import datetime
 
 from jsonschema import ValidationError, validate
 
-from .config_db_redis import ConfigDbRedis
+from .config_db_redis import ConfigDb
 
 
 LOG = logging.getLogger('SIP.EC.CDB')
@@ -19,7 +19,7 @@ class ProcessingControllerDbClient:
 
     def __init__(self):
         """Initialise the client."""
-        self._db = ConfigDbRedis()
+        self._db = ConfigDb()
         self.scheduling_event_name = 'scheduling_block_events'
         self.processing_event_name = 'processing_block_events'
 

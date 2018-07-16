@@ -12,12 +12,12 @@ import ast
 
 import pytest
 
-from ..config_db_redis import ConfigDbRedis
+from ..config_db_redis import ConfigDb
 
 
 def test_get_client_object():
     """Test creating a database client object."""
-    db_client = ConfigDbRedis()
+    db_client = ConfigDb()
     assert db_client is not None
     try:
         db_client.flush_db()
@@ -31,7 +31,7 @@ def test_hash_methods():
     This is used extensively as a way of storing hierarchical structures in the
     configuration database.
     """
-    db_client = ConfigDbRedis()
+    db_client = ConfigDb()
     try:
         db_client.flush_db()
     except ConnectionError:
@@ -62,7 +62,7 @@ def test_hash_methods():
 
 def test_set_get_list():
     """Test methods for handling values stored in lists."""
-    db_client = ConfigDbRedis()
+    db_client = ConfigDb()
     try:
         db_client.flush_db()
     except ConnectionError:
@@ -101,7 +101,7 @@ def test_events():
         These functions need some work or moving to a higher level in the
         client library.
     """
-    db_client = ConfigDbRedis()
+    db_client = ConfigDb()
     try:
         db_client.flush_db()
     except ConnectionError:
