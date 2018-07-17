@@ -34,7 +34,7 @@ Swarm (e.g. only one computer).*
 ## Starting ICAL pipeline
 
 There are three shell scripts that start ICAL pipeline container with three
-different entrypoints (which are just python scripts).
+different entry points (which are just python scripts).
 
 * A script *scripts/DaskSwarmModeling.sh* starts a container with
   `pipelines/imaging-modeling.py` entrypoint which creates a visibility list
@@ -45,12 +45,12 @@ different entrypoints (which are just python scripts).
   numpy-formatted files.
 
 * A script `scripts/DaskSwarmProcessing.sh` starts a container with
-  `pipelines/imaging-processing.py` entrypoint which reads all saved files and
+  `pipelines/imaging-processing.py` entry point which reads all saved files and
   performs data processing using `deconvolve_component()`,
   `continuum_imaging_component()` and ical_component() functions from ARL
 
 * A script `scripts/DaskSwarmICALstart.sh` starts a container with
-  `pipelines/ical-pipeline.py` entrypoint which performs both modelling and
+  `pipelines/ical-pipeline.py` entry point which performs both modelling and
   data processing internally.
 
 ## Checking the pipeline execution and results
