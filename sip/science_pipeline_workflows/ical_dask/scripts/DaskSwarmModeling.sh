@@ -1,22 +1,14 @@
 #!/bin/bash
 
-# docker run --rm -it \
-#     --name modeling \
-#     --network ical_sip \
-#     --env ARL_DASK_SCHEDULER=scheduler:8786 \
-#     --env PYTHONPATH=/pipelines:/pipelines/sdp_arl \
-#     -v "$(pwd)"/pipelines:/pipelines \
-#     --entrypoint python3 \
-#     ical_dask_pipeline \
-#     /pipelines/imaging_modeling.py
+# Script to run the ICAL Dask workflow data generation container.
 
-docker run --rm -it \
+docker run \
+    --rm \
     --name modeling \
     --network ical_sip \
-    --env ARL_DASK_SCHEDULER=scheduler:8786 \
     --env PYTHONPATH=/pipelines:/pipelines/sdp_arl \
-    -v "$(pwd)"/pipelines:/pipelines \
-    --entrypoint /bin/bash \
-    ical_dask_pipeline
-
-# python3 /pipelines/imaging_modeling.py
+    --env ARL_DASK_SCHEDULER=scheduler:8786 \
+    -v "$(pwd)"/pipelines/sdp_arl:/pipelines/sdp_arl \
+    -v "$(pwd)"/results:/pipelines/results \
+    ical_dask_pipeline \
+    python3 imaging_modeling.py

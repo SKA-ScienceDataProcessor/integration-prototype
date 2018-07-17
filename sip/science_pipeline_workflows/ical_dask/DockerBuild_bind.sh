@@ -18,6 +18,6 @@ if [ ! -d "results" ]; then
 fi
 
 # Build Docker images
-docker build -f dockerfiles/Dockerfile.pipeline_bind -t ical_dask_pipeline .
 docker build -f dockerfiles/Dockerfile.scheduler -t ical_dask_scheduler .
 docker build -f dockerfiles/Dockerfile.worker_bind -t ical_dask_worker .
+docker build -f dockerfiles/Dockerfile.pipeline_bind -t ical_dask_pipeline .
