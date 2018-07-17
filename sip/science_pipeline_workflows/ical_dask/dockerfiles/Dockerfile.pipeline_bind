@@ -3,7 +3,6 @@ LABEL maintainer="Vlad Stolyarov"
 
 ENV DEBIAN_FRONTEND=noninteractive
 
-# Install Python3 & Dask distributed
 RUN apt-get update && \
     apt-get install -y python3-pip && \
     pip3 install dask distributed
