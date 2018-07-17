@@ -13,45 +13,63 @@ The pipeline itself also works inside a Docker container.
 A stable version of ARL is archived in a tarball together with it's data files.
 This tarball, which is kept in Cambridge Astrophysics' ftp area, is downloaded
 by the install script `DockerBuild_bind.sh` and unpacked locally in
-`algorithm-reference-library` folder. This folder is later bound to the docker
+`pipelines/sdp_arl` folder. This folder is later bound to the docker
 containers as an external volume.
 
 ## Building Docker images
 
-In the current version the images `dask_scheduler`, `dask_worker` and
-`dask_pipeline` are built locally using a shell script `DockerBuild_bind.sh`
-using the dockerfiles in `dockerfiles` folder.
+The images `ical_dask_scheduler`, `ical_dask_worker` and `ical_dask_pipeline` 
+are built using the shell script `DockerBuild_bind.sh` and the Dockerfiles 
+in `dockerfiles` folder.
 
 ## Starting Docker Swarm
+
+The Docker Swarm Dask services can be started in two different ways: using
+`docker stack deploy` or with a provided shell script.
+
+*Please note that the current version supports only locally deployed Docker
+Swarm (e.g. only one computer).*
+
+### Docker stack deploy
+
+To start the Dask scheduler and worker(s) service containers.
+
+First create a overlay network with:
+
+```bash
+docker network create --driver overlay --attachable ical_sip 
+```
+
+Then start the ICAL Dask Execution Engine service stack with:
+
+```bash
+docker stack deploy -c scripts/docker-compose.start_ee.yml ical_dask
+```
+
+### Shell script
 
 The Docker Swarm Dask services can be started by a shell script
 `scripts/DaskSwarmStart_bind.sh`. The script will start Swarm services for a
 dask scheduler and a dask worker.
 
-*Please note that the current version supports only locally deployed Docker
-Swarm (e.g. only one computer).*
 
 ## Starting ICAL pipeline
 
-There are three shell scripts that start ICAL pipeline container with three
-different entry points (which are just python scripts).
+There are three shell scripts that start an ICAL pipeline container with three
+different workflow scripts:
 
-* A script *scripts/DaskSwarmModeling.sh* starts a container with
-  `pipelines/imaging-modeling.py` entrypoint which creates a visibility list
+* *scripts/DaskSwarmModeling.sh* starts a container with
+  `pipelines/imaging-modeling.py` which creates a visibility list
   for some particular configuration *(LOWBD2, nfreqwin=7, ntimes=11,
   rmax=300.0, phasecentre=(+30.0deg, -60.0deg))* as well as simulates the
   visibilities for some sources from GLEAM catalogue. It also exports the
   modeled data in HDF5 files, and stores parameters into pickle objects and
   numpy-formatted files.
 
-* A script `scripts/DaskSwarmProcessing.sh` starts a container with
-  `pipelines/imaging-processing.py` entry point which reads all saved files and
+* `scripts/DaskSwarmProcessing.sh` starts a container with
+  `pipelines/imaging-processing.py` which reads all saved files and
   performs data processing using `deconvolve_component()`,
   `continuum_imaging_component()` and ical_component() functions from ARL
-
-* A script `scripts/DaskSwarmICALstart.sh` starts a container with
-  `pipelines/ical-pipeline.py` entry point which performs both modelling and
-  data processing internally.
 
 ## Checking the pipeline execution and results
 
@@ -104,6 +122,6 @@ Note: It is recommended to stop Docker Swarm and wait a bit before restarting
 it again, otherwise the system has not enough time to release the resources
 like the Dask scheduler IP-address and can assign another one.
 
-## ToDo
+## Todo
 
 1. Automatic Dask scheduler IP discovery by the pipeline container
