@@ -84,5 +84,5 @@ these tests to pass*
 
 
 ```bash
-py.test --pylint --codestyle -s -v --pylint-rcfile=../../../../.pylintrc .
+pytest --pylint --codestyle -s -v --pylint-rcfile=../../../../.pylintrc .
 ```
