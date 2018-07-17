@@ -1,5 +1,9 @@
 #!/bin/bash
 
+# Script to download the SDP ARL dependency and build Docker images needed
+# to deploy the pipeline.
+
+
 # Download an ARL snapshot (if needed)
 if [ ! -d "pipelines/sdp_arl" ]; then
     wget -c -t 10 http://www.mrao.cam.ac.uk/projects/ska/arl/algorithm-reference-library.sip.20180605.tar.gz
