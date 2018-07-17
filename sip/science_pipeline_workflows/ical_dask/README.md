@@ -56,7 +56,6 @@ command:
 bash ./scripts/DaskSwarmStart_bind.sh
 ```
 
-
 ## Generating test input data
 
 Before running the pipeline, it is necessary to generate some data for it to
@@ -113,15 +112,67 @@ interface which is exposed on <http://localhost:8787>. The results including
 intermediate HDF5 files are saved into the `results` folder which is a 
 persistent data storage for the pipeline.
 
-## Stopping Dask Swarm
+## Stopping and cleaning up Services and containers.
 
-To remove services and stop network interface one can use a shell script
-`scripts/DaskSwarmStop.sh`.
+Stopping and cleaning up the workflow containers depends on how the workflow
+was started.
 
-Note: It is recommended to stop Docker Swarm and wait a bit before restarting
-it again, otherwise the system has not enough time to release the resources
-like the Dask scheduler IP-address and can assign another one.
+*Note: When debugging or developing any code, it is recommended wait slightly 
+before restarting services and containers again, otherwise the system may not
+have had enough time to release the resources fully.*
 
-## Todo
+### Cleaning up after using `docker stack deploy`
 
-1. Automatic Dask scheduler IP discovery by the pipeline container
+To remove the Docker stacks created if the ICAL pipeline has been set up and
+run using `docker stack deploy`, run the following commands:
+
+```bash
+docker stack rm ical_dask gen_data run_ical
+docker network prune -f
+```
+
+### Cleaning up after running shell scripts
+
+To remove any remaining containers and the overlay network if the ICAL 
+pipeline has been run using the provided shell scripts, run the command:
+
+```bash
+bash ./scripts/DaskSwamStop.sh
+```
+
+## Troubleshooting
+
+
+### Useful Docker commands:
+
+To list running services:
+
+```bash
+docker service ls
+```
+
+To list tasks of a service:
+
+```bash
+docker service ps [service name or id]
+```
+
+To view logs (stdout & stderr) from a service:
+
+```bash
+docker service logs [service name or id]
+```
+
+To view logs (stdout & stderr) from a container:
+
+
+```bash
+docker logs [container name or id]
+```
+
+To view current list of Docker Swarm stacks:
+
+```bash
+docker stack ls
+```
+
