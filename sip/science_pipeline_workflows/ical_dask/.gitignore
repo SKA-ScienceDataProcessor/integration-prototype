@@ -1,2 +1,5 @@
 /pipelines/sdp_arl/
-/results/
+/results/*.fits
+/results/*.hdf
+/results/*.np
+/results/*.pkl
