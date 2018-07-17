@@ -37,3 +37,4 @@
 - [ ] Identify use of QA functions and work out how to connect them to a 
       queue service (if applicable).
 
+- [ ] Explore ways to use host networking
