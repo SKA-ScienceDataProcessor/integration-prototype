@@ -65,9 +65,21 @@ script:
 #  - (cd sip && pylint --rcfile=../.pylintrc science_pipeline_workflows)
 #  - SIP_PCI_LOG_LEVEL="WARN" && py.test --pylint --codestyle -s -v --durations=3 --pylint-rcfile=.pylintrc sip/execution_control/processing_controller_interface/flask_api
   # - pydocstyle sip/execution_control/processing_controller_interface/flask_api
-  - py.test --pylint --codestyle --docstyle -s -v --pylint-rcfile=.pylintrc sip/execution_control/configuration_db/redis
-  # - pydocstyle sip/execution_control/configuration_db/redis
-  - py.test --pylint --codestyle -s -v --pylint-rcfile=./.pylintrc sip/execution_framework_interface/docker_compose_generator
+  - |
+    py.test
+    --pylint
+    --codestyle
+    --docstyle
+    -s -v
+    --pylint-rcfile=.pylintrc
+    sip/execution_control/configuration_db/redis
+  - |
+    py.test
+    --pylint
+    --codestyle
+    -s -v
+    --pylint-rcfile=./.pylintrc
+    sip/execution_framework_interface/docker_compose_generator
 
 #after_success:
 #  - echo "Build successful! building docker containers ..."
