@@ -1,10 +1,6 @@
-dask
-distributed
 numpy>=1.9
 jinja2
-babel
 imagesize
-pytz
 scipy
 pyfits>=3.3
 reproject
@@ -13,7 +9,6 @@ alabaster
 photutils
 scikit-image
 paramiko
-toolz
 psutil
 cloudpickle
 seqfile

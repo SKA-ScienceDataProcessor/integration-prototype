@@ -5,53 +5,57 @@ This is code based on the test ICAL pipeline notebook from ARL.
 """
 import logging
 import pickle
+import os
+import sys
 
 import numpy
 
 from astropy import units as u
 from astropy.coordinates import SkyCoord
 
-from sdp_arl.data_models.data_model_helpers import \
-    export_blockvisibility_to_hdf5
-from sdp_arl.data_models.parameters import arl_path
-from sdp_arl.data_models.polarisation import PolarisationFrame
+sys.path.append('sdp_arl')
 
-from sdp_arl.processing_components.component_support.arlexecute \
-    import arlexecute
-from sdp_arl.processing_components.component_support.dask_init \
-    import get_dask_Client
-from sdp_arl.processing_components.imaging.base import advise_wide_field
-from sdp_arl.processing_components.imaging.imaging_components \
-        import predict_component
-from sdp_arl.processing_components.util.support_components \
-    import corrupt_component, simulate_component
-from sdp_arl.processing_components.util.testing_support import \
+from data_models.data_model_helpers import export_blockvisibility_to_hdf5
+from data_models.polarisation import PolarisationFrame
+
+from processing_components.component_support.arlexecute import arlexecute
+from processing_components.component_support.dask_init import get_dask_Client
+from processing_components.imaging.base import advise_wide_field
+from processing_components.imaging.imaging_components import predict_component
+from processing_components.util.support_components import corrupt_component, \
+    simulate_component
+from processing_components.util.testing_support import \
     create_low_test_image_from_gleam
 
 
-LOG = logging.getLogger('sip.ical.modeling')
-RESULTS_DIR = arl_path('test_results')
+LOG = logging.getLogger('sip.ical.generate_data')
+RESULTS_DIR = 'results'
+if not os.path.exists(RESULTS_DIR):
+    os.makedirs(RESULTS_DIR)
 
 
 def init_logging():
     """Initialise Python logging."""
-    fmt = '%(thread)s %(asctime)s,%(msecs)d %(name)s %(levelname)s %(message)s'
-    # FIXME(BM) This fails!! No such file or directory: '/pipelines/sdp_arl/test_results/imaging_modeling.log'
+    # fmt = '%(thread)s %(asctime)s,%(msecs)d %(name)s %(levelname)s ' \
+    #       '%(message)s'
     # logging.basicConfig(filename='%s/imaging_modeling.log' % RESULTS_DIR,
     #                     filemode='a', format=fmt, datefmt='%H:%M:%S',
     #                     level=logging.INFO)
-    logging.basicConfig(format=fmt, datefmt='%H:%M:%S', level=logging.INFO)
+    fmt = '%(asctime)s.%(msecs)03d | %(name)-60s | %(levelname)-7s ' \
+          '| %(message)s'
+    logging.basicConfig(format=fmt, datefmt='%H:%M:%S', level=logging.DEBUG)
 
 
 def main():
     """Main workflow function."""
-
-    print('Results dir = %s' % RESULTS_DIR)
-    LOG.info("Starting imaging-modeling")
+    init_logging()
 
     # Get Dask client
     arlexecute.set_client(get_dask_Client())
     arlexecute.run(init_logging)
+
+    LOG.info('Results dir = %s', RESULTS_DIR)
+    LOG.info("Starting imaging-modeling")
 
     # Model parameters
     num_freq_win = 7
@@ -72,18 +76,20 @@ def main():
                                   order='frequency',
                                   rmax=r_max)
 
-    print('%d elements in vis_list' % len(vis_list))
-
+    LOG.info('%d elements in vis_list', len(vis_list))
     LOG.info('About to make visibility')
-
     vis_list = arlexecute.compute(vis_list, sync=True)
-
-    export_blockvisibility_to_hdf5(vis_list, '%s/vis_list.hdf' % RESULTS_DIR)
-
+    LOG.debug('vis_list type: %s', type(vis_list))
+    LOG.debug('vis_list element type: %s', type(vis_list[0]))
+    try:
+        export_blockvisibility_to_hdf5(vis_list,
+                                       '%s/vis_list.hdf' % RESULTS_DIR)
+    except AssertionError as e:
+        LOG.critical('ERROR %s', e)
+        return
     wprojection_planes = 1
     advice_low = advise_wide_field(vis_list[0], guard_band_image=8.0, delA=0.02,
                                    wprojection_planes=wprojection_planes)
-
     advice_high = advise_wide_field(vis_list[-1], guard_band_image=8.0,
                                     delA=0.02,
                                     wprojection_planes=wprojection_planes)
