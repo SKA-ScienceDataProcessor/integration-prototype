@@ -6,14 +6,11 @@ This is code based on the test ICAL pipeline notebook from ARL.
 import logging
 import pickle
 import os
-import sys
 
 import numpy
 
 from astropy import units as u
 from astropy.coordinates import SkyCoord
-
-sys.path.append('sdp_arl')
 
 from data_models.data_model_helpers import export_blockvisibility_to_hdf5
 from data_models.polarisation import PolarisationFrame
@@ -84,11 +81,12 @@ def main():
     try:
         export_blockvisibility_to_hdf5(vis_list,
                                        '%s/vis_list.hdf' % RESULTS_DIR)
-    except AssertionError as e:
-        LOG.critical('ERROR %s', e)
+    except AssertionError as error:
+        LOG.critical('ERROR %s', error)
         return
     wprojection_planes = 1
-    advice_low = advise_wide_field(vis_list[0], guard_band_image=8.0, delA=0.02,
+    advice_low = advise_wide_field(vis_list[0], guard_band_image=8.0,
+                                   delA=0.02,
                                    wprojection_planes=wprojection_planes)
     advice_high = advise_wide_field(vis_list[-1], guard_band_image=8.0,
                                     delA=0.02,

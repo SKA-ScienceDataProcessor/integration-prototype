@@ -8,11 +8,8 @@ This script demonstrates the continuum imaging and ICAL pipelines.
 import logging
 import pprint
 import pickle
-import sys
 
 import numpy
-
-sys.path.append('sdp_arl')
 
 from data_models.polarisation import PolarisationFrame
 from data_models.data_model_helpers import import_blockvisibility_from_hdf5
@@ -65,7 +62,8 @@ def main():
     phasecentre = dict_parameters["phasecentre"]
 
     # Import visibility list from HDF5 file
-    vis_list = import_blockvisibility_from_hdf5('%s/vis_list.hdf' % RESULTS_DIR)
+    vis_list = import_blockvisibility_from_hdf5('%s/vis_list.hdf' %
+                                                RESULTS_DIR)
     vis_slices = dict_parameters["vis_slices"]
     npixel = dict_parameters["npixel"]
     cellsize = dict_parameters["cellsize"]
