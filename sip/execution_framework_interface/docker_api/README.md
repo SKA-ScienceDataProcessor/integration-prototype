@@ -2,7 +2,13 @@
 
 ## Introduction
 
-## Known Issues
+Docker is a tool tha can package an application and its containers in a virtual 
+container. Docker Swarm is a clustering and scheduling tool for Docker container.
+
+
+The client library is written as a high level functions for use by various 
+Execution Control Services. The client lets you run docker commands from within
+Python - create services, delete services, manage nodes etc
 
 ## Quick-start
 
@@ -10,11 +16,17 @@
 
 ## Testing
 
+Linting and unit test are run automatically by SIP CI/CD system but can also be 
+run manually from the docker_api code directory with:
+
+py.test --pylint --codestyle -s -v --pylint-rcfile=../../../.pylintrc .
+
 ## TODO
 
 * Need to add exception into the functions
-* Check if there is a better way to parse the compose file
-* Look into service.py script to see how they do it
-* Research to find out better way to parse json
-* Complete update service function
-* Complete update node function
+* Replace and add Log to the script
+* Write README file
+* depends_on is not enabled -> Need to look into this
+* Need to setup the enviorment variables
+* Unit test for update_node function
+
