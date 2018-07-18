@@ -60,7 +60,7 @@ script:
   - pycodestyle --config=.pycodestyle emulators
   - pycodestyle --config=.pycodestyle --exclude=zookeeper examples
   - pycodestyle --config=.pycodestyle --exclude=receive_visibilities sip
-  - pylint --rcfile=./pylintrc --ignore=csp_pss_sender,csp_vis_sender_01,csp_vis_sender_02 emulators
+  - pylint --rcfile=.pylintrc --ignore=csp_pss_sender,csp_vis_sender_01,csp_vis_sender_02 emulators
 #  - pylint examples/*/*.py
 #  - (cd sip && pylint --rcfile=../.pylintrc core_processing)
 #  - (cd sip && pylint --rcfile=../.pylintrc execution_control)
