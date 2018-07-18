@@ -2,7 +2,7 @@ version: '3.6'
 
 services:
 
-    scheduler:
+    scheduler1:
         image: skasip/dask_scheduler_base
         # Dont need to do port mapping for host networks!
         # ports:
@@ -19,7 +19,7 @@ services:
         networks:
             hostnet: {}
 
-    scheduler1:
+    scheduler2:
         image: skasip/dask_scheduler_base
         # Dont need to do port mapping for host networks!
         # ports:

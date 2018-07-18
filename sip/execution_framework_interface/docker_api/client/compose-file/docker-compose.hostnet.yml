@@ -25,11 +25,9 @@ services:
         # host networking so will have to look this up in the config db
         # or have a DNS service
         command: ["sh", "-c", "dask-worker --nprocs 1 --nthreads 2 --memory-limit 2GB $${DASK_SCHEDULER_HOST}:$${DASK_SCHEDULER_PORT}"]
-        environment:
-            - DASK_SCHEDULER_HOST=localhost
-            - DASK_SCHEDULER_PORT=8786
-        depends_on:
-            - scheduler
+#        environment:
+#            - DASK_SCHEDULER_HOST=localhost
+#            - DASK_SCHEDULER_PORT=8786
         deploy:
             mode: replicated
             replicas: 1

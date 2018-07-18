@@ -7,19 +7,25 @@ services:
     ports:
       - 6379:6379
     volumes:
-      - config_database:/data/db
+      - type: volume
+        source: config_database
+        target: /data/db
 
   config_database1:
     image: redis:4.0.6-alpine
     ports:
       - 6377:6377
     volumes:
-      - config_database1:/data/db
+      - type: volume
+        source: config_database1
+        target: /data/db
 
   config_database2:
     image: redis:4.0.6-alpine
     ports:
       - 6376:6376
     volumes:
-      - config_database2:/data/db
+      - type: volume
+        source: config_database2
+        target: /data/db
 

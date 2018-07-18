@@ -1,0 +1,19 @@
+[
+  "__init__.py",
+  "__init__.py",
+  "docker_client.py",
+  "docker_client.py",
+  "test/__init__.py",
+  "test/__init__.py",
+  "test/test_docker_client.py",
+  "test/test_docker_client.py",
+  "test/test_docker_client.py::test_create_service",
+  "test/test_docker_client.py::test_create_volume",
+  "test/test_docker_client.py::test_get_service_list",
+  "test/test_docker_client.py::test_get_nodes_list",
+  "test/test_docker_client.py::test_get_volume_list",
+  "test/test_docker_client.py::test_delete_service",
+  "test/test_docker_client.py::test_delete_all_services",
+  "test/test_docker_client.py::test_delete_volume",
+  "test/test_docker_client.py::test_delete_all_volumes"
+]
