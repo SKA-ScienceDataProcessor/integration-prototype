@@ -34,7 +34,7 @@ For testing and stand-alone operation a number of mock components are provided.
     *Note: that the Redis service is not backed by a docker volume in this
      compose file as this is not needed during testing*
 
-3.  Create a virtualenv for application dependencies:
+1.  Create a virtualenv for application dependencies:
 
     ```bash
     python3 -m venv venv    
@@ -42,13 +42,13 @@ For testing and stand-alone operation a number of mock components are provided.
     pip install -r requirements.txt
     ```
 
-4. Start the Scheduler application:
+1. Start the Scheduler application:
 
     ```bash
     python3 -m app
     ```
 
-5.  Use the provided utilities for adding and removing Processing and Scheduling
+1.  Use the provided utilities for adding and removing Processing and Scheduling
     blocks from the mock Configuration database.
 
     ```bash
@@ -57,17 +57,18 @@ For testing and stand-alone operation a number of mock components are provided.
     python3 -m utils.delete_processing_block
     ```
 
-6.  Clean up:
+1.  Clean up:
 
     ```bash
     docker stack rm pc
     ```
+    
+## Debugging
+
+* If you have started the development backing services a web UI to the 
+  configuration database can be viewed at <http://localhost:8081>
+
 
 ## Unit tests
 
-Run with:
-
-```bash
-pytest -m tests/test_queue.py
-pytest -m test/test_celery_task.py
-```
+TODO(BM)
