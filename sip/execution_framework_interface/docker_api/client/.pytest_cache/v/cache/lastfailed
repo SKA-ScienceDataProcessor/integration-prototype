@@ -1,4 +1,0 @@
-{
-  "docker_client.py": true,
-  "test/test_docker_client.py": true
-}

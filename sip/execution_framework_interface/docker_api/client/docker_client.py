@@ -1,11 +1,12 @@
 # -*- coding: utf-8 -*-
 """Docker Client API"""
 
-import docker
-import logging
-import yaml
 import re
 import os
+import logging
+import docker
+import yaml
+
 
 LOG = logging.getLogger('SIP.EFI.DC')
 
@@ -37,7 +38,8 @@ class DockerClient:
         """
         # Raise an exception if we are not a manager
         if not self._manager:
-            raise RuntimeError('Services can only be run on swarm manager nodes')
+            raise RuntimeError('Services can only be run on '
+                               'swarm manager nodes')
 
         for compose_file in compose_files:
             with open(compose_file, 'r') as file:
@@ -47,7 +49,7 @@ class DockerClient:
                         service_exist = self._client.services.list(
                             filters={'name': service_name})
                         if not service_exist:
-                            service_spec = self.parse_service(
+                            service_spec = self.parse_services(
                                 service_config, service_name)
                             for s_spec in service_spec:
                                 LOG.debug('Creating services: %s', s_spec)
@@ -85,12 +87,12 @@ class DockerClient:
     # Delete functions
     ###########################################################################
 
-    def delete_service(self, service_name):
+    def delete_service(self, service):
         """ Removes/stops a docker service
         Only the manager nodes can delete a service
 
         Args:
-            service_name (string): Name of the service
+            service (string): Service name or ID
         """
 
         # Raise an exception if we are not a manager
@@ -99,7 +101,7 @@ class DockerClient:
                                'on swarm manager nodes')
 
         # Remove service
-        self._api_client.remove_service(service_name)
+        self._api_client.remove_service(service)
 
     def delete_all_services(self):
         """ Removes/stops a service
@@ -148,8 +150,6 @@ class DockerClient:
 
         # Remove volume
         self._api_client.remove_volume(volume_name)
-
-
 
     ###########################################################################
     # Get functions
@@ -294,9 +294,7 @@ class DockerClient:
         node_spec = {'Availability': 'active',
                      'Name': node_name,
                      'Role': 'manager',
-                     'Labels': labels
-                     }
-
+                     'Labels': labels}
         node = self._client.nodes.get(node_name)
         node.update(node_spec)
 
@@ -304,8 +302,7 @@ class DockerClient:
     # Parsing functions
     ###########################################################################
 
-    @staticmethod
-    def parse_service(service_config, service_name):
+    def parse_services(self, service_config, service_name):
         """Parsing the docker compose file
 
         Args:
@@ -315,78 +312,120 @@ class DockerClient:
         Returns:
             dict, service specifications extracted from the compose file
         """
-        # Initialising empty dictionary and list
+
+        # Initialising empty dictionary
         service_spec = {}
-        endpoints = {}
-        mode = {}
-        networks = []
 
         service_spec['name'] = service_name
         for key, value in service_config['services'][service_name].items():
             if 'ports' in key:
-                for port_element in value:
-                    target_port = port_element.split(':')
-                    for port in target_port:
-                        endpoints[int(port)] = int(port)
-
-                # Setting the types
-                endpoint_spec = docker.types.EndpointSpec(ports=endpoints)
+                endpoint_spec = self._parse_ports(value)
                 service_spec['endpoint_spec'] = endpoint_spec
             else:
                 if 'volumes' in key:
-                    for v_values in value:
-                        for v_key, v_value in v_values.items():
-                            if v_key == 'source':
-                                if v_value == '.':
-                                    source = os.path.dirname(
-                                        os.path.abspath(__file__))
-                                else:
-                                    source = v_value
-                            if v_key == 'target':
-                                target = v_value
-                        volume = [source + ':' + target]
-                        service_spec['mounts'] = volume
+                    volume_spec = self._parse_volumes(value)
+                    service_spec['mounts'] = volume_spec
                 else:
                     if 'deploy' in key:
-                        for d_value in value:
-                            if 'restart_policy' in d_value:
-                                restart_spec = docker.types.RestartPolicy(
-                                    **value[d_value])
-                                service_spec['restart_policy'] = restart_spec
-                            if 'mode' in d_value:
-                                if 'replicas' in d_value:
-                                    mode[d_value] = value[d_value]
-                                else:
-                                    mode[d_value] = value[d_value]
-                            if 'resources' in d_value:
-                                resource_spec = DockerClient.parse_resources(
-                                    value, d_value)
-                                service_spec['resources'] = resource_spec
-
-                        # Setting the types
-                        mode_spec = docker.types.ServiceMode(**mode)
-                        service_spec['mode'] = mode_spec
+                        self.parse_deploy(value, service_spec)
                     else:
                         if 'networks' in key:
-                            for n_key, n_value in \
-                                    service_config['networks'].items():
-                                for n_key_, n_value_ in n_value.items():
-                                    if 'name' in n_key_:
-                                        networks.append(n_value_)
-                            service_spec['networks'] = networks
+                            network_spec = self._parse_networks(service_config)
+                            service_spec['networks'] = network_spec
                         else:
                             service_spec[key] = value
         yield service_spec
 
+    def parse_deploy(self, deploy_values, service_spec):
+        """ Parse deploy key
+
+        Args:
+            deploy_values (dict): deploy configuration values
+            service_spec (dict): Service specification
+        """
+
+        # Initialising empty dictionary
+        mode = {}
+
+        for d_value in deploy_values:
+            if 'restart_policy' in d_value:
+                restart_spec = docker.types.RestartPolicy(
+                    **deploy_values[d_value])
+                service_spec['restart_policy'] = restart_spec
+            if 'mode' in d_value:
+                if 'replicas' in d_value:
+                    mode[d_value] = deploy_values[d_value]
+                else:
+                    mode[d_value] = deploy_values[d_value]
+            if 'resources' in d_value:
+                resource_spec = self._parse_resources(
+                    deploy_values, d_value)
+                service_spec['resources'] = resource_spec
+
+        # Setting the types
+        mode_spec = docker.types.ServiceMode(**mode)
+        service_spec['mode'] = mode_spec
+
+    ###########################################################################
+    # Static methods
+    ###########################################################################
+
     @staticmethod
-    def parse_resources(value, deploy_value):
+    def _parse_ports(port_values):
+        """ Parse ports key
+
+        Args:
+            port_values (dict): ports configuration values
+
+        Returns:
+            dict, Ports specification which contains exposed ports
+        """
+
+        # Initialising empty dictionary
+        endpoints = {}
+
+        for port_element in port_values:
+            target_port = port_element.split(':')
+            for port in target_port:
+                endpoints[int(port)] = int(port)
+
+        # Setting the types
+        endpoint_spec = docker.types.EndpointSpec(ports=endpoints)
+        return endpoint_spec
+
+    @staticmethod
+    def _parse_volumes(volume_values):
+        """ Parse volumes key
+
+        Args:
+            volume_values (dict): volume configuration values
+
+        Returns:
+            string, volume specification with mount source and container path
+        """
+
+        for v_values in volume_values:
+            for v_key, v_value in v_values.items():
+                if v_key == 'source':
+                    if v_value == '.':
+                        source = os.path.dirname(
+                            os.path.abspath(__file__))
+                    else:
+                        source = v_value
+                if v_key == 'target':
+                    target = v_value
+            volume_spec = [source + ':' + target]
+            return volume_spec
+
+    @staticmethod
+    def _parse_resources(resource_values, resource_name):
         """ Parse resources key
         Rename the key
         Return resources_spec
 
         Args:
-            value (dict): Resource configurations
-            deploy_value (string): Resource name
+            resource_values (dict): resource configurations values
+            resource_name (string): Resource name
 
         Returns:
             dict, resources specification
@@ -395,16 +434,37 @@ class DockerClient:
         # Initialising empty dictionary
         resources = {}
 
-        for resource_values in value[deploy_value]:
-            if 'limits' in resource_values:
-                for r_key, r_value in value[deploy_value][resource_values].items():
+        for r_values in resource_values[resource_name]:
+            if 'limits' in r_values:
+                for r_key, r_value in \
+                        resource_values[resource_name][r_values].items():
                     if 'cpu' in r_key:
-                        cpu_value = float(r_value) * 10**9
+                        cpu_value = float(r_value) * 10 ** 9
                         cpu_key = r_key[:3] + '_limit'
                         resources[cpu_key] = int(cpu_value)
                     if 'mem' in r_key:
                         mem_value = re.sub('M', '', r_value)
                         mem_key = r_key[:3] + '_limit'
-                        resources[mem_key] = int(mem_value)*1048576
+                        resources[mem_key] = int(mem_value) * 1048576
         resources_spec = docker.types.Resources(**resources)
         return resources_spec
+
+    @staticmethod
+    def _parse_networks(service_config):
+        """ Parse network key
+
+        Args:
+            service_config (dict): Service configurations
+
+        Returns:
+            list, List of networks
+        """
+
+        # Initialising empty list
+        networks = []
+
+        for n_values in service_config['networks'].values():
+            for n_key, n_value in n_values.items():
+                if 'name' in n_key:
+                    networks.append(n_value)
+        return networks
