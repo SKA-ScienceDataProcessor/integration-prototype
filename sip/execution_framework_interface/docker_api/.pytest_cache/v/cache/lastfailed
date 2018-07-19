@@ -1,7 +1,0 @@
-{
-  "client/test/test_docker_client.py::test_create_services": true,
-  "client/test/test_docker_client.py::test_delete_service": true,
-  "client/test/test_docker_client.py::test_get_service_list": true,
-  "experiment/docker_exp.py": true,
-  "experiment/docker_paas.py": true
-}
