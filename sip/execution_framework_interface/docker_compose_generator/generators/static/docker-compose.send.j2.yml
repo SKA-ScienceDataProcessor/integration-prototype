@@ -1,0 +1,22 @@
+version: '3.6'
+
+services:
+
+{% for sender in senders %}
+  {{ sender.service_name }}:
+    image: skasip/csp_vis_sender
+    command: '{{ sender.command }}'
+    deploy:
+      mode: replicated
+      replicas: 1
+      placement:
+        constraints: [node.labels.sender == {{ sender.id }}]
+    networks:
+    - hostnet
+{% endfor %}
+
+networks:
+  hostnet:
+    external: true
+    name: host
+    
