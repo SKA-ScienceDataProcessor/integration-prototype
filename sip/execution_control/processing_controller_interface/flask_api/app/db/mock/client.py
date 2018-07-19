@@ -11,7 +11,7 @@ import redis
 
 # Get Redis database object
 REDIS_HOST = os.getenv('REDIS_HOST', 'localhost')
-REDIS_DB_ID = os.getenv('REDIS_DB_ID', 0)
+REDIS_DB_ID = os.getenv('REDIS_DB_ID', '0')
 POOL = redis.ConnectionPool(host=REDIS_HOST, db=REDIS_DB_ID,
                             decode_responses=True)
 DB = redis.StrictRedis(connection_pool=POOL)
