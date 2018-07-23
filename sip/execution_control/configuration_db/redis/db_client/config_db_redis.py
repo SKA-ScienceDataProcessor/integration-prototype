@@ -56,6 +56,7 @@ class ConfigDb:
         """
         self._db.hmset(key, fields)
 
+    @check_connection
     def get_hash_values(self, key, fields):
         """Get values from the specified fields from the hash stored at key.
 
@@ -69,6 +70,7 @@ class ConfigDb:
         """
         return self._db.hmget(key, fields)
 
+    @check_connection
     def set_hash_value(self, key, field, value):
         """Set the value of field in a hash stored at key.
 
@@ -80,6 +82,7 @@ class ConfigDb:
         """
         self._db.hset(key, field, value)
 
+    @check_connection
     def get_hash_value(self, key, field):
         """Get the value of a field within a hash stored at key.
 
@@ -93,6 +96,7 @@ class ConfigDb:
         """
         return self._db.hget(key, field)
 
+    @check_connection
     def get_hash_dict(self, key):
         """Get all the fields and values stored in the hash at key.
 
@@ -105,6 +109,7 @@ class ConfigDb:
         """
         return self._db.hgetall(key)
 
+    @check_connection
     def prepend_to_list(self, key, value):
         """Add new element to the start of the list stored at key.
 
@@ -114,6 +119,7 @@ class ConfigDb:
         """
         self._db.lpush(key, value)
 
+    @check_connection
     def append_to_list(self, key, value):
         """Add new element to the end of the list stored at key.
 
@@ -123,6 +129,7 @@ class ConfigDb:
         """
         self._db.rpush(key, value)
 
+    @check_connection
     def get_list_value(self, key, index):
         """Get an element from a list by its index.
 
@@ -136,6 +143,7 @@ class ConfigDb:
         """
         return self._db.lindex(key, index)
 
+    @check_connection
     def get_list(self, key):
         """Get all the value in the list stored at key.
 
@@ -148,6 +156,7 @@ class ConfigDb:
         """
         return self._db.lrange(key, 0, -1)
 
+    @check_connection
     def get_list_length(self, key):
         """Get the length of the list stored at key.
 
@@ -175,6 +184,7 @@ class ConfigDb:
         """
         return self._db.keys(pattern)
 
+    @check_connection
     def delete_key(self, key):
         """Delete a key in the database (and associated values).
 
@@ -183,6 +193,7 @@ class ConfigDb:
         """
         self._db.delete(key)
 
+    @check_connection
     def key_exists(self, key):
         """Check if a key exists in the database.
 
@@ -195,6 +206,7 @@ class ConfigDb:
         """
         return self._db.exists(key)
 
+    @check_connection
     def get_all_blocks(self, block_id):
         """Search all keys associated with the block id.
 
@@ -215,6 +227,7 @@ class ConfigDb:
         key_search = '*' + block_id
         return self._db.keys(key_search)
 
+    @check_connection
     def push_event(self, event_name, event_type, block_id):
         """Add an event to the database.
 
@@ -231,6 +244,7 @@ class ConfigDb:
         """
         self._db.rpush(event_name, dict(type=event_type, id=block_id))
 
+    @check_connection
     def get_event(self, event_name, event_history=None):
         """Get an event from the database.
 
