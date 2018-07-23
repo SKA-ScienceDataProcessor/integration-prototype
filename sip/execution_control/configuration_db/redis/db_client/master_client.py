@@ -18,7 +18,7 @@ class MasterClient:
 
     def get_value(self, name, field):
         """Get value associated to the field in string"""
-        path = ':'.join(name)
+        path = name
         value = self._db.get_value(path, field)
         if value:
             return value
@@ -31,7 +31,7 @@ class MasterClient:
 
     def get_all_value(self, name):
         """Get all the value associated to the name, returned in dict"""
-        path = ':'.join(name)
+        path = name
         value = self._db.get_all_field_value(path)
         if value:
             return value
@@ -39,7 +39,7 @@ class MasterClient:
 
     def get_service_list(self, name):
         """Get the service list from the database"""
-        key = ':'.join(name)
+        key = name
         services = self._db.get_list(key)
         if services:
             for service_list in services:
@@ -49,7 +49,7 @@ class MasterClient:
     def get_service_from_list(self, name, index):
         """Get the n'th element of the service list.
         If the does not point to an element 0 is return"""
-        key = ':'.join(name)
+        key = name
         element = self._db.get_element(key, index)
         if element:
             element_eval = ast.literal_eval(element)
@@ -68,7 +68,7 @@ class MasterClient:
     def get_service_list_length(self, name):
         """Get the length of the service list.If the does not point
         to a list 0 is return"""
-        key = ':'.join(name)
+        key = name
         list_length = self._db.get_length(key)
         if list_length:
             return list_length
@@ -80,7 +80,7 @@ class MasterClient:
 
     def add_service_to_list(self, name, element):
         """Adds a new service to the end of the list"""
-        key = ':'.join(name)
+        key = name
         self._db.add_element(key, element)
 
     ###########################################################################
@@ -89,7 +89,7 @@ class MasterClient:
 
     def update_value(self, name, field, value):
         """"Updates the value of the given name and field"""
-        path = ':'.join(name)
+        path = name
         self._db.set_value(path, field, value)
 
     def update_service(self, v_path, field, value):
