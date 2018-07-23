@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""Test for the execution scheduler"""
+"""Test for the execution scheduler."""
 
 import os
 
@@ -43,7 +43,7 @@ def test_events(db_client):
 
 
 def test_get_block_details(db_client):
-    """Test returning details of a SBI or PB"""
+    """Test returning details of a SBI or PB."""
     print("Get Scheduling block")
     block_id = ["20180201-test-sbi000"]
     scheduling_block_instance = db_client.get_block_details(block_id)
