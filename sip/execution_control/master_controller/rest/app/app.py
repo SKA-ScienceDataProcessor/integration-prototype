@@ -60,7 +60,7 @@ logging.config.dictConfig(json.loads(logConfigAsJSON))
 
 APP = FlaskAPI(__name__)
 
-from .master_client import masterClient
+from .master_client import MasterClient as masterClient
 
 @APP.route('/')
 def root():

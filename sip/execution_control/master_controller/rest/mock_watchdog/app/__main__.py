@@ -35,7 +35,7 @@ logConfigAsJSON = '''{
 }
 '''
 
-from .master_client import masterClient
+from .master_client import MasterClient as masterClient
 
 ROOT = 'execution_control:master_controller'
 
