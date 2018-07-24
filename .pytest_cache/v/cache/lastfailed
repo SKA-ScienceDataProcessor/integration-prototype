@@ -1,4 +1,0 @@
-{
-  "sip/execution_framework_interface/docker_api/experiment/docker_exp.py": true,
-  "sip/execution_framework_interface/docker_api/experiment/docker_paas.py": true
-}
