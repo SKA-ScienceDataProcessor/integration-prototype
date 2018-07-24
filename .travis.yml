@@ -40,6 +40,7 @@ before_script:
   - (cd sip && pylint --rcfile=../.pylintrc execution_framework_interface || echo "FAIL")
   - (cd sip && pylint --rcfile=../.pylintrc execution_frameworks || echo "FAIL")
   - (cd sip && pylint --rcfile=../.pylintrc science_pipeline_workflows || echo "FAIL")
+  - pytest --pylint --docstyle --codestyle -s -v --pylint-rcfile=./.pylintrc sip/execution_framework_interface/docker_api
 
 script:
   - echo "Build script"

@@ -27,15 +27,15 @@ DC = DockerClient()
 Linting and unit test are run automatically by SIP CI/CD system but can also be 
 run manually from the docker_api code directory with:
 
-py.test --pylint --codestyle -s -v --pylint-rcfile=../../../.pylintrc .
+pytest --pylint --docstyle --codestyle -s -v --pylint-rcfile=../../../.pylintrc .
 
 ## TODO
 
 * Need to add exception into the functions
-* Replace and add Log to the script
-* Write README file
+* Add Log to the script
 * depends_on is not enabled -> Need to look into this
 * Need to setup the environment variables
 * Unit test for update_node function
 * Figure out how to validate compose files
-
+* While it is useful to test that service exists, it mighe be even better to test
+that the service is running as well

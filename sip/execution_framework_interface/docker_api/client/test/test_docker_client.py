@@ -2,82 +2,82 @@
 """Test for docker client API"""
 
 import logging
-import time
+import os
 
 from ..docker_client import DockerClient
 
 logging.basicConfig(level='DEBUG')
 
 DC = DockerClient()
+FILE_PATH = os.path.dirname(__file__)
 
 
 def test_create_services():
     """ Test function for create services"""
 
-    # Remove all services and volumes
-    DC.delete_all_services()
-    assert not DC.get_service_list()
-    time.sleep(2)
-    DC.delete_all_volumes()
-    assert not DC.get_volume_list()
-
     # Passing in a test compose file
-    filename = ["compose-file/docker-compose.visibility.yml"]
-    DC.create_services(filename)
-    assert len(DC.get_service_list()) == 1
+    service_names = []
+    config_path = os.path.join(FILE_PATH, '..', 'compose-file',
+                               'docker-compose.visibility.yml')
+    DC.create_services(config_path)
+    service_list = DC.get_service_list()
+    for services in service_list:
+        names = DC.get_service_name(services)
+        service_names.append(names)
+    assert "recv1" in service_names
+
+    # Cleaning
+    DC.delete_service("recv1")
 
 
 def test_create_volume():
     """ Test function for creating volume"""
 
-    # Remove all services and volumes
-    DC.delete_all_services()
-    assert not DC.get_service_list()
-    time.sleep(2)
-    DC.delete_all_volumes()
-    assert not DC.get_volume_list()
-
     # Create a new volume
-    DC.create_volume('test_volume', 'local')
-    assert len(DC.get_volume_list()) == 1
+    volume_name = 'test_volume'
+    DC.create_volume(volume_name, 'local')
+    assert "test_volume" in DC.get_volume_details(volume_name)['Name']
+
+    # Cleaning
+    DC.delete_volume(volume_name)
+    assert "test_volume" not in DC.get_volume_list()
 
 
 def test_get_service_list():
     """ Test function for getting service list"""
 
-    # Remove all services and volumes
-    DC.delete_all_services()
-    assert not DC.get_service_list()
-    time.sleep(2)
-    DC.delete_all_volumes()
-    assert not DC.get_volume_list()
+    # Create new services
+    service_names = []
+    config_path = os.path.join(FILE_PATH, '..', 'compose-file',
+                               'docker-compose.yml')
+    DC.create_services(config_path)
+    service_list = DC.get_service_list()
+    for services in service_list:
+        names = DC.get_service_name(services)
+        service_names.append(names)
+    assert "config_database" in service_names
+    assert "config_database1" in service_names
+    assert "config_database2" in service_names
 
-    # Create a new service
-    compose_file = ["compose-file/docker-compose.visibility.yml"]
-    DC.create_services(compose_file)
-    assert len(DC.get_service_list()) == 1
+    # Create more services
+    config_path_ = os.path.join(FILE_PATH, '..', 'compose-file',
+                                'docker-compose.shorter.yml')
+    DC.create_services(config_path_)
+    more_service_list = DC.get_service_list()
+    for services in more_service_list:
+        names = DC.get_service_name(services)
+        if names not in service_names:
+            service_names.append(names)
+    assert "scheduler1" in service_names
+    assert "scheduler2" in service_names
 
-    # Add more services
-    more_file = ["compose-file/docker-compose.yml"]
-    DC.create_services(more_file)
-    assert len(DC.get_service_list()) == 4
-
-    # Create a service with list of files
-    compose_files = ["compose-file/docker-compose.hostnet.yml",
-                     "compose-file/docker-compose.shorter.yml"]
-    DC.create_services(compose_files)
-    assert len(DC.get_service_list()) == 8
+    # Cleaning
+    for services in service_names:
+        DC.delete_service(services)
 
 
 def test_get_node_list():
     """ Test function for getting nodes list"""
-
-    # Remove all services and volumes
-    DC.delete_all_services()
-    assert not DC.get_service_list()
-    time.sleep(2)
-    DC.delete_all_volumes()
-    assert not DC.get_volume_list()
 
     # Number of nodes
     assert len(DC.get_node_list()) == 1
@@ -86,64 +86,41 @@ def test_get_node_list():
 def test_get_volume_list():
     """ Test function for getting volume list"""
 
-    # Remove all services and volumes
-    DC.delete_all_services()
-    assert not DC.get_service_list()
-    time.sleep(2)
-    DC.delete_all_volumes()
-    assert not DC.get_volume_list()
-
     # Create a new volume
-    DC.create_volume('test_volume', 'local')
-    assert len(DC.get_volume_list()) == 1
+    volume_name = 'test_volume'
+    DC.create_volume(volume_name, 'local')
+    assert "test_volume" in DC.get_volume_details(volume_name)['Name']
 
     # Try with a invalid name
     assert 'invalid_name' not in DC.get_volume_list()
+
+    # Cleaning
+    DC.delete_volume(volume_name)
+    assert volume_name not in DC.get_volume_list()
 
 
 def test_delete_service():
     """ Test function for deleting a service"""
 
-    # Remove all services and volumes
-    DC.delete_all_services()
-    assert not DC.get_service_list()
-    time.sleep(2)
-    DC.delete_all_volumes()
-    assert not DC.get_volume_list()
-
     # Passing in a test compose file
-    filename = ["compose-file/docker-compose.visibility.yml"]
-    DC.create_services(filename)
-    assert len(DC.get_service_list()) == 1
-
+    service_names = []
+    config_path = os.path.join(FILE_PATH, '..', 'compose-file',
+                               'docker-compose.visibility.yml')
+    DC.create_services(config_path)
     DC.delete_service("recv1")
-    assert len(DC.get_service_list()) < 1
+
+    service_list = DC.get_service_list()
+    for services in service_list:
+        names = DC.get_service_name(services)
+        service_names.append(names)
+    assert "recv1" not in service_names
 
 
 def test_delete_volume():
     """ Test function for deleting a volume"""
 
-    # Remove all services and volumes
-    DC.delete_all_services()
-    assert not DC.get_service_list()
-    time.sleep(2)
-    DC.delete_all_volumes()
-    assert not DC.get_volume_list()
-
     # Create a new volume
     DC.create_volume('delete_volume', 'local')
-    assert len(DC.get_volume_list()) == 1
 
     DC.delete_volume('delete_volume')
     assert "delete_volume" not in DC.get_volume_list()
-
-
-# def test_quick_test():
-#
-#     # Create a service with list of files
-#     compose_files = ["compose-file/docker-compose.visibility.yml",
-#                      "compose-file/docker-compose.shorter.yml",
-#                      "compose-file/docker-compose.hostnet.yml",
-#                      "compose-file/vis_receive_example.yml",
-#                      "compose-file/docker-compose.yml"]
-#     DC.create_services(compose_files)
