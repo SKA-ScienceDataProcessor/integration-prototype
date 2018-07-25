@@ -1,43 +1,27 @@
 {
     "$schema": "http://json-schema.org/draft-07/schema#",
     "title": "Scheduling Block Instance",
-    "description": "Schema for an SKA Scheduling Block Instance (SBI)",
+    "description": "Schema for an SKA Scheduling Block Instance",
     "version":  "0.3",
     "type": "object",
 
-    "required": [
-        "id",
-        "scheduling_block_id",
-        "sub_array_id",
-        "processing_blocks"
-    ],
-
     "properties": {
-        "id": {
-            "description": "ID in the form [date]-[project]-[type][id]",
-            "type": "string",
-            "pattern": "^[0-9]{8}-[\\w\\d]+-sbi[0-9]{3}$"
-        },
         "scheduling_block_id": {
-            "description": "Parent Scheduling Block ID in the form [date]-[project]-[type][id]",
+            "description": "[date]-[project]-[type][id] for the scheduling block id",
             "type": "string",
-            "pattern": "^[0-9]{8}-[\\w|\\d]+-sb[0-9]{3}$"
-        },
-        "sub_array_id": {
-            "description": "Sub-array ID",
-            "type": "string",
-            "pattern": "^subarray-0[0-9]|subarray-1[0-5]$"
-        },
-        "processing_blocks" : {
-            "description": "Array of Processing block objects",
-            "$ref": "#/definitions/blocks"
+            "pattern": "^[0-9]{8}-[a-z]+-sb[0-9]+$"
         },
         "name": {
-            "description": "Name (optional)",
+            "description": "Optional name string",
             "type": "string"
         },
+        "id": {
+            "description": "[date]-[project]-[type][id] for the scheduling block instance id",
+            "type": "string",
+            "pattern": "^[0-9]{8}-[a-z]+-sbi[0-9]+$"
+        },
         "type": {
-            "description": "Type of Scheduling Block Instance",
+            "description": "Type of scheduling block",
             "type": "string"
         },
         "date": {
@@ -45,36 +29,47 @@
             "type": "string",
             "pattern": "^[0-9]{8}$"
         },
+        "sub_array_id": {
+            "description": "[type][id] for the sub array id",
+            "type": "string",
+            "pattern": "^subarray[0-9]+$"
+        },
         "status": {
-            "description": "Status of the Scheduling Block Instance",
+            "description": "Status of the scheduling block instance",
+            "type": "string"
+        },
+        "version": {
+            "description": "Version of the scheduling block instance",
             "type": "string"
         },
         "project": {
-            "description": "Project name",
+            "description": "Project of the scheduling block instance",
             "type": "string"
-        }
+        },
+        "processing_blocks" : {"$ref": "#/definitions/blocks"}
     },
+
+    "required": ["scheduling_block_id", "id", "sub_array_id", "processing_blocks"],
 
     "definitions": {
         "blocks": {
-            "description": "Array of Processing Blocks",
+            "description": "Array of processing blocks associated with this scheduling block",
             "type": "array",
             "items": {
-                "description": "Processing Block configuration",
+                "description": "Processing block specification - description of required processing",
                 "type": "object",
-                "required": [
-                    "id",
-                    "resources_requirement",
-                    "workflow"
-                ],
                 "properties": {
                     "id": {
-                        "description": "ID in the form [project]-[type][id]",
+                        "description": "[project]-[type][id] for the processing block",
                         "type": "string",
                         "pattern": "^[a-z]+-[a-z]+[0-9]+$"
                     },
                     "type": {
                         "description": "Type of the processing block",
+                        "type": "string"
+                    },
+                    "template": {
+                        "description": "Template for processing block",
                         "type": "string"
                     },
                     "priority": {
@@ -85,16 +80,11 @@
                         "description": "Status of the processing block",
                         "type": "string"
                     },
-                    "resources_requirement" : {
-                        "$ref": "#/definitions/resource_requirement"
-                    },
-                    "assigned_resources" : {
-                        "$ref": "#/definitions/assigned_resources"
-                    },
-                    "workflow" : {
+                    "workflow": {
                         "$ref": "#/definitions/workflow"
                     }
-                }
+                },
+                "required": ["id"]
             }
         },
 
@@ -121,14 +111,25 @@
         },
 
         "workflow": {
-            "description": "Workflow stages",
+            "description": "Workflow stage",
             "type": "object",
             "properties": {
+                "type": {
+                    "description": "[stage, data, recv, vis, ical, vl]",
+                    "type": "string"
+                },
                 "status": {
-                "description": "Status of the workflow stage",
-                "type": "string"
+                    "description": "Status of the workflow stage",
+                    "type": "string"
+                },
+                "resources_requirement": {
+                    "$ref": "#/definitions/resource_requirement"
+                },
+                "assigned_resources": {
+                    "$ref": "#/definitions/assigned_resources"
                 }
-            }
+            },
+            "required": ["type", "resources_requirement"]
         }
     }
 }
