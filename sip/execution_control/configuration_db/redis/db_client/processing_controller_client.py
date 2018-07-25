@@ -158,21 +158,22 @@ class ProcessingControllerDbClient:
     def get_sub_array_ids(self):
         """Get list of sub array ids."""
         # Initialise empty list
-        _scheduling_block_ids = []
+        # _scheduling_block_ids = []
         _sub_array_ids = []
 
         for blocks_id in self.get_scheduling_block_ids():
-            _scheduling_block_ids.append(blocks_id)
-        block_details = self.get_block_details(_scheduling_block_ids)
-        for details in block_details:
-            _sub_array_ids.append(details['sub_array_id'])
+            # _scheduling_block_ids.append(blocks_id)
+            block_details = self.get_block_details(blocks_id)
+            _sub_array_ids.append(block_details['sub_array_id'])
         _sub_array_ids = sorted(list(set(_sub_array_ids)))
         return _sub_array_ids
 
     def get_sub_array_sbi_ids(self, sub_array_id):
         """Get Scheduling Block Instance ID associated with sub array id."""
         _ids = []
-        for details in self.get_block_details(self.get_scheduling_block_ids()):
+
+        for blocks_id in self.get_scheduling_block_ids():
+            details = self.get_block_details(blocks_id)
             if details['sub_array_id'] == sub_array_id:
                 _ids.append(details['id'])
         return _ids
@@ -187,6 +188,9 @@ class ProcessingControllerDbClient:
             generator?!
 
         """
+        # Initialise empty dict
+        block_data = {}
+
         # Convert input to list, if needed
         if not isinstance(block_ids, (list, tuple)):
             block_ids = [block_ids]
@@ -202,7 +206,7 @@ class ProcessingControllerDbClient:
                     if char in block_data[key]:
                         block_data[key] = ast.literal_eval(
                             str(block_data[key]))
-            yield block_data
+        return block_data
 
     def get_latest_event(self, event_class):
         """Get the latest event added.
@@ -302,17 +306,27 @@ class ProcessingControllerDbClient:
                 scheduling_block_id = block.split(':')
                 scheduling_block_details = self.get_block_details(
                     [scheduling_block_id[1]])
-                for block_details in scheduling_block_details:
-                    block_list = block_details['processing_blocks']
-                    if processing_block_id in block_list:
-                        block_list.remove(processing_block_id)
-                    self.update_value(scheduling_block_id[1],
-                                      'processing_blocks', block_list)
+                # for block_details in scheduling_block_details:
+                block_list = scheduling_block_details['processing_blocks']
+                if processing_block_id in block_list:
+                    block_list.remove(processing_block_id)
+                self.update_value(scheduling_block_id[1],
+                                  'processing_blocks', block_list)
 
                 # Add a event to the processing block event list to notify
                 # about deleting from the db
                 self._db.push_event(self.processing_event_name, "deleted",
                                     processing_block_id)
+
+    # #########################################################################
+    # Event functions
+    # #########################################################################
+
+    def events(self):
+        """."""
+
+        # Events
+        pass
 
     # #########################################################################
     # Utility functions

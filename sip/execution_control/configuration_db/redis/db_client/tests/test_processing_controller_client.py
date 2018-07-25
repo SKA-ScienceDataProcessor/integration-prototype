@@ -5,7 +5,7 @@ For instructions of how to run these tests see the README.md file in the
 `sip/configuration_db/redis` folder.
 
 TODO(BM)
-    - Remove generator functions
+    - Remove generator functions - Done
     - Make functions more specific wrt resources
         - get_block_details
         - update_value
@@ -78,12 +78,12 @@ def test_scheduling_blocks():
     assert block_ids == [config1['id'], config2['id']]
 
     # Query the details of the 1st block.
-    sbi_config = db_client.get_block_details([config1['id']]).__next__()
+    sbi_config = db_client.get_block_details([config1['id']])
     assert sbi_config['id'] == config1['id']
     assert sbi_config['sub_array_id'] == config1['sub_array_id']
 
     # Query the details of the 2nd block.
-    sbi_config = db_client.get_block_details([config2['id']]).__next__()
+    sbi_config = db_client.get_block_details([config2['id']])
     assert sbi_config['id'] == config2['id']
     assert sbi_config['sub_array_id'] == config2['sub_array_id']
 
@@ -103,11 +103,11 @@ def test_scheduling_blocks():
         db_client.delete_scheduling_block('foo')
 
     #  Update the status (or any other field) of the SBI
-    sbi = db_client.get_block_details(config2['id']).__next__()
+    sbi = db_client.get_block_details(config2['id'])
     assert 'status' in sbi
     assert sbi['status'] == 'created'
     db_client.update_value(config2['id'], 'status', 'TEST')
-    sbi = db_client.get_block_details(config2['id']).__next__()
+    sbi = db_client.get_block_details(config2['id'])
     assert sbi['status'] == 'TEST'
 
     # Get the latest scheduling block event
@@ -144,7 +144,6 @@ def test_processing_blocks():
     assert pb_ids == [config1['processing_blocks'][0]['id'],
                       config1['processing_blocks'][1]['id']]
     pb1 = db_client.get_block_details(config1['processing_blocks'][1]['id'])
-    pb1 = pb1.__next__()
     assert pb1['id'] == config1['processing_blocks'][1]['id']
 
     # Try to add another block with duplicate PB ids
@@ -176,7 +175,6 @@ def test_processing_blocks():
     # Get the details of a Processing Block
     pb_data = db_client.get_block_details(
         config2['processing_blocks'][0]['id'])
-    pb_data = pb_data.__next__()
     assert pb_data['id'] == config2['processing_blocks'][0]['id']
     assert 'workflow' in pb_data
     assert 'resources_requirement' in pb_data
@@ -185,7 +183,7 @@ def test_processing_blocks():
 
     # Update the status (or another key) of the PB
     db_client.update_value(pb_data['id'], 'status', 'TEST')
-    pb_data = db_client.get_block_details(pb_data['id']).__next__()
+    pb_data = db_client.get_block_details(pb_data['id'])
     assert pb_data['status'] == 'TEST'
 
     # Delete an invalid / missing PB
