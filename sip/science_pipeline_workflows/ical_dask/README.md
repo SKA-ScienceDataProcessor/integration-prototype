@@ -18,8 +18,8 @@ containers as an external volume.
 
 ## Building Docker images
 
-The images `ical_dask_scheduler`, `ical_dask_worker` and `ical_dask_pipeline` 
-are built using the shell script `DockerBuild_bind.sh` and the Dockerfiles 
+The images `ical_dask_scheduler`, `ical_dask_worker` and `ical_dask_pipeline`
+are built using the shell script `DockerBuild_bind.sh` and the Dockerfiles
 in `dockerfiles` folder.
 
 ## Starting Dask Execution Engine services
@@ -35,7 +35,7 @@ To start the Dask scheduler and worker(s) service containers.
 First create a overlay network with:
 
 ```bash
-docker network create --driver overlay --attachable ical_sip 
+docker network create --driver overlay --attachable ical_sip
 ```
 
 Then start the ICAL Dask Execution Engine service stack with:
@@ -47,9 +47,9 @@ docker stack deploy -c scripts/docker-compose.start_ee.yml ical_dask
 ### Using the provided shell (bash) script
 
 The Docker Swarm Dask services can be started by the shell script
-`DaskSwarmStart_bind.sh` found in the `scripts` directory. This script will 
-start a custom overlay network called `ical_sip` and Docker Swarm services for 
-a dask scheduler and a dask worker. The script can be run with the following 
+`DaskSwarmStart_bind.sh` found in the `scripts` directory. This script will
+start a custom overlay network called `ical_sip` and Docker Swarm services for
+a dask scheduler and a dask worker. The script can be run with the following
 command:
 
 ```bash
@@ -67,7 +67,7 @@ folder which is exposed into the containers using a bind mount.
 ### Using `docker stack deploy`
 
 The following command will create a service consisting of a single container
-associated with the stack name `gen_data` 
+associated with the stack name `gen_data`
 
 ```bash
 docker stack deploy -c scripts/docker-compose.generate_data.yml gen_data
@@ -84,13 +84,13 @@ bash ./scripts/DaskSwarmModeling.sh
 
 ## Running the ICAL processing pipeline
 
-Once the input data has been generated, it is now possible to run the 
+Once the input data has been generated, it is now possible to run the
 ICAL pipeline. Again, this can be done in two ways.
 
 ### Using `docker stack deploy`
 
 The following command will create a service consisting of a single container
-associated with the stack name `run_ical` 
+associated with the stack name `run_ical`
 
 ```bash
 docker stack deploy -c scripts/docker-compose.process_data.yml run_ical
@@ -109,7 +109,7 @@ bash ./scripts/DaskSwarmProcessing.sh
 
 It is possible to monitor the pipeline execution via Dask Bokeh web
 interface which is exposed on <http://localhost:8787>. The results including
-intermediate HDF5 files are saved into the `results` folder which is a 
+intermediate HDF5 files are saved into the `results` folder which is a
 persistent data storage for the pipeline.
 
 ## Stopping and cleaning up Services and containers.
@@ -117,7 +117,7 @@ persistent data storage for the pipeline.
 Stopping and cleaning up the workflow containers depends on how the workflow
 was started.
 
-*Note: When debugging or developing any code, it is recommended wait slightly 
+*Note: When debugging or developing any code, it is recommended wait slightly
 before restarting services and containers again, otherwise the system may not
 have had enough time to release the resources fully.*
 
@@ -133,7 +133,7 @@ docker network prune -f
 
 ### Cleaning up after running shell scripts
 
-To remove any remaining containers and the overlay network if the ICAL 
+To remove any remaining containers and the overlay network if the ICAL
 pipeline has been run using the provided shell scripts, run the command:
 
 ```bash
@@ -175,4 +175,3 @@ To view current list of Docker Swarm stacks:
 ```bash
 docker stack ls
 ```
-

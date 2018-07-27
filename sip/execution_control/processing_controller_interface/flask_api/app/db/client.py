@@ -6,7 +6,7 @@ import json
 import logging
 import os
 
-from jsonschema import ValidationError, validate
+from jsonschema import validate
 
 from .config_db_redis import ConfigDB
 
@@ -29,46 +29,48 @@ class ConfigDb:
     ###########################################################################
 
     def add_sched_block_instance(self, config_dict):
-        """Add Scheduling Block to the database"""
+        """Add Scheduling Block to the database.
+
+        Args:
+            config_dict (dict): SBI configuration
+
+        """
         # Get schema for validation
         schema = self._get_schema()
         LOG.debug('Adding SBI with config: %s', config_dict)
 
-        try:
-            # Validates the schema
-            validate(config_dict, schema)
+        # Validates the schema
+        validate(config_dict, schema)
 
-            # Add status field and value to the data
-            updated_block = self._add_status(config_dict)
+        # Add status field and value to the data
+        updated_block = self._add_status(config_dict)
 
-            # Splitting into different names and fields before
-            # adding to the database
-            scheduling_block_data, processing_block_data = \
-                self._split_sched_block_instance(updated_block)
+        # Splitting into different names and fields before
+        # adding to the database
+        scheduling_block_data, processing_block_data = \
+            self._split_sched_block_instance(updated_block)
 
-            # Adding Scheduling block instance with id
-            name = "scheduling_block:" + updated_block["id"]
-            self._db.set_specified_values(name, scheduling_block_data)
+        # Adding Scheduling block instance with id
+        name = "scheduling_block:" + updated_block["id"]
+        self._db.set_specified_values(name, scheduling_block_data)
 
-            # Add a event to the scheduling block event list to notify
-            # of a new scheduling block being added to the db.
-            self._db.push_event(self.scheduling_event_name,
-                                updated_block["status"],
-                                updated_block["id"])
+        # Add a event to the scheduling block event list to notify
+        # of a new scheduling block being added to the db.
+        self._db.push_event(self.scheduling_event_name,
+                            updated_block["status"],
+                            updated_block["id"])
 
-            # Adding Processing block with id
-            for value in processing_block_data:
-                name = ("scheduling_block:" + updated_block["id"] +
-                        ":processing_block:" + value['id'])
-                self._db.set_specified_values(name, value)
+        # Adding Processing block with id
+        for value in processing_block_data:
+            name = ("scheduling_block:" + updated_block["id"] +
+                    ":processing_block:" + value['id'])
+            self._db.set_specified_values(name, value)
 
-                # Add a event to the processing block event list to notify
-                # of a new processing block being added to the db.
-                self._db.push_event(self.processing_event_name,
-                                    value["status"],
-                                    value["id"])
-        except ValidationError:
-            raise
+            # Add a event to the processing block event list to notify
+            # of a new processing block being added to the db.
+            self._db.push_event(self.processing_event_name,
+                                value["status"],
+                                value["id"])
 
     # #########################################################################
     # Get functions
