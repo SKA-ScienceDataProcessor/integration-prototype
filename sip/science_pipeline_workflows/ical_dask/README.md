@@ -22,6 +22,10 @@ The images `ical_dask_scheduler`, `ical_dask_worker` and `ical_dask_pipeline`
 are built using the shell script `DockerBuild_bind.sh` and the Dockerfiles 
 in `dockerfiles` folder.
 
+## Starting Docker Swarm
+
+A swarm can be started with `docker swarm init` command. On some hosts, e.g. AlaSKA P3 it can be already started by default.
+
 ## Starting Dask Execution Engine services
 
 The Docker Swarm Dask Execution Engine services can be started in two different
@@ -139,6 +143,10 @@ pipeline has been run using the provided shell scripts, run the command:
 ```bash
 bash ./scripts/DaskSwamStop.sh
 ```
+
+## Stopping Docker Swarm
+
+A swarm can be stopped with a command `docker swarm leave --force` on a workstation. On the AlaSKA P3 OpenStack Docker Swarm cluster stopping a swarm it is not required.
 
 ## Troubleshooting
 
