@@ -45,6 +45,7 @@ before_install:
   - pip install -r sip/execution_control/processing_controller_interface/flask_api/requirements.txt
   # Install EF / EE interface requirements
   - pip install -r sip/execution_framework_interface/docker_compose_generator/requirements.txt
+  - pip install -r sip/science_pipeline_workflows/ical_dask/pipelines/requirements.arl.min.txt
   # Start Docker containers needed for unit tests
   - docker run -d -p 6379:6379 --name=config_db redis:4.0.6-alpine
   - docker ps -a
@@ -52,19 +53,23 @@ before_install:
 install:
   - echo "Install step..."
 
+#before_script:
+#  - echo "Before script"
+
 script:
   - pycodestyle --config=.pycodestyle emulators
   - pycodestyle --config=.pycodestyle --exclude=zookeeper examples
-  - pycodestyle --config=.pycodestyle --exclude=receive_visibilities,ical_dask sip
-#  - pylint --ignore=csp_pss_sender,csp_vis_sender_01,csp_vis_sender_02 emulators
-#  - pylint examples/*/*.py
-#  - (cd sip && pylint --rcfile=../.pylintrc core_processing)
-#  - (cd sip && pylint --rcfile=../.pylintrc execution_control)
-#  - (cd sip && pylint --rcfile=../.pylintrc execution_framework_interface)
-  - (cd sip && pylint --rcfile=../.pylintrc execution_frameworks)
-#  - (cd sip && pylint --rcfile=../.pylintrc science_pipeline_workflows)
-#  - SIP_PCI_LOG_LEVEL="WARN" && py.test --pylint --codestyle -s -v --durations=3 --pylint-rcfile=.pylintrc sip/execution_control/processing_controller_interface/flask_api
+  - pycodestyle --config=.pycodestyle --exclude=receive_visibilities sip
+  - pylint --rcfile=.pylintrc --ignore=csp_pss_sender,csp_vis_sender_01,csp_vis_sender_02 emulators
+# - pylint examples/*/*.py
+# - (cd sip && pylint --rcfile=../.pylintrc core_processing)
+# - (cd sip && pylint --rcfile=../.pylintrc execution_control)
+# - (cd sip && pylint --rcfile=../.pylintrc execution_framework_interface)
+# - (cd sip && pylint --rcfile=../.pylintrc execution_frameworks)
+# - (cd sip && pylint --rcfile=../.pylintrc science_pipeline_workflows)
+# - SIP_PCI_LOG_LEVEL="WARN" && py.test --pylint --codestyle -s -v --durations=3 --pylint-rcfile=.pylintrc sip/execution_control/processing_controller_interface/flask_api
   # - pydocstyle sip/execution_control/processing_controller_interface/flask_api
+  - pytest --pylint --codestyle -s -v --pylint-rcfile=.pylintrc sip/science_pipeline_workflows/ical_dask
   - pytest --pylint --codestyle --docstyle -s -v --pylint-rcfile=.pylintrc sip/execution_control/configuration_db/redis
   - pytest --pylint --codestyle -s -v --pylint-rcfile=./.pylintrc sip/execution_framework_interface/docker_compose_generator
 
