@@ -36,31 +36,20 @@ logConfigAsJSON = '''{
    }, 
    "root": 
    { 
-      "level": "INFO",
+      "level": "DEBUG",
       "handlers": ["wsgi"]
    }
 }
 '''
 logging.config.dictConfig(json.loads(logConfigAsJSON))
-#~ logging.config.dictConfig({
-    #~ 'version': 1,
-    #~ 'formatters': {'default': {
-        #~ 'format': '[%(asctime)s] %(levelname)s in %(module)s: %(message)s',
-    #~ }},
-    #~ 'handlers': {'wsgi': {
-        #~ 'class': 'logging.StreamHandler',
-        #~ 'stream': 'ext://flask.logging.wsgi_errors_stream',
-        #~ 'formatter': 'default'
-    #~ }},
-    #~ 'root': {
-        #~ 'level': 'INFO',
-        #~ 'handlers': ['wsgi']
-    #~ }
-#~ })
 
 APP = FlaskAPI(__name__)
 
 from .master_client import MasterClient as masterClient
+
+MC = 'execution_control:master_controller'
+#~ PC = 'sdp_components:processing_controller'
+#~ LOG = 'sdp_components:logging'
 
 @APP.route('/')
 def root():
@@ -83,11 +72,20 @@ def state():
     """Return the SDP State."""
 
     # These are the states we allowed to request
-    states = ['OFF', 'STANDBY', 'ON', 'DISABLE']
+    states = ('OFF', 'STANDBY', 'ON', 'DISABLE')
+    request_keys = ('state') # it could be that this is not necessary
+                             # as a query for another item may simply
+                             # go through another route
     APP.logger.debug(states)
 
     db = masterClient()
     if request.method == 'PUT':
+        if not any((True for ky in request.data.keys() if ky in request_keys)):
+            APP.logger.debug('no recognised keys in data')
+            return ({'error': 'Invalid request key(s) ({})'.\
+                            format(','.join(request.data.keys())),
+                     'allowed_request_keys': request_keys},
+                    status.HTTP_400_BAD_REQUEST)
         requested_state = request.data.get('state', '').upper()
         if requested_state not in states:
             return ({'error': 'Invalid state: {}'.format(requested_state),
@@ -96,21 +94,23 @@ def state():
         response = {'message': 'Accepted state: {}'.format(requested_state)}
         try:
             APP.logger.debug('updating state')
-            db.update_value('execution_control:master_controller',
-                    'target_state', requested_state)
+            # Get SDP state.
+            sdp_state = db.get_value(MC, 'SDP_state')
+            # If different then update target state
+            if sdp_state != requested_state:
+                db.update_value(MC, 'Target_state', requested_state)
         except redis.exceptions.ConnectionError:
             APP.logger.debug('failed to connect to DB')
             response['error'] = 'Unable to connect to database.'
         if requested_state == 'OFF':
-            os.kill(os.getpid(), signal.SIGINT)
+            os.kill(os.getpid(), signal.SIGINT) # do we really want to do this?
         return response
 
     # GET - if the state in the database is OFF we want to replace it with
     # INIT
     try:
         APP.logger.debug('getting current state')
-        current_state = db.get_value('execution_control:master_controller',
-                'TANGO_state')
+        current_state = db.get_value(MC, 'SDP_state')
         if current_state == None:
             APP.logger.debug('current state set to none')
             return {'state': 'UNKNOWN',
@@ -121,10 +121,9 @@ def state():
 
         # Check the timestamp to be sure that the watchdog is alive
         APP.logger.debug('getting timestamp')
-        timestamp = db.get_value('execution_control:master_controller',
-                'state_timestamp')
+        timestamp = db.get_value(MC, 'State_timestamp')
         if timestamp == None:
-            APP.logger.debug('no timestamp')
+            APP.logger.warning('Timestamp not available')
             return {'state': 'UNKNOWN',
                     'reason': 'services watchdog has died.'}
         else:
@@ -135,9 +134,9 @@ def state():
                 APP.logger.debug('timestamp okay')
                 return {'state': current_state}
             else:
-                APP.logger.warning('timestamp stale')
+                APP.logger.warning('Timestamp stale')
                 return {'state': 'UNKNOWN',
-                        'reason': 'services watchdog has died.'}
+                        'reason': 'Master Controller Services has died.'}
     except redis.exceptions.ConnectionError:
         APP.logger.debug('error connecting to DB')
         return {'state': 'UNKNOWN',

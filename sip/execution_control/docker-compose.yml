@@ -3,12 +3,12 @@ version: '3.4'
 services:
 
   master:
-    image: skasip/master_controller_rest
+    image: skasip/master_interface_service
     environment:
       REDIS_HOST: "master_db"
     ports:
       - 5000
-    build: .
+    build: master_interface_service
 
   master_db:
     image: redis:4.0.6-alpine
@@ -16,10 +16,10 @@ services:
       - master_db:/data/db
 
   services_watchdog:
-    image: skasip/mock_services_watchdog
+    image: skasip/master_controller_service
     environment:
       REDIS_HOST: "master_db"
-    build: mock_watchdog
+    build: master_controller_service
 
 volumes:
   master_db:

@@ -1,0 +1,4 @@
+#!/bin/sh
+# start containers for mc_rest
+#~ docker-compose build && docker-compose -f docker-compose.yml -f docker-compose.dev.yml up -d && python3 init_db.py
+docker-compose -f docker-compose.yml -f docker-compose.dev.yml up -d --build && python3 init_db.py

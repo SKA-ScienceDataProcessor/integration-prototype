@@ -5,6 +5,7 @@ WORKDIR /app
 
 COPY requirements.txt .
 RUN apk update && \
+    pip install --upgrade pip && \
     pip install --no-cache-dir -r requirements.txt && \
     pip install --no-cache-dir gunicorn && \
     apk add --no-cache curl && \
