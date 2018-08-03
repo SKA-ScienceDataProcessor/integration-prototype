@@ -1,0 +1,24 @@
+version: '3.6'
+
+services:
+
+  process_data:
+    image: ical_dask_pipeline
+    command: python3 imaging_processing.py
+    deploy:
+      mode: replicated
+      replicas: 1
+      restart_policy:
+        condition: none
+    environment:
+      - PYTHONPATH=/pipelines/sdp_arl
+      - ARL_DASK_SCHEDULER=scheduler:8786
+    volumes:
+      - ../pipelines/sdp_arl:/pipelines/sdp_arl
+      - ../results:/pipelines/results
+    networks:
+      - ical_sip
+
+networks:
+  ical_sip:
+    external: true
