@@ -1,0 +1,15 @@
+numpy>=1.9
+jinja2
+imagesize
+scipy
+pyfits>=3.3
+reproject
+astropy>=2.0
+alabaster
+photutils
+scikit-image
+paramiko
+psutil
+cloudpickle
+seqfile
+h5py
