@@ -1,100 +1,52 @@
 # coding=utf-8
-"""Tests of the Configuration Database Events API."""
-from threading import Thread
-import json
+"""Test of events interface."""
+import time
+import redis
 
-from .. import processing_block_events as events
-
-
-def test_event_from_json():
-    """Test Creating and event object from JSON"""
-    event = events.events.event_from_json(
-        json.dumps(dict(_id='123', _event_type='type',
-                        _subscriber='sub1', data={'a': 2})))
-    assert event.data == {'a': 2}
+from .. import events
 
 
-def test_subscribe():
+def test_events():
     """."""
-    events.events.DB.flushall()
-    q1 = events.subscribe('scheduler')
-    q2 = events.subscribe('scheduler')
-    q3 = events.subscribe('interface')
-    assert 'scheduler' in events.get_subscribers()
-    assert 'interface' in events.get_subscribers()
-
-    events.publish({'type': 'foo1'})
-    events.publish({'type': 'foo2'})
-
     print('')
-    print('---- q1 ----')
-    q1_events = []
-    for _ in range(10):
-        _event = q1.get()
-        if _event:
-            q1_events.append(_event)
-            print(type(_event), _event.data)
+    client = redis.StrictRedis(decode_responses=True)
+    client.flushall()
 
-    for _event in q1_events:
-        print(type(_event))
-        _event.complete()
+    aggregate_type = 'test'
 
-    print('---- q2 ----')
-    for _ in range(10):
-        print(q2.get())
+    # Subscribe to the 'pb' aggregate events with the 'test' subscriber
+    event_queue = events.subscribe(aggregate_type, 'test')
+    assert 'test' in events.get_subscribers(aggregate_type)
 
-    print('---- q3 ----')
-    for _ in range(10):
-        print(q3.get())
+    # Publish an event.
+    aggregate_key = 'pb:01'
+    events.publish(aggregate_type, aggregate_key,
+                   event_type='test_type', event_data={})
 
+    # Keep asking for events until we get one.
+    while True:
+        event = event_queue.get()
+        if event:
+            assert event.id == '{}_event_00000000'.format(aggregate_type)
+            assert event.aggregate_type == aggregate_type
+            assert event.subscriber == 'test'
+            assert 'type' in event.data
+            assert event.data['type'] == 'test_type'
+            assert '{}_id'.format(aggregate_type) in event.data
+            assert event.data['{}_id'.format(aggregate_type)] == aggregate_key
+            break
+        time.sleep(0.01)
 
-def test_get_after_crash():
-    """."""
-    events.events.DB.flushall()
+    # There should be no published events as we already got the
+    # only event.
+    assert not event_queue.get_published_events()
 
-    # Start a subscriber that goes away (eg crashes after subscribing)
-    temp_subscriber = Thread(target=events.subscribe, args=['temp_subscriber'])
-    temp_subscriber.start()
-    temp_subscriber.join()
+    # There should be one active event.
+    active_events = event_queue.get_active_events()
+    assert len(active_events) == 1
+    assert active_events[0].id == '{}_event_00000000'.format(aggregate_type)
 
-    # While it is not active, some events are published...
-    events.publish({'type': 'test1'})
-    events.publish({'type': 'test2'})
-
-    # When the subscriber comes back it will resubscribe but calling get
-    # on the event queue will not return events published while it was down.
-    q1 = events.subscribe('temp_subscriber')
-    print('')
-    for i in range(10):
-        print(i, q1.get())
-
-    # To get uncompleted processing events
-    processing = q1.get_processing()
-    print('PROCESSING1', processing)
-
-    # To get unhandled historical published events
-    published = q1.get_published()
-    print('PUBLISHED1', published)
-
-    # Historical published events now moved to publishing
-    processing = q1.get_processing()
-    print('PROCESSING2', processing)
-
-    # To get unhandled historical published events
-    published = q1.get_published()
-    print('PUBLISHED2', published)
-
-    # Complete the processing events.
-    for event in processing:
-        event.complete()
-
-    # Historical published events now moved to publishing
-    processing = q1.get_processing()
-    print('PROCESSING3', processing)
-
-    # To get unhandled historical published events
-    published = q1.get_published()
-    print('PUBLISHED3', published)
-
-
-
+    # Completing the active event should move it to history.
+    event.complete()
+    active_events = event_queue.get_active_events()
+    assert not active_events
