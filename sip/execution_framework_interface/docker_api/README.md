@@ -32,6 +32,7 @@ pytest --pylint --docstyle --codestyle -s -v --pylint-rcfile=../../../.pylintrc 
 
 ## TODO
 
+* Make unit tests depend on small images make for testing this API  
 * Need to add exception into the functions
 * Add Log to the script
 * depends_on is not enabled -> Need to look into this

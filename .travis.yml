@@ -49,7 +49,9 @@ before_install:
   - pip install -r sip/science_pipeline_workflows/ical_dask/pipelines/requirements.arl.min.txt
   # Start Docker containers needed for unit tests
   - docker run -d -p 6379:6379 --name=config_db redis:4.0.6-alpine
+  - docker swarm init
   - docker ps -a
+  - docker node ls
 
 install:
   - echo "Install step..."
@@ -69,7 +71,7 @@ script:
 # - (cd sip && pylint --rcfile=../.pylintrc execution_frameworks)
 # - (cd sip && pylint --rcfile=../.pylintrc science_pipeline_workflows)
 # - SIP_PCI_LOG_LEVEL="WARN" && py.test --pylint --codestyle -s -v --durations=3 --pylint-rcfile=.pylintrc sip/execution_control/processing_controller_interface/flask_api
-  # - pydocstyle sip/execution_control/processing_controller_interface/flask_api
+#  - pydocstyle sip/execution_control/processing_controller_interface/flask_api
   - pytest --pylint --codestyle -s -v --pylint-rcfile=.pylintrc sip/science_pipeline_workflows/ical_dask
   - pytest --pylint --codestyle --docstyle -s -v --pylint-rcfile=.pylintrc sip/execution_control/configuration_db/redis
   - pytest --pylint --codestyle -s -v --pylint-rcfile=./.pylintrc sip/execution_framework_interface/docker_compose_generator
