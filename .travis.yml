@@ -44,6 +44,7 @@ before_install:
   # Install PCI flask requirements
   - pip install -r sip/execution_control/processing_controller_interface/flask_api/requirements.txt
   # Install EF / EE interface requirements
+  - pip install -r sip/execution_framework_interface/docker_api/requirements.txt
   - pip install -r sip/execution_framework_interface/docker_compose_generator/requirements.txt
   - pip install -r sip/science_pipeline_workflows/ical_dask/pipelines/requirements.arl.min.txt
   # Start Docker containers needed for unit tests
