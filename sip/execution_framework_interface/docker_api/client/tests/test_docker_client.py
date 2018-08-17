@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""Test for docker client API"""
+"""Test for docker client API."""
 
 import logging
 import os
@@ -13,8 +13,7 @@ FILE_PATH = os.path.dirname(__file__)
 
 
 def test_create_services():
-    """ Test function for create services"""
-
+    """Test function for create services."""
     # Passing in a test compose file
     service_names = []
     config_path = os.path.join(FILE_PATH, '..', 'compose-file',
@@ -31,8 +30,7 @@ def test_create_services():
 
 
 def test_create_volume():
-    """ Test function for creating volume"""
-
+    """Test function for creating volume."""
     # Create a new volume
     volume_name = 'test_volume'
     DC.create_volume(volume_name, 'local')
@@ -44,8 +42,7 @@ def test_create_volume():
 
 
 def test_get_service_list():
-    """ Test function for getting service list"""
-
+    """Test function for getting service list."""
     # Create new services
     service_names = []
     config_path = os.path.join(FILE_PATH, '..', 'compose-file',
@@ -77,15 +74,13 @@ def test_get_service_list():
 
 
 def test_get_node_list():
-    """ Test function for getting nodes list"""
-
+    """Test function for getting nodes list."""
     # Number of nodes
     assert len(DC.get_node_list()) == 1
 
 
 def test_get_volume_list():
-    """ Test function for getting volume list"""
-
+    """Test function for getting volume list."""
     # Create a new volume
     volume_name = 'test_volume'
     DC.create_volume(volume_name, 'local')
@@ -100,8 +95,7 @@ def test_get_volume_list():
 
 
 def test_delete_service():
-    """ Test function for deleting a service"""
-
+    """Test function for deleting a service."""
     # Passing in a test compose file
     service_names = []
     config_path = os.path.join(FILE_PATH, '..', 'compose-file',
@@ -117,8 +111,7 @@ def test_delete_service():
 
 
 def test_delete_volume():
-    """ Test function for deleting a volume"""
-
+    """Test function for deleting a volume."""
     # Create a new volume
     DC.create_volume('delete_volume', 'local')
 
