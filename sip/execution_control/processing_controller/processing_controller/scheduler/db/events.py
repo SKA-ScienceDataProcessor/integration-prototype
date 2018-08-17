@@ -34,23 +34,37 @@ class Event:
         """Initialise the event."""
         self.aggregate_type = aggregate_type
         self.subscriber = subscriber
-        self.id = event_id
-        self.data = event_data
+        self._id = event_id
+        self._data = event_data
 
     def __str__(self):
         """Generate the 'informal' string representation.
 
         Used by the print statement.
         """
-        return str(dict(id=self.id, data=self.data))
+        return str(dict(id=self.id, data=self._data))
 
     def __repr__(self):
         """Generate the 'official' string representation.
 
         eg. used when printing lists of objects.
         """
-        return 'events:{}:{}:{}'.format(self.aggregate_type,
-                                        self.subscriber, self.id)
+        return '{}'.format(self._id)
+
+    @property
+    def id(self):
+        """Return the event id"""
+        return self._id
+
+    @property
+    def type(self):
+        """Return the type of event."""
+        return self._data['type']
+
+    @property
+    def data(self):
+        """Return the event data."""
+        return self._data
 
     def complete(self):
         """Retire event from the active to history.
@@ -61,7 +75,7 @@ class Event:
         # pipe = DB.pipeline()
         # pipe.lrem(keys.active(self.aggregate_type, self.subscriber), 0,
         #           self.id)
-        DB.lrem(keys.active(self.aggregate_type, self.subscriber), 0, self.id)
+        DB.lrem(keys.active(self.aggregate_type, self.subscriber), 0, self._id)
         # TODO(BM) Consider not adding to history and just removing the event
         # as a copy is also always stored against the aggregate so the
         # history is there too. If this is the case dont need an atomic
@@ -131,6 +145,8 @@ class EventQueue:
         goes down. Events returned are moved to the active list with a
         single atomic transaction.
 
+        Events are returned in order of oldest to newest.
+
         Return:
             list[Events], list of Event objects
 
@@ -140,10 +156,10 @@ class EventQueue:
         event_ids = pipe.lrange(self._pub_key, 0, -1)
         if event_ids:
             pipe.delete(self._pub_key)
-            pipe.lpush(self._active_key, *event_ids)
+            pipe.rpush(self._active_key, *event_ids)
         pipe.execute()
         events = []
-        for event_id in event_ids:
+        for event_id in event_ids[::-1]:
             event_data = ast.literal_eval(DB.hget(self._data_key, event_id))
             events.append(Event(event_id, self._aggregate_type,
                                 self._subscriber, event_data))
@@ -202,7 +218,7 @@ def subscribe(aggregate_type: str, subscriber: str,
     """
     key = keys.subscribers(aggregate_type)
     DB.lrem(key, 0, subscriber)
-    DB.lpush(key, subscriber)
+    DB.rpush(key, subscriber)
     return EventQueue(aggregate_type, subscriber, callback_handler)
 
 
@@ -219,7 +235,7 @@ def get_subscribers(aggregate_type: str) -> List[str]:
     return DB.lrange(keys.subscribers(aggregate_type), 0, -1)
 
 
-def publish(aggregate_type: str, aggregate_key: str, event_type: str,
+def publish(aggregate_type: str, aggregate_id: str, event_type: str,
             event_data: dict = None):
     """Publish an event.
 
@@ -228,7 +244,7 @@ def publish(aggregate_type: str, aggregate_key: str, event_type: str,
 
     Args:
         aggregate_type (str): Type of aggregate
-        aggregate_key (str): db key for the aggregate
+        aggregate_id (str): Aggregate ID
         event_type (str): The event type
         event_data (dict, optional): Optional event data
 
@@ -249,7 +265,7 @@ def publish(aggregate_type: str, aggregate_key: str, event_type: str,
         event_data = dict()
     aggregate_id_key = '{}_id'.format(aggregate_type)
     if aggregate_id_key not in event_data:
-        event_data[aggregate_id_key] = aggregate_key
+        event_data[aggregate_id_key] = aggregate_id
     if 'type' not in event_data:
         event_data['type'] = event_type
 
@@ -257,6 +273,7 @@ def publish(aggregate_type: str, aggregate_key: str, event_type: str,
     _publish_to_subscribers(pipe, aggregate_type, event_id, event_data)
 
     # Update the aggregate event list and data.
+    aggregate_key = '{}:{}'.format(aggregate_type, aggregate_id)
     _update_aggregate(pipe, aggregate_key, event_id, event_data)
 
     # Execute the set of db transactions as an atomic transaction.
@@ -305,8 +322,10 @@ def _update_aggregate(pipe: redis.client.StrictPipeline, aggregate_key: str,
         event_data (dict): Event data dictionary.
 
     """
-    pipe.lpush(keys.aggregate_events_list(aggregate_key), event_id)
-    pipe.hset(keys.aggregate_events_data(aggregate_key), event_id, event_data)
+    events_list_key = keys.aggregate_events_list(aggregate_key)
+    events_data_key = keys.aggregate_events_data(aggregate_key)
+    pipe.rpush(events_list_key, event_id)
+    pipe.hset(events_data_key, event_id, event_data)
 
 
 def _get_event_id(aggregate_type: str) -> str:

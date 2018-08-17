@@ -11,7 +11,8 @@ with Docker using the command:
 import redis
 
 from ..scheduler.db.generate import generate_sbi_config
-from ..scheduler.db.sbi import add_sbi, cancel_sbi, subscribe
+from ..scheduler.db import sbi
+from ..scheduler.db import pb
 
 
 def test_add_sbi():
@@ -19,32 +20,55 @@ def test_add_sbi():
     client = redis.StrictRedis()
     client.flushall()
 
-    print('')
-    pb_event_queue = subscribe('test')
-    # sbi_event_queue = events.subscribe('sbi', 'test')
-
+    sbi_event_queue = sbi.subscribe('test_add_sbi')
     sbi_config = generate_sbi_config(num_pbs=4)
-    # print(json.dumps(sbi_config, indent=2))
 
-    add_sbi(sbi_config)
-    # TODO(BM) check that the SBI was created correctly and there is an event
+    sbi.add(sbi_config)
+    sbi_data = sbi.get_config(sbi_config['id'])
+    assert sbi_data['id'] == sbi_config['id']
+    assert len(sbi_data['processing_block_ids']) == 4
+    events = sbi_event_queue.get_published_events()
+    assert len(events) == 1
+    assert events[0].data['type'] == 'created'
+    status = sbi.get_status(sbi_data['id'])
+    assert status == 'created'
 
-    cancel_sbi(sbi_config['id'])
-    # TODO(BM) check that the SBI cancel event was created correctly
 
-    # event = pb_events.get()
-    # print(event)
-    # event = pb_events.get()
-    # print(event)
+def test_cancel_sbi():
+    """Test cancelling SBI data."""
+    client = redis.StrictRedis()
+    client.flushall()
 
-    pb_events = pb_event_queue.get_published_events()
-    pb_events[0].complete()
+    # Add a SBI event to the database.
+    sbi_events = sbi.subscribe('test_add_sbi')
+    pb_events = pb.subscribe('test_add_sbi')
+    num_pbs = 3
+    for _ in range(2):
+        sbi.add(generate_sbi_config(num_pbs=num_pbs))
 
-    pb_events = pb_event_queue.get_active_events()
-    # for event in pb_events:
-    #     print(event)
-    # for event_id, event_data in pb_events.items():
-    #     print('2', event_id, event_data)
-    #
-    # print(event_id)
-    # set_event_complete(event_id)
+    # Get the list of SBIs from the database.
+    sbi_list = sbi.get_active()
+    sbi_id = sbi_list[0]
+
+    sbi.cancel(sbi_id)
+
+    # Check that the SBI has been canceled.
+    events = sbi_events.get_published_events()
+    assert events[-1].type == 'cancelled'
+    status = sbi.get_status(sbi_id)
+    assert status == 'cancelled'
+    cancelled_list = sbi.get_cancelled()
+    assert len(cancelled_list) == 1
+    assert cancelled_list[0] == sbi_id
+
+    # Check that the PBs associated with the SBI have also been canceled
+    events = pb_events.get_published_events()
+    for i in range(num_pbs):
+        assert events[-1 - i].type == 'cancelled'
+    pb_ids = sbi.get_pb_ids(sbi_id)
+    assert len(pb_ids) == num_pbs
+    cancelled_list = pb.get_cancelled()
+    assert len(cancelled_list) == num_pbs
+    for pb_id in pb_ids:
+        assert pb_id in cancelled_list
+        assert pb.get_events(pb_id)[-1].type == 'cancelled'
