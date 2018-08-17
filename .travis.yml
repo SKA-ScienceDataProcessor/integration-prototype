@@ -1,5 +1,8 @@
 sudo: required
 
+notifications:
+  slack: ska-sip:zgaO4jJWwB4UjFRulowC5g56
+
 language: python
 
 env:
