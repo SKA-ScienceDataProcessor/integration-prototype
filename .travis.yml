@@ -1,10 +1,14 @@
 sudo: required
 
+notifications:
+  slack: ska-sip:zgaO4jJWwB4UjFRulowC5g56
+
 language: python
 
 env:
   global:
     - SIP_PCI_LOG_LEVEL=NOTSET
+    - SIP_DOCKER_API_LOG_LEVEL=INFO
 
 services:
   - docker
@@ -44,11 +48,14 @@ before_install:
   # Install PCI flask requirements
   - pip install -r sip/execution_control/processing_controller_interface/flask_api/requirements.txt
   # Install EF / EE interface requirements
+  - pip install -r sip/execution_framework_interface/docker_api/requirements.txt
   - pip install -r sip/execution_framework_interface/docker_compose_generator/requirements.txt
   - pip install -r sip/science_pipeline_workflows/ical_dask/pipelines/requirements.arl.min.txt
   # Start Docker containers needed for unit tests
   - docker run -d -p 6379:6379 --name=config_db redis:4.0.6-alpine
+  - docker swarm init
   - docker ps -a
+  - docker node ls
 
 install:
   - echo "Install step..."
@@ -68,10 +75,11 @@ script:
 # - (cd sip && pylint --rcfile=../.pylintrc execution_frameworks)
 # - (cd sip && pylint --rcfile=../.pylintrc science_pipeline_workflows)
 # - SIP_PCI_LOG_LEVEL="WARN" && py.test --pylint --codestyle -s -v --durations=3 --pylint-rcfile=.pylintrc sip/execution_control/processing_controller_interface/flask_api
-  # - pydocstyle sip/execution_control/processing_controller_interface/flask_api
+#  - pydocstyle sip/execution_control/processing_controller_interface/flask_api
   - pytest --pylint --codestyle -s -v --pylint-rcfile=.pylintrc sip/science_pipeline_workflows/ical_dask
   - pytest --pylint --codestyle --docstyle -s -v --pylint-rcfile=.pylintrc sip/execution_control/configuration_db/redis
   - pytest --pylint --codestyle -s -v --pylint-rcfile=./.pylintrc sip/execution_framework_interface/docker_compose_generator
+  - pytest --pylint --docstyle --codestyle -s -v --pylint-rcfile=./.pylintrc sip/execution_framework_interface/docker_api
 
 #after_success:
 #  - echo "Build successful! building docker containers ..."
