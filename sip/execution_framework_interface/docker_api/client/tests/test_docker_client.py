@@ -6,7 +6,7 @@ import os
 
 from ..docker_client import DockerClient
 
-logging.basicConfig(level='DEBUG')
+logging.basicConfig(level=os.getenv('SIP_DOCKER_API_LOG_LEVEL', 'DEBUG'))
 
 DC = DockerClient()
 FILE_PATH = os.path.dirname(__file__)

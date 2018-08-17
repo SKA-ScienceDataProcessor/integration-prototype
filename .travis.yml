@@ -5,6 +5,7 @@ language: python
 env:
   global:
     - SIP_PCI_LOG_LEVEL=NOTSET
+    - SIP_DOCKER_API_LOG_LEVEL=INFO
 
 services:
   - docker
