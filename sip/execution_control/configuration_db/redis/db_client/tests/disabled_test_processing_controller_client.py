@@ -7,8 +7,8 @@ For instructions of how to run these tests see the README.md file in the
 TODO(BM)
     - Remove generator functions - Done
     - Make functions more specific wrt resources
-        - get_block_details
-        - update_value
+        - get_block_details - Ignored
+        - update_value - Ignored
         - events
     - Move events to another module?
     - Add methods to genereate ids (eg. sub_array_ids etc)

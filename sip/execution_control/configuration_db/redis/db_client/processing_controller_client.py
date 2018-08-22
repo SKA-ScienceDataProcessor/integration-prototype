@@ -158,11 +158,9 @@ class ProcessingControllerDbClient:
     def get_sub_array_ids(self):
         """Get list of sub array ids."""
         # Initialise empty list
-        # _scheduling_block_ids = []
         _sub_array_ids = []
 
         for blocks_id in self.get_scheduling_block_ids():
-            # _scheduling_block_ids.append(blocks_id)
             block_details = self.get_block_details(blocks_id)
             _sub_array_ids.append(block_details['sub_array_id'])
         _sub_array_ids = sorted(list(set(_sub_array_ids)))
@@ -185,7 +183,7 @@ class ProcessingControllerDbClient:
             block_ids (list): List of block IDs
 
         Returns:
-            generator?!
+            dict, details of the scheduling or processing block
 
         """
         # Initialise empty dict
@@ -201,6 +199,7 @@ class ProcessingControllerDbClient:
             # NOTE(BM) unfortunately the following hack doesn't quite work \
             # for keys where the value is a Python object (list, dict etc.) \
             # but is good enough for now where objects are stored as strings.
+            # TODO :(NJT) Check if it is possible to work with Python object
             for key in block_data:
                 for char in ['[', '{']:
                     if char in block_data[key]:

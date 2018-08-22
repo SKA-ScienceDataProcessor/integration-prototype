@@ -65,7 +65,7 @@
                         "pattern": "^[a-z]+-[a-z]+[0-9]+$"
                     },
                     "type": {
-                        "description": "Type of the processing block",
+                        "description": "[real-time, batch]",
                         "type": "string"
                     },
                     "template": {
@@ -89,7 +89,7 @@
         },
 
         "resource_requirement": {
-            "description": "Resource required for the processing block",
+            "description": "Resource required for the processing block, min/max",
             "type": "object",
             "properties": {
                 "storage_type": {
@@ -100,7 +100,7 @@
         },
 
         "assigned_resources": {
-            "description": "Resource assigned for the processing block",
+            "description": "Resource allocated for the processing block",
             "type": "object",
             "properties": {
                 "status": {
@@ -110,9 +110,31 @@
             }
         },
 
+        "execution_engine_parameters": {
+            "description": "Execution Engine parameters, docker-compose file",
+            "type": "object",
+            "properties": {
+                "param1": {
+                    "description": "Placeholder",
+                    "type": "string"
+                }
+            }
+        },
+
+        "configuration": {
+            "description": "Detailed config needed by the workflow script/stage",
+            "type": "object",
+            "properties": {
+                "config1": {
+                    "description": "Placeholder",
+                    "type": "string"
+                }
+            }
+        },
+
         "workflow": {
             "description": "Workflow stage",
-            "type": "object",
+            "type": "array",
             "properties": {
                 "type": {
                     "description": "[stage, data, recv, vis, ical, vl]",
@@ -127,9 +149,15 @@
                 },
                 "assigned_resources": {
                     "$ref": "#/definitions/assigned_resources"
+                },
+                "execution_engine_parameters": {
+                    "$ref": "#/definitions/execution_engine_parameters"
+                },
+                "configuration": {
+                    "$ref": "#/definitions/configuration"
                 }
             },
-            "required": ["type", "resources_requirement"]
+            "required": ["type", "resources_requirement", "execution_engine_parameters", "configuration"]
         }
     }
 }
