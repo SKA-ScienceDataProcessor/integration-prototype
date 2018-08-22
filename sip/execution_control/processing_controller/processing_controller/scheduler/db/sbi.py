@@ -1,5 +1,11 @@
 # coding=utf-8
-"""Scheduling Block Instance (SBI) Events."""
+"""Scheduling Block Instance (SBI) data and events API.
+
+TODO(BM): Consider having a SBI class so that we have an object for the \
+          SBI that can be manipulated.
+
+TODO(BM): Define event types or event objects that the SBI can have.
+"""
 import ast
 
 import redis
@@ -91,7 +97,7 @@ def publish(sbi_id: str, event_type: str, event_data: dict = None):
     events.publish(AGGREGATE_TYPE, sbi_id, event_type, event_data)
 
 
-def cancel(sbi_id):
+def cancel(sbi_id: str):
     """Cancel a SBI.
 
     Args:
@@ -108,12 +114,7 @@ def cancel(sbi_id):
     DB.rpush('{}:cancelled'.format(AGGREGATE_TYPE), sbi_id)
     sbi_pb_ids = get_config_value(sbi_id, 'processing_block_ids')
     for pb_id in sbi_pb_ids:
-        pb_type = pb.get_type(pb_id)
-        pb.publish(pb_id, 'cancelled')
-        DB.lrem('{}:active'.format(pb.AGGREGATE_TYPE), 0, pb_id)
-        DB.lrem('{}:active:{}'.format(pb.AGGREGATE_TYPE, pb_type), 0, pb_id)
-        DB.rpush('{}:cancelled'.format(pb.AGGREGATE_TYPE), pb_id)
-        DB.rpush('{}:cancelled:{}'.format(pb.AGGREGATE_TYPE, pb_type), pb_id)
+        pb.cancel(pb_id)
 
 
 def add(sbi_config: dict):
@@ -129,7 +130,7 @@ def add(sbi_config: dict):
 
     sbi_id = sbi_config['id']
     sbi_key = get_key(sbi_config['id'])
-    sbi_list_key = 'sbi:active'
+    sbi_list_key = '{}:active'.format(AGGREGATE_TYPE)
 
     # Add Scheduling Block instance configuration to the db
     DB.hmset(sbi_key, sbi_config)
@@ -146,10 +147,11 @@ def add(sbi_config: dict):
         # Store the SBI key in the PB for back-reference.
         pb_config['sbi_id'] = sbi_key
 
-        pb_key = pb.get_pb_key(pb_id)
+        pb_key = pb.get_key(pb_id)
         DB.hmset(pb_key, pb_config)
-        DB.rpush('pb:active', pb_id)
-        DB.rpush('pb:active:{}'.format(pb_config['type']), pb_id)
+        DB.rpush('{}:active'.format(pb.AGGREGATE_TYPE), pb_id)
+        DB.rpush('{}:active:{}'.format(pb.AGGREGATE_TYPE, pb_config['type']),
+                 pb_id)
 
         # Publish an event to notify subscribers of the new PB
         pb.publish(pb_id, 'created')
@@ -162,7 +164,7 @@ def get_active():
         list, SBI ids
 
     """
-    return DB.lrange('sbi:active', 0, -1)
+    return DB.lrange('{}:active'.format(AGGREGATE_TYPE), 0, -1)
 
 
 def get_cancelled():
@@ -172,7 +174,7 @@ def get_cancelled():
         list, SBI ids
 
     """
-    return DB.lrange('sbi:cancelled', 0, -1)
+    return DB.lrange('{}:cancelled'.format(AGGREGATE_TYPE), 0, -1)
 
 
 def get_completed():
@@ -182,10 +184,10 @@ def get_completed():
         list, SBI ids
 
     """
-    return DB.lrange('sbi:completed', 0, -1)
+    return DB.lrange('{}:completed'.format(AGGREGATE_TYPE), 0, -1)
 
 
-def get_config(sbi_id: str):
+def get_config(sbi_id: str) -> dict:
     """Get the data structure for an SBI.
 
     Args:
@@ -207,7 +209,7 @@ def get_config(sbi_id: str):
     return data
 
 
-def get_status(sbi_id: str):
+def get_status(sbi_id: str) -> str:
     """Get the status of an SBI.
 
     TODO(BM) Could use an event handler to update the status of the aggregate
@@ -220,18 +222,12 @@ def get_status(sbi_id: str):
 
     Returns:
         str,
-    """
-    key = get_event_list_key(sbi_id)
-    # TODO(BM) check the sbi key exists.
 
-    # Get the status from the events on the aggregate
-    event_list = DB.lrange(key, 0, -1)
-    # print(event_list)
-    # print('')
-    # event_data = DB.hgetall(get_sbi_event_data_key(sbi_id))
-    # for event_id, event_data in event_data.items():
-    #     print(event_id, event_data)
-    last_event = DB.hget(get_event_data_key(sbi_id), event_list[-1])
+    """
+    # FIXME(BM) check the SBI key exists.
+    # FIXME(BM) use the events API for this?
+    key = get_event_list_key(sbi_id)
+    last_event = DB.hget(get_event_data_key(sbi_id), DB.lindex(key, -1))
     last_event = ast.literal_eval(last_event)
     return last_event['type']
 
@@ -249,9 +245,8 @@ def get_pb_ids(sbi_id: str) -> List[str]:
 
     Returns:
         list,
+
     """
     # TODO(BM) move this hardcoded key to a function?
     key = 'processing_block_ids'
     return ast.literal_eval(DB.hget(get_key(sbi_id), key))
-
-

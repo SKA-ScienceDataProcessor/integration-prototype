@@ -53,7 +53,7 @@ class Event:
 
     @property
     def id(self):
-        """Return the event id"""
+        """Return the event id."""
         return self._id
 
     @property

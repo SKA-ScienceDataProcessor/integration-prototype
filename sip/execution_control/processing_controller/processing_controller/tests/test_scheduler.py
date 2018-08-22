@@ -14,4 +14,5 @@ def test_late_initialisation():
 
     scheduler = ProcessingBlockScheduler()
 
-    print(scheduler.queue())
+    # FIXME(BM) At this point the queue should not be empty!
+    assert not scheduler.queue()

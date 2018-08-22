@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""Mock Processing Block Controller Celery task
+"""Mock Processing Block Controller Celery task.
 
 export CELERY_BROKER=redis://localhost:6379/1
 export CELERY_BACKEND=redis://localhost:6379/2
@@ -29,28 +29,31 @@ def init_logger():
                     '%(name)s | %(levelname)-7s | %(message)s')
     handler.setFormatter(logging.Formatter(fmt, '%Y-%m-%d %H:%M:%S'))
     log.addHandler(handler)
-    log.setLevel(os.getenv('SIP_LOG_LEVEL', 'DEBUG'))
+    log.setLevel(os.getenv('SIP_PBC_LOG_LEVEL', 'INFO'))
 
 
 init_logger()
 
 
-@APP.task(name='processing_controller.processing_block_controller.tasks.executue_processing_block')
-def execute_processing_block(config):
+@APP.task(name='processing_controller.processing_block_controller.tasks.'
+               'execute_processing_block')
+def execute_processing_block(config: dict):
     """Execute a processing block.
 
     Args:
         config (dict): Processing Block Configuration.
     """
     log = logging.getLogger('sip.ec.pbc')
+
     log.info('**** Executing Processing block! ****')
     log.info('config: %s', json.dumps(config))
     log.info('Starting workflow')
+    timeout = config.get('timeout', None)
     start_time = time.time()
     while True:
         time.sleep(0.5)
         log.debug('Executing workflow ... %.1f s', (time.time() - start_time))
-        if time.time() - start_time > 10.0:
+        if timeout and time.time() - start_time > timeout:
             break
     # The workflow configuration should contain the workflow template
     # and the configuration for each workflow stage.
@@ -74,5 +77,3 @@ def execute_processing_block(config):
     #     restart_policy=docker.types.RestartPolicy(condition='none'),
     #     mode=docker.types.ServiceMode(mode='replicated', replicas=1))
     # log.info('Service ID: %s', service.id)
-
-

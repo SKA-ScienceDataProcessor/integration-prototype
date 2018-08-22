@@ -46,6 +46,7 @@ class ProcessingBlockScheduler:
         """
         LOG.info('Initialising Processing Block queue.')
         queue = ProcessingBlockQueue()
+        # TODO(BM) populate queue from the database
         return queue
 
     def queue(self):

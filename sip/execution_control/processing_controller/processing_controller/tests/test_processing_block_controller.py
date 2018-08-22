@@ -4,6 +4,7 @@
 http://docs.celeryproject.org/en/latest/userguide/testing.html
 """
 import time
+# import logging
 
 import json  # pylint: disable=unused-import
 
@@ -41,12 +42,13 @@ def test_execute_processing_block():
     """
     # print('NAME=', execute_processing_block.name)
     # state = celery.current_app.events.State()
-    block_config = dict(id='pb-01')
-    result = execute_processing_block.apply_async((block_config,))
+    config = dict(id='pb-01', timeout=0.1)
+    result = execute_processing_block.apply_async((config,))
     # print('\nresult =', result)
     # start_time = time.time()
     _inspect = Inspect(app=APP)
     while not result.ready():
         # print('XX', _inspect.active())
         # print('XX', result.ready(), (time.time() - start_time))
+
         time.sleep(0.5)

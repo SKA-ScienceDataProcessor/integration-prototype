@@ -1,7 +1,0 @@
-version: '3'
-
-services:
-
-  mock_task_vis_receive:
-    image: skasip/mock_task_vis_receive_01
-    build: .
