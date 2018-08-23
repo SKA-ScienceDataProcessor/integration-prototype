@@ -9,9 +9,11 @@ import datetime
 from jsonschema import validate
 
 from .config_db_redis import ConfigDb
+from . import events
 
 
 LOG = logging.getLogger('SIP.EC.CDB')
+AGGREGATE_TYPE = 'sbi'
 
 
 class ProcessingControllerDbClient:
@@ -20,8 +22,42 @@ class ProcessingControllerDbClient:
     def __init__(self):
         """Initialise the client."""
         self._db = ConfigDb()
+        self._events = events
         self.scheduling_event_name = 'scheduling_block_events'
         self.processing_event_name = 'processing_block_events'
+
+    def subscribe(self, subscriber: str) -> events.EventQueue:
+        """Subscribe to Scheduling Block Instance (SBI) events.
+
+        Args:
+            subscriber (str): Subscriber name.
+
+        Returns:
+            events.EventQueue, Event queue object for querying PB events.
+
+        """
+        return self._events.subscribe(AGGREGATE_TYPE, subscriber)
+
+    def get_subscribers(self):
+        """Get the list of subscribers to Scheduling Block Instance (SBI) events.
+
+        Returns:
+            List[str], list of subscriber names.
+
+        """
+        return self._events.get_subscribers(AGGREGATE_TYPE)
+
+    def publish(self, sbi_id: str, event_type: str, event_data: dict = None):
+        """Publish a SBI event.
+
+        Args:
+            sbi_id (str): SBI id.
+            event_type (str): Type of event.
+            event_data (dict, optional): Event data.
+
+        """
+        self._events.publish(AGGREGATE_TYPE, sbi_id, event_type, event_data)
+
 
     ###########################################################################
     # Add functions
@@ -42,6 +78,8 @@ class ProcessingControllerDbClient:
         schema = self._get_schema()
         LOG.debug('Adding SBI with config: %s', config_dict)
 
+        print(config_dict)
+
         # Validates the schema
         validate(config_dict, schema)
 
@@ -56,24 +94,29 @@ class ProcessingControllerDbClient:
         # Adding Scheduling block instance with id
         name = "scheduling_block:" + updated_block["id"]
         self._db.set_hash_values(name, scheduling_block_data)
+        sbi_list_key = '{}:active'.format(AGGREGATE_TYPE)
+        self._db.append_to_list(sbi_list_key, updated_block["id"])
 
-        # Add a event to the scheduling block event list to notify
-        # of a new scheduling block being added to the db.
-        self._db.push_event(self.scheduling_event_name,
-                            updated_block["status"],
-                            updated_block["id"])
+        # Publish an event to notify subscribers of the new SBI
+        self.publish(updated_block["id"], 'created')
 
-        # Adding Processing block with id
-        for value in processing_block_data:
-            name = ("scheduling_block:" + updated_block["id"] +
-                    ":processing_block:" + value['id'])
-            self._db.set_hash_values(name, value)
+        # # Add a event to the scheduling block event list to notify
+        # # of a new scheduling block being added to the db.
+        # self._db.push_event(self.scheduling_event_name,
+        #                     updated_block["status"],
+        #                     updated_block["id"])
 
-            # Add a event to the processing block event list to notify
-            # of a new processing block being added to the db.
-            self._db.push_event(self.processing_event_name,
-                                value["status"],
-                                value["id"])
+        # # Adding Processing block with id
+        # for value in processing_block_data:
+        #     name = ("scheduling_block:" + updated_block["id"] +
+        #             ":processing_block:" + value['id'])
+        #     self._db.set_hash_values(name, value)
+        #
+        #     # Add a event to the processing block event list to notify
+        #     # of a new processing block being added to the db.
+        #     self._db.push_event(self.processing_event_name,
+        #                         value["status"],
+        #                         value["id"])
 
     # #########################################################################
     # Get functions
@@ -242,6 +285,32 @@ class ProcessingControllerDbClient:
     # Delete functions
     # #########################################################################
 
+    def cancel_scheduling_block(self, block_id: str):
+        """Cancel a SBI.
+
+        Args:
+            block_id (str): the SBI Id
+
+        """
+        # sbi_key = get_sbi_key(sbi_id)
+        LOG.debug('Deleting SBI %s', block_id)
+        scheduling_blocks = self._db.get_all_blocks(block_id)
+
+        if not scheduling_blocks:
+            raise KeyError('Scheduling Block Instance not found: {}'
+                           .format(block_id))
+
+        # TODO(BM) ideally publish the cancel event and update the sbi and pb \
+        # lists in one atomic transaction (using pipelines)
+        self.publish(block_id, 'cancelled')
+        self._db.remove_element.lrem('{}:active'.format(AGGREGATE_TYPE), 0, block_id)
+        self._db.append_to_list('{}:cancelled'.format(AGGREGATE_TYPE), block_id)
+        # sbi_pb_ids = get_config_value(block_id, 'processing_block_ids')
+        # for pb_id in sbi_pb_ids:
+        #     pb.cancel(pb_id)
+        # TODO(NJT) Need to add about Processing Blocks
+
+    # TODO(NJT) TO BE REMOVED AS THIS FUNCTION IS PROPERLY NOT REQUIRED
     def delete_scheduling_block(self, block_id):
         """Delete the specified Scheduling Block Instance.
 
@@ -317,15 +386,6 @@ class ProcessingControllerDbClient:
                 self._db.push_event(self.processing_event_name, "deleted",
                                     processing_block_id)
 
-    # #########################################################################
-    # Event functions
-    # #########################################################################
-
-    def events(self):
-        """."""
-
-        # Events
-        pass
 
     # #########################################################################
     # Utility functions
@@ -400,3 +460,34 @@ class ProcessingControllerDbClient:
         _scheduling_block_data['processing_blocks'] = _processing_block_id
 
         return _scheduling_block_data, _processing_block_data
+
+    # #########################################################################
+    # TO BE ARRANGED
+    # #########################################################################
+
+    def get_active(self):
+        """Get the list of active SBI from the database.
+
+        Returns:
+            list, SBI ids
+
+        """
+        return self._db.get_list('{}:active'.format(AGGREGATE_TYPE))
+
+    def get_cancelled(self):
+        """Get the list of cancelled SBI from the database.
+
+        Returns:
+            list, SBI ids
+
+        """
+        return self._db.get_list('{}:cancelled'.format(AGGREGATE_TYPE))
+
+    def get_completed(self):
+        """Get the list of completed SBI from the database.
+
+        Returns:
+            list, SBI ids
+
+        """
+        return self._db.get_list('{}:completed'.format(AGGREGATE_TYPE))

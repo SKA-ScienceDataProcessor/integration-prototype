@@ -9,7 +9,7 @@ import namesgenerator
 
 PB_TYPES = [
     'real-time',
-    'batch'
+    'offline'
 ]
 
 WORKFLOW_TYPES = [

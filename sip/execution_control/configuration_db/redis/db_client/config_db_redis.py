@@ -3,11 +3,11 @@
 from __future__ import unicode_literals
 import os
 import logging
-import redis
-import redis.exceptions
 
 from functools import wraps
 
+import redis
+import redis.exceptions
 
 LOG = logging.getLogger('SIP.EC.CDB')
 REDIS_HOST = os.getenv('REDIS_HOST', 'localhost')
@@ -141,14 +141,18 @@ class ConfigDb(object):
             self._db.lpush(key, *value)
 
     @check_connection
-    def append_to_list(self, key, value):
+    def append_to_list(self, key, *value, pipeline=False):
         """Add new element to the end of the list stored at key.
 
         Args:
             key (str): Key where the list is stored
             value: Value to add to the list
+            pipeline (bool):
         """
-        self._db.rpush(key, value)
+        if pipeline:
+            self._pipeline.rpush(key, *value)
+        else:
+            self._db.rpush(key, *value)
 
     @check_connection
     def get_list_value(self, key, index):
@@ -178,8 +182,8 @@ class ConfigDb(object):
         """
         if pipeline:
             return self._pipeline.lrange(key, 0, -1)
-        else:
-            return self._db.lrange(key, 0, -1)
+
+        return self._db.lrange(key, 0, -1)
 
     @check_connection
     def get_list_length(self, key):
@@ -320,20 +324,24 @@ class ConfigDb(object):
 
     @check_connection
     def execute(self):
-        """"""
+        """Executes all previous queued commands in a transaction
+        and restores the connection state to normal.
+        """
         self._pipeline.execute()
 
     @check_connection
     def watch(self, key, pipeline=False):
-        """
+        """Marks the given keys to be watch for conditional
+        execution of a transaction.
+
         Args:
             key (str):
+            pipeline (str):
         """
         if pipeline:
             self._pipeline.watch(key)
         else:
             self._db.watch(key)
-
 
     @check_connection
     def publish(self, channel, message, pipeline=False):
@@ -366,4 +374,3 @@ class ConfigDb(object):
             Use with care!
         """
         self._db.flushdb()
-
