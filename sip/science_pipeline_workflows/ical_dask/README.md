@@ -109,6 +109,18 @@ data.
 bash ./scripts/DaskSwarmProcessing.sh
 ```
 
+## Using JSON parameter file
+
+The parameters for the modeling and data processing stages are defined in a JSON file,
+the default one is `parameters.json` which should be located in `pipelines` folder. Another
+JSON file name can be specified as an argument for the scripts `pipelines/imaging_modeling.py` and
+`pipelines/imaging_processing.py` in appropriate shell scripts (`scripts/DaskSwarmModeling.sh` and
+`scripts/DaskSwarmProcessing.sh`).
+
+Currently there are four uppper-level dictionaries, `modeling` (the settings for a simulation), `processing` 
+(the settings for image reconstruction pipelines continuum-imaging and ICAL), `files` with the HDF5 and FITS file names 
+and `advice` with the parameters for the modeled/reconstructed image.
+
 ## Checking the pipeline execution and results
 
 It is possible to monitor the pipeline execution via Dask Bokeh web
