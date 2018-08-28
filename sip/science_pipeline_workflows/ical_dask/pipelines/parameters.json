@@ -1,0 +1,94 @@
+{
+    "modeling": {
+	"simulate" : {
+		"order": "frequency"
+	},
+	"gleam_model":{
+		"flux_limit": 1.0,
+		"applybeam" : true			
+	},
+	"phasecentre":{
+		"RA"     : 30.0,
+		"Dec"    : -60.0,
+		"frame"  : "icrs",
+		"equinox": "J2000"
+	},
+	"configuration" : {
+	    	"name"         : "LOWBD2",
+	    	"num_freq_win" : 7,
+	    	"fstart"       : 0.9e8,
+	    	"fend"         : 1.1e8,
+    	    	"num_times"    : 11,
+	    	"timestart_pi" : -0.333333333,
+	    	"timeend_pi"   : 0.333333333,
+    	    	"r_max"        : 300.0,
+		"PolarisationFrame" : "stokesI"
+	},
+	"predict" : {
+		"context" : "wstack"
+    	},
+	"corrupt" : {
+		"phase_error" : 1.0
+	}
+
+    },
+    "files": {
+    	"vis_list"                   : "vis_list.hdf",
+	"predicted_vis_list"         : "predicted_vislist.hdf",
+	"corrupted_vis_list"         : "corrupted_vislist.hdf",
+	"continuum_imaging_restored" : "imaging-dask_continuum_imaging_restored.fits",
+	"continuum_imaging_residual" : "imaging-dask_continuum_imaging_residual.fits",
+	"ical_restored"              : "imaging-dask_ical_restored.fits",
+	"ical_residual"	             : "imaging-dask_ical_residual.fits"
+    },
+
+    "advice": {
+    	"guard_band_image"   : 8.0,
+        "delA"               : 0.02,
+        "wprojection_planes" : 1
+    },
+   
+    "processing" : {
+	"continuum_imaging" : {
+		"context"   : "wstack",
+		"scales"    : [0, 3, 10],
+        	"algorithm" : "mmclean",
+        	"nmoment"   : 3,
+        	"niter"	    : 1000,
+        	"fractional_threshold" : 0.1,
+        	"threshold" : 0.1,
+        	"nmajor"    : 5,
+        	"gain"      : 0.25,
+        	"deconvolve_facets" : 8,
+        	"deconvolve_overlap" : 16,
+        	"deconvolve_taper" : "tukey",
+        	"psf_support" : 64
+	},
+	"ical" : {
+		"context"   : "wstack",
+		"calibration_context" : "TG",
+		"scales"    : [0, 3, 10],
+        	"algorithm" : "mmclean",
+        	"nmoment"   : 3,
+        	"niter"	    : 1000,
+        	"fractional_threshold" : 0.1,
+        	"threshold" : 0.1,
+        	"nmajor"    : 5,
+        	"gain"      : 0.25,
+        	"deconvolve_facets" : 8,
+        	"deconvolve_overlap" : 16,
+        	"deconvolve_taper" : "tukey",
+		"timeslice" : "auto",
+		"global_solution" : false,
+        	"psf_support" : 64,
+		"do_selfcal" : true
+	},
+	"controls" : {
+		"T":{"first_selfcal" : 1, "timescale" : "auto"},
+		"G":{"first_selfcal" : 3, "timescale" : "auto"},
+		"B":{"first_selfcal" : 4, "timescale" : 1e5}
+	}
+	
+    }
+}
+
