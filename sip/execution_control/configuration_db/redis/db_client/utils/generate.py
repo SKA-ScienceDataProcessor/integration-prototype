@@ -6,6 +6,8 @@ from random import randint, choice
 
 import namesgenerator
 
+# TODO(NJT) Needs to re-written according to the new schema.
+# TODO - Pattern in the schema needs to be updated
 
 PB_TYPES = [
     'real-time',
@@ -112,6 +114,6 @@ def generate_sbi_config(num_pbs: int = 3) -> dict:
         project=project,
         name=namesgenerator.get_random_name(),
         processing_block_ids=pb_ids,
-        processing_block_data=sbi_pb_config
+        processing_blocks=sbi_pb_config
     )
     return sbi_config

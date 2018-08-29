@@ -5,15 +5,16 @@ import json
 import logging
 import os
 import datetime
-
+from typing import List
 from jsonschema import validate
 
 from .config_db_redis import ConfigDb
 from . import events
-
+from .event_keys import aggregate_events_data, aggregate_events_list
 
 LOG = logging.getLogger('SIP.EC.CDB')
-AGGREGATE_TYPE = 'sbi'
+SBI_AGGREGATE_TYPE = 'sbi'
+PB_AGGREGATE_TYPE = 'pb'
 
 
 class ProcessingControllerDbClient:
@@ -23,106 +24,122 @@ class ProcessingControllerDbClient:
         """Initialise the client."""
         self._db = ConfigDb()
         self._events = events
-        self.scheduling_event_name = 'scheduling_block_events'
-        self.processing_event_name = 'processing_block_events'
 
-    def subscribe(self, subscriber: str) -> events.EventQueue:
+    ###########################################################################
+    # Pub Sub functions
+    ###########################################################################
+
+    def subscribe(self, subscriber: str, aggregate_type: str) -> \
+            events.EventQueue:
         """Subscribe to Scheduling Block Instance (SBI) events.
 
         Args:
             subscriber (str): Subscriber name.
+            aggregate_type (str): Aggregate type
 
         Returns:
             events.EventQueue, Event queue object for querying PB events.
 
         """
-        return self._events.subscribe(AGGREGATE_TYPE, subscriber)
+        return self._events.subscribe(aggregate_type, subscriber)
 
-    def get_subscribers(self):
+    def get_subscribers(self, aggregate_type: str):
         """Get the list of subscribers to Scheduling Block Instance (SBI) events.
+
+        Args:
+            aggregate_type (str): Aggregate type
 
         Returns:
             List[str], list of subscriber names.
 
         """
-        return self._events.get_subscribers(AGGREGATE_TYPE)
+        return self._events.get_subscribers(aggregate_type)
 
-    def publish(self, sbi_id: str, event_type: str, event_data: dict = None):
+    def publish(self, block_id: str, event_type: str, aggregate_type: str,
+                event_data: dict = None):
         """Publish a SBI event.
 
         Args:
-            sbi_id (str): SBI id.
+            block_id (str): Scheduling block instance or processing block id.
             event_type (str): Type of event.
+            aggregate_type (str): Aggregate type
             event_data (dict, optional): Event data.
 
         """
-        self._events.publish(AGGREGATE_TYPE, sbi_id, event_type, event_data)
-
+        self._events.publish(aggregate_type, block_id, event_type, event_data)
 
     ###########################################################################
     # Add functions
     ###########################################################################
 
-    def add_scheduling_block(self, config_dict):
+    def add_scheduling_block_instance(self, config_dict: dict,
+                                      sbi_aggregate_type=None,
+                                      pb_aggregate_type=None):
         """Add Scheduling Block to the database.
 
         Args:
             config_dict (dict): SBI configuration dictionary.
-
-        Raises:
-            jsonschema.ValidationError, if the SBI configuration is invalid.
-            Exception, if ??
-
+            sbi_aggregate_type (str): Aggregate type for Scheduling block
+                                      instance
+            pb_aggregate_type (str): Aggregate type for processing block
         """
+
+        # Checking for aggregate types
+        if sbi_aggregate_type:
+            sbi_aggregate_type = sbi_aggregate_type
+        else:
+            sbi_aggregate_type = SBI_AGGREGATE_TYPE
+
+        if pb_aggregate_type:
+            pb_aggregate_type = pb_aggregate_type
+        else:
+            pb_aggregate_type = PB_AGGREGATE_TYPE
+
         # Get schema for validation
         schema = self._get_schema()
         LOG.debug('Adding SBI with config: %s', config_dict)
-
-        print(config_dict)
 
         # Validates the schema
         validate(config_dict, schema)
 
         # Add status field and value to the data
-        updated_block = self._add_status(config_dict)
+        sbi_config = self._add_status(config_dict)
+
+        sbi_id = sbi_config['id']
+        sbi_key = self._get_key(sbi_config['id'], sbi_aggregate_type)
 
         # Splitting into different names and fields before
         # adding to the database
         scheduling_block_data, processing_block_data = \
-            self._split_scheduling_block(updated_block)
+            self._split_scheduling_block(sbi_config)
 
         # Adding Scheduling block instance with id
-        name = "scheduling_block:" + updated_block["id"]
-        self._db.set_hash_values(name, scheduling_block_data)
-        sbi_list_key = '{}:active'.format(AGGREGATE_TYPE)
-        self._db.append_to_list(sbi_list_key, updated_block["id"])
+        # name = "scheduling_block:" + sbi_config["id"]
+        self._db.set_hash_values(sbi_key, scheduling_block_data)
+        sbi_list_key = '{}:active'.format(sbi_aggregate_type)
+        self._db.append_to_list(sbi_list_key, sbi_id)
 
         # Publish an event to notify subscribers of the new SBI
-        self.publish(updated_block["id"], 'created')
+        self.publish(sbi_id, 'created', sbi_aggregate_type)
 
-        # # Add a event to the scheduling block event list to notify
-        # # of a new scheduling block being added to the db.
-        # self._db.push_event(self.scheduling_event_name,
-        #                     updated_block["status"],
-        #                     updated_block["id"])
+        # Adding Processing block with id
+        for sbi_pb_config in processing_block_data:
+            pb_id = sbi_pb_config['id']
+            pb_key = self._get_key(pb_id, pb_aggregate_type)
+            sbi_pb_config['scheduling_block_id'] = sbi_key
+            self._db.set_hash_values(pb_key, sbi_pb_config)
+            self._db.append_to_list('{}:active'.format(pb_aggregate_type), pb_id)
+            self._db.append_to_list('{}:active:{}'.format(
+                pb_aggregate_type, sbi_pb_config['type']), pb_id)
 
-        # # Adding Processing block with id
-        # for value in processing_block_data:
-        #     name = ("scheduling_block:" + updated_block["id"] +
-        #             ":processing_block:" + value['id'])
-        #     self._db.set_hash_values(name, value)
-        #
-        #     # Add a event to the processing block event list to notify
-        #     # of a new processing block being added to the db.
-        #     self._db.push_event(self.processing_event_name,
-        #                         value["status"],
-        #                         value["id"])
+            # Publish an event to notify subscribers of the new PB
+            self.publish(sbi_pb_config["id"], 'created', pb_aggregate_type)
 
     # #########################################################################
     # Get functions
     # #########################################################################
 
-    def get_sbi_id(self, date=None, project='sip'):
+    def get_scheduling_block_instance_id(self, date=None, project='sip'):
         """Return a Scheduling Block Instance ID string.
 
         Args:
@@ -148,7 +165,7 @@ class ProcessingControllerDbClient:
         sbi_index = self.get_num_scheduling_blocks()
         return '{}-{}-sbi{:03d}'.format(_date, project, sbi_index)
 
-    def get_scheduling_block_ids(self):
+    def get_scheduling_block_instance_ids(self):
         """Get the sorted list of Scheduling Block Instance ids.
 
         Returns:
@@ -167,14 +184,29 @@ class ProcessingControllerDbClient:
                 scheduling_block_ids.append(id_split)
         return sorted(scheduling_block_ids)
 
-    def get_num_scheduling_blocks(self):
+    def get_num_scheduling_block_instance(self):
         """Get the number of Scheduling Blocks Instance ids in the database.
 
         Returns:
             int, The number of Scheduling Block Instance IDs
 
         """
-        return len(self.get_scheduling_block_ids())
+        return len(self.get_sbi_ids())
+
+    def get_pb_ids(self, sbi_id: str) -> List[str]:
+        """Return the list of PB ids associated with the SBI.
+
+        Args:
+            sbi_id (str): SBI id
+
+        Returns:
+            list,
+
+        """
+        # TODO(BM) move this hardcoded key to a function?
+        key = 'processing_block_ids'
+        return ast.literal_eval(self._db.get_hash_value(self._get_key(
+            sbi_id, SBI_AGGREGATE_TYPE), key))
 
     def get_processing_block_ids(self):
         """Get the sorted list of Processing Block ids.
@@ -219,11 +251,12 @@ class ProcessingControllerDbClient:
                 _ids.append(details['id'])
         return _ids
 
-    def get_block_details(self, block_ids):
+    def get_block_details(self, block_ids: list, aggregate_type: str):
         """Get the details of a Scheduling or Processing block.
 
         Args:
             block_ids (list): List of block IDs
+            aggregate_type (str): Aggregate type
 
         Returns:
             dict, details of the scheduling or processing block
@@ -237,155 +270,212 @@ class ProcessingControllerDbClient:
             block_ids = [block_ids]
 
         for _id in block_ids:
-            block_key = self._db.get_block(_id)[0]
+            sbi_key = self._get_key(_id, aggregate_type)
+
+            # Check that the key exists
+            if not self._db.get_keys(sbi_key):
+                raise KeyError('Scheduling Block Instance not found: {}'
+                               .format(_id))
+
+            block_key = self._db.get_keys(sbi_key)[0]
             block_data = self._db.get_hash_dict(block_key)
             # NOTE(BM) unfortunately the following hack doesn't quite work \
             # for keys where the value is a Python object (list, dict etc.) \
             # but is good enough for now where objects are stored as strings.
-            # TODO :(NJT) Check if it is possible to work with Python object
             for key in block_data:
                 for char in ['[', '{']:
                     if char in block_data[key]:
-                        block_data[key] = ast.literal_eval(
-                            str(block_data[key]))
+                        block_data[key] = ast.literal_eval(str(block_data[key]))
         return block_data
 
-    def get_latest_event(self, event_class):
-        """Get the latest event added.
+    def get_status(self, block_id: str, aggregate_type: str) -> str:
+        """Get the status of an SBI.
 
         Args:
-            event_class (str): Class of event, either 'processing_block' or
-                               'scheduling_block'
+            block_id (str): Scheduling block instance or processing block id.
+            aggregate_type (str): Aggregate type
 
         Returns:
-            dict, event data.
-
-        Raises:
-            Keyerror, if an invalid event class is specified.
+            str,
 
         """
-        if event_class not in ('processing_block', 'scheduling_block'):
-            raise KeyError('Invalid event class')
-        block_event = event_class + '_events'
-        block_history = event_class + '_event_history'
-        event = self._db.get_event(block_event, block_history)
-        return ast.literal_eval(event)
+        sbi_key = self._get_key(block_id, aggregate_type)
+
+        # Check that the key exists
+        if not self._db.get_keys(sbi_key):
+            raise KeyError('Scheduling Block Instance not found: {}'
+                           .format(block_id))
+
+        key = self.get_event_list_key(block_id, aggregate_type)
+        last_event = self._db.get_hash_value(self.get_event_data_key(
+            block_id, aggregate_type), self._db.get_list_value(key, -1))
+        last_event = ast.literal_eval(last_event)
+        return last_event['type']
+
+    def get_active(self, aggregate_type: str):
+        """Get the list of active SBI from the database.
+
+        Args:
+            aggregate_type (str): Aggregate type
+
+        Returns:
+            list, SBI ids
+
+        """
+        return self._db.get_list('{}:active'.format(aggregate_type))
+
+    def get_cancelled(self, aggregate_type: str):
+        """Get the list of cancelled SBI from the database.
+
+        Args:
+            aggregate_type (str): Aggregate type
+
+        Returns:
+            list, SBI ids
+
+
+        """
+        return self._db.get_list('{}:cancelled'.format(aggregate_type))
+
+    def get_completed(self, aggregate_type: str):
+        """Get the list of completed SBI from the database.
+
+        Args:
+            aggregate_type (str): Aggregate type
+
+        Returns:
+            list, SBI ids
+
+        """
+        return self._db.get_list('{}:completed'.format(aggregate_type))
+
+    def get_event_list_key(self, sbi_id: str, aggregate_type: str) -> str:
+        """Return the SBI events list db key.
+
+        Args:
+            sbi_id (str): SBI id.
+            aggregate_type (str): Aggregate type
+
+        Returns:
+            str, db key for the specified SBI event data.
+
+        """
+        return aggregate_events_list(self._get_key(sbi_id, aggregate_type))
+
+    def get_event_data_key(self, sbi_id: str, aggregate_type: str) -> str:
+        """Return the SBI events data db key.
+
+        Args:
+            sbi_id (str): SBI id.
+            aggregate_type (str): Aggregate type
+
+        Returns:
+            str, db key for the specified SBI event data.
+
+        """
+        return aggregate_events_data(self._get_key(sbi_id, aggregate_type))
+
+    def get_cancelled(self, aggregate_type: str):
+        """Get the list of cancelled SBI from the database.
+
+        Returns:
+            list, SBI ids
+            aggregate_type (str): Aggregate type
+
+        """
+        return self._db.get_list('{}:cancelled'.format(aggregate_type))
+
+    def get_events(self, pb_id: str) -> List[events.Event]:
+        """Get event data for the specified PB.
+
+        Args:
+            pb_id (str): PB Id.
+
+        Returns:
+            list of event data dictionaries
+
+        """
+        event_data_key = self.get_event_data_key(pb_id, 'pb')
+        event_list = []
+        for event_id, data in self._db.get_hash_dict(event_data_key).items():
+            data = ast.literal_eval(data)
+            event_list.append(events.Event(event_id, 'pb', '', data))
+        return event_list
 
     # #########################################################################
     # Update functions
     # #########################################################################
 
-    def update_value(self, block_id, field, value):
-        """Update the value of the given block id and field."""
-        block_name = self._db.get_block(block_id)
-        for name in block_name:
-            self._db.set_hash_value(name, field, value)
+    def update_value(self, block_id :str, field: str, value: str,
+                     aggregate_type: str):
+        """Update the value of the given block id and field.
+
+        Args:
+            block_id (str):
+            field (str):
+            value(str):
+            aggregate_type (str): Aggregate type
+
+        """
+        block_key = self._get_key(block_id, aggregate_type)
+        for key in block_key:
+            self._db.set_hash_value(key, field, value)
 
     # #########################################################################
-    # Delete functions
+    # Cancel functions
     # #########################################################################
 
-    def cancel_scheduling_block(self, block_id: str):
+    def cancel_scheduling_block_instance(self, block_id: str):
         """Cancel a SBI.
 
         Args:
             block_id (str): the SBI Id
 
         """
-        # sbi_key = get_sbi_key(sbi_id)
         LOG.debug('Deleting SBI %s', block_id)
-        scheduling_blocks = self._db.get_all_blocks(block_id)
+        sbi_key = self._get_key(block_id, 'sbi')
 
-        if not scheduling_blocks:
+        # Check that the key exists!
+        if not self._db.get_keys(sbi_key):
             raise KeyError('Scheduling Block Instance not found: {}'
                            .format(block_id))
 
-        # TODO(BM) ideally publish the cancel event and update the sbi and pb \
         # lists in one atomic transaction (using pipelines)
-        self.publish(block_id, 'cancelled')
-        self._db.remove_element.lrem('{}:active'.format(AGGREGATE_TYPE), 0, block_id)
-        self._db.append_to_list('{}:cancelled'.format(AGGREGATE_TYPE), block_id)
-        # sbi_pb_ids = get_config_value(block_id, 'processing_block_ids')
-        # for pb_id in sbi_pb_ids:
-        #     pb.cancel(pb_id)
-        # TODO(NJT) Need to add about Processing Blocks
-
-    # TODO(NJT) TO BE REMOVED AS THIS FUNCTION IS PROPERLY NOT REQUIRED
-    def delete_scheduling_block(self, block_id):
-        """Delete the specified Scheduling Block Instance.
-
-        Removes the Scheduling Block Instance, and all Processing Blocks
-        that belong to it from the database.
-
-        Args:
-            block_id (str): Scheduling Block ID
-
-        Raises:
-            KeyError: If the specified block_id is not found.
-
-        """
-        LOG.debug('Deleting SBI %s', block_id)
-        scheduling_blocks = self._db.get_all_blocks(block_id)
-
-        if not scheduling_blocks:
-            raise KeyError('Scheduling Block Instance not found: {}'
-                           .format(block_id))
-
-        if scheduling_blocks:
-            for blocks in scheduling_blocks:
-                if "processing_block" not in blocks:
-                    self._db.delete_key(blocks)
-                else:
-                    split_key = blocks.split(':')
-                    self._db.delete_key(blocks)
-
-                    # Add a event to the processing block event list to notify
-                    # about deleting from the db
-                    self._db.push_event(self.processing_event_name, "deleted",
-                                        split_key[3])
-
-            # Add a event to the scheduling block event list to notify
-            # of a deleting a scheduling block from the db
-            self._db.push_event(self.scheduling_event_name, "deleted",
+        self.publish(block_id, 'cancelled', SBI_AGGREGATE_TYPE)
+        self._db.remove_element('{}:active'.format(SBI_AGGREGATE_TYPE), 0,
                                 block_id)
+        self._db.append_to_list('{}:cancelled'.format(SBI_AGGREGATE_TYPE),
+                                block_id)
+        # sbi_pb_ids = get_hash_value(block_id, 'processing_block_ids')
+        sbi_pb_ids = ast.literal_eval(self._db.get_hash_value(sbi_key,
+                                      'processing_block_ids'))
 
-    def delete_processing_block(self, processing_block_id):
-        """Delete Processing Block(s).
+        for pb_id in sbi_pb_ids:
+            self.cancel_processing_block(pb_id)
+
+    def cancel_processing_block(self, pb_id: str):
+        """Cancel a PB.
 
         Args:
-            processing_block_id (str): Processing Block ID
-
-        Raises:
-            KeyError if the specified processing_block_id is not found.
+            pb_id (str): the PB Id
 
         """
-        LOG.debug('Deleting Processing Block %s', processing_block_id)
-        processing_block = self._db.get_block(processing_block_id)
+        pb_key = self._get_key(pb_id, 'pb')
 
-        if not processing_block:
+        # Check that the key exists!
+        if not self._db.get_keys(pb_key):
             raise KeyError('Processing Block not found: {}'
-                           .format(processing_block_id))
+                           .format(pb_id))
 
-        for block in processing_block:
-            if 'processing_block' in block:
-                self._db.delete_key(block)
-
-                # Remove processing block id from scheduling block id
-                scheduling_block_id = block.split(':')
-                scheduling_block_details = self.get_block_details(
-                    [scheduling_block_id[1]])
-                # for block_details in scheduling_block_details:
-                block_list = scheduling_block_details['processing_blocks']
-                if processing_block_id in block_list:
-                    block_list.remove(processing_block_id)
-                self.update_value(scheduling_block_id[1],
-                                  'processing_blocks', block_list)
-
-                # Add a event to the processing block event list to notify
-                # about deleting from the db
-                self._db.push_event(self.processing_event_name, "deleted",
-                                    processing_block_id)
-
+        pb_type = self._db.get_hash_value(pb_key, 'type')
+        # publish(pb_id, 'cancelled')
+        self.publish(pb_id, 'cancelled', PB_AGGREGATE_TYPE)
+        self._db.remove_element('{}:active'.format(PB_AGGREGATE_TYPE), 0, pb_id)
+        self._db.remove_element('{}:active:{}'.format(PB_AGGREGATE_TYPE,
+                                                      pb_type), 0, pb_id)
+        self._db.append_to_list('{}:cancelled'.format(PB_AGGREGATE_TYPE), pb_id)
+        self._db.append_to_list('{}:cancelled:{}'.format(PB_AGGREGATE_TYPE,
+                                                         pb_type), pb_id)
 
     # #########################################################################
     # Utility functions
@@ -408,6 +498,20 @@ class ProcessingControllerDbClient:
             schema_data = file.read()
         schema = json.loads(schema_data)
         return schema
+
+    @staticmethod
+    def _get_key(sbi_id: str, aggregate_type: str) -> str:
+        """Return a Scheduling Block Instance db key.
+
+        Args:
+            sbi_id (str): Scheduling block instance id
+            aggregate_type (str): Aggregate key
+
+        Returns:
+            str, db key for the specified SBI
+
+        """
+        return '{}:{}'.format(aggregate_type, sbi_id)
 
     @staticmethod
     def _add_status(scheduling_block):
@@ -457,37 +561,6 @@ class ProcessingControllerDbClient:
         # Adding processing block id to the scheduling block list
         for block_id in _processing_block_data:
             _processing_block_id.append(block_id['id'])
-        _scheduling_block_data['processing_blocks'] = _processing_block_id
+        _scheduling_block_data['processing_block_ids'] = _processing_block_id
 
         return _scheduling_block_data, _processing_block_data
-
-    # #########################################################################
-    # TO BE ARRANGED
-    # #########################################################################
-
-    def get_active(self):
-        """Get the list of active SBI from the database.
-
-        Returns:
-            list, SBI ids
-
-        """
-        return self._db.get_list('{}:active'.format(AGGREGATE_TYPE))
-
-    def get_cancelled(self):
-        """Get the list of cancelled SBI from the database.
-
-        Returns:
-            list, SBI ids
-
-        """
-        return self._db.get_list('{}:cancelled'.format(AGGREGATE_TYPE))
-
-    def get_completed(self):
-        """Get the list of completed SBI from the database.
-
-        Returns:
-            list, SBI ids
-
-        """
-        return self._db.get_list('{}:completed'.format(AGGREGATE_TYPE))

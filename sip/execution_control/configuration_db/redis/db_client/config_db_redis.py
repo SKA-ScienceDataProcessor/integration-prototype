@@ -241,35 +241,11 @@ class ConfigDb(object):
         return self._db.exists(key)
 
     @check_connection
-    def get_all_blocks(self, block_id):
-        """Search all keys associated with the block id.
-
-        FIXME(BM): This function should probably be moved to the
-                   Processing Controller client
-
-        """
-        key_search = '*' + block_id + '*'
-        return self._db.keys(key_search)
-
-    @check_connection
-    def get_block(self, block_id):
-        """Search for keys associated with the block id.
-
-        FIXME(BM): This function should probably be moved to the
-            Processing Controller client
-        """
-        key_search = '*' + block_id
-        return self._db.keys(key_search)
-
-    @check_connection
     def push_event(self, event_name, event_type, block_id):
         """Add an event to the database.
 
         An event is a list entry stored at a list with key event_name.
         The list entry is a dictionary with two fields: event_type and block_id
-
-        FIXME(BM): This function needs to be generalised or added to the
-            Processing Controller client.
 
         Args:
             event_name (str): Event list key.
@@ -284,9 +260,6 @@ class ConfigDb(object):
 
         Gets an event from the named event list removing the event and
         adding it to the event history.
-
-        FIXME(BM): This function needs to be generalised or added to the
-            Processing Controller client.
 
         Args:
             event_name (str): Event list key.
