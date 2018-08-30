@@ -1,24 +1,78 @@
 # -*- coding: utf-8 -*-
 """High Level Master Controller Client API."""
 import ast
+import logging
+import time
 
 from .config_db_redis import ConfigDb
+from . import events
+from .event_keys import aggregate_events_data, aggregate_events_list
+
+LOG = logging.getLogger('SIP.EC.CDB')
+MC_AGGREGATE_TYPE = 'execution_control'
+SDP_AGGREGATE_TYPE = 'sdp_components'
 
 
 class MasterDbClient:
     """Master Controller Client Interface."""
 
     def __init__(self):
-        """Initialise the Master Controller Database client."""
+        """Initialise the client."""
         self._db = ConfigDb()
+        self._events = events
+
+    ###########################################################################
+    # PubSub functions
+    ###########################################################################
+
+    def subscribe(self, subscriber: str, ) -> events.EventQueue:
+        """Subscribe to Scheduling Block Instance (SBI) events.
+
+        Args:
+            subscriber (str): Subscriber name.
+
+        Returns:
+            events.EventQueue, Event queue object for querying PB events.
+
+        """
+        return self._events.subscribe(MC_AGGREGATE_TYPE, subscriber)
+
+    def get_subscribers(self):
+        """Get the list of subscribers to Scheduling Block Instance (SBI) events.
+
+        Returns:
+            List[str], list of subscriber names.
+
+        """
+        return self._events.get_subscribers(MC_AGGREGATE_TYPE)
+
+    def publish(self, block_id: str, event_type: str, event_data: dict = None):
+        """Publish a SBI event.
+
+        Args:
+            block_id (str):
+            event_type (str): Type of event.
+            event_data (dict, optional): Event data.
+
+        """
+        self._events.publish(MC_AGGREGATE_TYPE, block_id, event_type, event_data)
 
     ###########################################################################
     # Get functions
     ###########################################################################
 
     def get_value(self, key, field):
-        """Get value associated to the field in string."""
-        value = self._db.get_hash_value(key, field)
+        """Get value associated to the field in string.
+
+        Args:
+              key (str)
+              field (str)
+        """
+
+        aggregate_type = self._get_aggregate_type(key)
+
+        value = self._db.get_hash_value(self._get_key(key, aggregate_type),
+                                        field)
         if value:
             return value
         return None
@@ -80,6 +134,26 @@ class MasterDbClient:
             return list_length
         return 0
 
+    def get_active(self):
+        """Get the list of active scheduling block instance or processing
+        block from the database.
+
+        Returns:
+            list, Scheduling block instance or processing block ids
+
+        """
+        return self._db.get_list('{}:active'.format(MC_AGGREGATE_TYPE))
+
+    def get_completed(self):
+        """Get the list of completed scheduling block instance or processing
+         block from the database.
+
+        Returns:
+            list, Scheduling block instance or processing block ids
+
+        """
+        return self._db.get_list('{}:completed'.format(MC_AGGREGATE_TYPE))
+
     ###########################################################################
     # Add functions
     ###########################################################################
@@ -92,23 +166,104 @@ class MasterDbClient:
     # Update functions
     ###########################################################################
 
-    def update_value(self, key, field, value):
-        """Update the value of the given name and field."""
-        self._db.set_hash_value(key, field, value)
+    def update_target_state(self, key, field, value):
+        """Update the target state.
 
-    def update_service(self, v_path, field, value):
-        """Update the service."""
-        # Converts the name format
-        path = self._convert_path(v_path)
-        self._db.set_hash_value(path, field, value)
+        Args:
+              key (str):
+              field (str):
+              value (str):
+
+        """
+        mc_key = self._get_key(key, MC_AGGREGATE_TYPE)
+        current_time = time.strftime('%Y/%m/%d %H:%M:%S', time.gmtime())
+        self._db.set_hash_value(mc_key, field, value, pipeline=True)
+        self._db.set_hash_value(mc_key, "Target_timestamp", current_time,
+                                pipeline=True)
+        self._db.execute()
+        target_list_key = '{}:active'.format(MC_AGGREGATE_TYPE)
+        print(target_list_key)
+        self._db.append_to_list(target_list_key, key)
+
+        # Publish an event to notify subscribers of the change in target state
+        self.publish(key, 'updated')
+
+    def update_sdp_state(self, key, field, value):
+        """Update the target state.
+
+        Args:
+              key (str):
+              field (str):
+              value (str):
+        """
+
+        # TODO (NJT) Currently there is no way to differentiate between the key
+        # TODO       Therefore, need to find a to do that. It works fine for now.
+        mc_key = self._get_key(key, MC_AGGREGATE_TYPE)
+        LOG.debug('State Updated is Completed %s', mc_key)
+
+        # Check that the key exists!
+        if not self._db.get_keys(mc_key):
+            raise KeyError('Master Controller key is not found: {}'
+                           .format(mc_key))
+
+        current_time = time.strftime('%Y/%m/%d %H:%M:%S', time.gmtime())
+        self.publish(key, 'completed')
+        self._db.set_hash_value(mc_key, field, value, pipeline=True)
+        self._db.set_hash_value(mc_key, "State_timestamp", current_time,
+                                pipeline=True)
+        self._db.remove_element('{}:active'.format(MC_AGGREGATE_TYPE), 0,
+                                key, pipeline=True)
+        self._db.append_to_list('{}:completed'.format(MC_AGGREGATE_TYPE),
+                                key, pipeline=True)
+        self._db.execute()
+
+    def update_component_state(self, key, field, value):
+        """Update the state of the given key and field.
+
+        Args:
+              key (str):
+              field (str):
+              value (str):
+        """
+        component_key = self._get_key(key, SDP_AGGREGATE_TYPE)
+        self._db.set_hash_value(component_key, field, value)
 
     ###########################################################################
     # Private functions
     ###########################################################################
 
     @staticmethod
-    def _convert_path(key):
-        """Convert the name format to the match the database."""
-        key_path = key.split('.')
-        service_path = ':'.join(key_path)
-        return service_path
+    def _get_key(key: str, aggregate_type: str) -> str:
+        """Return a Scheduling Block Instance db key.
+
+        Args:
+            sbi_id (str): Scheduling block instance id
+            aggregate_type (str): Aggregate type
+
+        Returns:
+            str, db key for the specified SBI
+
+        """
+        return '{}:{}'.format(aggregate_type, key)
+
+    @staticmethod
+    def _get_aggregate_type(key: str) -> str:
+        """Get the correct aggregate type"""
+        if key == 'master_controller':
+            aggregate_type = MC_AGGREGATE_TYPE
+        else:
+            aggregate_type = SDP_AGGREGATE_TYPE
+        return aggregate_type
+
+    # #########################################################################
+    # Utility functions
+    # #########################################################################
+
+    def clear(self):
+        """Clear / drop the entire database.
+
+        Note:
+            Use with care!
+        """
+        self._db.flush_db()

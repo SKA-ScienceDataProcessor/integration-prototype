@@ -45,9 +45,9 @@ class ConfigDb(object):
 
     @check_connection
     def get_value(self, key):
-        """
+        """Get the value of the key.
         Args:
-            key (str):
+            key (str):  key (name) where the value is stored
 
         """
         return self._db.get(key)
@@ -90,7 +90,7 @@ class ConfigDb(object):
             key (str): key (name) of the hash
             field (str): Field within the hash to set
             value (str): Value to set
-            pipeline (bool): TODO (WRITE COMMENT HERE)
+            pipeline (bool): True, start a transaction block. Default false.
 
         """
         if pipeline:
@@ -132,9 +132,9 @@ class ConfigDb(object):
         Args:
             key (str): Key where the list is stored
             value: Value to add to the list
-            pipeline (bool):
-        """
+            pipeline (bool): True, start a transaction block. Default false.
 
+        """
         if pipeline:
             self._pipeline.lpush(key, *value)
         else:
@@ -147,7 +147,8 @@ class ConfigDb(object):
         Args:
             key (str): Key where the list is stored
             value: Value to add to the list
-            pipeline (bool):
+            pipeline (bool): True, start a transaction block. Default false.
+
         """
         if pipeline:
             self._pipeline.rpush(key, *value)
@@ -174,7 +175,7 @@ class ConfigDb(object):
 
         Args:
             key (str): Key where the list is stored.
-            pipeline (bool):
+            pipeline (bool): True, start a transaction block. Default false.
 
         Returns:
             list: values in the list ordered by list index
@@ -193,7 +194,7 @@ class ConfigDb(object):
             key (str): Key where the list is stored
 
         Returns:
-            int: length of the list stored at key.
+            int: Length of the list stored at key.
 
         """
         return self._db.llen(key)
@@ -219,9 +220,8 @@ class ConfigDb(object):
 
         Args:
             key (str): Key to delete
-            pipeline (bool): TODO (WRITE COMMENT HERE)
+            pipeline (bool): True, start a transaction block. Default false.
         """
-
         if pipeline:
             self._pipeline.delete(key)
         else:
@@ -279,21 +279,28 @@ class ConfigDb(object):
         published to them.
 
         Args:
-            kwargs:
+            kwargs: Channels to subscribe
+
+        Returns:
+            list: list of channels and number of subscribers
         """
         pub_sub = self._db.pubsub(**kwargs)
         return pub_sub
 
     @check_connection
-    def remove_element(self, key, count, value):
+    def remove_element(self, key, count, value, pipeline=False):
         """Remove element of the list stored at key.
 
         Args:
             key (str): Key where the list is stored
-            count: number of occurences to be removed from the list
+            count: Number of occurrences to be removed from the list
             value (str): Value to remove from the list
+            pipeline (bool): True, start a transaction block. Default false
         """
-        self._db.lrem(key, count, value)
+        if pipeline:
+            self._pipeline.lrem(key, count, value)
+        else:
+            self._db.lrem(key, count, value)
 
     @check_connection
     def execute(self):
@@ -308,8 +315,8 @@ class ConfigDb(object):
         execution of a transaction.
 
         Args:
-            key (str):
-            pipeline (str):
+            key (str): Key that needs to be watched
+            pipeline (bool): True, start a transaction block. Default false.
         """
         if pipeline:
             self._pipeline.watch(key)
@@ -321,9 +328,9 @@ class ConfigDb(object):
         """Posts a message to a given channel
 
         Args:
-            channel (str):
-            message (str):
-            pipeline (str):
+            channel (str): Channel where the message will be published
+            message (str): Message to publish
+            pipeline (bool): True, start a transaction block. Default false.
         """
         if pipeline:
             self._pipeline.publish(channel, message)

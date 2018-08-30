@@ -102,7 +102,7 @@ def test_cancel_sbi():
     assert len(cancelled_list) == num_pbs
     for pb_id in pb_ids:
         assert pb_id in cancelled_list
-        assert db.get_events(pb_id)[-1].type == 'cancelled'
+        assert db.get_events(pb_id, 'pb')[-1].type == 'cancelled'
 
 
 def test_pb_events():
@@ -132,6 +132,8 @@ def test_pb_events():
 
     # TODO(BM) check the status of the aggregate after the event has been \
     # applied
+
+#######################################################################
 
 # def test_get_sbi_id():
 #     """Test method to generate a valid SBI id."""
