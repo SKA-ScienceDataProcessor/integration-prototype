@@ -11,6 +11,7 @@ RUN apt-get update && \
 ENV LC_ALL=C.UTF-8
 ENV LANG=C.UTF-8
 
+RUN pip install numpy
 
 WORKDIR /worker
 

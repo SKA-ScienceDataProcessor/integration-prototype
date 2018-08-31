@@ -22,6 +22,10 @@ The images `ical_dask_scheduler`, `ical_dask_worker` and `ical_dask_pipeline`
 are built using the shell script `DockerBuild_bind.sh` and the Dockerfiles
 in `dockerfiles` folder.
 
+## Starting Docker Swarm
+
+A swarm can be started with `docker swarm init` command. On some hosts, e.g. AlaSKA P3 it can be already started by default.
+
 ## Starting Dask Execution Engine services
 
 The Docker Swarm Dask Execution Engine services can be started in two different
@@ -105,6 +109,18 @@ data.
 bash ./scripts/DaskSwarmProcessing.sh
 ```
 
+## Using JSON parameter file
+
+The parameters for the modeling and data processing stages are defined in a JSON file,
+the default one is `parameters.json` which should be located in `pipelines` folder. Another
+JSON file name can be specified as an argument for the scripts `pipelines/imaging_modeling.py` and
+`pipelines/imaging_processing.py` in appropriate shell scripts (`scripts/DaskSwarmModeling.sh` and
+`scripts/DaskSwarmProcessing.sh`).
+
+Currently there are four uppper-level dictionaries, `modeling` (the settings for a simulation), `processing` 
+(the settings for image reconstruction pipelines continuum-imaging and ICAL), `files` with the HDF5 and FITS file names 
+and `advice` with the parameters for the modeled/reconstructed image.
+
 ## Checking the pipeline execution and results
 
 It is possible to monitor the pipeline execution via Dask Bokeh web
@@ -139,6 +155,10 @@ pipeline has been run using the provided shell scripts, run the command:
 ```bash
 bash ./scripts/DaskSwamStop.sh
 ```
+
+## Stopping Docker Swarm
+
+A swarm can be stopped with a command `docker swarm leave --force` on a workstation. On the AlaSKA P3 OpenStack Docker Swarm cluster stopping a swarm it is not required.
 
 ## Troubleshooting
 

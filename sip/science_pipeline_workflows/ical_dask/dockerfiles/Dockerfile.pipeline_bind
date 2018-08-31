@@ -11,6 +11,8 @@ RUN apt-get update && \
 ENV LC_ALL=C.UTF-8
 ENV LANG=C.UTF-8
 
+RUN pip install numpy
+
 WORKDIR /pipelines
 
 # Install ARL requirements
@@ -18,4 +20,4 @@ COPY pipelines/requirements.arl.min.txt ./requirements.txt
 RUN pip install -r requirements.txt
 
 # Copy pipeline scripts
-COPY pipelines/*.py ./
+#COPY pipelines/*.py ./
