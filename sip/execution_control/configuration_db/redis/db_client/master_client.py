@@ -77,10 +77,10 @@ class MasterDbClient:
             return value
         return None
 
-    def get_value_bool(self, key, field):
-        """Get the value associated to the field in boolean."""
-        value = self.get_value(key, field)
-        return bool(value)
+    # def get_value_bool(self, key, field):
+    #     """Get the value associated to the field in boolean."""
+    #     value = self.get_value(key, field)
+    #     return bool(value)
 
     def get_all_value(self, key):
         """Get all the value associated to the name, returned in dict."""
@@ -113,16 +113,16 @@ class MasterDbClient:
             return element_eval
         return 0
 
-    def get_service_from_list_bool(self, key, index):
-        """Get the n'th element of the service list in boolean.
-
-        If the does not point to an element 0 is returned.
-        """
-        service = self.get_service_from_list(key, index)
-        for entry in service:
-            if service[entry] == 'true' or 'false' or 'True' or 'False':
-                bool(service[entry])
-            return service
+    # def get_service_from_list_bool(self, key, index):
+    #     """Get the n'th element of the service list in boolean.
+    #
+    #     If the does not point to an element 0 is returned.
+    #     """
+    #     service = self.get_service_from_list(key, index)
+    #     for entry in service:
+    #         if service[entry] == 'true' or 'false' or 'True' or 'False':
+    #             bool(service[entry])
+    #         return service
 
     def get_service_list_length(self, key):
         """Get the length of the service list.
@@ -235,10 +235,10 @@ class MasterDbClient:
 
     @staticmethod
     def _get_key(key: str, aggregate_type: str) -> str:
-        """Return a Scheduling Block Instance db key.
+        """Return a master controller db key.
 
         Args:
-            sbi_id (str): Scheduling block instance id
+            key (str):
             aggregate_type (str): Aggregate type
 
         Returns:
@@ -249,7 +249,12 @@ class MasterDbClient:
 
     @staticmethod
     def _get_aggregate_type(key: str) -> str:
-        """Get the correct aggregate type"""
+        """Get the correct aggregate type
+
+        Args:
+              key (str):
+
+        """
         if key == 'master_controller':
             aggregate_type = MC_AGGREGATE_TYPE
         else:
