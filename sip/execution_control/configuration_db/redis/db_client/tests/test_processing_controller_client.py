@@ -16,21 +16,22 @@ import jsonschema
 from ..utils.generate import generate_sbi_config
 from random import choice
 from ..processing_controller_client import ProcessingControllerDbClient
+from ..sbi_client import SchedulingBlockDbClient
+from ..pb_client import ProcessingBlockDbClient
 
 
 def test_create_client_object():
     """Test creating a client object."""
-    db_client = ProcessingControllerDbClient()
+    db_client = SchedulingBlockDbClient()
     assert db_client is not None
 
 
 def test_add_sbi():
     """Test adding SBI data to the EC configuration DB."""
-    db = ProcessingControllerDbClient()
+    db = SchedulingBlockDbClient()
     db.clear()
 
-    sbi_aggregate_type = 'sbi'
-    sbi_event_queue = db.subscribe('test_add_sbi', sbi_aggregate_type)
+    sbi_event_queue = db.subscribe('test_add_sbi')
 
     # TODO (NJT) Need to fix scheduling block instance data generator
     # generate_data = generate_sbi_config(num_pbs=4)
@@ -41,26 +42,28 @@ def test_add_sbi():
                       processing_blocks=[dict(id="sip-vis000",
                                               type='real-time')])
 
+    # db.add_scheduling_block_instance(sbi_config)
     db.add_scheduling_block_instance(sbi_config)
-    sbi_data = db.get_block_details(sbi_config['id'], sbi_aggregate_type)
+    sbi_data = db.get_block_details(sbi_config['id'])
 
     assert sbi_data['id'] == sbi_config['id']
     assert len(sbi_data['processing_block_ids']) == 1
     events = sbi_event_queue.get_published_events()
     assert len(events) == 1
     assert events[0].data['type'] == 'created'
-    status = db.get_status(sbi_data['id'], sbi_aggregate_type)
+    status = db.get_status(sbi_data['id'])
     assert status == 'created'
 
 
 def test_cancel_sbi():
     """Test cancelling SBI data."""
-    db = ProcessingControllerDbClient()
-    db.clear()
+    sbi_db = SchedulingBlockDbClient()
+    pb_db = ProcessingBlockDbClient()
+    sbi_db.clear()
 
     # Add a SBI event to the database.
-    sbi_events = db.subscribe('test_add_sbi', 'sbi')
-    pb_events = db.subscribe('test_add_sbi', 'pb')
+    sbi_events = sbi_db.subscribe('test_add_sbi')
+    pb_events = pb_db.subscribe('test_add_sbi')
     num_pbs = 3
 
     # TODO (NJT) Need to fix generator
@@ -76,19 +79,19 @@ def test_cancel_sbi():
                                          dict(id="sip-vis002",
                                               type='real-time')])
 
-    db.add_scheduling_block_instance(sbi_config)
+    sbi_db.add_scheduling_block_instance(sbi_config)
 
     # Get the list of SBIs from the database.
-    sbi_list = db.get_active('sbi')
+    sbi_list = sbi_db.get_active()
     sbi_id = sbi_list[0]
-    db.cancel_scheduling_block_instance(sbi_id)
+    sbi_db.cancel_scheduling_block_instance(sbi_id)
 
     # Check that the SBI has been canceled.
     events = sbi_events.get_published_events()
     assert events[-1].type == 'cancelled'
-    status = db.get_status(sbi_id, 'sbi')
+    status = sbi_db.get_status(sbi_id)
     assert status == 'cancelled'
-    cancelled_list = db.get_cancelled('sbi')
+    cancelled_list = sbi_db.get_cancelled()
     assert len(cancelled_list) == 1
     assert cancelled_list[0] == sbi_id
 
@@ -96,30 +99,29 @@ def test_cancel_sbi():
     events = pb_events.get_published_events()
     for i in range(num_pbs):
         assert events[-1 - i].type == 'cancelled'
-    pb_ids = db.get_pb_ids(sbi_id)
+    pb_ids = pb_db.get_pb_ids(sbi_id)
     assert len(pb_ids) == num_pbs
-    cancelled_list = db.get_cancelled('pb')
+    cancelled_list = pb_db.get_cancelled()
     assert len(cancelled_list) == num_pbs
     for pb_id in pb_ids:
         assert pb_id in cancelled_list
-        assert db.get_events(pb_id, 'pb')[-1].type == 'cancelled'
+        assert pb_db.get_events(pb_id)[-1].type == 'cancelled'
 
 
 def test_pb_events():
     """Test the PB events API"""
-    db = ProcessingControllerDbClient()
+    db = ProcessingBlockDbClient()
     db.clear()
 
     subscriber = 'pb_events_test'
-    aggregate_type = 'pb'
-    event_queue = db.subscribe(subscriber, aggregate_type)
+    event_queue = db.subscribe(subscriber)
     event_count = 4
 
     pb_id = '{:03d}'.format(0)
-    db.publish(pb_id, 'created', aggregate_type)
+    db.publish(pb_id, 'created')
     for _ in range(event_count):
         event_type = choice(['cancelled', 'queued', 'scheduled'])
-        db.publish(pb_id, event_type, aggregate_type)
+        db.publish(pb_id, event_type)
 
     # Note: When calling get() the oldest event is obtained first.
     events = []
