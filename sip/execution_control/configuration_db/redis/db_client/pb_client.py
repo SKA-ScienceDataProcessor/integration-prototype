@@ -61,28 +61,9 @@ class ProcessingBlockDbClient(ProcessingControllerDbClient):
         return ast.literal_eval(self._db.get_hash_value(
             self._get_sbi_key(sbi_id), key))
 
-    def get_all_pb_ids(self):
-        """Get the sorted list of all the Processing Block ids.
-
-        Returns:
-            list, All Processing Block IDs in the database
-
-        """
-        _processing_block_ids = []
-
-        # TODO (NJT) Better way to do this?
-        # Pattern used to search processing block ids
-        pattern = '*:processing_block:*'
-        block_ids = self._db.get_keys(pattern)
-
-        for block_id in block_ids:
-            id_split = block_id.split(':')[-1]
-            _processing_block_ids.append(id_split)
-        return sorted(_processing_block_ids)
-
     def get_num_pb_ids(self):
         """Get number of processing block ids."""
-        return len(self.get_all_pb_ids())
+        return len(self.get_active())
 
     # #########################################################################
     # Cancel functions
@@ -95,7 +76,6 @@ class ProcessingBlockDbClient(ProcessingControllerDbClient):
             pb_id (str): Processing block id
 
         """
-        # TODO(NJT) Check if the processing block instance is actually removed
         pb_key = self.get_key(pb_id)
 
         # Check that the key exists!
