@@ -17,9 +17,6 @@ schema = {
 validate({'name': "myname", "price": 34.99}, schema)
 
 """
-import datetime
-import pytest
-import jsonschema
 import subprocess
 
 from ..master_client import MasterDbClient
@@ -33,68 +30,68 @@ def test_create_client_object():
 
 def test_set_target_state():
     """TODO test description."""
-    db = MasterDbClient()
-    db.clear()
+    db_client = MasterDbClient()
+    db_client.clear()
 
     subprocess.call(["python3", "utils/set_initial_data.py"])
-    mc_event_queue = db.subscribe('test_update_target')
+    mc_event_queue = db_client.subscribe('test_update_target')
     key = 'master_controller'
     # # key = ['execution_control', 'master_controller']
     field = 'Target_state'
     value = "OFF"
-    db.update_target_state(key, field, value)
+    db_client.update_target_state(key, field, value)
     events = mc_event_queue.get_published_events()
     assert len(events) == 1
     assert events[0].data['type'] == 'updated'
-    state = db.get_value(key, field)
+    state = db_client.get_value(key, field)
     assert state == 'OFF'
 
     # Update states of the components
     component_key = ['processing_controller', 'logging']
     for c_key in component_key:
-        db.update_component_state(c_key, field, value)
+        db_client.update_component_state(c_key, field, value)
     for test_key in component_key:
-        state = db.get_value(test_key, field)
+        state = db_client.get_value(test_key, field)
         assert state == 'OFF'
 
 
 def test_set_sdp_state():
     """TODO test description."""
-    db = MasterDbClient()
-    db.clear()
+    db_client = MasterDbClient()
+    db_client.clear()
 
     subprocess.call(["python3", "utils/set_initial_data.py"])
-    mc_event_queue = db.subscribe('test_update_target')
+    mc_event_queue = db_client.subscribe('test_update_target')
     key = 'master_controller'
     # # key = ['execution_control', 'master_controller']
     field = 'Target_state'
     value = "OFF"
-    db.update_target_state(key, field, value)
+    db_client.update_target_state(key, field, value)
     events = mc_event_queue.get_published_events()
     assert len(events) == 1
     assert events[0].data['type'] == 'updated'
-    state = db.get_value(key, field)
+    state = db_client.get_value(key, field)
     assert state == 'OFF'
 
     # Update states of the components
     component_key = ['processing_controller', 'logging']
     for c_key in component_key:
-        db.update_component_state(c_key, field, value)
+        db_client.update_component_state(c_key, field, value)
     for test_key in component_key:
-        state = db.get_value(test_key, field)
+        state = db_client.get_value(test_key, field)
         assert state == 'OFF'
 
     # update completed state
     sdp_field = "SDP_state"
-    sbi_list = db.get_active()
+    sbi_list = db_client.get_active()
     mc_key = sbi_list[0]
-    db.update_sdp_state(mc_key, sdp_field, value)
+    db_client.update_sdp_state(mc_key, sdp_field, value)
     events = mc_event_queue.get_published_events()
     assert events[-1].type == 'completed'
     assert events[0].data['type'] == 'completed'
-    state = db.get_value(key, field)
+    state = db_client.get_value(key, field)
     assert state == 'OFF'
-    completed_list = db.get_completed()
+    completed_list = db_client.get_completed()
     assert len(completed_list) == 1
     assert completed_list[0] == mc_key
 
@@ -102,9 +99,9 @@ def test_set_sdp_state():
     current_field = "Current_state"
     component_key = ['processing_controller', 'logging']
     for c_key in component_key:
-        db.update_component_state(c_key, current_field, value)
+        db_client.update_component_state(c_key, current_field, value)
     for test_key in component_key:
-        state = db.get_value(test_key, field)
+        state = db_client.get_value(test_key, field)
         assert state == 'OFF'
 
 
@@ -176,7 +173,8 @@ def test_set_sdp_state():
 #     service_list_name = ['execution_control', 'master_controller',
 #                          'service_list']
 #     # TODO
-#     # self.assertEqual(db_client.get_service_list_length(service_list_name), 6)
+#     # self.assertEqual(db_client.get_service_list_length(service_list_name),
+#                                                          6)
 
 # NOT REQUIRED
 # def test_list_access():

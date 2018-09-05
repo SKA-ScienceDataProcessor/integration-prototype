@@ -16,12 +16,10 @@ AGGREGATE_TYPE = 'sbi'
 
 
 class SchedulingBlockDbClient(ProcessingControllerDbClient):
-    """
+    """Configuration Database client API for the Scheduling Block Instance."""
 
-    """
     def __init__(self):
-        """
-        """
+        """Initialise variables."""
         self._db = ConfigDb()
         self._pb = ProcessingBlockDbClient()
         ProcessingControllerDbClient.__init__(self, AGGREGATE_TYPE, self._db)
@@ -30,7 +28,7 @@ class SchedulingBlockDbClient(ProcessingControllerDbClient):
     # Add functions
     ###########################################################################
 
-    def add_scheduling_block_instance(self, config_dict: dict):
+    def add_sbi(self, config_dict: dict):
         """Add Scheduling Block to the database.
 
         Args:
@@ -48,16 +46,15 @@ class SchedulingBlockDbClient(ProcessingControllerDbClient):
         sbi_config = self._add_status(config_dict)
 
         sbi_id = sbi_config['id']
-        # sbi_key = self._get_key(sbi_config['id'])
+        # sbi_key = self._get_key(sbi_config['id'])get_sbi_id
         sbi_key = self.get_key(sbi_config['id'])
 
         # Splitting into different names and fields before
         # adding to the database
         scheduling_block_data, processing_block_data = \
-            self._split_scheduling_block(sbi_config)
+            self._split_sbi(sbi_config)
 
         # Adding Scheduling block instance with id
-        # name = "scheduling_block:" + sbi_config["id"]
         self._db.set_hash_values(sbi_key, scheduling_block_data)
         sbi_list_key = '{}:active'.format(AGGREGATE_TYPE)
         self._db.append_to_list(sbi_list_key, sbi_id)
@@ -66,13 +63,13 @@ class SchedulingBlockDbClient(ProcessingControllerDbClient):
         self.publish(sbi_id, 'created')
 
         # Adding processing blocks
-        self._pb.add_processing_block(processing_block_data, sbi_key)
+        self._pb.add_pb(processing_block_data, sbi_key)
 
     # #########################################################################
     # Get functions
     # #########################################################################
 
-    def get_scheduling_block_instance_id(self, date=None, project='sip'):
+    def get_sbi_id(self, date=None, project='sip'):
         """Return a Scheduling Block Instance ID string.
 
         Args:
@@ -95,30 +92,32 @@ class SchedulingBlockDbClient(ProcessingControllerDbClient):
         else:
             raise RuntimeError('Unknown date type.')
 
-        sbi_index = self.get_num_scheduling_blocks()
+        sbi_index = self.get_num_sbi()
         return '{}-{}-sbi{:03d}'.format(_date, project, sbi_index)
 
-    def get_scheduling_block_instance_ids(self):
-        """Get the sorted list of Scheduling Block Instance ids.
+    def get_sbi_ids(self):
+        """Get the sorted list of Scheduling Block Instance ids
+        from the database.
 
         Returns:
             list, All Scheduling Block Instance IDs in the database
 
         """
+        # Initialise empty list
         scheduling_block_ids = []
 
-        # TODO (NJT) Better way to do this?
         # Pattern used to search scheduling block ids
-        pattern = 'scheduling_block:*'
-        block_ids = self._db.get_keys(pattern)
+        pattern = AGGREGATE_TYPE + ':*'
+        sbi_ids = self._db.get_keys(pattern)
 
-        for block_id in block_ids:
-            if 'processing_block' not in block_id:
-                id_split = block_id.split(':')[-1]
-                scheduling_block_ids.append(id_split)
+        # TODO (NJT) Need to sort out to get the correct key
+        for _ids in sbi_ids:
+            # if 'processing_block' not in block_id:
+            #     id_split = block_id.split(':')[-1]
+            scheduling_block_ids.append(_ids)
         return sorted(scheduling_block_ids)
 
-    def get_num_scheduling_block_instance(self):
+    def get_num_sbi(self):
         """Get the number of Scheduling Blocks Instance ids in the database.
 
         Returns:
@@ -133,7 +132,7 @@ class SchedulingBlockDbClient(ProcessingControllerDbClient):
         # Initialise empty list
         _sub_array_ids = []
 
-        for blocks_id in self.get_scheduling_block_ids():
+        for blocks_id in self.get_sbi_ids():
             block_details = self.get_block_details(blocks_id)
             _sub_array_ids.append(block_details['sub_array_id'])
         _sub_array_ids = sorted(list(set(_sub_array_ids)))
@@ -141,10 +140,16 @@ class SchedulingBlockDbClient(ProcessingControllerDbClient):
 
     # TODO (NJT) Need to work on this function
     def get_sub_array_sbi_ids(self, sub_array_id):
-        """Get Scheduling Block Instance ID associated with sub array id."""
+        """Get Scheduling Block Instance ID associated with sub array id.
+
+        Args:
+            sub_array_id (str):  Sub array ID.
+
+        """
+        # Initialise empty list
         _ids = []
 
-        for blocks_id in self.get_scheduling_block_ids():
+        for blocks_id in self.get_sbi_ids():
             details = self.get_block_details(blocks_id)
             if details['sub_array_id'] == sub_array_id:
                 _ids.append(details['id'])
@@ -154,8 +159,7 @@ class SchedulingBlockDbClient(ProcessingControllerDbClient):
     # Cancel functions
     # #########################################################################
 
-    # TODO (NJT) Need to sort out the aggregate type
-    def cancel_scheduling_block_instance(self, sbi_id: str):
+    def cancel_sbi(self, sbi_id: str):
         """Cancel a scheduling block instance
 
         Args:
@@ -178,8 +182,8 @@ class SchedulingBlockDbClient(ProcessingControllerDbClient):
         self._db.append_to_list('{}:cancelled'.format(AGGREGATE_TYPE),
                                 sbi_id)
         # sbi_pb_ids = get_hash_value(block_id, 'processing_block_ids')
-        sbi_pb_ids = ast.literal_eval(self._db.get_hash_value(sbi_key,
-                                      'processing_block_ids'))
+        sbi_pb_ids = ast.literal_eval(self._db.get_hash_value(
+            sbi_key, 'processing_block_ids'))
 
         for pb_id in sbi_pb_ids:
             self._pb.cancel_processing_block(pb_id)
@@ -208,7 +212,7 @@ class SchedulingBlockDbClient(ProcessingControllerDbClient):
                     field['status'] = 'created'
         return scheduling_block
 
-    def _split_scheduling_block(self, scheduling_block):
+    def _split_sbi(self, scheduling_block):
         """Split the scheduling block data into multiple names.
 
         Args:
@@ -218,7 +222,7 @@ class SchedulingBlockDbClient(ProcessingControllerDbClient):
             dict: split of scheduling block data and processing block data
 
         Raises:
-            Exception: ???
+            Exception: If processing block already exists in the database
 
         """
         # Initialise empty list
@@ -233,7 +237,7 @@ class SchedulingBlockDbClient(ProcessingControllerDbClient):
             else:
                 # Check if there is a processing block that already exists in
                 # the database
-                processing_block_id = self._pb.get_processing_block_ids()
+                processing_block_id = self._pb.get_all_pb_ids()
 
                 for value in block_values:
                     if value['id'] not in processing_block_id:

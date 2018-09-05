@@ -11,7 +11,7 @@ LOG = logging.getLogger('SIP.EC.CDB')
 
 
 class ProcessingControllerDbClient(object):
-    """Configuration Database client API for the Processing Controller."""
+    """Base class for scheduling block instance and processing block API."""
 
     def __init__(self, aggregate_type, db):
         """ Initialise variables.
@@ -29,8 +29,7 @@ class ProcessingControllerDbClient(object):
     # PubSub functions
     ###########################################################################
 
-    def subscribe(self, subscriber: str) -> \
-            events.EventQueue:
+    def subscribe(self, subscriber: str) -> events.EventQueue:
         """Subscribe to Scheduling Block Instance or Processing Block events.
 
         Args:
@@ -90,7 +89,7 @@ class ProcessingControllerDbClient(object):
             block_id (str): Scheduling block instance or processing block id.
 
         Returns:
-            str,
+            str, status of sbi or pb.
 
         """
         key = self.get_key(block_id)
@@ -178,14 +177,14 @@ class ProcessingControllerDbClient(object):
 
             block_key = self._db.get_keys(sbi_key)[0]
             block_data = self._db.get_hash_dict(block_key)
-            # TODO (NJT) Look into this
             # NOTE(BM) unfortunately the following hack doesn't quite work \
             # for keys where the value is a Python object (list, dict etc.) \
             # but is good enough for now where objects are stored as strings.
             for key in block_data:
                 for char in ['[', '{']:
                     if char in block_data[key]:
-                        block_data[key] = ast.literal_eval(str(block_data[key]))
+                        block_data[key] = ast.literal_eval(str(
+                            block_data[key]))
         return block_data
 
     def get_active(self):
@@ -204,7 +203,6 @@ class ProcessingControllerDbClient(object):
 
         Returns:
             list, Scheduling block instance or processing block ids
-
 
         """
         return self._db.get_list('{}:cancelled'.format(self._aggregate_type))
@@ -232,9 +230,9 @@ class ProcessingControllerDbClient(object):
             value(str): New value
 
         """
-        block_key = self._get_key(block_id, self._aggregate_type)
-        for key in block_key:
-            self._db.set_hash_value(key, field, value)
+        # block_key =
+        for block_key in self.get_key(block_id, self._aggregate_type):
+            self._db.set_hash_value(block_key, field, value)
 
     # #########################################################################
     # Utility functions

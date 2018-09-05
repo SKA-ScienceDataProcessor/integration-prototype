@@ -6,7 +6,6 @@ import time
 
 from .config_db_redis import ConfigDb
 from . import events
-from .event_keys import aggregate_events_data, aggregate_events_list
 
 LOG = logging.getLogger('SIP.EC.CDB')
 MC_AGGREGATE_TYPE = 'execution_control'
@@ -38,7 +37,8 @@ class MasterDbClient:
         return self._events.subscribe(MC_AGGREGATE_TYPE, subscriber)
 
     def get_subscribers(self):
-        """Get the list of subscribers to Scheduling Block Instance (SBI) events.
+        """Get the list of subscribers to Scheduling Block Instance (SBI)
+        events.
 
         Returns:
             List[str], list of subscriber names.
@@ -46,7 +46,8 @@ class MasterDbClient:
         """
         return self._events.get_subscribers(MC_AGGREGATE_TYPE)
 
-    def publish(self, block_id: str, event_type: str, event_data: dict = None):
+    def publish(self, block_id: str, event_type: str,
+                event_data: dict = None):
         """Publish a SBI event.
 
         Args:
@@ -55,7 +56,8 @@ class MasterDbClient:
             event_data (dict, optional): Event data.
 
         """
-        self._events.publish(MC_AGGREGATE_TYPE, block_id, event_type, event_data)
+        self._events.publish(MC_AGGREGATE_TYPE, block_id, event_type,
+                             event_data)
 
     ###########################################################################
     # Get functions
@@ -197,8 +199,10 @@ class MasterDbClient:
               value (str):
         """
 
-        # TODO (NJT) Currently there is no way to differentiate between the key
-        # TODO       Therefore, need to find a to do that. It works fine for now.
+        # TODO (NJT) Currently there is no way to differentiate between
+        # the key
+        # TODO       Therefore, need to find a to do that. It works fine
+        # for now.
         mc_key = self._get_key(key, MC_AGGREGATE_TYPE)
         LOG.debug('State Updated is Completed %s', mc_key)
 

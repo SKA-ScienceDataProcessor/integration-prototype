@@ -15,11 +15,10 @@ SBI_AGGREGATE_TYPE = 'sbi'
 ###########################################################################
 
 class ProcessingBlockDbClient(ProcessingControllerDbClient):
-    """
-    """
+    """Configuration Database client API for the Processing Block."""
+
     def __init__(self):
-        """
-        """
+        """Initialise variables."""
         self._db = ConfigDb()
         ProcessingControllerDbClient.__init__(self, AGGREGATE_TYPE, self._db)
 
@@ -27,13 +26,12 @@ class ProcessingBlockDbClient(ProcessingControllerDbClient):
     # Add functions
     ###########################################################################
 
-    def add_processing_block(self, processing_block_data, sbi_key):
+    def add_pb(self, processing_block_data: dict, sbi_key: str):
         """
         Args:
-            processing_block_data (str):
-            sbi_key (str):
+            processing_block_data (dict): Processing block data
+            sbi_key (str): Scheduling BLock Instance key
 
-        :return:
         """
         # Adding Processing block with id
         for pb_config in processing_block_data:
@@ -48,8 +46,23 @@ class ProcessingBlockDbClient(ProcessingControllerDbClient):
             # Publish an event to notify subscribers of the new PB
             self.publish(pb_config["id"], 'created')
 
-    def get_processing_block_ids(self):
-        """Get the sorted list of Processing Block ids.
+    def get_pb_ids(self, sbi_id: str) -> List[str]:
+        """Return the list of PB ids associated with the SBI.
+
+        Args:
+            sbi_id (str): Scheduling block instance id
+
+        Returns:
+            list, Processing block ids
+
+        """
+        # TODO(BM) move this hardcoded key to a function?
+        key = 'processing_block_ids'
+        return ast.literal_eval(self._db.get_hash_value(
+            self._get_sbi_key(sbi_id), key))
+
+    def get_all_pb_ids(self):
+        """Get the sorted list of all the Processing Block ids.
 
         Returns:
             list, All Processing Block IDs in the database
@@ -67,24 +80,9 @@ class ProcessingBlockDbClient(ProcessingControllerDbClient):
             _processing_block_ids.append(id_split)
         return sorted(_processing_block_ids)
 
-    def get_num_processing_blocks(self):
+    def get_num_pb_ids(self):
         """Get number of processing block ids."""
-        return len(self.get_processing_block_ids())
-
-    def get_pb_ids(self, sbi_id: str) -> List[str]:
-        """Return the list of PB ids associated with the SBI.
-
-        Args:
-            sbi_id (str): SBI id
-
-        Returns:
-            list,
-
-        """
-        # TODO(BM) move this hardcoded key to a function?
-        key = 'processing_block_ids'
-        return ast.literal_eval(self._db.get_hash_value(
-            self._get_sbi_key(sbi_id), key))
+        return len(self.get_all_pb_ids())
 
     # #########################################################################
     # Cancel functions
