@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
 """High Level Master Controller Client API."""
-import ast
 import logging
 import time
 
@@ -24,8 +23,8 @@ class MasterDbClient:
     # PubSub functions
     ###########################################################################
 
-    def subscribe(self, subscriber: str, ) -> events.EventQueue:
-        """Subscribe to Scheduling Block Instance (SBI) events.
+    def subscribe(self, subscriber: str) -> events.EventQueue:
+        """Subscribe to Master Controller events.
 
         Args:
             subscriber (str): Subscriber name.
@@ -37,8 +36,7 @@ class MasterDbClient:
         return self._events.subscribe(MC_AGGREGATE_TYPE, subscriber)
 
     def get_subscribers(self):
-        """Get the list of subscribers to Scheduling Block Instance (SBI)
-        events.
+        """Get the list of subscribers to Master Controller events.
 
         Returns:
             List[str], list of subscriber names.
@@ -46,164 +44,102 @@ class MasterDbClient:
         """
         return self._events.get_subscribers(MC_AGGREGATE_TYPE)
 
-    def publish(self, block_id: str, event_type: str,
+    def publish(self, key: str, event_type: str,
                 event_data: dict = None):
-        """Publish a SBI event.
+        """Publish a Master Controller event.
 
         Args:
-            block_id (str):
+            key (str): Master controller or sdp components.
             event_type (str): Type of event.
             event_data (dict, optional): Event data.
 
         """
-        self._events.publish(MC_AGGREGATE_TYPE, block_id, event_type,
+        self._events.publish(MC_AGGREGATE_TYPE, key, event_type,
                              event_data)
 
     ###########################################################################
     # Get functions
     ###########################################################################
 
-    def get_value(self, key, field):
+    def get_value(self, key: str, field: str):
         """Get value associated to the field in string.
 
         Args:
-              key (str)
-              field (str)
+              key (str) : Master controller or sdp components.
+              field (str): Field
+        Returns:
+            str, value of a specified key and field
+
         """
-
         aggregate_type = self._get_aggregate_type(key)
-
         value = self._db.get_hash_value(self._get_key(key, aggregate_type),
                                         field)
         if value:
             return value
         return None
 
-    # def get_value_bool(self, key, field):
-    #     """Get the value associated to the field in boolean."""
-    #     value = self.get_value(key, field)
-    #     return bool(value)
-
-    def get_all_value(self, key):
-        """Get all the value associated to the name, returned in dict."""
-        value = self._db.get_hash_dict(key)
-        if value:
-            return value
-        return None
-
-    def get_service_list(self, key):
-        """Get the service list from the database."""
-        # Initialise empty list
-        list_eval = []
-
-        services = self._db.get_list(key)
-        if services:
-            for service_list in services:
-                list_eval.append(ast.literal_eval(service_list))
-
-        # TODO: (NJT) Need to test this function to check if it returns list
-        return list_eval
-
-    def get_service_from_list(self, key, index):
-        """Get the n'th element of the service list.
-
-        If the does not point to an element 0 is returned.
-        """
-        element = self._db.get_list_value(key, index)
-        if element:
-            element_eval = ast.literal_eval(element)
-            return element_eval
-        return 0
-
-    # def get_service_from_list_bool(self, key, index):
-    #     """Get the n'th element of the service list in boolean.
-    #
-    #     If the does not point to an element 0 is returned.
-    #     """
-    #     service = self.get_service_from_list(key, index)
-    #     for entry in service:
-    #         if service[entry] == 'true' or 'false' or 'True' or 'False':
-    #             bool(service[entry])
-    #         return service
-
-    def get_service_list_length(self, key):
-        """Get the length of the service list.
-
-        If the does not point to a list 0 is returned.
-        """
-        list_length = self._db.get_list_length(key)
-        if list_length:
-            return list_length
-        return 0
-
+    # TODO(NJT) MIght be good to add current time
     def get_active(self):
-        """Get the list of active scheduling block instance or processing
-        block from the database.
+        """Get the list of active master controller from the database.
 
         Returns:
-            list, Scheduling block instance or processing block ids
+            list, list of active master controller
 
         """
         return self._db.get_list('{}:active'.format(MC_AGGREGATE_TYPE))
 
+    # TODO(NJT) MIght be good to add current time
     def get_completed(self):
-        """Get the list of completed scheduling block instance or processing
-         block from the database.
+        """Get the list of completed master controller from the database.
 
         Returns:
-            list, Scheduling block instance or processing block ids
+            list, list of completed master controller
 
         """
         return self._db.get_list('{}:completed'.format(MC_AGGREGATE_TYPE))
 
     ###########################################################################
-    # Add functions
-    ###########################################################################
-
-    def add_service_to_list(self, key, element):
-        """Add a new service to the end of the list."""
-        self._db.prepend_to_list(key, element)
-
-    ###########################################################################
     # Update functions
     ###########################################################################
 
-    def update_target_state(self, key, field, value):
+    def update_target_state(self, value):
         """Update the target state.
 
         Args:
-              key (str):
-              field (str):
-              value (str):
+              value (str): New value for target state
 
         """
-        mc_key = self._get_key(key, MC_AGGREGATE_TYPE)
+        # TODO(NJT) move this hardcoded key and field to a function?
+        key = "master_controller"
+        field = "Target_state"
+        aggregate_type = self._get_aggregate_type(key)
+        mc_key = self._get_key(key, aggregate_type)
+
+        # Setting UTC time
         current_time = time.strftime('%Y/%m/%d %H:%M:%S', time.gmtime())
         self._db.set_hash_value(mc_key, field, value, pipeline=True)
         self._db.set_hash_value(mc_key, "Target_timestamp", current_time,
                                 pipeline=True)
         self._db.execute()
-        target_list_key = '{}:active'.format(MC_AGGREGATE_TYPE)
-        print(target_list_key)
+        target_list_key = '{}:active'.format(aggregate_type)
         self._db.append_to_list(target_list_key, key)
 
         # Publish an event to notify subscribers of the change in target state
         self.publish(key, 'updated')
 
-    def update_sdp_state(self, key, field, value):
-        """Update the target state.
+    def update_sdp_state(self, value):
+        """Update the SDP state.
 
         Args:
-              key (str):
-              field (str):
-              value (str):
+            value (str): New value for sdp state
+
         """
 
-        # TODO (NJT) Currently there is no way to differentiate between
-        # the key
-        # TODO       Therefore, need to find a to do that. It works fine
-        # for now.
-        mc_key = self._get_key(key, MC_AGGREGATE_TYPE)
+        # TODO(NJT) move this hardcoded key and field to a function?
+        key = "master_controller"
+        field = "SDP_state"
+        aggregate_type = self._get_aggregate_type(key)
+        mc_key = self._get_key(key, aggregate_type)
         LOG.debug('State Updated is Completed %s', mc_key)
 
         # Check that the key exists!
@@ -216,9 +152,9 @@ class MasterDbClient:
         self._db.set_hash_value(mc_key, field, value, pipeline=True)
         self._db.set_hash_value(mc_key, "State_timestamp", current_time,
                                 pipeline=True)
-        self._db.remove_element('{}:active'.format(MC_AGGREGATE_TYPE), 0,
+        self._db.remove_element('{}:active'.format(aggregate_type), 0,
                                 key, pipeline=True)
-        self._db.append_to_list('{}:completed'.format(MC_AGGREGATE_TYPE),
+        self._db.append_to_list('{}:completed'.format(aggregate_type),
                                 key, pipeline=True)
         self._db.execute()
 
@@ -226,11 +162,13 @@ class MasterDbClient:
         """Update the state of the given key and field.
 
         Args:
-              key (str):
-              field (str):
-              value (str):
+            key (str): Master controller or sdp components
+            field (str): Field of the value that will be updated
+            value (str): New value for the given state
+
         """
-        component_key = self._get_key(key, SDP_AGGREGATE_TYPE)
+        aggregate_type = self._get_aggregate_type(key)
+        component_key = self._get_key(key, aggregate_type)
         self._db.set_hash_value(component_key, field, value)
 
     ###########################################################################
@@ -238,25 +176,28 @@ class MasterDbClient:
     ###########################################################################
 
     @staticmethod
-    def _get_key(key: str, aggregate_type: str) -> str:
+    def _get_key(key_type: str, aggregate_type: str) -> str:
         """Return a master controller db key.
 
         Args:
-            key (str):
+            key_type (str): Master controller or sdp components
             aggregate_type (str): Aggregate type
 
         Returns:
-            str, db key for the specified SBI
+            str, db key for the specified type.
 
         """
-        return '{}:{}'.format(aggregate_type, key)
+        return '{}:{}'.format(aggregate_type, key_type)
 
     @staticmethod
     def _get_aggregate_type(key: str) -> str:
         """Get the correct aggregate type
 
         Args:
-              key (str):
+            key (str): Master controller or sdp components
+
+        Returns:
+            str, aggregate type for the specified key
 
         """
         if key == 'master_controller':

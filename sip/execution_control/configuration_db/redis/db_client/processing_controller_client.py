@@ -226,7 +226,7 @@ class ProcessingControllerDbClient(object):
 
         Args:
             block_id (str): Scheduling block instance or processing block id
-            field (str): Field of the value that needs to be updated
+            field (str): Field of the value that will be updated
             value(str): New value
 
         """
