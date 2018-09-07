@@ -17,6 +17,7 @@ schema = {
 validate({'name': "myname", "price": 34.99}, schema)
 
 """
+import os
 import subprocess
 
 from ..master_client import MasterDbClient
@@ -33,7 +34,9 @@ def test_set_target_state():
     db_client = MasterDbClient()
     db_client.clear()
 
-    subprocess.call(["python3", "db_client/utils/set_initial_data.py"])
+    initial_data = os.path.join(os.path.dirname(__file__), '../utils',
+                                'set_initial_data.py')
+    subprocess.call(["python3", initial_data])
     mc_event_queue = db_client.subscribe('test_update_target')
     key = 'master_controller'
     # # key = ['execution_control', 'master_controller']
@@ -60,7 +63,9 @@ def test_set_sdp_state():
     db_client = MasterDbClient()
     db_client.clear()
 
-    subprocess.call(["python3", "db_client/utils/set_initial_data.py"])
+    initial_data = os.path.join(os.path.dirname(__file__), '../utils',
+                                'set_initial_data.py')
+    subprocess.call(["python3", initial_data])
     mc_event_queue = db_client.subscribe('test_update_target')
     key = 'master_controller'
     # # key = ['execution_control', 'master_controller']
@@ -111,7 +116,9 @@ def test_get_state():
     db_client = MasterDbClient()
     db_client.clear()
 
-    subprocess.call(["python3", "db_client/utils/set_initial_data.py"])
+    initial_data = os.path.join(os.path.dirname(__file__), '../utils',
+                                'set_initial_data.py')
+    subprocess.call(["python3", initial_data])
     keys = ['master_controller', 'processing_controller']
     field = 'Target_state'
     for key in keys:
