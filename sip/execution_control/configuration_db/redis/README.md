@@ -89,8 +89,9 @@ source venv/bin/activate
 pip install pytest
 pip install pytest-codestyle
 pip install pytest-pylint
+pip install pytest-docstyle
 pip install -r requirements.txt
 
 ```bash
-pytest --pylint --codestyle -s -v --pylint-rcfile=../../../../.pylintrc .
+pytest --pylint --codestyle --docstyle -s -v --pylint-rcfile=../../../../.pylintrc .
 ```
