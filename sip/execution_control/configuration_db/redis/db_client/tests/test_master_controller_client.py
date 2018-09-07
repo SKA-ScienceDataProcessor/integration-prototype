@@ -33,7 +33,7 @@ def test_set_target_state():
     db_client = MasterDbClient()
     db_client.clear()
 
-    subprocess.call(["python3", "utils/set_initial_data.py"])
+    subprocess.call(["python3", "db_client/utils/set_initial_data.py"])
     mc_event_queue = db_client.subscribe('test_update_target')
     key = 'master_controller'
     # # key = ['execution_control', 'master_controller']
@@ -60,7 +60,7 @@ def test_set_sdp_state():
     db_client = MasterDbClient()
     db_client.clear()
 
-    subprocess.call(["python3", "utils/set_initial_data.py"])
+    subprocess.call(["python3", "db_client/utils/set_initial_data.py"])
     mc_event_queue = db_client.subscribe('test_update_target')
     key = 'master_controller'
     # # key = ['execution_control', 'master_controller']
@@ -106,16 +106,16 @@ def test_set_sdp_state():
         assert state == 'OFF'
 
 
-# def test_get_state():
-#     """Test method to check the correct state is returned."""
-#     db_client = MasterDbClient()
-#     db_client.clear()
-#
-#     subprocess.call(["python3", "utils/set_initial_data.py"])
-#     keys = ['master_controller', 'processing_controller']
-#     field = 'Target_state'
-#     for key in keys:
-#         state = db_client.get_value(key, field)
-#         assert state == "ON"
-#     state = db_client.get_value('logging', 'Current_state')
-#     assert state == "ON"
+def test_get_state():
+    """Test method to check the correct state is returned."""
+    db_client = MasterDbClient()
+    db_client.clear()
+
+    subprocess.call(["python3", "db_client/utils/set_initial_data.py"])
+    keys = ['master_controller', 'processing_controller']
+    field = 'Target_state'
+    for key in keys:
+        state = db_client.get_value(key, field)
+        assert state == "ON"
+    state = db_client.get_value('logging', 'Current_state')
+    assert state == "ON"

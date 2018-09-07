@@ -46,6 +46,7 @@ class ConfigDb(object):
     @check_connection
     def get_value(self, key):
         """Get the value of the key.
+
         Args:
             key (str):  key (name) where the value is stored
 
@@ -275,14 +276,14 @@ class ConfigDb(object):
 
     @check_connection
     def pub_sub(self, **kwargs):
-        """Subscribe to channels and listen for messages that get
-        published to them.
+        """Subscribe to channels and listen for messages that get published.
 
         Args:
             kwargs: Channels to subscribe
 
         Returns:
             list: list of channels and number of subscribers
+
         """
         pub_sub = self._db.pubsub(**kwargs)
         return pub_sub
@@ -296,6 +297,7 @@ class ConfigDb(object):
             count: Number of occurrences to be removed from the list
             value (str): Value to remove from the list
             pipeline (bool): True, start a transaction block. Default false
+
         """
         if pipeline:
             self._pipeline.lrem(key, count, value)
@@ -304,19 +306,25 @@ class ConfigDb(object):
 
     @check_connection
     def execute(self):
-        """Executes all previous queued commands in a transaction
-        and restores the connection state to normal.
+        """Execute queued commands.
+
+        Executes all previous queued commands in a transaction and restores
+        the connection state to normal.
+
         """
         self._pipeline.execute()
 
     @check_connection
     def watch(self, key, pipeline=False):
-        """Marks the given keys to be watch for conditional
-        execution of a transaction.
+        """Watch the given key.
+
+        Marks the given key to be watch for conditional execution
+        of a transaction.
 
         Args:
             key (str): Key that needs to be watched
             pipeline (bool): True, start a transaction block. Default false.
+
         """
         if pipeline:
             self._pipeline.watch(key)
@@ -325,12 +333,13 @@ class ConfigDb(object):
 
     @check_connection
     def publish(self, channel, message, pipeline=False):
-        """Posts a message to a given channel
+        """Post a message to a given channel.
 
         Args:
             channel (str): Channel where the message will be published
             message (str): Message to publish
             pipeline (bool): True, start a transaction block. Default false.
+
         """
         if pipeline:
             self._pipeline.publish(channel, message)
@@ -343,6 +352,7 @@ class ConfigDb(object):
 
         Args:
             key (str): Key where the list is stored
+
         """
         self._db.incr(key)
 

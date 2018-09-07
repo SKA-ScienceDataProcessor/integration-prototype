@@ -134,7 +134,6 @@ class MasterDbClient:
             value (str): New value for sdp state
 
         """
-
         # TODO(NJT) move this hardcoded key and field to a function?
         key = "master_controller"
         field = "SDP_state"
@@ -191,7 +190,7 @@ class MasterDbClient:
 
     @staticmethod
     def _get_aggregate_type(key: str) -> str:
-        """Get the correct aggregate type
+        """Get the correct aggregate type.
 
         Args:
             key (str): Master controller or sdp components

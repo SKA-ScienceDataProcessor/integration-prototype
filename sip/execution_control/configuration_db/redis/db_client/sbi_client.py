@@ -34,7 +34,6 @@ class SchedulingBlockDbClient(ProcessingControllerDbClient):
         Args:
             config_dict (dict): SBI configuration dictionary.
         """
-
         # Get schema for validation
         schema = self._get_schema()
         LOG.debug('Adding SBI with config: %s', config_dict)
@@ -138,7 +137,7 @@ class SchedulingBlockDbClient(ProcessingControllerDbClient):
     # #########################################################################
 
     def cancel_sbi(self, sbi_id: str):
-        """Cancel a scheduling block instance
+        """Cancel a scheduling block instance.
 
         Args:
             sbi_id (str): Scheduling block instance id

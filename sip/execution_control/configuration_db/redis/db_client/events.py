@@ -70,18 +70,12 @@ class Event:
         This should be called when processing of the event by the handler is
         complete.
         """
-        # pipe = DB.pipeline()
-        # pipe.lrem(keys.active(self.aggregate_type, self.subscriber), 0,
-        #           self.id)
         DB.remove_element(keys.active(self.aggregate_type, self.subscriber), 0,
                           self._id)
         # TODO(BM) Consider not adding to history and just removing the event
         # as a copy is also always stored against the aggregate so the
         # history is there too. If this is the case dont need an atomic
         # transaction pipe as can do this in a single transaction.
-        # pipe.rpush(keys.history(self.aggregate_type, self.subscriber),
-        #            self.id)
-        # pipe.execute()
 
 
 class EventQueue:
@@ -148,17 +142,11 @@ class EventQueue:
             list[Events], list of Event objects
 
         """
-
-        # event_ids = pipe.lrange(self._pub_key, 0, -1)
-        # pipe.watch(self._pub_key)
         DB.watch(self._pub_key, pipeline=True)
         event_ids = DB.get_list(self._pub_key, pipeline=True)
         if event_ids:
-            # pipe.delete(self._pub_key)
             DB.delete_key(self._pub_key, pipeline=True)
-            # pipe.lpush(self._active_key, *event_ids)
             DB.append_to_list(self._active_key, *event_ids, pipeline=True)
-        # pipe.execute()
         DB.execute()
         events = []
         for event_id in event_ids[::-1]:
@@ -179,7 +167,6 @@ class EventQueue:
             list[Events], list of event objects.
 
         """
-        # event_ids = DB.lrange(self._active_key, 0, -1)
         event_ids = DB.get_list(self._active_key)
         events = []
         for event_id in event_ids:
@@ -199,7 +186,6 @@ class EventQueue:
             Event, (Active) event object
 
         """
-        # event_id = DB.rpoplpush(src=self._pub_key, dst=self._active_key)
         event_id = DB.get_event(self._pub_key, self._active_key)
         event_data = ast.literal_eval(DB.get_hash_value(self._data_key,
                                                         event_id))
@@ -239,7 +225,6 @@ def get_subscribers(aggregate_type: str) -> List[str]:
         List[str], list of subscriber names.
 
     """
-    # return DB.lrange(keys.subscribers(aggregate_type), 0, -1)
     return DB.get_list(keys.subscribers(aggregate_type))
 
 
@@ -257,14 +242,7 @@ def publish(aggregate_type: str, aggregate_id: str, event_type: str,
         event_data (dict, optional): Optional event data
 
     """
-    # TODO(BM) check if the aggregate key is in the db?!
-
-    # Create a pipeline object that queues multiple commands as a single
-    # atomic transaction
-    # pipe = DB.pipeline()
-
     # Get a unique event key
-    # FIXME(BM) there is a risk here that the event id and publishing the \
     # event is not an atomic operation.
     event_id = _get_event_id(aggregate_type)
 
@@ -278,7 +256,6 @@ def publish(aggregate_type: str, aggregate_id: str, event_type: str,
         event_data['type'] = event_type
 
     # Publish the event to subscribers
-    # _publish_to_subscribers(pipe, aggregate_type, event_id, event_data)
     _publish_to_subscribers(aggregate_type, event_id, event_data)
 
     # Update the aggregate event list and data.
@@ -308,14 +285,10 @@ def _publish_to_subscribers(aggregate_type: str, event_id: str,
 
     # Add the event to each subscribers published list
     for sub in subscribers:
-        # pipe.lpush(keys.published(aggregate_type, sub), event_id)
         DB.prepend_to_list(keys.published(aggregate_type, sub), event_id,
                            pipeline=True)
-        # pipe.hset(keys.data(aggregate_type, sub), event_id,
-        #           event_data)
         DB.set_hash_value(keys.data(aggregate_type, sub), event_id,
                           event_data, pipeline=True)
-    # pipe.publish(aggregate_type, event_id)
     DB.publish(aggregate_type, event_id, pipeline=True)
 
 
@@ -332,21 +305,10 @@ def _update_aggregate(aggregate_key: str, event_id: str, event_data: dict):
         event_data (dict): Event data dictionary.
 
     """
-    # # pipe.lpush(keys.aggregate_events_list(aggregate_key), event_id)
-    # DB.prepend_to_list(keys.aggregate_events_list(aggregate_key),
-    #                    event_id, pipeline=True)
-    # # pipe.hset(keys.aggregate_events_data(aggregate_key), event_id,
-    # #           event_data)
-    # DB.set_hash_value(keys.aggregate_events_data(aggregate_key),
-    #                   event_id, event_data, pipeline=True)
-
     events_list_key = keys.aggregate_events_list(aggregate_key)
     events_data_key = keys.aggregate_events_data(aggregate_key)
     DB.append_to_list(events_list_key, event_id, pipeline=True)
     DB.set_hash_value(events_data_key, event_id, event_data, pipeline=True)
-
-    # pipe.rpush(events_list_key, event_id)
-    # pipe.hset(events_data_key, event_id, event_data)
 
 
 def _get_event_id(aggregate_type: str) -> str:

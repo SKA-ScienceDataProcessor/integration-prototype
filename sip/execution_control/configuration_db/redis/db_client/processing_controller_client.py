@@ -14,7 +14,7 @@ class ProcessingControllerDbClient(object):
     """Base class for scheduling block instance and processing block API."""
 
     def __init__(self, aggregate_type, db):
-        """ Initialise variables.
+        """Initialise variables.
 
         Args:
             aggregate_type (str): Aggregate Type
@@ -42,14 +42,15 @@ class ProcessingControllerDbClient(object):
         return self._events.subscribe(self._aggregate_type, subscriber)
 
     def get_subscribers(self):
-        """Get the list of subscribers to Scheduling Block Instance (SBI) or
+        """Get the list of subscribers.
+
+        Get the list of subscribers to Scheduling Block Instance (SBI) or
         Processing Block events.
 
         Returns:
             List[str], list of subscriber names.
 
         """
-
         return self._events.get_subscribers(self._aggregate_type)
 
     def publish(self, block_id: str, event_type: str, event_data: dict = None):
@@ -69,8 +70,10 @@ class ProcessingControllerDbClient(object):
     # #########################################################################
 
     def get_event_list_key(self, block_id: str) -> str:
-        """Return the scheduling block instance or processing block events
-         list db key.
+        """Get event list db key.
+
+        Return the scheduling block instance or processing block events
+        list db key.
 
         Args:
             block_id (str): Scheduling block instance or processing block id
@@ -106,7 +109,9 @@ class ProcessingControllerDbClient(object):
         return last_event['type']
 
     def get_event_data_key(self, block_id: str) -> str:
-        """Return the scheduling block instance or processing block events
+        """Get event data db key.
+
+        Return the scheduling block instance or processing block events
         data db key.
 
         Args:
@@ -120,7 +125,9 @@ class ProcessingControllerDbClient(object):
         return aggregate_events_data(self.get_key(block_id))
 
     def get_events(self, block_id: str) -> List[events.Event]:
-        """Get event data for the specified Scheduling block instance or
+        """Get event data.
+
+        Get event data for the specified Scheduling block instance or
         processing block.
 
         Args:
@@ -188,7 +195,9 @@ class ProcessingControllerDbClient(object):
         return block_data
 
     def get_active(self):
-        """Get the list of active scheduling block instance or processing
+        """Get list of active blocks.
+
+        Get the list of active scheduling block instance or processing
         block from the database.
 
         Returns:
@@ -198,7 +207,9 @@ class ProcessingControllerDbClient(object):
         return self._db.get_list('{}:active'.format(self._aggregate_type))
 
     def get_cancelled(self):
-        """Get the list of cancelled scheduling block instance or processing
+        """Get list of cancelled blocks.
+
+        Get the list of cancelled scheduling block instance or processing
         block from the database.
 
         Returns:
@@ -208,8 +219,10 @@ class ProcessingControllerDbClient(object):
         return self._db.get_list('{}:cancelled'.format(self._aggregate_type))
 
     def get_completed(self):
-        """Get the list of completed scheduling block instance or processing
-         block from the database.
+        """Get list of completed blocks.
+
+        Get the list of completed scheduling block instance or processing
+        block from the database.
 
         Returns:
             list, Scheduling block instance or processing block ids
@@ -230,7 +243,6 @@ class ProcessingControllerDbClient(object):
             value(str): New value
 
         """
-        # block_key =
         for block_key in self.get_key(block_id, self._aggregate_type):
             self._db.set_hash_value(block_key, field, value)
 

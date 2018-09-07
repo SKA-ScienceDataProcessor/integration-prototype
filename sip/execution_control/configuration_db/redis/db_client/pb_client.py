@@ -27,7 +27,8 @@ class ProcessingBlockDbClient(ProcessingControllerDbClient):
     ###########################################################################
 
     def add_pb(self, processing_block_data: dict, sbi_key: str):
-        """
+        """Add processing blocks to db.
+
         Args:
             processing_block_data (dict): Processing block data
             sbi_key (str): Scheduling BLock Instance key
@@ -84,7 +85,6 @@ class ProcessingBlockDbClient(ProcessingControllerDbClient):
                            .format(pb_id))
 
         pb_type = self._db.get_hash_value(pb_key, 'type')
-        # publish(pb_id, 'cancelled')
         self.publish(pb_id, 'cancelled')
         self._db.remove_element('{}:active'.format(AGGREGATE_TYPE), 0, pb_id)
         self._db.remove_element('{}:active:{}'.format(AGGREGATE_TYPE,
