@@ -74,6 +74,7 @@ python3 -m db_client.utils.set_initial_data
 
 ### Test Scripts
 
+
 While unit tests are run automatically the 
 [SIP CI/CD service](https://travis-ci.com/SKA-ScienceDataProcessor/integration-prototype),
 it is possible to run them manually with the following command from the
@@ -82,6 +83,13 @@ it is possible to run them manually with the following command from the
 ***Note**: a Redis db container must be started first in order for most of
 these tests to pass*
 
+```bash
+virtualenv -p python3 venv
+source venv/bin/activate
+pip install pytest
+pip install pytest-codestyle
+pip install pytest-pylint
+pip install -r requirements.txt
 
 ```bash
 pytest --pylint --codestyle -s -v --pylint-rcfile=../../../../.pylintrc .
