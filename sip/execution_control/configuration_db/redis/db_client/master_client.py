@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 """High Level Master Controller Client API."""
 import logging
-import time
 
+from datetime import datetime
 from .config_db_redis import ConfigDb
 from . import events
 
@@ -116,7 +116,7 @@ class MasterDbClient:
         mc_key = self._get_key(key, aggregate_type)
 
         # Setting UTC time
-        current_time = time.strftime('%Y/%m/%d %H:%M:%S', time.gmtime())
+        current_time = datetime.utcnow().strftime('%Y/%m/%d %H:%M:%S.%f')
         self._db.set_hash_value(mc_key, field, value, pipeline=True)
         self._db.set_hash_value(mc_key, "Target_timestamp", current_time,
                                 pipeline=True)
@@ -146,7 +146,7 @@ class MasterDbClient:
             raise KeyError('Master Controller key is not found: {}'
                            .format(mc_key))
 
-        current_time = time.strftime('%Y/%m/%d %H:%M:%S', time.gmtime())
+        current_time = datetime.utcnow().strftime('%Y/%m/%d %H:%M:%S.%f')
         self.publish(key, 'completed')
         self._db.set_hash_value(mc_key, field, value, pipeline=True)
         self._db.set_hash_value(mc_key, "State_timestamp", current_time,

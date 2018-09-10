@@ -31,7 +31,7 @@ def check_connection(func):
     return with_exception_handling
 
 
-class ConfigDb(object):
+class ConfigDb:
     """Low level Configuration Database client."""
 
     def __init__(self):

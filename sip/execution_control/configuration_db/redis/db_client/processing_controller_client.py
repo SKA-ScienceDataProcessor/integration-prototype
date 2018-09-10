@@ -10,7 +10,7 @@ from .event_keys import aggregate_events_data, aggregate_events_list
 LOG = logging.getLogger('SIP.EC.CDB')
 
 
-class ProcessingControllerDbClient(object):
+class ProcessingControllerDbClient:
     """Base class for scheduling block instance and processing block API."""
 
     def __init__(self, aggregate_type, db):
@@ -243,8 +243,8 @@ class ProcessingControllerDbClient(object):
             value(str): New value
 
         """
-        for block_key in self.get_key(block_id, self._aggregate_type):
-            self._db.set_hash_value(block_key, field, value)
+        self._db.set_hash_value(self.get_key(block_id, self._aggregate_type),
+                                field, value)
 
     # #########################################################################
     # Utility functions
