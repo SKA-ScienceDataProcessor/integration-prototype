@@ -39,7 +39,6 @@ def test_set_target_state():
     subprocess.call(["python3", initial_data])
     mc_event_queue = db_client.subscribe('test_update_target')
     key = 'master_controller'
-    # # key = ['execution_control', 'master_controller']
     field = 'Target_state'
     value = "OFF"
     db_client.update_target_state(value)
@@ -62,6 +61,7 @@ def test_set_sdp_state():
     """Test updating sdp state to the db """
     db_client = MasterDbClient()
     db_client.clear()
+
     subprocess.call(["python3", os.path.dirname(__file__), '../utils',
                      'set_initial_data.py'])
     mc_event_queue = db_client.subscribe('test_update_target')

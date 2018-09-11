@@ -139,7 +139,7 @@ class MasterDbClient:
         field = "SDP_state"
         aggregate_type = self._get_aggregate_type(key)
         mc_key = self._get_key(key, aggregate_type)
-        LOG.debug('State Updated is Completed %s', mc_key)
+        LOG.debug('State Update is Completed %s', mc_key)
 
         # Check that the key exists!
         if not self._db.get_keys(mc_key):

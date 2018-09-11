@@ -57,5 +57,37 @@ def test_get_active():
     # db.add_scheduling_block_instance(sbi_config)
     sbi_db.add_sbi(sbi_config)
     active_pb = pb_db.get_active()
-    pb_id = pb_db.get_pb_ids(sbi_config['id'])
-    assert active_pb[0] in pb_id
+    pb_ids = pb_db.get_pb_ids(sbi_config['id'])
+    assert active_pb[0] in pb_ids
+
+
+def test_get_workflow_stages():
+    """Test method to get stage detals in worflow"""
+    sbi_db = SchedulingBlockDbClient()
+    pb_db = ProcessingBlockDbClient()
+    pb_db.clear()
+    sbi_config = dict(id="20180110-sip-sbi000",
+                      scheduling_block_id="20180101-sip-sb000",
+                      sub_array_id="subarray000",
+                      processing_blocks=[dict(id="sip-vis000",
+                                              type='real-time',
+                                              workflow=[dict(
+                                                  resource_requirement=dict(
+                                                      storage_type="hot",
+                                                      volume="mount",
+                                                      cpu=2),
+                                                  assigned_resources=dict(
+                                                      storage_type="hot",
+                                                      volume="mount",
+                                                      cpu=1))])])
+    sbi_db.add_sbi(sbi_config)
+    pb_ids = pb_db.get_pb_ids(sbi_config['id'])
+    for pb_id in pb_ids:
+        assigned_resources = pb_db.get_workflow_stage(
+            pb_id, 'assigned_resources')
+        assert assigned_resources['volume'] == "mount"
+        assert assigned_resources['cpu'] == 1
+        resource_requirement = pb_db.get_workflow_stage(
+            pb_id, 'resource_requirement')
+        assert resource_requirement['storage_type'] == "hot"
+        assert resource_requirement['cpu'] == 2
