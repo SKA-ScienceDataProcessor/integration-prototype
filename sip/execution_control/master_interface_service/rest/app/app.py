@@ -1,5 +1,7 @@
 # -*- coding: utf-8 -*-
-"""SIP Master Controller (REST)."""
+"""
+    SIP Master Interface Service, Restful version.
+"""
 from datetime import datetime
 import os
 import redis
@@ -45,9 +47,10 @@ logging.config.dictConfig(json.loads(logConfigAsJSON))
 
 APP = FlaskAPI(__name__)
 
-from .master_client import MasterClient as masterClient
+from .master_client import MasterDbClient as masterClient
 
-MC = 'execution_control:master_controller'
+MC = 'master_controller'
+#~ MC = 'execution_control:master_controller'
 #~ PC = 'sdp_components:processing_controller'
 #~ LOG = 'sdp_components:logging'
 
@@ -96,14 +99,20 @@ def state():
             APP.logger.debug('updating state')
             # Get SDP state.
             sdp_state = db.get_value(MC, 'SDP_state')
+            APP.logger.debug('SDP_state is {}'.format(sdp_state))
             # If different then update target state
             if sdp_state != requested_state:
-                db.update_value(MC, 'Target_state', requested_state)
+                #~ db.update_value(MC, 'Target_state', requested_state)
+                db.update_target_state(requested_state)
+                #~ db.update_value(MC, 'sett_timestamp', 
+                        #~ str(datetime.utcnow()))
         except redis.exceptions.ConnectionError:
             APP.logger.debug('failed to connect to DB')
             response['error'] = 'Unable to connect to database.'
-        if requested_state == 'OFF':
-            os.kill(os.getpid(), signal.SIGINT) # do we really want to do this?
+        #~ if requested_state == 'OFF':
+            # Do we really want to do this?
+            # Also, do we really want to put OFF into the database?
+            #~ os.kill(os.getpid(), signal.SIGINT)
         return response
 
     # GET - if the state in the database is OFF we want to replace it with
@@ -111,7 +120,7 @@ def state():
     try:
         APP.logger.debug('getting current state')
         current_state = db.get_value(MC, 'SDP_state')
-        if current_state == None:
+        if current_state is None:
             APP.logger.debug('current state set to none')
             return {'state': 'UNKNOWN',
                     'reason': 'database not initialised.'}
@@ -121,22 +130,24 @@ def state():
 
         # Check the timestamp to be sure that the watchdog is alive
         APP.logger.debug('getting timestamp')
-        timestamp = db.get_value(MC, 'State_timestamp')
-        if timestamp == None:
+        state_tmstmp = db.get_value(MC, 'State_timestamp')
+        target_tmstmp = db.get_value(MC, 'Target_timestamp')
+        if state_tmstmp is None or target_tmstmp is None:
             APP.logger.warning('Timestamp not available')
             return {'state': 'UNKNOWN',
-                    'reason': 'services watchdog has died.'}
+                    'reason': 'Master Controller Services may have died.'}
         else:
-            APP.logger.debug("timestamp in DB: {}".format(timestamp))
-            APP.logger.debug("current time:    {}".format(datetime.utcnow()))
-            timestamp = datetime.strptime(timestamp, '%Y-%m-%d %H:%M:%S.%f')
-            if (datetime.utcnow() - timestamp).seconds < 10:
+            APP.logger.debug("State timestamp: {}".format(state_tmstmp))
+            APP.logger.debug("Target timestamp: {}".format(target_tmstmp))
+            state_tmstmp = datetime.strptime(state_tmstmp, '%Y/%m/%d %H:%M:%S.%f')
+            target_tmstmp = datetime.strptime(target_tmstmp, '%Y/%m/%d %H:%M:%S.%f')
+            if target_tmstmp < state_tmstmp:
                 APP.logger.debug('timestamp okay')
                 return {'state': current_state}
             else:
-                APP.logger.warning('Timestamp stale')
+                APP.logger.warning('Timestamp for Master Controller Services is stale')
                 return {'state': 'UNKNOWN',
-                        'reason': 'Master Controller Services has died.'}
+                        'reason': 'Master Controller Services may have died.'}
     except redis.exceptions.ConnectionError:
         APP.logger.debug('error connecting to DB')
         return {'state': 'UNKNOWN',

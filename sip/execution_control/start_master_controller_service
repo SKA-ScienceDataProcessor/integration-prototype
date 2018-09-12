@@ -1,4 +1,20 @@
 #!/bin/sh
 # start containers for mc_rest
-#~ docker-compose build && docker-compose -f docker-compose.yml -f docker-compose.dev.yml up -d && python3 init_db.py
-docker-compose -f docker-compose.yml -f docker-compose.dev.yml up -d --build && python3 init_db.py
+# First copy files from configuration_db (temporary measure)
+
+mcpath=master_controller_service/app
+mipath=master_interface_service/rest/app
+dbpath=configuration_db/redis/db_client
+for file in event_keys.py events.py master_client.py config_db_redis.py
+do
+    if [ ! -e ${mcpath}/${file} ] || [ ${dbpath}/${file} -nt ${mcpath}/${file} ]
+    then cp ${dbpath}/${file} ${mcpath}
+    fi
+    if [ ! -e ${mipath}/${file} ] || [ ${dbpath}/${file} -nt ${mipath}/${file} ]
+    then cp ${dbpath}/${file} ${mipath}
+    fi
+done
+
+# Build and run docker images
+docker-compose -f docker-compose.yml -f docker-compose.dev.yml up -d --build && \
+            (cd ${dbpath}/utils; python3 set_initial_data.py)
