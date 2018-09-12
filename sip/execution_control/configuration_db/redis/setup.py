@@ -1,7 +1,7 @@
 """Setup config file to package configuration database."""
 from setuptools import setup
 
-setup(name='db_client',
+setup(name='ConfigurationDb',
       version='0.1',
       description='SIP Execution Control Configuration Database '
                   'client library.',
