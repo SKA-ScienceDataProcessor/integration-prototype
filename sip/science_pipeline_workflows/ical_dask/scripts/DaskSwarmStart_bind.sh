@@ -12,7 +12,7 @@ docker service create \
     --network ${NETWORK} \
     --publish 8786:8786 \
     --publish 8787:8787 \
-    ical_dask_scheduler
+    vlad7235/ical_dask_scheduler:latest
 
 # Create Dask worker service adding ARL library as a bind mount
 docker service create \
@@ -22,5 +22,5 @@ docker service create \
     --env ARL_DASK_SCHEDULER=scheduler:8786 \
     --env PYTHONPATH=/worker/sdp_arl \
     --replicas 2 \
-    ical_dask_worker \
+    vlad7235/ical_dask_worker:latest \
     scheduler:8786 --nprocs 2 --nthreads 1 --memory-limit 2GB

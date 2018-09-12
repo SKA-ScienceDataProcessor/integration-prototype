@@ -11,5 +11,5 @@ docker run \
     -v "$(pwd)"/pipelines:/pipelines \
     -v "$(pwd)"/pipelines/sdp_arl:/pipelines/sdp_arl \
     -v "$(pwd)"/results:/pipelines/results \
-    ical_dask_pipeline \
+    vlad7235/ical_dask_pipeline:latest \
     python3 imaging_processing.py
