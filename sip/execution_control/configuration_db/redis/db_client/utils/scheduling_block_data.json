@@ -8,25 +8,45 @@
   "version": "0.2",
   "project": "sip",
   "processing_blocks": [
+
     {
       "id": "sip-vis000",
-      "type": "vis_ingest",
+      "type": "real-time",
+      "template": "",
       "priority": 1,
-      "resources_requirement": {
-      "storage_type": "hot"
-      },
-      "workflow": {
-      }
+      "workflow": [
+        {
+          "resources_requirement": {
+            "storage_type": "hot"
+          },
+          "assigned_resources": {
+          },
+          "execution_engine_parameters": {
+
+          },
+          "configuration": {
+          }
+        }
+      ]
     },
     {
       "id": "sip-vis001",
-      "type": "vis_ingest",
+      "type": "batch",
+      "template": "",
       "priority": 2,
-      "resources_requirement": {
-      "storage_type": "hot"
-      },
-      "workflow": {
-      }
+      "workflow": [
+        {
+          "resources_requirement": {
+            "storage_type": "hot"
+          },
+          "assigned_resources": {
+          },
+          "execution_engine_parameters": {
+          },
+          "configuration": {
+          }
+        }
+      ]
     }
   ]
 }

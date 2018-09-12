@@ -2,7 +2,7 @@
     "$schema": "http://json-schema.org/draft-07/schema#",
     "title": "Scheduling Block Instance",
     "description": "Schema for an SKA Scheduling Block Instance",
-    "version":  "0.2",
+    "version":  "0.3",
     "type": "object",
 
     "properties": {
@@ -27,7 +27,7 @@
         "date": {
             "description": "YYYYmmdd for the date",
             "type": "string",
-            "pattern": "^[0-9]{8}$"
+            "pattern": "^[0-9]{4}/[0-9]{2}/[0-9]{2} [0-9]{2}:[0-9]{2}:[0-9]{2}"
         },
         "sub_array_id": {
             "description": "[type][id] for the sub array id",
@@ -65,7 +65,11 @@
                         "pattern": "^[a-z]+-[a-z]+[0-9]+$"
                     },
                     "type": {
-                        "description": "Type of the processing block",
+                        "description": "[real-time, batch]",
+                        "type": "string"
+                    },
+                    "template": {
+                        "description": "Template for processing block",
                         "type": "string"
                     },
                     "priority": {
@@ -76,16 +80,16 @@
                         "description": "Status of the processing block",
                         "type": "string"
                     },
-                    "resources_requirement" : {"$ref": "#/definitions/resource_requirement"},
-                    "assigned_resources" : {"$ref": "#/definitions/assigned_resources"},
-                    "workflow" : {"$ref": "#/definitions/workflow"}
+                    "workflow": {
+                        "$ref": "#/definitions/workflow"
+                    }
                 },
-                "required": ["id", "resources_requirement"]
+                "required": ["id"]
             }
         },
 
         "resource_requirement": {
-            "description": "Resource required for the processing block",
+            "description": "Resource required for the processing block, min/max",
             "type": "object",
             "properties": {
                 "storage_type": {
@@ -96,7 +100,7 @@
         },
 
         "assigned_resources": {
-            "description": "Resource assigned for the processing block",
+            "description": "Resource allocated for the processing block",
             "type": "object",
             "properties": {
                 "status": {
@@ -106,15 +110,54 @@
             }
         },
 
-        "workflow": {
-            "description": "Workflow stages",
+        "execution_engine_parameters": {
+            "description": "Execution Engine parameters, docker-compose file",
             "type": "object",
             "properties": {
-                "status": {
-                "description": "Status of the workflow stage",
-                "type": "string"
+                "param1": {
+                    "description": "Placeholder",
+                    "type": "string"
                 }
             }
+        },
+
+        "configuration": {
+            "description": "Detailed config needed by the workflow script/stage",
+            "type": "object",
+            "properties": {
+                "config1": {
+                    "description": "Placeholder",
+                    "type": "string"
+                }
+            }
+        },
+
+        "workflow": {
+            "description": "Workflow stage",
+            "type": "array",
+            "properties": {
+                "type": {
+                    "description": "[stage, data, recv, vis, ical, vl]",
+                    "type": "string"
+                },
+                "status": {
+                    "description": "Status of the workflow stage",
+                    "type": "string"
+                },
+                "resources_requirement": {
+                    "$ref": "#/definitions/resource_requirement"
+                },
+                "assigned_resources": {
+                    "$ref": "#/definitions/assigned_resources"
+                },
+                "execution_engine_parameters": {
+                    "$ref": "#/definitions/execution_engine_parameters"
+                },
+                "configuration": {
+                    "$ref": "#/definitions/configuration"
+                }
+            },
+            "required": ["type", "resources_requirement", "execution_engine_parameters", "configuration"]
         }
     }
 }

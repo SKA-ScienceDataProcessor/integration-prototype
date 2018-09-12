@@ -1,110 +1,218 @@
 # -*- coding: utf-8 -*-
-"""High Level Master Controller Client API"""
+"""High Level Master Controller Client API."""
+import logging
 
-import ast
+from datetime import datetime
+from .config_db_redis import ConfigDb
+from . import events
 
-from .config_db_redis import ConfigDB
+LOG = logging.getLogger('SIP.EC.CDB')
+MC_AGGREGATE_TYPE = 'execution_control'
+SDP_AGGREGATE_TYPE = 'sdp_components'
 
 
-class MasterClient:
-    """ Master Controller Client Interface"""
+class MasterDbClient:
+    """Master Controller Client Interface."""
 
     def __init__(self):
-        self._db = ConfigDB()
+        """Initialise the client."""
+        self._db = ConfigDb()
+        self._events = events
+
+    ###########################################################################
+    # PubSub functions
+    ###########################################################################
+
+    def subscribe(self, subscriber: str) -> events.EventQueue:
+        """Subscribe to Master Controller events.
+
+        Args:
+            subscriber (str): Subscriber name.
+
+        Returns:
+            events.EventQueue, Event queue object for querying PB events.
+
+        """
+        return self._events.subscribe(MC_AGGREGATE_TYPE, subscriber)
+
+    def get_subscribers(self):
+        """Get the list of subscribers to Master Controller events.
+
+        Returns:
+            List[str], list of subscriber names.
+
+        """
+        return self._events.get_subscribers(MC_AGGREGATE_TYPE)
+
+    def publish(self, key: str, event_type: str,
+                event_data: dict = None):
+        """Publish a Master Controller event.
+
+        Args:
+            key (str): Master controller or sdp components.
+            event_type (str): Type of event.
+            event_data (dict, optional): Event data.
+
+        """
+        self._events.publish(MC_AGGREGATE_TYPE, key, event_type,
+                             event_data)
 
     ###########################################################################
     # Get functions
     ###########################################################################
 
-    def get_value(self, name, field):
-        """Get value associated to the field in string"""
-        path = name
-        value = self._db.get_value(path, field)
+    def get_value(self, key: str, field: str):
+        """Get value associated to the field in string.
+
+        Args:
+              key (str) : Master controller or sdp components.
+              field (str): Field
+        Returns:
+            str, value of a specified key and field
+
+        """
+        aggregate_type = self._get_aggregate_type(key)
+        value = self._db.get_hash_value(self._get_key(key, aggregate_type),
+                                        field)
         if value:
             return value
         return None
 
-    def get_value_bool(self, name, field):
-        """Get the value associated to the field in boolean"""
-        value = self.get_value(name, field)
-        return bool(value)
+    # TODO(NJT) MIght be good to add current time
+    def get_active(self):
+        """Get the list of active master controller from the database.
 
-    def get_all_value(self, name):
-        """Get all the value associated to the name, returned in dict"""
-        path = name
-        value = self._db.get_all_field_value(path)
-        if value:
-            return value
-        return None
+        Returns:
+            list, list of active master controller
 
-    def get_service_list(self, name):
-        """Get the service list from the database"""
-        key = name
-        services = self._db.get_list(key)
-        if services:
-            for service_list in services:
-                list_eval = ast.literal_eval(service_list)
-                yield list_eval
+        """
+        return self._db.get_list('{}:active'.format(MC_AGGREGATE_TYPE))
 
-    def get_service_from_list(self, name, index):
-        """Get the n'th element of the service list.
-        If the does not point to an element 0 is return"""
-        key = name
-        element = self._db.get_element(key, index)
-        if element:
-            element_eval = ast.literal_eval(element)
-            return element_eval
-        return 0
+    # TODO(NJT) MIght be good to add current time
+    def get_completed(self):
+        """Get the list of completed master controller from the database.
 
-    def get_service_from_list_bool(self, name, index):
-        """Get the n'th element of the service list in boolean.
-        If the does not point to an element 0 is return"""
-        service = self.get_service_from_list(name, index)
-        for entry in service:
-            if service[entry] == 'true' or 'false' or 'True' or 'False':
-                bool(service[entry])
-            return service
+        Returns:
+            list, list of completed master controller
 
-    def get_service_list_length(self, name):
-        """Get the length of the service list.If the does not point
-        to a list 0 is return"""
-        key = name
-        list_length = self._db.get_length(key)
-        if list_length:
-            return list_length
-        return 0
-
-    ###########################################################################
-    # Add functions
-    ###########################################################################
-
-    def add_service_to_list(self, name, element):
-        """Adds a new service to the end of the list"""
-        key = name
-        self._db.add_element(key, element)
+        """
+        return self._db.get_list('{}:completed'.format(MC_AGGREGATE_TYPE))
 
     ###########################################################################
     # Update functions
     ###########################################################################
 
-    def update_value(self, name, field, value):
-        """"Updates the value of the given name and field"""
-        path = name
-        self._db.set_value(path, field, value)
+    def update_target_state(self, value):
+        """Update the target state.
 
-    def update_service(self, v_path, field, value):
-        """Update the service"""
-        # Converts the name format
-        path = self._convert_path(v_path)
-        self._db.set_value(path, field, value)
+        Args:
+              value (str): New value for target state
+
+        """
+        # TODO(NJT) move this hardcoded key and field to a function?
+        key = "master_controller"
+        field = "Target_state"
+        aggregate_type = self._get_aggregate_type(key)
+        mc_key = self._get_key(key, aggregate_type)
+
+        # Setting UTC time
+        current_time = datetime.utcnow().strftime('%Y/%m/%d %H:%M:%S.%f')
+        self._db.set_hash_value(mc_key, field, value, pipeline=True)
+        self._db.set_hash_value(mc_key, "Target_timestamp", current_time,
+                                pipeline=True)
+        self._db.execute()
+        target_list_key = '{}:active'.format(aggregate_type)
+        self._db.append_to_list(target_list_key, key)
+
+        # Publish an event to notify subscribers of the change in target state
+        self.publish(key, 'updated')
+
+    def update_sdp_state(self, value):
+        """Update the SDP state.
+
+        Args:
+            value (str): New value for sdp state
+
+        """
+        # TODO(NJT) move this hardcoded key and field to a function?
+        key = "master_controller"
+        field = "SDP_state"
+        aggregate_type = self._get_aggregate_type(key)
+        mc_key = self._get_key(key, aggregate_type)
+        LOG.debug('State Updated is Completed %s', mc_key)
+
+        # Check that the key exists!
+        if not self._db.get_keys(mc_key):
+            raise KeyError('Master Controller key is not found: {}'
+                           .format(mc_key))
+
+        current_time = datetime.utcnow().strftime('%Y/%m/%d %H:%M:%S.%f')
+        self.publish(key, 'completed')
+        self._db.set_hash_value(mc_key, field, value, pipeline=True)
+        self._db.set_hash_value(mc_key, "State_timestamp", current_time,
+                                pipeline=True)
+        self._db.remove_element('{}:active'.format(aggregate_type), 0,
+                                key, pipeline=True)
+        self._db.append_to_list('{}:completed'.format(aggregate_type),
+                                key, pipeline=True)
+        self._db.execute()
+
+    def update_component_state(self, key, field, value):
+        """Update the state of the given key and field.
+
+        Args:
+            key (str): Master controller or sdp components
+            field (str): Field of the value that will be updated
+            value (str): New value for the given state
+
+        """
+        aggregate_type = self._get_aggregate_type(key)
+        component_key = self._get_key(key, aggregate_type)
+        self._db.set_hash_value(component_key, field, value)
 
     ###########################################################################
     # Private functions
     ###########################################################################
 
     @staticmethod
-    def _convert_path(name):
-        """Converts the name format to the match the database."""
-        path = name.split('.')
-        service_path = ':'.join(path)
-        return service_path
+    def _get_key(key_type: str, aggregate_type: str) -> str:
+        """Return a master controller db key.
+
+        Args:
+            key_type (str): Master controller or sdp components
+            aggregate_type (str): Aggregate type
+
+        Returns:
+            str, db key for the specified type.
+
+        """
+        return '{}:{}'.format(aggregate_type, key_type)
+
+    @staticmethod
+    def _get_aggregate_type(key: str) -> str:
+        """Get the correct aggregate type.
+
+        Args:
+            key (str): Master controller or sdp components
+
+        Returns:
+            str, aggregate type for the specified key
+
+        """
+        if key == 'master_controller':
+            aggregate_type = MC_AGGREGATE_TYPE
+        else:
+            aggregate_type = SDP_AGGREGATE_TYPE
+        return aggregate_type
+
+    # #########################################################################
+    # Utility functions
+    # #########################################################################
+
+    def clear(self):
+        """Clear / drop the entire database.
+
+        Note:
+            Use with care!
+        """
+        self._db.flush_db()
