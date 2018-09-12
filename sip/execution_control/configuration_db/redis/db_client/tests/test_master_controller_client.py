@@ -20,7 +20,7 @@ validate({'name': "myname", "price": 34.99}, schema)
 import os
 import subprocess
 
-from ..master_client import MasterDbClient
+from db_client import MasterDbClient
 
 
 def test_create_client_object():

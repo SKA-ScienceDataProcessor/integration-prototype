@@ -64,6 +64,25 @@ redis-server
 Note - It requires redis to be installed and all python packages in the
 requirements.txt file
 
+### Package the client
+
+Following instructions shows have to package the client
+
+Go to `sip/execution_control/configuration_db/redis` folder:
+
+```bash
+python3 setup.py develop
+pip install .
+```
+
+You should now be able to run the db_client anywhere in the system. 
+e.g.
+```bash
+import db_client
+db_client.MasterDbClient()
+```
+
+
 ### Utility Scripts
 
 To set initial data into the configuration database run the following command:
@@ -91,7 +110,10 @@ pip install pytest-codestyle
 pip install pytest-pylint
 pip install pytest-docstyle
 pip install -r requirements.txt
+```
+
+Install the client as package. Follow "Package the client" instruction.
 
 ```bash
-pytest --pylint --codestyle --docstyle -s -v --pylint-rcfile=../../../../.pylintrc .
+pytest --pylint --codestyle --docstyle -s -v --pylint-rcfile=../../../../.pylintrc 
 ```

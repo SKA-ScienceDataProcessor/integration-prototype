@@ -3,7 +3,7 @@
 import ast
 from typing import List
 
-from .config_db_redis import ConfigDb
+from db_client import ConfigDb
 from .processing_controller_client import ProcessingControllerDbClient
 
 AGGREGATE_TYPE = 'pb'
@@ -55,7 +55,27 @@ class ProcessingBlockDbClient(ProcessingControllerDbClient):
             resources (dict): Assigned resources to a specific pb
 
         """
-        pass
+        # Initialising empty list
+        workflow_list = []
+        workflow_dict = {}
+
+        # Get key
+        pb_key = self.get_key(pb_id)
+
+        # Check that the key exists!
+        if not self._db.get_keys(pb_key):
+            raise KeyError('Processing Block not found: {}'
+                           .format(pb_id))
+
+        # Add assigned resources to workflow
+        for stages in ast.literal_eval(self._db.get_hash_value(
+                pb_key, 'workflow')):
+            workflow_stage = dict(stages)
+            workflow_stage['assigned_resources'] = resources
+            workflow_list.append(workflow_stage)
+
+        workflow_dict['workflow'] = workflow_list
+        self._db.set_hash_values(pb_key, workflow_dict)
 
     # #########################################################################
     # Get functions
