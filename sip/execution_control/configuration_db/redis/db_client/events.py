@@ -73,6 +73,7 @@ class Event:
         DB.remove_element(keys.active(self.aggregate_type, self.subscriber), 0,
                           self._id)
 
+
 class EventQueue:
     """Event queue class.
 

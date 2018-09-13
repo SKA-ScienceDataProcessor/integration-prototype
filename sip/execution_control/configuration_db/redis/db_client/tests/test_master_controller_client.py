@@ -39,21 +39,21 @@ def test_set_target_state():
     subprocess.call(["python3", initial_data])
     mc_event_queue = db_client.subscribe('test_update_target')
     key = 'master_controller'
-    field = 'Target_state'
+    state_field = 'Target_state'
     value = "OFF"
-    db_client.update_target_state(value)
+    db_client.update_target_state(state_field, value)
     events = mc_event_queue.get_published_events()
     assert len(events) == 1
     assert events[0].data['type'] == 'updated'
-    state = db_client.get_value(key, field)
+    state = db_client.get_value(key, state_field)
     assert state == 'OFF'
 
     # Update states of the components
     component_key = ['processing_controller', 'logging']
     for c_key in component_key:
-        db_client.update_component_state(c_key, field, value)
+        db_client.update_component_state(c_key, state_field, value)
     for test_key in component_key:
-        state = db_client.get_value(test_key, field)
+        state = db_client.get_value(test_key, state_field)
         assert state == 'OFF'
 
 
@@ -66,21 +66,21 @@ def test_set_sdp_state():
                      'set_initial_data.py'])
     mc_event_queue = db_client.subscribe('test_update_target')
     key = 'master_controller'
-    field = 'Target_state'
+    state_field = 'Target_state'
     value = "OFF"
-    db_client.update_target_state(value)
+    db_client.update_target_state(state_field, value)
     events = mc_event_queue.get_published_events()
     assert len(events) == 1
     assert events[0].data['type'] == 'updated'
-    state = db_client.get_value(key, field)
+    state = db_client.get_value(key, state_field)
     assert state == 'OFF'
 
     # Update states of the components
     component_key = ['processing_controller', 'logging']
     for c_key in component_key:
-        db_client.update_component_state(c_key, field, value)
+        db_client.update_component_state(c_key, state_field, value)
     for test_key in component_key:
-        state = db_client.get_value(test_key, field)
+        state = db_client.get_value(test_key, state_field)
         assert state == 'OFF'
 
     # update completed state
@@ -88,7 +88,7 @@ def test_set_sdp_state():
     mc_list = db_client.get_active()
     mc_key = mc_list[0]
     assert mc_key == key
-    db_client.update_sdp_state(value)
+    db_client.update_sdp_state(sdp_field, value)
     events = mc_event_queue.get_published_events()
     assert events[-1].type == 'completed'
     assert events[0].data['type'] == 'completed'
