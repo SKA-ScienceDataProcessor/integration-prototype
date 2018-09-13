@@ -103,7 +103,8 @@ def state():
             # If different then update target state
             if sdp_state != requested_state:
                 #~ db.update_value(MC, 'Target_state', requested_state)
-                db.update_target_state(requested_state)
+                #~ db.update_target_state(requested_state)
+                db.update_target_state('Target_state', requested_state)
                 #~ db.update_value(MC, 'sett_timestamp', 
                         #~ str(datetime.utcnow()))
         except redis.exceptions.ConnectionError:

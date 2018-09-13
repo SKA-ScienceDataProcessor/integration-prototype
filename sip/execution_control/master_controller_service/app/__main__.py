@@ -40,7 +40,7 @@ logConfigAsJSON = '''{
 '''
 
 from .master_client import MasterDbClient as masterClient
-from . import events # ? probably access events as masterClient.events if I needed to
+#~ from . import events # ? probably access events as masterClient.events if I needed to
 
 MC = 'master_controller'
 PC = 'processing_controller'
@@ -108,7 +108,8 @@ def main():
                         logger.debug(
                           'Setting SDP_state to be the same as target_state')
                         #~ db.update_value(MC, "SDP_state", target_state)
-                        db.update_sdp_state(target_state)
+                        #~ db.update_sdp_state(target_state)
+                        db.update_sdp_state("SDP_state", target_state)
                         ### update component target states. Presumably processing 
                         ### controller & processing block controller?
                         ### is it as simple as this?
