@@ -3,7 +3,7 @@
 import ast
 from typing import List
 
-from .config_db_redis import ConfigDb
+from db_client import ConfigDb
 from .processing_controller_client import ProcessingControllerDbClient
 
 AGGREGATE_TYPE = 'pb'
@@ -31,7 +31,7 @@ class ProcessingBlockDbClient(ProcessingControllerDbClient):
 
         Args:
             processing_block_data (dict): Processing block data
-            sbi_key (str): Scheduling BLock Instance key
+            sbi_key (str): Scheduling Block Instance key
 
         """
         # Adding Processing block with id
@@ -46,6 +46,63 @@ class ProcessingBlockDbClient(ProcessingControllerDbClient):
 
             # Publish an event to notify subscribers of the new PB
             self.publish(pb_config["id"], 'created')
+
+    def add_assigned_resources(self, pb_id: str, resources: dict):
+        """Add assigned resources to db.
+
+        Args:
+            pb_id (str): Processing block id
+            resources (dict): Assigned resources to a specific pb
+
+        """
+        # Initialising empty list
+        workflow_list = []
+        workflow_dict = {}
+
+        # Get key
+        pb_key = self.get_key(pb_id)
+
+        # Check that the key exists!
+        if not self._db.get_keys(pb_key):
+            raise KeyError('Processing Block not found: {}'
+                           .format(pb_id))
+
+        # Add assigned resources to workflow
+        for stages in ast.literal_eval(self._db.get_hash_value(
+                pb_key, 'workflow')):
+            workflow_stage = dict(stages)
+            workflow_stage['assigned_resources'] = resources
+            workflow_list.append(workflow_stage)
+
+        workflow_dict['workflow'] = workflow_list
+        self._db.set_hash_values(pb_key, workflow_dict)
+
+    # #########################################################################
+    # Get functions
+    # #########################################################################
+
+    def get_workflow_stage(self, pb_id: str, stage: str):
+        """Return details of a workflow stage associated to the PB.
+
+        Args:
+            pb_id (str): Processing block id
+            stage (str): Workflow stage name
+
+        Returns:
+            dict, resources of a specified pb
+
+        """
+        pb_key = self.get_key(pb_id)
+
+        # Check that the key exists!
+        if not self._db.get_keys(pb_key):
+            raise KeyError('Processing Block not found: {}'
+                           .format(pb_id))
+
+        workflow_list = self._db.get_hash_value(pb_key, 'workflow')
+        for stages in ast.literal_eval(workflow_list):
+            workflow_stage = dict(stages)[stage]
+            return workflow_stage
 
     def get_pb_ids(self, sbi_id: str) -> List[str]:
         """Return the list of PB ids associated with the SBI.

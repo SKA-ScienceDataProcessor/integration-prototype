@@ -72,10 +72,6 @@ class Event:
         """
         DB.remove_element(keys.active(self.aggregate_type, self.subscriber), 0,
                           self._id)
-        # TODO(BM) Consider not adding to history and just removing the event
-        # as a copy is also always stored against the aggregate so the
-        # history is there too. If this is the case dont need an atomic
-        # transaction pipe as can do this in a single transaction.
 
 
 class EventQueue:

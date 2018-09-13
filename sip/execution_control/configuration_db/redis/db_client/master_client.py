@@ -9,6 +9,7 @@ from . import events
 LOG = logging.getLogger('SIP.EC.CDB')
 MC_AGGREGATE_TYPE = 'execution_control'
 SDP_AGGREGATE_TYPE = 'sdp_components'
+MC_KEY = 'master_controller'
 
 
 class MasterDbClient:
@@ -78,7 +79,6 @@ class MasterDbClient:
             return value
         return None
 
-    # TODO(NJT) MIght be good to add current time
     def get_active(self):
         """Get the list of active master controller from the database.
 
@@ -88,7 +88,6 @@ class MasterDbClient:
         """
         return self._db.get_list('{}:active'.format(MC_AGGREGATE_TYPE))
 
-    # TODO(NJT) MIght be good to add current time
     def get_completed(self):
         """Get the list of completed master controller from the database.
 
@@ -102,44 +101,41 @@ class MasterDbClient:
     # Update functions
     ###########################################################################
 
-    def update_target_state(self, value):
+    def update_target_state(self, state_field, value):
         """Update the target state.
 
         Args:
-              value (str): New value for target state
+            state_field (str): state_field that will be updated
+            value (str): New value for target state
 
         """
-        # TODO(NJT) move this hardcoded key and field to a function?
-        key = "master_controller"
-        field = "Target_state"
-        aggregate_type = self._get_aggregate_type(key)
-        mc_key = self._get_key(key, aggregate_type)
+        aggregate_type = self._get_aggregate_type(MC_KEY)
+        mc_key = self._get_key(MC_KEY, aggregate_type)
 
         # Setting UTC time
         current_time = datetime.utcnow().strftime('%Y/%m/%d %H:%M:%S.%f')
-        self._db.set_hash_value(mc_key, field, value, pipeline=True)
+        self._db.set_hash_value(mc_key, state_field, value, pipeline=True)
         self._db.set_hash_value(mc_key, "Target_timestamp", current_time,
                                 pipeline=True)
         self._db.execute()
         target_list_key = '{}:active'.format(aggregate_type)
-        self._db.append_to_list(target_list_key, key)
+        self._db.append_to_list(target_list_key, MC_KEY)
 
         # Publish an event to notify subscribers of the change in target state
-        self.publish(key, 'updated')
+        self.publish(MC_KEY, 'updated')
 
-    def update_sdp_state(self, value):
+    def update_sdp_state(self, state_field, value):
         """Update the SDP state.
 
         Args:
+            state_field (str): State field that will be updated
             value (str): New value for sdp state
 
         """
         # TODO(NJT) move this hardcoded key and field to a function?
-        key = "master_controller"
-        field = "SDP_state"
-        aggregate_type = self._get_aggregate_type(key)
-        mc_key = self._get_key(key, aggregate_type)
-        LOG.debug('State Updated is Completed %s', mc_key)
+        aggregate_type = self._get_aggregate_type(MC_KEY)
+        mc_key = self._get_key(MC_KEY, aggregate_type)
+        LOG.debug('State Update is Completed %s', mc_key)
 
         # Check that the key exists!
         if not self._db.get_keys(mc_key):
@@ -147,14 +143,14 @@ class MasterDbClient:
                            .format(mc_key))
 
         current_time = datetime.utcnow().strftime('%Y/%m/%d %H:%M:%S.%f')
-        self.publish(key, 'completed')
-        self._db.set_hash_value(mc_key, field, value, pipeline=True)
+        self.publish(MC_KEY, 'completed')
+        self._db.set_hash_value(mc_key, state_field, value, pipeline=True)
         self._db.set_hash_value(mc_key, "State_timestamp", current_time,
                                 pipeline=True)
         self._db.remove_element('{}:active'.format(aggregate_type), 0,
-                                key, pipeline=True)
+                                MC_KEY, pipeline=True)
         self._db.append_to_list('{}:completed'.format(aggregate_type),
-                                key, pipeline=True)
+                                MC_KEY, pipeline=True)
         self._db.execute()
 
     def update_component_state(self, key, field, value):

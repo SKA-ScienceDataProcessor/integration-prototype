@@ -11,8 +11,8 @@ TODO(BM)
 """
 import datetime
 
-from ..sbi_client import SchedulingBlockDbClient
-from ..pb_client import ProcessingBlockDbClient
+from db_client import SchedulingBlockDbClient
+from db_client import ProcessingBlockDbClient
 
 
 def test_create_client_object():

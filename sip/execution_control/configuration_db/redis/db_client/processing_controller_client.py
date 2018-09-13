@@ -69,6 +69,27 @@ class ProcessingControllerDbClient:
     # Get functions
     # #########################################################################
 
+    def get_status(self, block_id: str) -> str:
+        """Get the status of an scheduling block instance or processing block.
+
+        Args:
+            block_id (str): Scheduling block instance or processing block id.
+
+        Returns:
+            str, status of sbi or pb.
+
+        """
+        key = self.get_key(block_id)
+
+        # Check that the key exists
+        if not self._db.get_keys(key):
+            raise KeyError('Block ID not found: {}'.format(block_id))
+        key = self.get_event_list_key(block_id)
+        last_event = self._db.get_hash_value(self.get_event_data_key(
+            block_id), self._db.get_list_value(key, -1))
+        last_event = ast.literal_eval(last_event)
+        return last_event['type']
+
     def get_event_list_key(self, block_id: str) -> str:
         """Get event list db key.
 
@@ -84,29 +105,6 @@ class ProcessingControllerDbClient:
 
         """
         return aggregate_events_list(self.get_key(block_id))
-
-    def get_status(self, block_id: str) -> str:
-        """Get the status of an scheduling block instance or processing block.
-
-        Args:
-            block_id (str): Scheduling block instance or processing block id.
-
-        Returns:
-            str, status of sbi or pb.
-
-        """
-        key = self.get_key(block_id)
-
-        # Check that the key exists
-        if not self._db.get_keys(key):
-            raise KeyError('Block ID not found: {}'
-                           .format(block_id))
-
-        key = self.get_event_list_key(block_id)
-        last_event = self._db.get_hash_value(self.get_event_data_key(
-            block_id), self._db.get_list_value(key, -1))
-        last_event = ast.literal_eval(last_event)
-        return last_event['type']
 
     def get_event_data_key(self, block_id: str) -> str:
         """Get event data db key.
