@@ -78,7 +78,6 @@ class MasterDbClient:
             return value
         return None
 
-    # TODO(NJT) MIght be good to add current time
     def get_active(self):
         """Get the list of active master controller from the database.
 
@@ -88,7 +87,6 @@ class MasterDbClient:
         """
         return self._db.get_list('{}:active'.format(MC_AGGREGATE_TYPE))
 
-    # TODO(NJT) MIght be good to add current time
     def get_completed(self):
         """Get the list of completed master controller from the database.
 
