@@ -13,26 +13,26 @@ import logging
 import logging.config
 
 logConfigAsJSON = '''{
-    "version": 1, 
-    "formatters": 
+    "version": 1,
+    "formatters":
     {
-        "default": 
+        "default":
         {
             "format": "[%(asctime)s] %(levelname)s in %(module)s: %(message)s"
         }
-    }, 
-    "handlers": 
+    },
+    "handlers":
     {
-        "console": 
+        "console":
         {
             "class": "logging.StreamHandler",
             "level": "DEBUG",
             "formatter": "default",
             "stream": "ext://sys.stdout"
         }
-    }, 
-    "root": 
-    { 
+    },
+    "root":
+    {
         "level": "DEBUG",
         "handlers": ["console"]
     }
@@ -40,15 +40,49 @@ logConfigAsJSON = '''{
 '''
 
 from .master_client import MasterDbClient as masterClient
-#~ from . import events # ? probably access events as masterClient.events if I needed to
 
 MC = 'master_controller'
 PC = 'processing_controller'
+LOG = 'logging'
 #~ MC = 'execution_control:master_controller'
 #~ PC = 'sdp_components:processing_controller'
 #~ LOG = 'sdp_components:logging'
 
 db = masterClient()
+
+def update_components(target_state):
+    '''
+    When we get a new target state this function is called
+    to ensure components receive the target state(s) and act
+    on them.
+    '''
+    logger = logging.getLogger(__name__)
+    ### update component target states. Presumably processing
+    ### controller & processing block controller?
+    ### is it as simple as this?
+    logger.debug('Setting PC state to be {}'.format(target_state))
+    db.update_component_state(PC, "Target_state", target_state)
+    db.update_component_state(LOG, "Target_state", target_state)
+
+                        ### We may need to check the target state prior to
+                        ### setting these?
+    # What SHOULD we do if the target state is OFF?
+    # Change to init?
+    # Should we have an OFF/INIT sequence?
+    # For the time being we assume that we have made further calls to the
+    # subcomponents and received a new status from them
+    # at this point the Current_State for the components should have been
+    # modified we will do this ourselves for now
+    if target_state == 'OFF':
+        logger.info('Target State is OFF')
+        logger.debug('Pretend to do work. New state is INIT.')
+        target_state = 'INIT'
+        #~ return('INIT')
+    db.update_component_state(PC, "Current_state", target_state)
+    db.update_component_state(LOG, "Current_state", target_state)
+    logger.debug('Pretend to do work. New state is {}.'.format(target_state))
+    return(target_state)
+
 
 def main():
     """Application entry point.
@@ -60,12 +94,8 @@ def main():
 
     logger = logging.getLogger(__name__)
     logger.debug("in main()")
-    #~ aggregate_type = 'rest_interface' # placeholder
     subscriber = 'Master_Controller_Service'
-    #~ event_type = 'change'
-    #~ aggregate_key = 'chuck' # placeholder - not needed?
     logger.debug('About to register with event queue')
-    #~ event_queue = events.subscribe(aggregate_type, subscriber)
     event_queue = db.subscribe(subscriber)
     active_subs = db.get_subscribers()
     logger.debug('Subcribers: {}'.format(active_subs))
@@ -83,44 +113,29 @@ def main():
             logger.debug('Event ID is {}'.format(event.id))
             logger.debug('Aggregate Type is {}'.format(event.aggregate_type))
             try:
-                #~ logger.debug(
-                  #~ 'Setting timestamp so that we know this process is working')
-                #~ db.update_value(MC, 'State_timestamp',
-                            #~ str(datetime.datetime.utcnow()))
                 logger.debug('Getting target state')
-                target_state = db.get_value(MC, "Target_state") 
+                target_state = db.get_value(MC, "Target_state")
                 if target_state is not None:
                     logger.info('Target state is {}'.format(target_state))
                     '''
-                    The target state may have been set to the same as the 
+                    The target state may have been set to the same as the
                     current state, in which case don't bother changing it.
-                    Alternatively we could assume if the target state has 
-                    been set it will be different to the current state and 
+                    Alternatively we could assume if the target state has
+                    been set it will be different to the current state and
                     we should change regardless.
                     '''
                     sdp_state =  db.get_value(MC, "SDP_state")
                     if target_state != sdp_state:
-                        # What SHOULD we do if the target state is OFF?
-                        # Change to init?
-                        # Should we have an OFF/INIT sequence?
-                        if target_state == 'OFF':
-                            logger.info('Target State is OFF')
                         logger.debug(
-                          'Setting SDP_state to be the same as target_state')
-                        #~ db.update_value(MC, "SDP_state", target_state)
-                        #~ db.update_sdp_state(target_state)
-                        db.update_sdp_state("SDP_state", target_state)
-                        ### update component target states. Presumably processing 
-                        ### controller & processing block controller?
-                        ### is it as simple as this?
+                            'Communicating target_state to component systems')
+                        updated_state = update_components(target_state)
                         logger.debug(
-                            'Setting PC_state to be the same as target_state')
-                        #~ db.update_value(PC, "Target_state", target_state)
-                        db.update_component_state(PC, "Target_state", target_state)
-                        ### We may need to check the target state prior to
-                        ### setting these?
+                          'Setting SDP_state to be the new state {}.'.\
+                                                        format(updated_state))
+                        db.update_sdp_state("SDP_state", updated_state)
                 else:
                     logger.warning('Target state does not exist in database.')
+                # this probably wants to be moved into update_components
                 logger.debug('Getting states of components')
             except Exception as err:
                 logger.warning('Exception occured {}'.format(err))
