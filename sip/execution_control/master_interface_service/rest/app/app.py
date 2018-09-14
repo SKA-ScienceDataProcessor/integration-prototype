@@ -14,30 +14,31 @@ from flask_api import FlaskAPI, status
 
 
 logConfigAsJSON = '''{
-   "version": 1, 
-   "formatters": 
+   "version": 1,
+   "formatters":
    {
-      "default": 
+      "default":
       {
          "format": "[%(asctime)s] %(levelname)s in %(module)s: %(message)s"
       },
       "flask_style":
       {
-         "format": "[%(asctime)s] [%(process)s] [%(levelname)s] in %(module)s: %(message)s",
+         "format":
+    "[%(asctime)s] [%(process)s] [%(levelname)s] in %(module)s: %(message)s",
          "datefmt": "%Y-%m-%d %H:%M:%S %z"
       }
-   }, 
-   "handlers": 
+   },
+   "handlers":
    {
-      "wsgi": 
+      "wsgi":
       {
-         "class": "logging.StreamHandler", 
+         "class": "logging.StreamHandler",
          "stream": "ext://flask.logging.wsgi_errors_stream",
-         "formatter": "flask_style" 
+         "formatter": "flask_style"
       }
-   }, 
-   "root": 
-   { 
+   },
+   "root":
+   {
       "level": "DEBUG",
       "handlers": ["wsgi"]
    }
@@ -105,7 +106,7 @@ def state():
                 #~ db.update_value(MC, 'Target_state', requested_state)
                 #~ db.update_target_state(requested_state)
                 db.update_target_state('Target_state', requested_state)
-                #~ db.update_value(MC, 'sett_timestamp', 
+                #~ db.update_value(MC, 'sett_timestamp',
                         #~ str(datetime.utcnow()))
         except redis.exceptions.ConnectionError:
             APP.logger.debug('failed to connect to DB')
@@ -140,13 +141,16 @@ def state():
         else:
             APP.logger.debug("State timestamp: {}".format(state_tmstmp))
             APP.logger.debug("Target timestamp: {}".format(target_tmstmp))
-            state_tmstmp = datetime.strptime(state_tmstmp, '%Y/%m/%d %H:%M:%S.%f')
-            target_tmstmp = datetime.strptime(target_tmstmp, '%Y/%m/%d %H:%M:%S.%f')
+            state_tmstmp = datetime.strptime(state_tmstmp,
+                                                    '%Y/%m/%d %H:%M:%S.%f')
+            target_tmstmp = datetime.strptime(target_tmstmp,
+                                                     '%Y/%m/%d %H:%M:%S.%f')
             if target_tmstmp < state_tmstmp:
                 APP.logger.debug('timestamp okay')
                 return {'state': current_state}
             else:
-                APP.logger.warning('Timestamp for Master Controller Services is stale')
+                APP.logger.warning(
+                        'Timestamp for Master Controller Services is stale')
                 return {'state': 'UNKNOWN',
                         'reason': 'Master Controller Services may have died.'}
     except redis.exceptions.ConnectionError:
