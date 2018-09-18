@@ -143,7 +143,7 @@ class ProcessingControllerDbClient:
                                            data))
         return event_list
 
-    def get_key(self, block_id: str,) -> str:
+    def get_key(self, block_id: str) -> str:
         """Return a Scheduling Block Instance or Processing Block db key.
 
         Args:
@@ -241,8 +241,7 @@ class ProcessingControllerDbClient:
             value(str): New value
 
         """
-        self._db.set_hash_value(self.get_key(block_id, self._aggregate_type),
-                                field, value)
+        self._db.set_hash_value(self.get_key(block_id), field, value)
 
     # #########################################################################
     # Utility functions

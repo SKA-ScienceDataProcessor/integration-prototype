@@ -77,7 +77,8 @@ pip install .
 
 You should now be able to run the db_client anywhere in the system. 
 e.g.
-```bash
+
+```python
 import db_client
 db_client.MasterDbClient()
 ```

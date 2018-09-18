@@ -3,7 +3,7 @@
 import ast
 from typing import List
 
-from db_client import ConfigDb
+from config_db import ConfigDb
 from .processing_controller_client import ProcessingControllerDbClient
 
 AGGREGATE_TYPE = 'pb'

@@ -6,8 +6,8 @@ For instructions of how to run these tests see the README.md file in the
 
 """
 from random import choice
-from db_client import SchedulingBlockDbClient
-from db_client import ProcessingBlockDbClient
+from config_db import SchedulingBlockDbClient
+from config_db import ProcessingBlockDbClient
 
 
 def test_create_client_object():
