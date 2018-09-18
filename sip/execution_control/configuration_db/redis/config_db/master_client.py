@@ -3,7 +3,8 @@
 import logging
 
 from datetime import datetime
-from config_db import ConfigDb
+
+from .config_db_redis import ConfigDb
 from . import events
 
 LOG = logging.getLogger('SIP.EC.CDB')
