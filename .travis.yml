@@ -57,7 +57,7 @@ script:
   - pycodestyle --config=.pycodestyle --exclude=receive_visibilities sip
   - pylint --rcfile=.pylintrc --ignore=csp_pss_sender,csp_vis_sender_01,csp_vis_sender_02 emulators
   - pytest --codestyle --docstyle -s -v sip/execution_control/configuration_db/redis
-  - pylint --rcfile=.pylintrc sip/execution_control/configuration_db/redis/db_client
+  - pylint --rcfile=.pylintrc sip/execution_control/configuration_db/redis/config_db
   - pytest --pylint --codestyle -s -v --pylint-rcfile=.pylintrc sip/science_pipeline_workflows/ical_dask
   - pytest --pylint --codestyle -s -v --pylint-rcfile=./.pylintrc sip/execution_framework_interface/docker_compose_generator
   - pytest --pylint --docstyle --codestyle -s -v --pylint-rcfile=./.pylintrc sip/execution_framework_interface/docker_api
