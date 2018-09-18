@@ -65,7 +65,7 @@ script:
 #  - (cd sip && pylint --rcfile=../.pylintrc science_pipeline_workflows)
 #  - SIP_PCI_LOG_LEVEL="WARN" && py.test --pylint --codestyle -s -v --durations=3 --pylint-rcfile=.pylintrc sip/execution_control/processing_controller_interface/flask_api
   # - pydocstyle sip/execution_control/processing_controller_interface/flask_api
-  - pytest --pylint --codestyle --docstyle -s -v --pylint-rcfile=.pylintrc sip/execution_control/configuration_db/redis
+  - pytest --pylint --codestyle --docstyle -s -v --pylint-rcfile=.pylintrc sip/execution_control/configuration_db/redis/db_client
   - pytest --pylint --codestyle -s -v --pylint-rcfile=./.pylintrc sip/execution_framework_interface/docker_compose_generator
   - pytest --pylint --docstyle --codestyle -s -v --pylint-rcfile=./.pylintrc sip/execution_framework_interface/docker_api
 
