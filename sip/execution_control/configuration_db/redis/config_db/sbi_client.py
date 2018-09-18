@@ -7,10 +7,11 @@ import ast
 import datetime
 
 from jsonschema import validate
-from config_db import ProcessingControllerDbClient
-from config_db import ProcessingBlockDbClient
 
 from .config_db_redis import ConfigDb
+from .pb_client import ProcessingBlockDbClient
+from .processing_controller_client import ProcessingControllerDbClient
+
 
 LOG = logging.getLogger('SIP.EC.CDB')
 AGGREGATE_TYPE = 'sbi'
