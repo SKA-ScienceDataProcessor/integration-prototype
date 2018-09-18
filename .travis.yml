@@ -43,6 +43,8 @@ before_install:
   - pip install simplejson>=3.15.0
   # Install PCI flask requirements
   - pip install -r sip/execution_control/processing_controller_interface/flask_api/requirements.txt
+  # Install CD interface requirements
+  - pip install -r sip/execution_control/configuration_db/redis/requirements.txt
   # Install EF / EE interface requirements
   - pip install -r sip/execution_framework_interface/docker_compose_generator/requirements.txt
   # Start Docker containers needed for unit tests
