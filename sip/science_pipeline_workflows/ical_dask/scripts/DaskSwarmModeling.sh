@@ -1,8 +1,14 @@
-docker stop modeling
-docker rm modeling
+#!/bin/bash
 
-# Run pipeline container with bound ARL and pipeline folders
-#docker run -d -it --name modeling -v /home/vlad/software.x32/SKA/integration-prototype/sip/science_pipeline_workflows/ical_dask/algorithm-reference-library:/home/sdp/algorithm-reference-library -v /var/run/docker.sock:/var/run/docker.sock -v /home/vlad/software.x32/SKA/integration-prototype/sip/science_pipeline_workflows/ical_dask/pipelines:/home/sdp/pipelines dask_modeling
+# Script to run the ICAL Dask workflow data generation container.
 
-docker run -d -it --name modeling -v /home/vlad/software.x32/SKA/integration-prototype/sip/science_pipeline_workflows/ical_dask/algorithm-reference-library:/home/sdp/algorithm-reference-library -v /var/run/docker.sock:/var/run/docker.sock -v /home/vlad/software.x32/SKA/integration-prototype/sip/science_pipeline_workflows/ical_dask/pipelines:/home/sdp/pipelines --entrypoint /home/sdp/pipelines/imaging-modeling.py dask_pipeline
-
+docker run \
+    --rm \
+    --name modeling \
+    --network ical_sip \
+    --env PYTHONPATH=/pipelines:/pipelines/sdp_arl \
+    --env ARL_DASK_SCHEDULER=scheduler:8786 \
+    -v "$(pwd)"/pipelines/sdp_arl:/pipelines/sdp_arl \
+    -v "$(pwd)"/results:/pipelines/results \
+    ical_dask_pipeline \
+    python3 imaging_modeling.py

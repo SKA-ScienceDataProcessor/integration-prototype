@@ -12,13 +12,11 @@ delete services, manage nodes etc
 
 ## Quick-start
 
-To use the client, simply copy the client script to the service directory.
+To use the client, simply make a copy of the `docker_client.py` module.
+This can then be imported and initialised as follows:
 
-import the client and initialise the client.
-
-```bash
-from ..docker_client import DockerClient
-
+```python
+from docker_client import DockerClient
 DC = DockerClient()
 ```
 
@@ -27,7 +25,9 @@ DC = DockerClient()
 Linting and unit test are run automatically by SIP CI/CD system but can also be 
 run manually from the docker_api code directory with:
 
+```bash
 pytest --pylint --docstyle --codestyle -s -v --pylint-rcfile=../../../.pylintrc .
+```
 
 ## TODO
 
