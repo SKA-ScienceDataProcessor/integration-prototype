@@ -11,6 +11,7 @@ import logging.config
 
 from flask import request
 from flask_api import FlaskAPI, status
+from .master_client import MasterDbClient as masterClient
 
 
 logConfigAsJSON = '''{
@@ -48,16 +49,16 @@ logging.config.dictConfig(json.loads(logConfigAsJSON))
 
 APP = FlaskAPI(__name__)
 
-from .master_client import MasterDbClient as masterClient
 
 MC = 'master_controller'
 #~ MC = 'execution_control:master_controller'
 #~ PC = 'sdp_components:processing_controller'
 #~ LOG = 'sdp_components:logging'
 
+
 @APP.route('/')
 def root():
-    """."""
+    """Home page of this Flask."""
 
     # logging
     APP.logger.debug("debugging information on")
@@ -77,17 +78,17 @@ def state():
 
     # These are the states we allowed to request
     states = ('OFF', 'STANDBY', 'ON', 'DISABLE')
-    request_keys = ('state') # it could be that this is not necessary
-                             # as a query for another item may simply
-                             # go through another route
+    request_keys = ('state')    # it could be that this is not necessary
+                                # as a query for another item may simply
+                                # go through another route
     APP.logger.debug(states)
 
     db = masterClient()
     if request.method == 'PUT':
         if not any((True for ky in request.data.keys() if ky in request_keys)):
             APP.logger.debug('no recognised keys in data')
-            return ({'error': 'Invalid request key(s) ({})'.\
-                            format(','.join(request.data.keys())),
+            return ({'error': 'Invalid request key(s) ({})'.
+                    format(','.join(request.data.keys())),
                      'allowed_request_keys': request_keys},
                     status.HTTP_400_BAD_REQUEST)
         requested_state = request.data.get('state', '').upper()
@@ -144,7 +145,7 @@ def state():
             state_tmstmp = datetime.strptime(state_tmstmp,
                                                     '%Y/%m/%d %H:%M:%S.%f')
             target_tmstmp = datetime.strptime(target_tmstmp,
-                                                     '%Y/%m/%d %H:%M:%S.%f')
+                                                    '%Y/%m/%d %H:%M:%S.%f')
             if target_tmstmp < state_tmstmp:
                 APP.logger.debug('timestamp okay')
                 return {'state': current_state}

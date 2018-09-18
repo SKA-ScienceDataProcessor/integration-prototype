@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 """
     Master Controller Service.
+
     This version polls REDIS Events rather
     than the database directly.
 """
@@ -11,6 +12,7 @@ import time
 import json
 import logging
 import logging.config
+from .master_client import MasterDbClient as masterClient
 
 logConfigAsJSON = '''{
     "version": 1,
@@ -39,7 +41,6 @@ logConfigAsJSON = '''{
 }
 '''
 
-from .master_client import MasterDbClient as masterClient
 
 MC = 'master_controller'
 PC = 'processing_controller'
@@ -50,12 +51,13 @@ LOG = 'logging'
 
 db = masterClient()
 
+
 def update_components(target_state):
-    '''
+    """
     When we get a new target state this function is called
     to ensure components receive the target state(s) and act
     on them.
-    '''
+    """
     logger = logging.getLogger(__name__)
     ### update component target states. Presumably processing
     ### controller & processing block controller?
@@ -77,7 +79,6 @@ def update_components(target_state):
         logger.info('Target State is OFF')
         logger.debug('Pretend to do work. New state is INIT.')
         target_state = 'INIT'
-        #~ return('INIT')
     db.update_component_state(PC, "Current_state", target_state)
     db.update_component_state(LOG, "Current_state", target_state)
     logger.debug('Pretend to do work. New state is {}.'.format(target_state))
@@ -86,10 +87,11 @@ def update_components(target_state):
 
 def main():
     """Application entry point.
-        In the original version we would poll the database.
-        In this version we subscribe to the events we are
-        interested in and then poll the event queue until
-        our event comes up.
+
+    In the original version we would poll the database.
+    In this version we subscribe to the events we are
+    interested in and then poll the event queue until
+    our event comes up.
     """
 
     logger = logging.getLogger(__name__)
@@ -101,12 +103,10 @@ def main():
     logger.debug('Subcribers: {}'.format(active_subs))
     while True:
         time.sleep(1)
-        '''
-        Poll the event queue and loop round if there is no event.
-        My understanding is I do not have to check the event type
-        here, because I only subscribe to the events I am interested in
-        and the event queue only returns events I have subcribed to.
-        '''
+        # Poll the event queue and loop round if there is no event.
+        # My understanding is I do not have to check the event type
+        # here, because I only subscribe to the events I am interested in
+        # and the event queue only returns events I have subcribed to.
         event = event_queue.get()
         logger.debug('Event is {}'.format(event))
         if event:
@@ -117,21 +117,19 @@ def main():
                 target_state = db.get_value(MC, "Target_state")
                 if target_state is not None:
                     logger.info('Target state is {}'.format(target_state))
-                    '''
-                    The target state may have been set to the same as the
-                    current state, in which case don't bother changing it.
-                    Alternatively we could assume if the target state has
-                    been set it will be different to the current state and
-                    we should change regardless.
-                    '''
-                    sdp_state =  db.get_value(MC, "SDP_state")
+                    # The target state may have been set to the same as the
+                    # current state, in which case don't bother changing it.
+                    # Alternatively we could assume if the target state has
+                    # been set it will be different to the current state and
+                    # we should change regardless.
+                    sdp_state = db.get_value(MC, "SDP_state")
                     if target_state != sdp_state:
                         logger.debug(
                             'Communicating target_state to component systems')
                         updated_state = update_components(target_state)
                         logger.debug(
-                          'Setting SDP_state to be the new state {}.'.\
-                                                        format(updated_state))
+                          'Setting SDP_state to be the new state {}.'.
+                          format(updated_state))
                         db.update_sdp_state("SDP_state", updated_state)
                 else:
                     logger.warning('Target state does not exist in database.')
