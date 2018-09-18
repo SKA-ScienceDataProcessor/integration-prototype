@@ -4,7 +4,7 @@ import ast
 from typing import List
 
 from config_db import ConfigDb
-from .processing_controller_client import ProcessingControllerDbClient
+from config_db import ProcessingControllerDbClient
 
 AGGREGATE_TYPE = 'pb'
 SBI_AGGREGATE_TYPE = 'sbi'
