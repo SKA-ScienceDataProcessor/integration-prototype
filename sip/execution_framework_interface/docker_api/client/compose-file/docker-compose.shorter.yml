@@ -1,0 +1,38 @@
+version: '3.6'
+
+services:
+
+    scheduler1:
+        image: skasip/dask_scheduler_base
+        # Dont need to do port mapping for host networks!
+        # ports:
+        #     - 8787:8787  # Bokeh Dask UI?
+        #     - 8786:8786  # Dask scheduler port
+        deploy:
+            mode: replicated
+            replicas: 1
+            resources:
+                limits:
+                    cpus: '1.0'
+                    memory: 1024M
+        # healthcheck based curl of boken interface
+        networks:
+            hostnet: {}
+
+    scheduler2:
+        image: skasip/dask_scheduler_base
+        # Dont need to do port mapping for host networks!
+        # ports:
+        #     - 8787:8787  # Bokeh Dask UI?
+        #     - 8786:8786  # Dask scheduler port
+        deploy:
+            mode: replicated
+            replicas: 1
+        # healthcheck based curl of boken interface
+        networks:
+            hostnet: {}
+
+networks:
+    hostnet:
+        external: true
+        name: host
