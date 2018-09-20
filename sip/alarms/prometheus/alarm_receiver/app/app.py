@@ -12,6 +12,7 @@ logging.basicConfig(level=logging.INFO)
 
 DB = AlarmDbClient()
 
+
 @APP.route('/')
 def root():
     """."""
