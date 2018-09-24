@@ -2,3 +2,4 @@
 redis>=2.10.6
 jsonschema>=2.6.0
 simplejson>=3.15.0
+namesgenerator==0.3

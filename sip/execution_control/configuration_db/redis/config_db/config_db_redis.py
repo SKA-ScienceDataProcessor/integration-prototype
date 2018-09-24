@@ -1,8 +1,10 @@
 # -*- coding: utf-8 -*-
 """Low Level Configuration Service Client API."""
+from __future__ import unicode_literals
 import os
-from functools import wraps
 import logging
+
+from functools import wraps
 
 import redis
 import redis.exceptions
@@ -39,6 +41,17 @@ class ConfigDb:
         pool = redis.ConnectionPool(host=REDIS_HOST, db=REDIS_DB_ID,
                                     port=REDIS_PORT, decode_responses=True)
         self._db = redis.StrictRedis(connection_pool=pool)
+        self._pipeline = self._db.pipeline()
+
+    @check_connection
+    def get_value(self, key):
+        """Get the value of the key.
+
+        Args:
+            key (str):  key (name) where the value is stored
+
+        """
+        return self._db.get(key)
 
     @check_connection
     def set_hash_values(self, key, fields):
@@ -71,16 +84,20 @@ class ConfigDb:
         return self._db.hmget(key, fields)
 
     @check_connection
-    def set_hash_value(self, key, field, value):
+    def set_hash_value(self, key, field, value, pipeline=False):
         """Set the value of field in a hash stored at key.
 
         Args:
             key (str): key (name) of the hash
             field (str): Field within the hash to set
             value (str): Value to set
+            pipeline (bool): True, start a transaction block. Default false.
 
         """
-        self._db.hset(key, field, value)
+        if pipeline:
+            self._pipeline.hset(key, field, value)
+        else:
+            self._db.hset(key, field, value)
 
     @check_connection
     def get_hash_value(self, key, field):
@@ -110,24 +127,34 @@ class ConfigDb:
         return self._db.hgetall(key)
 
     @check_connection
-    def prepend_to_list(self, key, value):
+    def prepend_to_list(self, key, *value, pipeline=False):
         """Add new element to the start of the list stored at key.
 
         Args:
             key (str): Key where the list is stored
             value: Value to add to the list
+            pipeline (bool): True, start a transaction block. Default false.
+
         """
-        self._db.lpush(key, value)
+        if pipeline:
+            self._pipeline.lpush(key, *value)
+        else:
+            self._db.lpush(key, *value)
 
     @check_connection
-    def append_to_list(self, key, value):
+    def append_to_list(self, key, *value, pipeline=False):
         """Add new element to the end of the list stored at key.
 
         Args:
             key (str): Key where the list is stored
             value: Value to add to the list
+            pipeline (bool): True, start a transaction block. Default false.
+
         """
-        self._db.rpush(key, value)
+        if pipeline:
+            self._pipeline.rpush(key, *value)
+        else:
+            self._db.rpush(key, *value)
 
     @check_connection
     def get_list_value(self, key, index):
@@ -144,16 +171,20 @@ class ConfigDb:
         return self._db.lindex(key, index)
 
     @check_connection
-    def get_list(self, key):
+    def get_list(self, key, pipeline=False):
         """Get all the value in the list stored at key.
 
         Args:
             key (str): Key where the list is stored.
+            pipeline (bool): True, start a transaction block. Default false.
 
         Returns:
             list: values in the list ordered by list index
 
         """
+        if pipeline:
+            return self._pipeline.lrange(key, 0, -1)
+
         return self._db.lrange(key, 0, -1)
 
     @check_connection
@@ -164,7 +195,7 @@ class ConfigDb:
             key (str): Key where the list is stored
 
         Returns:
-            int: length of the list stored at key.
+            int: Length of the list stored at key.
 
         """
         return self._db.llen(key)
@@ -185,13 +216,17 @@ class ConfigDb:
         return self._db.keys(pattern)
 
     @check_connection
-    def delete_key(self, key):
+    def delete_key(self, key, pipeline=False):
         """Delete a key in the database (and associated values).
 
         Args:
             key (str): Key to delete
+            pipeline (bool): True, start a transaction block. Default false.
         """
-        self._db.delete(key)
+        if pipeline:
+            self._pipeline.delete(key)
+        else:
+            self._db.delete(key)
 
     @check_connection
     def key_exists(self, key):
@@ -207,35 +242,11 @@ class ConfigDb:
         return self._db.exists(key)
 
     @check_connection
-    def get_all_blocks(self, block_id):
-        """Search all keys associated with the block id.
-
-        FIXME(BM): This function should probably be moved to the
-                   Processing Controller client
-
-        """
-        key_search = '*' + block_id + '*'
-        return self._db.keys(key_search)
-
-    @check_connection
-    def get_block(self, block_id):
-        """Search for keys associated with the block id.
-
-        FIXME(BM): This function should probably be moved to the
-            Processing Controller client
-        """
-        key_search = '*' + block_id
-        return self._db.keys(key_search)
-
-    @check_connection
     def push_event(self, event_name, event_type, block_id):
         """Add an event to the database.
 
         An event is a list entry stored at a list with key event_name.
         The list entry is a dictionary with two fields: event_type and block_id
-
-        FIXME(BM): This function needs to be generalised or added to the
-            Processing Controller client.
 
         Args:
             event_name (str): Event list key.
@@ -251,9 +262,6 @@ class ConfigDb:
         Gets an event from the named event list removing the event and
         adding it to the event history.
 
-        FIXME(BM): This function needs to be generalised or added to the
-            Processing Controller client.
-
         Args:
             event_name (str): Event list key.
             event_history (str, optional): Event history list.
@@ -265,6 +273,88 @@ class ConfigDb:
         if event_history is None:
             event_history = event_name + '_history'
         return self._db.rpoplpush(event_name, event_history)
+
+    @check_connection
+    def pub_sub(self, **kwargs):
+        """Subscribe to channels and listen for messages that get published.
+
+        Args:
+            kwargs: Channels to subscribe
+
+        Returns:
+            list: list of channels and number of subscribers
+
+        """
+        pub_sub = self._db.pubsub(**kwargs)
+        return pub_sub
+
+    @check_connection
+    def remove_element(self, key, count, value, pipeline=False):
+        """Remove element of the list stored at key.
+
+        Args:
+            key (str): Key where the list is stored
+            count: Number of occurrences to be removed from the list
+            value (str): Value to remove from the list
+            pipeline (bool): True, start a transaction block. Default false
+
+        """
+        if pipeline:
+            self._pipeline.lrem(key, count, value)
+        else:
+            self._db.lrem(key, count, value)
+
+    @check_connection
+    def execute(self):
+        """Execute queued commands.
+
+        Executes all previous queued commands in a transaction and restores
+        the connection state to normal.
+
+        """
+        self._pipeline.execute()
+
+    @check_connection
+    def watch(self, key, pipeline=False):
+        """Watch the given key.
+
+        Marks the given key to be watch for conditional execution
+        of a transaction.
+
+        Args:
+            key (str): Key that needs to be watched
+            pipeline (bool): True, start a transaction block. Default false.
+
+        """
+        if pipeline:
+            self._pipeline.watch(key)
+        else:
+            self._db.watch(key)
+
+    @check_connection
+    def publish(self, channel, message, pipeline=False):
+        """Post a message to a given channel.
+
+        Args:
+            channel (str): Channel where the message will be published
+            message (str): Message to publish
+            pipeline (bool): True, start a transaction block. Default false.
+
+        """
+        if pipeline:
+            self._pipeline.publish(channel, message)
+        else:
+            self._db.publish(channel, message)
+
+    @check_connection
+    def increment(self, key):
+        """Increment the number stored a key by one.
+
+        Args:
+            key (str): Key where the list is stored
+
+        """
+        self._db.incr(key)
 
     @check_connection
     def flush_db(self):

@@ -64,6 +64,26 @@ redis-server
 Note - It requires redis to be installed and all python packages in the
 requirements.txt file
 
+### Package the client
+
+Following instructions shows have to package the client
+
+Go to `sip/execution_control/configuration_db/redis` folder:
+
+```bash
+python3 setup.py develop
+pip install .
+```
+
+You should now be able to run the db_client anywhere in the system. 
+e.g.
+
+```python
+import db_client
+db_client.MasterDbClient()
+```
+
+
 ### Utility Scripts
 
 To set initial data into the configuration database run the following command:
@@ -74,6 +94,7 @@ python3 -m db_client.utils.set_initial_data
 
 ### Test Scripts
 
+
 While unit tests are run automatically the 
 [SIP CI/CD service](https://travis-ci.com/SKA-ScienceDataProcessor/integration-prototype),
 it is possible to run them manually with the following command from the
@@ -82,7 +103,18 @@ it is possible to run them manually with the following command from the
 ***Note**: a Redis db container must be started first in order for most of
 these tests to pass*
 
+```bash
+virtualenv -p python3 venv
+source venv/bin/activate
+pip install pytest
+pip install pytest-codestyle
+pip install pytest-pylint
+pip install pytest-docstyle
+pip install -r requirements.txt
+```
+
+Install the client as package. Follow "Package the client" instruction.
 
 ```bash
-pytest --pylint --codestyle -s -v --pylint-rcfile=../../../../.pylintrc .
+pytest --pylint --codestyle --docstyle -s -v --pylint-rcfile=../../../../.pylintrc 
 ```
