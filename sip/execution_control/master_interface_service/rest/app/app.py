@@ -51,9 +51,8 @@ APP = FlaskAPI(__name__)
 
 
 MC = 'master_controller'
-#~ MC = 'execution_control:master_controller'
-#~ PC = 'sdp_components:processing_controller'
-#~ LOG = 'sdp_components:logging'
+PC = 'processing_controller'
+LOG = 'logging'
 
 
 @APP.route('/')
@@ -78,17 +77,20 @@ def state():
 
     # These are the states we allowed to request
     states = ('OFF', 'STANDBY', 'ON', 'DISABLE')
-    request_keys = ('state')    # it could be that this is not necessary
-                                # as a query for another item may simply
-                                # go through another route
     APP.logger.debug(states)
+    # it could be that this is not necessary as a query for another
+    # item may simply go through another route
+    request_keys = ('state',)
 
     db = masterClient()
     if request.method == 'PUT':
-        if not any((True for ky in request.data.keys() if ky in request_keys)):
-            APP.logger.debug('no recognised keys in data')
+        # Has the user used unknown keys in the query?
+        unk_kys = [ky for ky in request.data.keys() if ky not in request_keys]
+        # unk_kys should be empty
+        if unk_kys:
+            APP.logger.debug('Unrecognised keys in data')
             return ({'error': 'Invalid request key(s) ({})'.
-                    format(','.join(request.data.keys())),
+                    format(','.join(unk_kys)),
                      'allowed_request_keys': request_keys},
                     status.HTTP_400_BAD_REQUEST)
         requested_state = request.data.get('state', '').upper()
@@ -104,11 +106,7 @@ def state():
             APP.logger.debug('SDP_state is {}'.format(sdp_state))
             # If different then update target state
             if sdp_state != requested_state:
-                #~ db.update_value(MC, 'Target_state', requested_state)
-                #~ db.update_target_state(requested_state)
                 db.update_target_state('Target_state', requested_state)
-                #~ db.update_value(MC, 'sett_timestamp',
-                        #~ str(datetime.utcnow()))
         except redis.exceptions.ConnectionError:
             APP.logger.debug('failed to connect to DB')
             response['error'] = 'Unable to connect to database.'

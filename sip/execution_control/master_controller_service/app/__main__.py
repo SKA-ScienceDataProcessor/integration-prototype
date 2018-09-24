@@ -45,9 +45,6 @@ logConfigAsJSON = '''{
 MC = 'master_controller'
 PC = 'processing_controller'
 LOG = 'logging'
-#~ MC = 'execution_control:master_controller'
-#~ PC = 'sdp_components:processing_controller'
-#~ LOG = 'sdp_components:logging'
 
 db = masterClient()
 
@@ -59,15 +56,14 @@ def update_components(target_state):
     on them.
     """
     logger = logging.getLogger(__name__)
-    ### update component target states. Presumably processing
-    ### controller & processing block controller?
-    ### is it as simple as this?
+    # ### update component target states. Presumably processing
+    # ### controller & processing block controller?
+    # ### is it as simple as this?
+    # ### We may need to check the target state prior to
+    # ### setting these?
     logger.debug('Setting PC state to be {}'.format(target_state))
     db.update_component_state(PC, "Target_state", target_state)
     db.update_component_state(LOG, "Target_state", target_state)
-
-                        ### We may need to check the target state prior to
-                        ### setting these?
     # What SHOULD we do if the target state is OFF?
     # Change to init?
     # Should we have an OFF/INIT sequence?
