@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""Demo alarm hander."""
+"""Demo alarm handler."""
 
 import logging
 from flask import request

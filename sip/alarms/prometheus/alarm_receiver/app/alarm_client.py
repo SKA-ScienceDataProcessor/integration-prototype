@@ -7,7 +7,7 @@ class AlarmDbClient:
     """Alarm Handler Client Interface."""
 
     def __init__(self):
-        """Initialise the Alarm Hnadler Database client."""
+        """Initialise the Alarm Handler Database client."""
         self._db = ConfigDb()
 
     ###########################################################################
