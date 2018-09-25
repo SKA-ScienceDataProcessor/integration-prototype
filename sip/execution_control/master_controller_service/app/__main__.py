@@ -12,7 +12,7 @@ import time
 import json
 import logging
 import logging.config
-from .master_client import MasterDbClient as masterClient
+from config_db.master_client import MasterDbClient as masterClient
 
 logConfigAsJSON = '''{
     "version": 1,
@@ -73,7 +73,7 @@ def update_components(target_state):
     # modified we will do this ourselves for now
     if target_state == 'OFF':
         logger.info('Target State is OFF')
-        logger.debug('Pretend to do work. New state is INIT.')
+        logger.debug('Pretend to do extra work. New state is INIT.')
         target_state = 'INIT'
     db.update_component_state(PC, "Current_state", target_state)
     db.update_component_state(LOG, "Current_state", target_state)
@@ -105,9 +105,8 @@ def main():
         # and the event queue only returns events I have subcribed to.
         event = event_queue.get()
         logger.debug('Event is {}'.format(event))
-        if event:
+        if event and event.type == 'updated':
             logger.debug('Event ID is {}'.format(event.id))
-            logger.debug('Aggregate Type is {}'.format(event.aggregate_type))
             try:
                 logger.debug('Getting target state')
                 target_state = db.get_value(MC, "Target_state")
