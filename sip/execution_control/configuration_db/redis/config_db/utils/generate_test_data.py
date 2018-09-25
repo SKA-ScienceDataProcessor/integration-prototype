@@ -1,5 +1,5 @@
 # coding=utf-8
-"""Module to generate test data."""
+"""Module to generate test data for sbi and pb client."""
 from uuid import uuid4
 import datetime
 from random import randint, choice
