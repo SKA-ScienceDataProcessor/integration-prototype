@@ -11,7 +11,7 @@ import logging.config
 
 from flask import request
 from flask_api import FlaskAPI, status
-from .master_client import MasterDbClient as masterClient
+from config_db.master_client import MasterDbClient as masterClient
 
 
 logConfigAsJSON = '''{
