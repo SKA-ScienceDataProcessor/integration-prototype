@@ -64,6 +64,16 @@ redis-server
 Note - It requires redis to be installed and all python packages in the
 requirements.txt file
 
+### Zip the client
+
+To package the client inside a container, you would need to zip the client. This
+can be done by following the instructions. (This is only a temporary solution until 
+the client is in pip)
+
+```bash
+zip -r config_db.zip config_db/ requirements.txt setup.py
+```
+
 ### Package the client
 
 Following instructions shows have to package the client
@@ -75,13 +85,14 @@ python3 setup.py develop
 pip install .
 ```
 
-You should now be able to run the db_client anywhere in the system. 
+You should now be able to run the config_db anywhere in the system. 
 e.g.
 
 ```python
-import db_client
-db_client.MasterDbClient()
+import config_db
+config_db.MasterDbClient()
 ```
+
 
 
 ### Utility Scripts
