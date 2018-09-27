@@ -3,8 +3,8 @@
     "master_controller": {
       "SDP_state": "ON",
       "Target_state": "ON",
-      "State_timestamp": "2018/08/01 09:00:22",
-      "Target_timestamp": "2018/08/01 09:00:22"
+      "State_timestamp": "2018/08/01 09:00:22.111",
+      "Target_timestamp": "2018/08/01 09:00:22.222"
 
     }
   },

@@ -1,34 +1,14 @@
 
 It is assumed you will start this service along with the master controller
 service, within Docker containers. To do so you should run the script
-start_master_controller_service which is two directories above in 
-execution_control.
+start_master_controller_service which is in this directory.
 To stop the services you should use the stop_master_controller_service
 script in the same directory.
 
-If you require to run this natively (outside the docker):
-You need a python3 installation with the following modules installed:
- - Flask
- - Flask-API
- - redis
-
-This should either be in your system libraries, or you create a python 
-virtual environment (venv) and install the modules there.
-
-Assuming you have installed the above modules and (where required)
-activated the venv, run the following command in this directory:
-
-    gunicorn -b 0.0.0.0:5000 app.app:APP
-
-Note that some files have to be copied from
-../../configuration_db/redis/db_client to app:
-  - event_keys.py 
-  - events.py 
-  - master_client.py 
-  - config_db_redis.py
-
-These will be copied automatically if you run the script
-start_master_controller_service in (and from) the direcory execution_control.
+If you require to run this natively (outside the docker) follow the
+instructions in the accompanying README_venv file which explains how
+to create a python virtual environment and populate it with the required
+python packages.
 
 The util directory contains some shell scripts to test the flask API outside 
 of a web interface.

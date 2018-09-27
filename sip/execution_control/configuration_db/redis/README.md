@@ -94,28 +94,6 @@ python3 -m db_client.utils.set_initial_data
 
 ### Test Scripts
 
-<<<<<<< HEAD
-
-While unit tests are run automatically the 
-[SIP CI/CD service](https://travis-ci.com/SKA-ScienceDataProcessor/integration-prototype),
-it is possible to run them manually with the following command from the
-`sip/execution_control/configuration_db/redis` folder:
-
-***Note**: a Redis db container must be started first in order for most of
-these tests to pass*
-
-```bash
-virtualenv -p python3 venv
-source venv/bin/activate
-pip install pytest
-pip install pytest-codestyle
-pip install pytest-pylint
-pip install pytest-docstyle
-pip install -r requirements.txt
-
-```bash
-pytest --pylint --codestyle --docstyle -s -v --pylint-rcfile=../../../../.pylintrc .
-=======
 
 While unit tests are run automatically the 
 [SIP CI/CD service](https://travis-ci.com/SKA-ScienceDataProcessor/integration-prototype),
@@ -139,5 +117,4 @@ Install the client as package. Follow "Package the client" instruction.
 
 ```bash
 pytest --pylint --codestyle --docstyle -s -v --pylint-rcfile=../../../../.pylintrc 
->>>>>>> 9f548dce585590aaf18690089851b3a85b982d46
 ```

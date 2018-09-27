@@ -1,21 +1,12 @@
 
 It is assumed you will start this service along with the master interface
 service, within Docker containers. To do so you should run the script
-start_master_controller_service which is one directory above in 
-execution_control.
+start_master_controller_service which is in the ../master_interface_service/rest
+directory.
 To stop the services you should use the stop_master_controller_service
 script in the same directory.
 
-If you require to run this natively (outside the docker):
-From this directory, run the command:
-    python3 -m app
-
-Note that some files have to be copied from
-../configuration_db/redis/db_client to app:
-  - event_keys.py 
-  - events.py 
-  - master_client.py 
-  - config_db_redis.py
-
-These will be copied automatically if you run the script
-start_master_controller_service in (and from) the direcory execution_control.
+If you require to run this natively (outside the docker) follow the
+instructions in the accompanying README_venv file which explains how
+to create a python virtual environment and populate it with the required
+python packages.
