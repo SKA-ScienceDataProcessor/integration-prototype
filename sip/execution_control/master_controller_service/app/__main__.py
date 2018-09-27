@@ -6,8 +6,6 @@
     than the database directly.
 """
 
-import datetime
-import os
 import time
 import json
 import logging
@@ -56,6 +54,7 @@ def update_components(target_state):
     on them.
     """
     logger = logging.getLogger(__name__)
+
     # ### update component target states. Presumably processing
     # ### controller & processing block controller?
     # ### is it as simple as this?
@@ -64,6 +63,7 @@ def update_components(target_state):
     logger.debug('Setting PC state to be {}'.format(target_state))
     db.update_component_state(PC, "Target_state", target_state)
     db.update_component_state(LOG, "Target_state", target_state)
+
     # What SHOULD we do if the target state is OFF?
     # Change to init?
     # Should we have an OFF/INIT sequence?
@@ -96,13 +96,14 @@ def main():
     logger.debug('About to register with event queue')
     event_queue = db.subscribe(subscriber)
     active_subs = db.get_subscribers()
-    logger.debug('Subcribers: {}'.format(active_subs))
+    logger.debug('Subscribers: {}'.format(active_subs))
     while True:
         time.sleep(1)
+
         # Poll the event queue and loop round if there is no event.
         # My understanding is I do not have to check the event type
         # here, because I only subscribe to the events I am interested in
-        # and the event queue only returns events I have subcribed to.
+        # and the event queue only returns events I have subscribed to.
         event = event_queue.get()
         logger.debug('Event is {}'.format(event))
         if event and event.type == 'updated':
@@ -112,6 +113,7 @@ def main():
                 target_state = db.get_value(MC, "Target_state")
                 if target_state is not None:
                     logger.info('Target state is {}'.format(target_state))
+
                     # The target state may have been set to the same as the
                     # current state, in which case don't bother changing it.
                     # Alternatively we could assume if the target state has
@@ -128,6 +130,7 @@ def main():
                         db.update_sdp_state("SDP_state", updated_state)
                 else:
                     logger.warning('Target state does not exist in database.')
+
                 # this probably wants to be moved into update_components
                 logger.debug('Getting states of components')
             except Exception as err:

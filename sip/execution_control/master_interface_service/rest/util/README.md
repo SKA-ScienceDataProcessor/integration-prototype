@@ -1,4 +1,4 @@
-# Utilties for the Master Interface Service
+# Utilities for the Master Interface Service
 
 One can access the Master Interface Service by pointing a web server 
 at http://localhost:5000/state and typing in a JSON string.

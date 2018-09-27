@@ -1,6 +1,6 @@
 
 You can use the virtual environment created for the master interface service.
-But if you want separate venvs do the following:
+But if you want separate venv do the following:
 
 1) Create a Virtual Environment:
  python3 -m venv venv

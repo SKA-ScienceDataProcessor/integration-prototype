@@ -3,9 +3,7 @@
     SIP Master Interface Service, Restful version.
 """
 from datetime import datetime
-import os
 import redis
-import signal
 import json
 import logging.config
 
@@ -78,14 +76,17 @@ def state():
     # These are the states we allowed to request
     states = ('OFF', 'STANDBY', 'ON', 'DISABLE')
     APP.logger.debug(states)
+
     # it could be that this is not necessary as a query for another
     # item may simply go through another route
     request_keys = ('state',)
 
     db = masterClient()
     if request.method == 'PUT':
+
         # Has the user used unknown keys in the query?
         unk_kys = [ky for ky in request.data.keys() if ky not in request_keys]
+
         # unk_kys should be empty
         if unk_kys:
             APP.logger.debug('Unrecognised keys in data')
@@ -101,19 +102,22 @@ def state():
         response = {'message': 'Accepted state: {}'.format(requested_state)}
         try:
             APP.logger.debug('updating state')
+
             # Get SDP state.
             sdp_state = db.get_value(MC, 'SDP_state')
             APP.logger.debug('SDP_state is {}'.format(sdp_state))
+
             # If different then update target state
             if sdp_state != requested_state:
                 db.update_target_state('Target_state', requested_state)
         except redis.exceptions.ConnectionError:
             APP.logger.debug('failed to connect to DB')
             response['error'] = 'Unable to connect to database.'
-        #~ if requested_state == 'OFF':
-            # Do we really want to do this?
-            # Also, do we really want to put OFF into the database?
-            #~ os.kill(os.getpid(), signal.SIGINT)
+
+        # if requested_state == 'OFF':
+        # Do we really want to do this?
+        # Also, do we really want to put OFF into the database?
+        # os.kill(os.getpid(), signal.SIGINT)
         return response
 
     # GET - if the state in the database is OFF we want to replace it with
@@ -141,9 +145,9 @@ def state():
             APP.logger.debug("State timestamp: {}".format(state_tmstmp))
             APP.logger.debug("Target timestamp: {}".format(target_tmstmp))
             state_tmstmp = datetime.strptime(state_tmstmp,
-                                                    '%Y/%m/%d %H:%M:%S.%f')
+                                             '%Y/%m/%d %H:%M:%S.%f')
             target_tmstmp = datetime.strptime(target_tmstmp,
-                                                    '%Y/%m/%d %H:%M:%S.%f')
+                                              '%Y/%m/%d %H:%M:%S.%f')
             if target_tmstmp < state_tmstmp:
                 APP.logger.debug('timestamp okay')
                 return {'state': current_state}
