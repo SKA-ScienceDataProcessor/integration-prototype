@@ -6,8 +6,10 @@ For instructions of how to run these tests see the README.md file in the
 
 """
 from random import choice
+
 from config_db import SchedulingBlockDbClient
 from config_db import ProcessingBlockDbClient
+from ..utils.generate_scheduling_data import generate_sbi_config
 
 
 def test_create_client_object():
@@ -48,13 +50,8 @@ def test_get_active():
     pb_db = ProcessingBlockDbClient()
     sbi_db.clear()
     sbi_db.subscribe('test_add_sbi')
-    sbi_config = dict(id="20180110-sip-sbi000",
-                      scheduling_block_id="20180101-sip-sb000",
-                      sub_array_id="subarray000",
-                      processing_blocks=[dict(id="sip-vis000",
-                                              type='real-time')])
 
-    # db.add_scheduling_block_instance(sbi_config)
+    sbi_config = generate_sbi_config()
     sbi_db.add_sbi(sbi_config)
     active_pb = pb_db.get_active()
     pb_ids = pb_db.get_pb_ids(sbi_config['id'])
@@ -98,18 +95,7 @@ def test_add_assigned_resources():
     sbi_db = SchedulingBlockDbClient()
     pb_db = ProcessingBlockDbClient()
     pb_db.clear()
-    sbi_config = dict(id="20180110-sip-sbi000",
-                      scheduling_block_id="20180101-sip-sb000",
-                      sub_array_id="subarray000",
-                      processing_blocks=[dict(id="sip-vis000",
-                                              type='real-time',
-                                              workflow=[dict(
-                                                  resource_requirement=dict(
-                                                      storage_type="hot",
-                                                      volume="mount",
-                                                      cpu=2),
-                                                  assigned_resources=dict(
-                                                  ))])])
+    sbi_config = generate_sbi_config()
     assigned_resources_data = dict(storage_type="hot", volume="mount", cpu=1)
     sbi_db.add_sbi(sbi_config)
     pb_ids = pb_db.get_pb_ids(sbi_config['id'])

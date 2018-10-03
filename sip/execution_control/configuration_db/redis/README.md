@@ -119,7 +119,6 @@ virtualenv -p python3 venv
 source venv/bin/activate
 pip install pytest
 pip install pytest-codestyle
-pip install pytest-pylint
 pip install pytest-docstyle
 pip install -r requirements.txt
 ```

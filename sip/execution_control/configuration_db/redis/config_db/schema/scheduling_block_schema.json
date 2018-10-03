@@ -24,8 +24,8 @@
             "description": "Type of scheduling block",
             "type": "string"
         },
-        "date": {
-            "description": "YYYYmmdd for the date",
+        "date_time": {
+            "description": "YYYY/mm/dd HH:MM:SS for the date and time",
             "type": "string",
             "pattern": "^[0-9]{4}/[0-9]{2}/[0-9]{2} [0-9]{2}:[0-9]{2}:[0-9]{2}"
         },

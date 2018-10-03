@@ -13,6 +13,7 @@ import datetime
 
 from config_db import SchedulingBlockDbClient
 from config_db import ProcessingBlockDbClient
+from ..utils.generate_scheduling_data import generate_sbi_config
 
 
 def test_create_client_object():
@@ -25,19 +26,8 @@ def test_add_sbi():
     """Test adding SBI data to the EC configuration DB."""
     sbi_db = SchedulingBlockDbClient()
     sbi_db.clear()
-
     sbi_event_queue = sbi_db.subscribe('test_add_sbi')
-
-    # TODO (NJT) Need to fix scheduling block instance data generator
-    # generate_data = generate_sbi_config(num_pbs=4)
-    # print(generate_data)
-    sbi_config = dict(id="20180110-sip-sbi000",
-                      scheduling_block_id="20180101-sip-sb000",
-                      sub_array_id="subarray000",
-                      processing_blocks=[dict(id="sip-vis000",
-                                              type='real-time')])
-
-    # db.add_scheduling_block_instance(sbi_config)
+    sbi_config = generate_sbi_config(num_pbs=1)
     sbi_db.add_sbi(sbi_config)
     sbi_data = sbi_db.get_block_details(sbi_config['id'])
 
@@ -60,20 +50,7 @@ def test_cancel_sbi():
     sbi_events = sbi_db.subscribe('test_add_sbi')
     pb_events = pb_db.subscribe('test_add_sbi')
     num_pbs = 3
-
-    # TODO (NJT) Need to fix generator
-    # for _ in range(2):
-    #     sbi.add(generate_sbi_config(num_pbs=num_pbs))
-    sbi_config = dict(id="20180110-sip-sbi000",
-                      scheduling_block_id="20180101-sip-sb000",
-                      sub_array_id="subarray000",
-                      processing_blocks=[dict(id="sip-vis000",
-                                              type='real-time'),
-                                         dict(id="sip-vis001",
-                                              type='real-time'),
-                                         dict(id="sip-vis002",
-                                              type='real-time')])
-
+    sbi_config = generate_sbi_config()
     sbi_db.add_sbi(sbi_config)
 
     # Get the list of SBIs from the database.
@@ -130,13 +107,7 @@ def test_get_active():
     pb_db = ProcessingBlockDbClient()
     sbi_db.clear()
     sbi_db.subscribe('test_add_sbi')
-    sbi_config = dict(id="20180110-sip-sbi000",
-                      scheduling_block_id="20180101-sip-sb000",
-                      sub_array_id="subarray000",
-                      processing_blocks=[dict(id="sip-vis000",
-                                              type='real-time')])
-
-    # db.add_scheduling_block_instance(sbi_config)
+    sbi_config = generate_sbi_config()
     sbi_db.add_sbi(sbi_config)
     active_sbi = sbi_db.get_active()
     assert active_sbi[0] == sbi_config['id']
