@@ -2,7 +2,7 @@
 from setuptools import setup
 
 setup(name='skasip-config_db',
-      version='0.1',
+      version='0.2',
       description='SIP Execution Control Configuration Database '
                   'client library.',
       author='SKA SIP',
@@ -13,3 +13,4 @@ setup(name='skasip-config_db',
           'simplejson',
           'namesgenerator'],
       zip_safe=False)
+
