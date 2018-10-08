@@ -13,4 +13,3 @@ setup(name='skasip-config_db',
           'simplejson',
           'namesgenerator'],
       zip_safe=False)
-
