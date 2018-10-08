@@ -17,7 +17,6 @@ This can then be imported and initialised as follows:
 
 ```python
 from docker_client import DockerClient
-
 DC = DockerClient()
 ```
 
@@ -26,13 +25,12 @@ DC = DockerClient()
 Linting and unit test are run automatically by SIP CI/CD system but can also be 
 run manually from the docker_api code directory with:
 
-```
+```bash
 pytest --pylint --docstyle --codestyle -s -v --pylint-rcfile=../../../.pylintrc .
 ```
 
 ## TODO
 
-* Make unit tests depend on small images make for testing this API  
 * Need to add exception into the functions
 * Add Log to the script
 * depends_on is not enabled -> Need to look into this

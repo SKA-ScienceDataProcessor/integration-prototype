@@ -1,0 +1,52 @@
+{
+  "scheduling_block_id": "20180201-test-sb000",
+  "name": "Optional name string",
+  "id": "20180201-test-sbi000",
+  "type": "Scheduling Block Instance",
+  "date": "20180201",
+  "sub_array_id": "subarray000",
+  "version": "0.2",
+  "project": "sip",
+  "processing_blocks": [
+
+    {
+      "id": "sip-vis000",
+      "type": "real-time",
+      "template": "",
+      "priority": 1,
+      "workflow": [
+        {
+          "resources_requirement": {
+            "storage_type": "hot"
+          },
+          "assigned_resources": {
+          },
+          "execution_engine_parameters": {
+
+          },
+          "configuration": {
+          }
+        }
+      ]
+    },
+    {
+      "id": "sip-vis001",
+      "type": "batch",
+      "template": "",
+      "priority": 2,
+      "workflow": [
+        {
+          "resources_requirement": {
+            "storage_type": "hot"
+          },
+          "assigned_resources": {
+          },
+          "execution_engine_parameters": {
+          },
+          "configuration": {
+          }
+        }
+      ]
+    }
+  ]
+}

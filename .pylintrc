@@ -159,7 +159,7 @@ evaluation=10.0 - ((float(5 * error + warning + refactor + convention) / stateme
 # Set the output format. Available formats are text, parseable, colorized, json
 # and msvs (visual studio).You can also give a reporter class, eg
 # mypackage.mymodule.MyReporterClass.
-output-format=parseable
+--msg-template={path}:{line}: [{msg_id}({symbol}), {obj}] {msg}
 
 # Tells whether to display a full report or only the messages
 reports=no
@@ -528,7 +528,7 @@ max-locals=25
 max-parents=7
 
 # Maximum number of public methods for a class (see R0904).
-max-public-methods=20
+max-public-methods=23
 
 # Maximum number of return / yield for function / method body
 max-returns=6
