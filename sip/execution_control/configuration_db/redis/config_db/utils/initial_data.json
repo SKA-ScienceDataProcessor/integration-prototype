@@ -1,0 +1,21 @@
+{
+  "execution_control": {
+    "master_controller": {
+      "SDP_state": "ON",
+      "Target_state": "ON",
+      "State_timestamp": "2018/08/01 09:00:22.000",
+      "Target_timestamp": "2018/08/01 09:00:22.000"
+
+    }
+  },
+  "sdp_components": {
+    "processing_controller": {
+      "Current_state": "ON",
+      "Target_state": "ON"
+    },
+    "logging": {
+      "Current_state": "ON",
+      "Target_state": "ON"
+    }
+  }
+}
