@@ -1,52 +1,115 @@
 {
-  "scheduling_block_id": "20180201-test-sb000",
-  "name": "Optional name string",
-  "id": "20180201-test-sbi000",
-  "type": "Scheduling Block Instance",
-  "date": "20180201",
-  "sub_array_id": "subarray000",
-  "version": "0.2",
-  "project": "sip",
-  "processing_blocks": [
+   "id":"SBI-20181018-skasip-8111",
+   "version":"1.0.0",
+   "scheduling_block":{
+      "id":"SB-20181018-skasip-1588",
+      "project":"skasip",
+      "telescope":"ska1_low",
+      "program_block":"sip_demos"
+   },
+   "subarray":"subarray-8",
+   "date_time":"20181018 14:27:50",
+   "scans":{
+      "id":"scan-20181018-81"
+   },
+   "processing_blocks":[
+      {
+         "id":"PB-20181018-dprepc-067",
+         "version":"1.0.0",
+         "type":"real-time",
+         "priority":0,
+         "resources_required":{
+            "id":"buffer-cold-bind-085",
+            "value":"081GB",
+            "parameters":{
 
-    {
-      "id": "sip-vis000",
-      "type": "real-time",
-      "template": "",
-      "priority": 1,
-      "workflow": [
-        {
-          "resources_requirement": {
-            "storage_type": "hot"
-          },
-          "assigned_resources": {
-          },
-          "execution_engine_parameters": {
+            }
+         },
+         "workflow_id":"dprepc-39",
+         "workflow_version":"1.0.0",
+         "workflow_stages":[
+            {
+               "id":"dprepc-setup-59",
+               "type":"setup",
+               "version":"1.0.0",
+               "dependencies":[
 
-          },
-          "configuration": {
-          }
-        }
-      ]
-    },
-    {
-      "id": "sip-vis001",
-      "type": "batch",
-      "template": "",
-      "priority": 2,
-      "workflow": [
-        {
-          "resources_requirement": {
-            "storage_type": "hot"
-          },
-          "assigned_resources": {
-          },
-          "execution_engine_parameters": {
-          },
-          "configuration": {
-          }
-        }
-      ]
-    }
-  ]
+               ],
+               "resources_required":{
+                  "id":"node:p3-compute_b-023",
+                  "value":3,
+                  "parameters":{
+                     "exclusive":true,
+                     "storage_type":"cold",
+                     "volume":"bind",
+                     "cpu":7
+                  }
+               },
+               "assigned_resources":{
+
+               },
+               "ee_config":{
+                  "type":"docker_swarm",
+                  "compose_template":"/workflow_templates/startup.yaml.j2"
+               },
+               "app_config":{
+                  "args_template":"/workflow_applications/start.yaml.j2"
+               }
+            },
+            {
+               "id":"dprepc-processing-35",
+               "type":"processing",
+               "version":"1.0.0",
+               "dependencies":[
+
+               ],
+               "resources_required":{
+                  "id":"node:p3-compute_b-023",
+                  "value":3,
+                  "parameters":{
+                     "exclusive":true,
+                     "storage_type":"cold",
+                     "volume":"bind",
+                     "cpu":5
+                  }
+               },
+               "assigned_resources":{
+
+               },
+               "ee_config":{
+                  "type":"docker_swarm",
+                  "compose_template":"/workflow_templates/processing.yaml.j2"
+               },
+               "app_config":{
+                  "args_template":"/workflow_applications/process.yaml.j2"
+               }
+            },
+            {
+               "id":"dprepc-cleanup-99",
+               "type":"cleanup",
+               "version":"1.0.0",
+               "dependencies":[
+
+               ],
+               "resources_required":{
+                  "id":"node:p3-compute_a-044",
+                  "value":3,
+                  "parameters":{
+                     "exclusive":false
+                  }
+               },
+               "assigned_resources":{
+
+               },
+               "ee_config":{
+                  "type":"docker_swarm",
+                  "compose_template":".workflow_templates/cleanup.yaml.j2"
+               },
+               "app_config":{
+
+               }
+            }
+         ]
+      }
+   ]
 }
