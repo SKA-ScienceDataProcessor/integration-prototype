@@ -5,12 +5,12 @@ myname=${0##*/}
 while getopts ds10?h name
 do
    case $name in
-   d)    state=disabled ;;
+   d)    state=disable ;;
    s)	 state=standby ;;
    0)    state=off ;;
    1)    state=on ;;
    \?|h)   printf "Usage: %s: -0 | -1 | -s | -d \n" $myname
-        printf "   for off, on, standby and disabled respectively\n"
+        printf "   for off, on, standby and disable respectively\n"
         printf "   (default on)\n"
          exit 2;;
    esac

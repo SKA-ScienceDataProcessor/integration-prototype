@@ -1,0 +1,9 @@
+#!/bin/bash
+# Command line utility to access the flask interface root for SDP State.
+# Uses curl and jq.
+
+URL=http://localhost:5000/
+
+curl -s "$URL" | jq .
+
+

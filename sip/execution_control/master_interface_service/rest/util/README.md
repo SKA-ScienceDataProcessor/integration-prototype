@@ -32,6 +32,8 @@ To make things simpler for the user
 the following bash shell-scripts have been made available here:
 
 * sdp_state: for reading the current state as above;
+* sdp_root: for reading the root of the flask interface;
+* sdp_send: for sending a state change request to the flask interface;
 * mkstate: for creating the JSON for pasting into the web browser;
 * mkstate1: functionally identical to mkstate;
 * flask: interactive menu-driven interface to the flask interface 
@@ -40,6 +42,7 @@ for reading and changing the state.
 `sdp_state` needs no parameters; `mkstate` (and also `mkstate1`) 
 takes an option -0 for off; -1 for on; -d for disable and -s for standby.
 With no options it assumes on.
+`sdp_send` uses the same options as `mkstate`.
 `flask` needs no arguments and should be intuitive.
 
 `mkstate` and `mkstate1` both produce a formatted JSON string to be used

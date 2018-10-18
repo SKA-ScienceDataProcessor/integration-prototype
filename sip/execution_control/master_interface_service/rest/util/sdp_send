@@ -1,0 +1,31 @@
+#!/bin/bash
+# Command line utility to access change the SDP State throught
+# the flask interface.
+# Uses curl and jq.
+myname=${0##*/}
+while getopts ds10?h name
+do
+   case $name in
+   d)    state=disable ;;
+   s)	 state=standby ;;
+   0)    state=off ;;
+   1)    state=on ;;
+   \?|h)   printf "%s: Send a change-state request to the flask interface\n" \
+                $myname
+        printf "Usage: %s: -0 | -1 | -s | -d \n" $myname
+        printf "   for off, on, standby and disable respectively\n"
+        printf "   (default on)\n"
+        printf "   Use -c to compact output.\n"
+        exit 2;;
+   esac
+done
+
+
+URL=http://localhost:5000/state
+
+
+result=$(curl -s -X PUT -H "Content-Type: application/json" \
+                -d $(jq -cn --arg state ${state:-on} '{"state":$state}') $URL)
+
+res=$(jq .message <<< "$result")
+printf "%s\n" "${res//\"/}"
