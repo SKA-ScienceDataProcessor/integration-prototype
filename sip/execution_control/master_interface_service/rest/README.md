@@ -26,7 +26,29 @@ the service standalone. Instructions are here for both.
 ### Run in Docker containers
 
 #### Standalone Docker container
-(no instructions for now)
+(Still under construction)
+
+Follow these commands within this directory unless otherwise stated.
+1. Get a copy of the config_db library. 
+If the file config_db.zip does
+not appear in this directory copy it from _../../configuration__db/redis_.
+If it does not appear in that directory run the 
+following commands to create it:
+```bash
+cd ../../configuration_db/redis
+zip -r config_db.zip setup.py config_db
+cp config_db.zip ~-
+cd -
+```
+1. Build a Docker Image.
+```bash
+docker build -t rest_component .
+```
+1. Run the image in a container
+```bash
+docker run -it -p5000:5000 -e5000 rest_component
+```
+Point a browser at __localhost:5000__
 
 #### With Master Controller Service
 Run the __start_master_controller_service__ script which can be found

@@ -96,7 +96,9 @@ def state():
                     status.HTTP_400_BAD_REQUEST)
         requested_state = request.data.get('state', '').upper()
         if requested_state not in states:
-            return ({'error': 'Invalid state: {}'.format(requested_state),
+            APP.logger.debug('Invalid state: {}'.format(requested_state))
+            return ({'error': 'Invalid Input',
+                     'message': 'Invalid state: {}'.format(requested_state),
                      'allowed_states': states},
                     status.HTTP_400_BAD_REQUEST)
         response = {'message': 'Accepted state: {}'.format(requested_state)}
