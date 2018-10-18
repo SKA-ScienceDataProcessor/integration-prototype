@@ -6,7 +6,8 @@
     than the database directly.
 """
 
-import time
+from time import time, sleep
+from sched import scheduler
 import json
 import logging
 import logging.config
@@ -53,7 +54,6 @@ def update_components(target_state):
     to ensure components receive the target state(s) and act
     on them.
     """
-    logger = logging.getLogger(__name__)
 
     # ### update component target states. Presumably processing
     # ### controller & processing block controller?
@@ -75,74 +75,87 @@ def update_components(target_state):
         logger.info('Target State is OFF')
         logger.debug('Pretend to do extra work. New state is INIT.')
         target_state = 'INIT'
+    # Presumably in a later version we would actually set target state, eg:
+    # db.update_component_state(PC, "Target_state", target_state)
+    # We could then use the scheduler schedule another function to check 
+    # that they have changed.
     db.update_component_state(PC, "Current_state", target_state)
     db.update_component_state(LOG, "Current_state", target_state)
     logger.debug('Pretend to do work. New state is {}.'.format(target_state))
     return(target_state)
 
 
-def main():
-    """Application entry point.
-
-    In the original version we would poll the database.
-    In this version we subscribe to the events we are
-    interested in and then poll the event queue until
-    our event comes up.
+def handle_event(event):
+    """
+    Retrieve the target state and update the SDP state.
     """
 
-    logger = logging.getLogger(__name__)
-    logger.debug("in main()")
-    subscriber = 'Master_Controller_Service'
-    logger.debug('About to register with event queue')
-    event_queue = db.subscribe(subscriber)
-    active_subs = db.get_subscribers()
-    logger.debug('Subscribers: {}'.format(active_subs))
-    while True:
-        time.sleep(1)
+    try:
+        logger.debug('Getting target state')
+        target_state = db.get_value(MC, "Target_state")
+        if target_state is not None:
+            logger.info('Target state is {}'.format(target_state))
 
-        # Poll the event queue and loop round if there is no event.
-        # My understanding is I do not have to check the event type
-        # here, because I only subscribe to the events I am interested in
-        # and the event queue only returns events I have subscribed to.
-        event = event_queue.get()
-        logger.debug('Event is {}'.format(event))
-        if event and event.type == 'updated':
-            logger.debug('Event ID is {}'.format(event.id))
-            try:
-                logger.debug('Getting target state')
-                target_state = db.get_value(MC, "Target_state")
-                if target_state is not None:
-                    logger.info('Target state is {}'.format(target_state))
+            # The target state may have been set to the same as the
+            # current state, in which case don't bother changing it.
+            # Alternatively we could assume if the target state has
+            # been set it will be different to the current state and
+            # we should change regardless.
+            # Certainly, in the REST variant of the Master Interface
+            # Service will only change the target state if it is different
+            # to the SDP state.
+            sdp_state = db.get_value(MC, "SDP_state")
+            if target_state == sdp_state:
+                return
+            logger.debug(
+                'Communicating target_state to component systems')
+            updated_state = update_components(target_state)
+            logger.debug(
+              'Setting SDP_state to be the new state {}.'.
+              format(updated_state))
+            db.update_sdp_state("SDP_state", updated_state)
+        else:
+            logger.warning('Target state does not exist in database.')
+    except Exception as err:
+        logger.warning('Exception occured {}'.format(err))
 
-                    # The target state may have been set to the same as the
-                    # current state, in which case don't bother changing it.
-                    # Alternatively we could assume if the target state has
-                    # been set it will be different to the current state and
-                    # we should change regardless.
-                    sdp_state = db.get_value(MC, "SDP_state")
-                    if target_state != sdp_state:
-                        logger.debug(
-                            'Communicating target_state to component systems')
-                        updated_state = update_components(target_state)
-                        logger.debug(
-                          'Setting SDP_state to be the new state {}.'.
-                          format(updated_state))
-                        db.update_sdp_state("SDP_state", updated_state)
-                else:
-                    logger.warning('Target state does not exist in database.')
 
-                # this probably wants to be moved into update_components
-                logger.debug('Getting states of components')
-            except Exception as err:
-                logger.warning('Exception occured {}'.format(err))
+def check_event_queue():
+    """
+    Poll the Event Queue.
+    
+    Call handle_event if there is an event of type updated.
+    Reset the scheduler to call this function again in 1 second.
+    """
+    event = event_queue.get()
+    logger.debug('Event is {}'.format(event))
+    if event and event.type == 'updated':
+        logger.debug('Event ID is {}'.format(event.id))
+        handle_event(event)
+    # Return to this function after one second
+    sch.enter(1, 1, check_event_queue)
 
 
 if __name__ == '__main__':
+    """Application entry point.
+
+    Logging, scheduling, database and database events
+    are all set up here.
+    DB event queue polling is done by check_event_queue()
+    which itself is called by sched.scheduler()
+    """
     logging.config.dictConfig(json.loads(logConfigAsJSON))
     logger = logging.getLogger(__name__)
+    sch = scheduler(time, sleep)
     try:
         logger.debug("starting")
-        main()
+        subscriber = 'Master_Controller_Service'
+        logger.debug('About to register with event queue')
+        event_queue = db.subscribe(subscriber)
+        active_subs = db.get_subscribers()
+        logger.debug('Subscribers: {}'.format(active_subs))
+        sch.enter(0, 1, check_event_queue)
+        sch.run()
     except KeyboardInterrupt as err:
         logger.debug('Keyboard Interrupt {}'.format(err))
         logger.info('Exiting!')
