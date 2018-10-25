@@ -12,7 +12,10 @@
 # brew install jq
 # (curl is a standard OSX utility?)
 
-URL=http://localhost:5000/state
+: ${DOCKER_HOST:=localhost}
+url2=${DOCKER_HOST%:*}:5000/state
+URL=http://${url2#*//}
+unset url2
 states=("OFF" "STANDBY" "ON" "DISABLE")
 
 do_put() {
@@ -21,7 +24,7 @@ do_put() {
     do
         printf "\n"
         result=$(curl -s -X PUT -H "Content-Type: application/json" \
-                -d $(jq -cn --arg state ${state} '{"state":$state}') $URL)
+                -d $(jq -cn --arg state ${state} '{"state":$state}') "${URL}")
         res=$(jq .message <<< "$result")
         if [[ ${res:+yes} == yes ]]
         then
@@ -35,7 +38,7 @@ do_put() {
 }
 
 do_get() {
-    json=$(curl -s http://localhost:5000/state)
+    json=$(curl -s "${URL}")
     state=$(jq .state <<< "$json")
     printf "\n"
     if [[ ${state//\"/} == UNKNOWN ]]

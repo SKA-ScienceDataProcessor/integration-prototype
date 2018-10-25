@@ -21,7 +21,10 @@ do
 done
 
 
-URL=http://localhost:5000/state
+: ${DOCKER_HOST:=localhost}
+url2=${DOCKER_HOST%:*}:5000/state
+URL=http://${url2#*//}
+unset url2
 
 
 result=$(curl -s -X PUT -H "Content-Type: application/json" \

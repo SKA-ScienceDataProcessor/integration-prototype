@@ -1,5 +1,5 @@
 # Utilities for the Master Interface Service
-
+## On a developer's computer
 One can access the Master Interface Service by pointing a web server 
 at http://localhost:5000/state and typing in a JSON string.
 But there are some disadvantages to this including:
@@ -50,7 +50,7 @@ With no options it assumes on.
 utility to format the JSON string; `mkstate1` uses the bash builtin printf
 instead.
 
-Two out of these require the utility `curl` which I believe is part 
+All but two of these require the utility `curl` which I believe is part 
 of the OSX toolkit. 
 For Linux systems it may be necessary to install with (for 
 example on Debian-based systems such as Ubuntu):
@@ -66,4 +66,41 @@ sudo apt install jq
 and OSX systems with
 ```
 brew install jq
+```
+## On the P-cubed or other Swarm-enabled computer
+On your own machine it is possible to use localhost to access the flask and
+Redis services.
+With P-cubed you need to use the IP address set up in the DOCKER_HOST 
+environment variable, which is set in the `env.sh` file, which can be found
+in the same directory as the PEM certificates required to run docker on the
+server.
+The content of the variable will look something 
+like `tcp://10.60.253.14:2375`.
+The author assumes the user already has something like this in 
+their profile to enable
+OpenStack and Docker on the P-cubed server:
+```bash
+[[ -f $HOME/p3-openrc.shV3 ]] && . $HOME/p3-openrc.shV3
+[[ -f $HOME/swarm-creds/env.sh ]] && . $HOME/swarm-creds/env.sh
+```
+Adding the following lines will strip out the prefix `tcp//` and suffix `:port`
+from the DOCKER_HOST variable and assign the IP address to the 
+REDIS_HOST environment variable (obvioulsy the profile will 
+need to be resourced to allow the change to come into effect):
+```bash
+REDIS_HOST=${DOCKER_HOST%:*}
+REDIS_HOST=${REDIS_HOST#*//}
+export REDIS_HOST
+```
+Similarly the scripts in this directory will use the DOCKER_HOST variable
+if it exists to create the URL required for the flask API.
+If it doesn't exist the localhost will be used instead.
+
+At the writing of this README the P-cubed server does not have the jq
+package installed; it will be necessary to download it from the 
+official website to use these utilities. 
+The following command will download it to the file `jq`, which can 
+then be moved into the user's path:
+```bash
+wget -O jq https://github.com/stedolan/jq/releases/download/jq-1.5/jq-linux64
 ```

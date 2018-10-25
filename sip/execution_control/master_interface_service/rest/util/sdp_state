@@ -2,7 +2,11 @@
 # Command line utility to access the flask interface for SDP State.
 # Uses curl and jq.
 
-URL=http://localhost:5000/state
+: ${DOCKER_HOST:=localhost}
+url2=${DOCKER_HOST%:*}:5000/state
+URL=http://${url2#*//}
+unset url2
+
 
 curl -s "$URL" | jq .
 

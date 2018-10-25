@@ -1,3 +1,4 @@
 #!/bin/sh
-# stop and destroy containers for mc_rest
+# stop and destroy containers for the master interface service (Rest Variant)
+
 docker-compose rm -s -f
