@@ -9,16 +9,16 @@ dbpath=../../configuration_db/redis
 # First copy files from configuration_db (temporary measure)
 
 package=config_db.zip
-# Create package file if necessary
-if [ ! -e ${dbpath}/${package} ]
-then
-    (cd ${dbpath}; zip -r ${package} setup.py ${package%.zip})
-    cp ${dbpath}/${package} ${mcpath}
-    cp ${dbpath}/${package} ${mipath}
-fi
-# copy package file if necessary
-[ -e ${mcpath}/${package} ] || cp ${dbpath}/${package} ${mcpath}
-[ -e ${mipath}/${package} ] || cp ${dbpath}/${package} ${mipath}
+#~ # Create package file if necessary
+#~ if [ ! -e ${dbpath}/${package} ]
+#~ then
+    #~ (cd ${dbpath}; zip -r ${package} setup.py ${package%.zip})
+    #~ cp ${dbpath}/${package} ${mcpath}
+    #~ cp ${dbpath}/${package} ${mipath}
+#~ fi
+#~ # copy package file if necessary
+#~ [ -e ${mcpath}/${package} ] || cp ${dbpath}/${package} ${mcpath}
+#~ [ -e ${mipath}/${package} ] || cp ${dbpath}/${package} ${mipath}
 
 # Build and run docker images
 # First the master interface service
@@ -33,5 +33,7 @@ docker build -t skasip/master_controller_service ${mcpath}
 docker stack deploy -c docker-compose.stack.yml master_controller_stack
 
 # Finally initialise the database:
+# Give it a chance to get ready
+sleep 2
 printf "Initialising database - you need the REDIS package in your python path\n"
 python3 ${dbpath}/config_db/utils/set_initial_data.py
