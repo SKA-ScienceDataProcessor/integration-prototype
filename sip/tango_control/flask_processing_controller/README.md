@@ -5,45 +5,58 @@
 
 ## Introduction
 
-This service provides an external interface to SDP for controlling the list of
-Scheduling Block Instances (and their associated Processing Blocks) registered
-with the SDP system, in particular the SDP scheduler. This interface
-provides this information in the form of a set of resources namely:
+This services provides a simple RESTful interface mocking SIP Tango
+Subarray, Scheduling Block Instance, and Processing Block Devices. 
 
-1. Scheduling Block Instance list
-2. Scheduling Block Instance details
-3. Processing Block list
-4. Processing Block details
-5. Sub-array list
-6. Sub-array details
+See SIP report (section 7.6), for more detailed description of this interface.
 
-This service is backed by the Configuration Database service which is used
-to store Scheduling Block Instance data structures, as well as to communicate
-between this service and the Processing Controller Scheduler Service via
-a simple event queue.
+## Quickstart
 
-Interaction with the Configuration Database Service is performed via a
-client API provided by the Configuration Database Service implementation.
+### Running during development
 
-Activities provided by these resources include:
+Start Redis Configuration backing service:
 
-1. Submitting a new Scheduling Block Instance to SDP
-2. Query list of Scheduling Block Instances known to SDP
-3. Query list of Scheduling Block Instances associated with a given sub-array
-4. Query details of a Scheduling Block
-5. Query list of Processing Blocks known to SDP
-6. Query list of Processing Blocks associated with a given sub-array
-7. Query details of a Processing Block
+```bash
+docker stack deploy -c docker-compose.dev.yml
+```
 
-Design notes for this service can be found in the
-[SIP Execution Control Confluence pages](https://confluence.ska-sdp.org/display/WBS/SIP%3A+%5BEC%5D+Processing+Controller+Interface+Service)
+Start the Flask App:
 
-## Known issues
+```bash
+virtualenv -p python3 venv
+source venv/bin/activate
+pip install -r requirements.txt
+export FLASK_APP=app/app.py
+export FLASK_DEBUG=True
+export SIP_PCI_LOG_LEVEL='DEBUG'
+flask run --host=0.0.0.0 --port=5000
+```
 
-- Mapping of the JSON RESTful API presented by this Flask app to the
-  baseline Tango Implementation.
-- Handling of the sub-array interface(s). This could be required to have a
-  time dimension currently completely ignored by this interface.
+### Build to the Docker image
+
+
+```bash
+docker build -t skasip/tc_pci_flask .
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 ## Quick-start
 

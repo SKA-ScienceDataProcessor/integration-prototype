@@ -1,19 +1,9 @@
-FROM python:3.6.4-alpine3.7
+FROM skasip/tc_flask_base:latest
 
-WORKDIR /pci
-
-COPY requirements.txt .
-RUN apk update && \
-    pip install --no-cache-dir -r requirements.txt && \
-    pip install --no-cache-dir gunicorn && \
-    apk add --no-cache curl && \
-    find /usr/local/lib/python3.6/ -name 'tests' -exec rm -r '{}' + && \
-    rm -r /root/.cache
-
-COPY app/api /pci/app/api
-COPY app/db /pci/app/db
-COPY app/app.py /pci/app/app.py
-COPY app/__init__.py /pci/app/__init__.py
+COPY app/api /sip/app/api
+COPY app/old.db /sip/app/db
+COPY app/app.py /sip/app/app.py
+COPY app/__init__.py /sip/app/__init__.py
 
 EXPOSE 5000
 
