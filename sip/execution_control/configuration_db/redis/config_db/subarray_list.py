@@ -35,7 +35,7 @@ class SubarrayList:
     _key_prefix = OBJECT_PREFIX
 
     def __init__(self):
-        """Initialise the subarray list"""
+        """Initialise the subarray list."""
         LOG.debug("Initialising subarray list.")
         for i in range(NUM_SUBARRAYS):
             Subarray(i)
@@ -74,7 +74,6 @@ class SubarrayList:
                 inactive.append(Subarray.get_id(i))
         return inactive
 
-
     @staticmethod
     def activate(subarray_id: Union[int, str]):
         """Activate the specified subarray.
@@ -92,5 +91,3 @@ class SubarrayList:
             subarray_id (str): string
         """
         Subarray(subarray_id).deactivate()
-
-

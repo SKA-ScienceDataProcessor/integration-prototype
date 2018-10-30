@@ -14,7 +14,7 @@ LOG = logging.getLogger('SIP.EC.CDB')
 
 
 class SchedulingBlockInstance(SchedulingDataObject):
-    """Scheduling Block Instance Configuration Database API"""
+    """Scheduling Block Instance Configuration Database API."""
 
     def __init__(self, sbi_id):
         """."""
@@ -23,13 +23,11 @@ class SchedulingBlockInstance(SchedulingDataObject):
         self._key = self.primary_key(self._id)
 
     def get_config(self):
-        """."""
+        """Return the SBI configuration."""
         return self.get_block_details(self._id)
 
     def abort(self):
-        """Abort the Scheduling Block Instance.
-
-        """
+        """Abort the Scheduling Block Instance."""
         LOG.debug('Deleting SBI %s', self._id)
         sbi_key = self.primary_key(self._id)
 
@@ -51,7 +49,8 @@ class SchedulingBlockInstance(SchedulingDataObject):
             pb.abort()
 
     @staticmethod
-    def get_id(date=None, project: str = 'sip', instance_id: int = None) -> str:
+    def get_id(date=None, project: str = 'sip',
+               instance_id: int = None) -> str:
         """Get a Scheduling Block Instance (SBI) ID.
 
         Args:

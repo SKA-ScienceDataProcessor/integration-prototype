@@ -15,7 +15,7 @@ DB = redis.StrictRedis(decode_responses=True)
 
 def add_workflow_definition(workflow_definition: dict,
                             templates_dir: str):
-    """Adds a workflow definition to the Configuration Database.
+    """Add a workflow definition to the Configuration Database.
 
     Args:
         workflow_definition (dict): Workflow definition.
@@ -47,10 +47,11 @@ def register_workflow_definition(workflow_id, workflow_version):
 
 
 def get_workflow_definitions():
-    """Get list of known workflow definitions
+    """Get list of known workflow definitions.
 
     Returns
         list[dict]
+
     """
     keys = DB.keys("workflow_definitions:*")
     known_workflows = dict()
@@ -62,9 +63,9 @@ def get_workflow_definitions():
     return known_workflows
 
 
-def delete_workflow_definitions(workflow_id: str=None,
-                                workflow_version: str=None):
-    """Delete workflow definitions
+def delete_workflow_definitions(workflow_id: str = None,
+                                workflow_version: str = None):
+    """Delete workflow definitions.
 
     Args:
         workflow_id (str, optional): Optional workflow identifier
@@ -72,6 +73,7 @@ def delete_workflow_definitions(workflow_id: str=None,
 
     If workflow_id and workflow_version are None, delete all workflow
     definitions.
+
     """
     if workflow_id is None and workflow_version is None:
         keys = DB.keys("workflow_definitions:*")
@@ -89,7 +91,7 @@ def delete_workflow_definitions(workflow_id: str=None,
 
 
 def get_workflow_definition(workflow_id: str, workflow_version: str) -> dict:
-    """Gets a workflow definition from the Configuration Database
+    """Get a workflow definition from the Configuration Database.
 
     Args:
         workflow_id (str): Workflow identifier
@@ -97,6 +99,7 @@ def get_workflow_definition(workflow_id: str, workflow_version: str) -> dict:
 
     Returns:
         dict, Workflow definition dictionary
+
     """
     name = "workflow_definitions:{}:{}".format(workflow_id, workflow_version)
     workflow = DB.hgetall(name)
@@ -105,7 +108,7 @@ def get_workflow_definition(workflow_id: str, workflow_version: str) -> dict:
 
 
 def _load_templates(workflow: dict, templates_dir: str):
-    """Load templates keys"""
+    """Load templates keys."""
     for i, stage_config in enumerate(workflow['stages']):
         for config_type in ['ee_config', 'app_config']:
             for key, value in stage_config[config_type].items():

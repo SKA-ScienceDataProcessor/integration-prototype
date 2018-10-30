@@ -13,11 +13,10 @@ DB = ConfigDb()
 
 
 class ProcessingBlock(SchedulingDataObject):
-    """Processing Block Configuration Database API"""
+    """Processing Block Configuration Database API."""
 
     def __init__(self, pb_id):
-        """
-        Construct a Configuration Database Processing Block Object
+        """Construct a Configuration Database Processing Block Object.
 
         Args:
             pb_id (str): Processing Block Identifier

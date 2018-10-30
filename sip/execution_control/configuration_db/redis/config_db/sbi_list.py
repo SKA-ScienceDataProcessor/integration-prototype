@@ -40,7 +40,7 @@ class SchedulingBlockInstanceList(SchedulingDataObject):
     # Add functions
     ###########################################################################
 
-    def add(self, sbi_config: dict, subarray_id: str=None):
+    def add(self, sbi_config: dict, subarray_id: str = None):
         """Add Scheduling Block Instance to the database.
 
         Expected to be used by configure() commands on the Tango Control
@@ -61,6 +61,7 @@ class SchedulingBlockInstanceList(SchedulingDataObject):
             ValidationError, if the supplied config_dict is invalid.
             RuntimeError, if a PB workflow definition (id, version) is not
             known.
+
         """
         LOG.debug('Adding SBI with config: %s', sbi_config)
 
@@ -120,37 +121,6 @@ class SchedulingBlockInstanceList(SchedulingDataObject):
 
         """
         return len(self.get_active())
-
-    # TODO (NJT) Need to work on this function
-    def get_sub_array_ids(self):
-        """Get list of sub array ids."""
-        # Initialise empty list
-        warnings.warn("Deprecated", DeprecationWarning)
-        _sub_array_ids = []
-
-        for blocks_id in self.get_active():
-            block_details = self.get_block_details(blocks_id)
-            _sub_array_ids.append(block_details['sub_array_id'])
-        _sub_array_ids = sorted(list(set(_sub_array_ids)))
-        return _sub_array_ids
-
-    # TODO (NJT) Need to work on this function
-    def get_sub_array_sbi_ids(self, sub_array_id):
-        """Get Scheduling Block Instance ID associated with sub array id.
-
-        Args:
-            sub_array_id (str):  Sub array ID.
-
-        """
-        # Initialise empty list
-        warnings.warn("Deprecated", DeprecationWarning)
-        _ids = []
-
-        for blocks_id in self.get_active():
-            details = self.get_block_details(blocks_id)
-            if details['sub_array_id'] == sub_array_id:
-                _ids.append(details['id'])
-        return _ids
 
     def get_pb_ids(self, sbi_id: str) -> List[str]:
         """Return the list of PB ids associated with the SBI.
@@ -221,7 +191,7 @@ class SchedulingBlockInstanceList(SchedulingDataObject):
         return schema
 
     @staticmethod
-    def _init_status(sbi_data: dict, initial_status: str= 'created'):
+    def _init_status(sbi_data: dict, initial_status: str = 'created'):
         """Add status fields to the SBI data object.
 
         Args:
@@ -229,12 +199,6 @@ class SchedulingBlockInstanceList(SchedulingDataObject):
             initial_status (str): Initial SBI status
         """
         sbi_data['status'] = initial_status
-        # FIXME(BM) PB status fields should be initialised when adding the PB using its API
-        # for pb in sbi_data['processing_blocks']:
-        #     pb['status'] = 'created'
-        #     pb['workflow']['status'] = 'none'
-        #     for workflow_stage in pb['workflow']['stages']:
-        #         workflow_stage['status'] = 'none'
 
     def _split_sbi(self, scheduling_block):
         """Split the scheduling block data into multiple names.
@@ -278,13 +242,14 @@ class SchedulingBlockInstanceList(SchedulingDataObject):
         return _scheduling_block_data, _processing_block_data
 
     def _add_pb(self, pb_config: dict):
-        """Add a Processing Block data object to the db
+        """Add a Processing Block data object to the db.
 
         Args:
             pb_config (dict): Processing block data
 
         Raises:
             RuntimeError, if the parent sbi_id is not set or doesnt exist
+
         """
         if 'sbi_id' not in pb_config:
             raise RuntimeError('Parent SBI missing from PB configuration!')
@@ -318,7 +283,8 @@ class SchedulingBlockInstanceList(SchedulingDataObject):
 
         # Add resources and dependencies to PB and workflow stages if not
         # defined
-        for key in ['resources_required', 'resources_assigned', 'dependencies']:
+        for key in ['resources_required', 'resources_assigned',
+                    'dependencies']:
             if key not in pb_config:
                 pb_config[key] = []
             for stage in pb_config['workflow_stages']:
@@ -339,7 +305,7 @@ class SchedulingBlockInstanceList(SchedulingDataObject):
 
     @staticmethod
     def _get_workflow_definition(pb_config):
-        """Adds the workflow definition to the PB
+        """Add a workflow definition to the PB.
 
         Args:
             pb_config (dict): List of PB data objects.
@@ -350,6 +316,7 @@ class SchedulingBlockInstanceList(SchedulingDataObject):
         Raises:
             RunTimeError, if the workflow definition (id, version)
             specified in the sbi_config is not known.
+
         """
         known_workflows = get_workflow_definitions()
         workflow_id = pb_config['workflow']['id']

@@ -16,7 +16,8 @@ schema = {
 # if no exception is raised by validate(), the instance is valid.
 validate({'name': "myname", "price": 34.99}, schema)
 
-FIXME(BM) remove subprocess calls --- import init function directly and call method!
+FIXME(BM) remove subprocess calls --- \
+          import init function directly and call method!
 """
 import os
 import subprocess

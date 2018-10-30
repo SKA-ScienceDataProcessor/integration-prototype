@@ -12,7 +12,7 @@ OBJECT_PREFIX = 'subarrays'
 
 
 class Subarray:
-    """Subarray API"""
+    """Subarray API."""
 
     def __init__(self, subarray_id):
         """Initialise the subarray object."""
@@ -32,6 +32,7 @@ class Subarray:
 
         Returns:
             dict, the subarray configuration
+
         """
         return DB.get_hash_dict(self.key)
 
@@ -51,6 +52,7 @@ class Subarray:
 
         Returns:
             list, list of SBI ids associated with this subarray.
+
         """
         return ast.literal_eval(DB.get_hash_value(self.key, 'sbi_ids'))
 
@@ -73,6 +75,7 @@ class Subarray:
 
         Returns:
             bool, True if the subarray is active, otherwise False
+
         """
         value = DB.get_hash_value(self.key, 'active')
         return True if value == 'true' else False
@@ -83,6 +86,7 @@ class Subarray:
 
         Returns:
             str, the subarray id for the specified index
+
         """
         return 'subarray_{:02d}'.format(index)
 
@@ -92,5 +96,6 @@ class Subarray:
 
         Returns:
             str, the subarray key
+
         """
         return '{}:{}'.format(OBJECT_PREFIX, Subarray.get_id(index))

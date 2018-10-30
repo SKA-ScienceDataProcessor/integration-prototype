@@ -23,4 +23,3 @@ def test_activate():
     active = subarray_list.get_active()
     assert len(active) == 1
     assert active[0] == Subarray.get_id(2)
-
