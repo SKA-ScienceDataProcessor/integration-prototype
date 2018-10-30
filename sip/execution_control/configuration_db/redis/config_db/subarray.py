@@ -1,7 +1,7 @@
 # coding=utf-8
 """High-level interface for subarray objects."""
-import logging
 import ast
+import logging
 
 from .config_db_redis import ConfigDb
 
@@ -20,7 +20,7 @@ class Subarray:
             self.id = self.get_id(subarray_id)
         else:
             self.id = subarray_id
-        LOG.debug("Initialising subarray {}.", self.id)
+        LOG.debug("Initialising subarray %s.", self.id)
         subarray_config = dict(id=self.id, active=False, parameters={},
                                sbi_ids=[])
         self.key = '{}:{}'.format(OBJECT_PREFIX, self.id)

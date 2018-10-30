@@ -3,12 +3,12 @@
 
 Intended for registering a new workflow type with the Configuration database.
 """
-import os
-import redis
-import jsonschema
-import json
-
 import ast
+import json
+import os
+
+import jsonschema
+import redis
 
 DB = redis.StrictRedis(decode_responses=True)
 

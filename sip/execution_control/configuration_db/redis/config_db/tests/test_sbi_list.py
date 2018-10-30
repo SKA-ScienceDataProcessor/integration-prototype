@@ -7,13 +7,11 @@ For instructions of how to run these tests see the README.md file in the
 TODO(BM)
     - Update sub-array interfaces to respect time
 """
-import datetime
-
-from ..sbi_list import SchedulingBlockInstanceList
 from ..pb_list import ProcessingBlockList
-from ..workflow_definitions import (register_workflow_definition,
-                                    add_workflow_definition)
+from ..sbi_list import SchedulingBlockInstanceList
 from ..utils.generate_sbi_configuration import (generate_sbi_config)
+from ..workflow_definitions import (add_workflow_definition,
+                                    register_workflow_definition)
 
 
 def test_create_sbi_list_object():

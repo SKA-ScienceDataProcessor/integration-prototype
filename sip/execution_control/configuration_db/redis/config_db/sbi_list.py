@@ -1,22 +1,20 @@
 # -*- coding: utf-8 -*-
 """High-level interface for Scheduling Block Instance (SBI) objects."""
-import logging
-import json
-import os
 import ast
-import warnings
 import datetime
+import json
+import logging
+import os
 from typing import List
 
 from jsonschema import validate
 
 from .config_db_redis import ConfigDb
 from .pb_list import ProcessingBlockList
-from .scheduling_data_object import (SchedulingDataObject, PB_TYPE_PREFIX,
-                                     SBI_TYPE_PREFIX)
+from .scheduling_data_object import (PB_TYPE_PREFIX, SBI_TYPE_PREFIX,
+                                     SchedulingDataObject)
 from .workflow_definitions import (get_workflow_definition,
                                    get_workflow_definitions)
-
 
 LOG = logging.getLogger('SIP.EC.CDB')
 DB = ConfigDb()
@@ -226,7 +224,6 @@ class SchedulingBlockInstanceList(SchedulingDataObject):
                 # Check if there is a processing block that already exists in
                 # the database
                 processing_block_id = self._pb_list.get_active()
-
                 for value in block_values:
                     if value['id'] not in processing_block_id:
                         _processing_block_data = block_values
@@ -323,8 +320,8 @@ class SchedulingBlockInstanceList(SchedulingDataObject):
         workflow_version = pb_config['workflow']['version']
         if workflow_id not in known_workflows or \
            workflow_version not in known_workflows[workflow_id]:
-            raise RuntimeError("Unknown workflow definition: {}:{}",
-                               workflow_id, workflow_version)
+            raise RuntimeError("Unknown workflow definition: {}:{}"
+                               .format(workflow_id, workflow_version))
         workflow_config = get_workflow_definition(workflow_id,
                                                   workflow_version)
         return workflow_config

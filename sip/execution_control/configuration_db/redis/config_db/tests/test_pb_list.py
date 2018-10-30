@@ -5,7 +5,6 @@ For instructions of how to run these tests see the README.md file in the
 `sip/configuration_db/redis` folder.
 """
 from random import choice
-import json
 
 from ..sbi_list import SchedulingBlockInstanceList
 from ..pb_list import ProcessingBlockList
@@ -81,7 +80,7 @@ def test_get_workflow_stages():
     # Add the SBI to the database.
     sbi_list.add(sbi_config)
 
-    pb_ids = sbi_list.get_pb_ids(sbi_config['id'])
+    _ = sbi_list.get_pb_ids(sbi_config['id'])
 
     # TODO Check workflow keys have been added to the PB from the workflow
     # definition.

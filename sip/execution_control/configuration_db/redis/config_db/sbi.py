@@ -38,8 +38,8 @@ class SchedulingBlockInstance(SchedulingDataObject):
 
         # lists in one atomic transaction (using pipelines)
         self.publish(self._id, 'aborted')
-        DB.remove_element('{}:active'.format(self.aggregate_type), 0, sbi_id)
-        DB.append_to_list('{}:aborted'.format(self.aggregate_type), sbi_id)
+        DB.remove_element('{}:active'.format(self.aggregate_type), 0, self._id)
+        DB.append_to_list('{}:aborted'.format(self.aggregate_type), self._id)
         # sbi_pb_ids = get_hash_value(block_id, 'processing_block_ids')
         sbi_pb_ids = ast.literal_eval(
             DB.get_hash_value(sbi_key, 'processing_block_ids'))

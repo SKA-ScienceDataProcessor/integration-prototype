@@ -16,6 +16,7 @@ def test_initialise():
 
 
 def test_activate():
+    """Test subarray activation."""
     DB.flush_db()
     subarray_list = SubarrayList()
     subarray_list.activate(2)
