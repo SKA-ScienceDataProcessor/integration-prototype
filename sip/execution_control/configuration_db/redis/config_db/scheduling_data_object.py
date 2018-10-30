@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""High Level Processing Controller Client API."""
+"""Base class for scheduling or processing block data objects."""
 import ast
 import logging
 from typing import List
@@ -9,9 +9,12 @@ from .event_keys import aggregate_events_data, aggregate_events_list
 
 LOG = logging.getLogger('SIP.EC.CDB')
 
+PB_TYPE_PREFIX = 'pb'
+SBI_TYPE_PREFIX = 'sbi'
 
-class ProcessingControllerDbClient:
-    """Base class for scheduling block instance and processing block API."""
+
+class SchedulingDataObject:
+    """Base class for SBI and PB data objects API."""
 
     def __init__(self, aggregate_type, db):
         """Initialise variables.
@@ -21,7 +24,9 @@ class ProcessingControllerDbClient:
             db: Configuration Database
 
         """
-        self._aggregate_type = aggregate_type
+        if aggregate_type not in [PB_TYPE_PREFIX, SBI_TYPE_PREFIX]:
+            raise RuntimeError('Invalid aggregate type')
+        self.aggregate_type = aggregate_type
         self._events = events
         self._db = db
 
@@ -39,7 +44,7 @@ class ProcessingControllerDbClient:
             events.EventQueue, Event queue object for querying PB events.
 
         """
-        return self._events.subscribe(self._aggregate_type, subscriber)
+        return self._events.subscribe(self.aggregate_type, subscriber)
 
     def get_subscribers(self):
         """Get the list of subscribers.
@@ -51,7 +56,7 @@ class ProcessingControllerDbClient:
             List[str], list of subscriber names.
 
         """
-        return self._events.get_subscribers(self._aggregate_type)
+        return self._events.get_subscribers(self.aggregate_type)
 
     def publish(self, block_id: str, event_type: str, event_data: dict = None):
         """Publish a Scheduling Block Instance or Processing Block event.
@@ -62,7 +67,7 @@ class ProcessingControllerDbClient:
             event_data (dict, optional): Event data.
 
         """
-        self._events.publish(self._aggregate_type, block_id, event_type,
+        self._events.publish(self.aggregate_type, block_id, event_type,
                              event_data)
 
     # #########################################################################
@@ -79,7 +84,7 @@ class ProcessingControllerDbClient:
             str, status of sbi or pb.
 
         """
-        key = self.get_key(block_id)
+        key = self.primary_key(block_id)
 
         # Check that the key exists
         if not self._db.get_keys(key):
@@ -104,7 +109,7 @@ class ProcessingControllerDbClient:
             processing block event data.
 
         """
-        return aggregate_events_list(self.get_key(block_id))
+        return aggregate_events_list(self.primary_key(block_id))
 
     def get_event_data_key(self, block_id: str) -> str:
         """Get event data db key.
@@ -120,7 +125,7 @@ class ProcessingControllerDbClient:
             processing block event data.
 
         """
-        return aggregate_events_data(self.get_key(block_id))
+        return aggregate_events_data(self.primary_key(block_id))
 
     def get_events(self, block_id: str) -> List[events.Event]:
         """Get event data.
@@ -139,11 +144,11 @@ class ProcessingControllerDbClient:
         event_list = []
         for event_id, data in self._db.get_hash_dict(event_data_key).items():
             data = ast.literal_eval(data)
-            event_list.append(events.Event(event_id, self._aggregate_type, '',
+            event_list.append(events.Event(event_id, self.aggregate_type, '',
                                            data))
         return event_list
 
-    def get_key(self, block_id: str) -> str:
+    def primary_key(self, block_id: str) -> str:
         """Return a Scheduling Block Instance or Processing Block db key.
 
         Args:
@@ -153,7 +158,7 @@ class ProcessingControllerDbClient:
             str, db key for the specified SBI or PB
 
         """
-        return '{}:{}'.format(self._aggregate_type, block_id)
+        return '{}:{}'.format(self.aggregate_type, block_id)
 
     def get_block_details(self, block_ids: list):
         """Get the details of a Scheduling Block Instance or Processing block.
@@ -173,7 +178,7 @@ class ProcessingControllerDbClient:
             block_ids = [block_ids]
 
         for _id in block_ids:
-            sbi_key = self.get_key(_id)
+            sbi_key = self.primary_key(_id)
 
             # Check that the key exists
             if not self._db.get_keys(sbi_key):
@@ -202,19 +207,19 @@ class ProcessingControllerDbClient:
             list, Scheduling block instance or processing block ids
 
         """
-        return self._db.get_list('{}:active'.format(self._aggregate_type))
+        return self._db.get_list('{}:active'.format(self.aggregate_type))
 
-    def get_cancelled(self):
-        """Get list of cancelled blocks.
+    def get_aborted(self):
+        """Get list of aborted blocks.
 
-        Get the list of cancelled scheduling block instance or processing
+        Get the list of aborted scheduling block instance or processing
         block from the database.
 
         Returns:
             list, Scheduling block instance or processing block ids
 
         """
-        return self._db.get_list('{}:cancelled'.format(self._aggregate_type))
+        return self._db.get_list('{}:aborted'.format(self.aggregate_type))
 
     def get_completed(self):
         """Get list of completed blocks.
@@ -226,7 +231,7 @@ class ProcessingControllerDbClient:
             list, Scheduling block instance or processing block ids
 
         """
-        return self._db.get_list('{}:completed'.format(self._aggregate_type))
+        return self._db.get_list('{}:completed'.format(self.aggregate_type))
 
     # #########################################################################
     # Update functions
@@ -241,7 +246,7 @@ class ProcessingControllerDbClient:
             value(str): New value
 
         """
-        self._db.set_hash_value(self.get_key(block_id), field, value)
+        self._db.set_hash_value(self.primary_key(block_id), field, value)
 
     # #########################################################################
     # Utility functions

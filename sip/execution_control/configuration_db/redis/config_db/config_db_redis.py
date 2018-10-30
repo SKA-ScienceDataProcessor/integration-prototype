@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""Low Level Configuration Service Client API."""
+"""Low-level Configuration Database API using Redis."""
 from __future__ import unicode_literals
 import os
 import logging

@@ -1,5 +1,11 @@
 # -*- coding: utf-8 -*-
-"""High Level Master Controller Client API."""
+"""High Level Master Controller Client API.
+
+FIXME(BM): should have the following public methods
+    * set_target_state
+    * get_target_state
+    * get_current_state
+"""
 import logging
 
 from datetime import datetime
@@ -13,7 +19,7 @@ SDP_AGGREGATE_TYPE = 'sdp_components'
 MC_KEY = 'master_controller'
 
 
-class MasterDbClient:
+class SDPStates:
     """Master Controller Client Interface."""
 
     def __init__(self):

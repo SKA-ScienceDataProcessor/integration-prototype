@@ -19,7 +19,7 @@ A higher level events API is also provided in the modules `pb_events.py` and
 from typing import List, Callable
 import ast
 
-from config_db import ConfigDb
+from .config_db_redis import ConfigDb
 from . import event_keys as keys
 
 DB = ConfigDb()

@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
-"""Set initial data to the configuration database."""
-
+"""Utility module to set initial data into the Configuration Database."""
 import os
 
 import redis
@@ -75,8 +74,8 @@ class ConfigInit:
 def main():
     """Add initial data to the database."""
     print("Adding Initial Data")
-    config_file_path = os.path.join(os.path.dirname(__file__),
-                                    'initial_data.json')
+    config_file_path = os.path.join(os.path.dirname(__file__), 'data',
+                                    'initial_states.json')
     with open(config_file_path, 'r') as file:
         schema_data = file.read()
     init_data = json.loads(schema_data)

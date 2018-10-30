@@ -1,0 +1,17 @@
+{
+  "id": "vis_ingest_test",
+  "version": "1.0.0",
+  "stages": [
+    {
+      "id": "mock_setup",
+      "version": "1.0.0",
+      "type": "setup",
+      "dependencies": [],
+      "resources_required": [{
+        "id": "node:p3:compute_a",
+        "value": "1",
+        "parameters": { "exclusive": true }
+      }]
+    }
+  ]
+}
