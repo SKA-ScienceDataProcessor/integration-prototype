@@ -23,7 +23,7 @@ def unregister_service(subsystem: str, name: str, version: str):
 
     """
     service_descriptor = dict(subsystem=subsystem, name=name, version=version)
-    DB._db.lrem('services', 0, service_descriptor)
+    DB.remove_from_list('services', service_descriptor)
 
 
 def get_num_services(subsystem: str = None) -> int:

@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
 """Low-level Configuration Database API using Redis."""
-import ast
 import os
 import logging
 
@@ -155,6 +154,23 @@ class ConfigDb:
             self._pipeline.rpush(key, *value)
         else:
             self._db.rpush(key, *value)
+
+    @check_connection
+    def remove_from_list(self, key: str, value, count: int = 0,
+                         pipeline: bool = False):
+        """Remove specified value(s) from the list stored at key.
+
+        Args:
+            key (str): Key where the list is stored.
+            value: value to remove
+            count (int): Number of entries to remove, default 0 == all
+            pipeline(bool): If True, start a transaction block. Default False.
+
+        """
+        if pipeline:
+            self._pipeline.lrem(key, count, value)
+        else:
+            self._db.lrem(key, count, value)
 
     @check_connection
     def get_list_value(self, key, index):

@@ -93,7 +93,7 @@ class SchedulingDataObject:
         last_event = self._db.get_hash_value(self.get_event_data_key(
             block_id), self._db.get_list_value(key, -1))
         last_event = ast.literal_eval(last_event)
-        return last_event['type']
+        return last_event['event_type']
 
     def get_event_list_key(self, block_id: str) -> str:
         """Get event list db key.
@@ -140,13 +140,15 @@ class SchedulingDataObject:
             list of event data dictionaries
 
         """
-        event_data_key = self.get_event_data_key(block_id)
-        event_list = []
-        for event_id, data in self._db.get_hash_dict(event_data_key).items():
-            data = ast.literal_eval(data)
-            event_list.append(events.Event(event_id, self.aggregate_type, '',
-                                           data))
-        return event_list
+        events_list = []
+        event_ids = self._db.get_list(self.get_event_list_key(block_id))
+        for event_id in event_ids:
+            data = ast.literal_eval(
+                self._db.get_hash_value(self.get_event_data_key(block_id),
+                                        event_id))
+            events_list.append(events.Event(event_id, self.aggregate_type, '',
+                                            data))
+        return events_list
 
     def primary_key(self, block_id: str) -> str:
         """Return a Scheduling Block Instance or Processing Block db key.

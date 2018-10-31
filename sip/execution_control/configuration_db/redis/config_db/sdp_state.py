@@ -1,11 +1,5 @@
 # -*- coding: utf-8 -*-
-"""High-level SDP state API.
-
-FIXME(BM): should have the following public methods
-    * set_target_state
-    * get_target_state
-    * get_current_state
-"""
+"""High-level SDP state API."""
 import logging
 
 from datetime import datetime
@@ -14,9 +8,9 @@ from .config_db_redis import ConfigDb
 from . import events
 
 LOG = logging.getLogger('SIP.EC.CDB')
-MC_AGGREGATE_TYPE = 'execution_control'
-SDP_AGGREGATE_TYPE = 'sdp_components'
-MC_KEY = 'master_controller'
+AGGREGATE_TYPE = 'states'
+AGGREGATE_ID = 'sdp_state'
+OBJECT_KEY = '{}:{}'.format(AGGREGATE_TYPE, AGGREGATE_ID)
 
 
 class SDPState:
@@ -26,41 +20,36 @@ class SDPState:
         """Initialise the client."""
         self._db = ConfigDb()
         self._events = events
-        # TODO(BM) initialise states if not previously set
-        _key = 'state:sdp'
 
-        utc_now = datetime.utcnow()
-        _initial_state = dict(
-            current_state='none',
-            target_state='none',
-            current_timestamp=utc_now.isoformat(),
-            target_timestamp=utc_now.isoformat())
+        _key = OBJECT_KEY
+        if not self._db.key_exists(_key):
+            self._db.set_hash_values(_key, self._initial_state_config())
 
-        self._db.set_hash_values(_key, _initial_state)
-
-        # TODO load this from a file...?! or allow services to be registered?
-        service_list = [
-            'ExecutionControl:MasterController:test',
-            'ExecutionControl:ProcessingController:test',
-            'ExecutionControl:Alerts:test',
-            'TangoControl:SDPMaster:test',
-            'TangoControl:ProcessingInterface:test',
-            'TangoControl:Logger:test',
-            'TangoControl:Alarms:test',
-            'Platform:DockerSwarm:test',
-            'Platform:Logger:test',
-            'Platform:Metrics:test'
-        ]
-        for service in service_list:
-            _key = 'state:{}'.format(service)
-            self._db.set_hash_values(_key, _initial_state)
+        # # FIXME(BM) this should not be hardcoded and perhaps moved to the \
+        # # service_state class?
+        # service_list = [
+        #     'ExecutionControl:MasterController:test',
+        #     'ExecutionControl:ProcessingController:test',
+        #     'ExecutionControl:Alerts:test',
+        #     'TangoControl:SDPMaster:test',
+        #     'TangoControl:ProcessingInterface:test',
+        #     'TangoControl:Logger:test',
+        #     'TangoControl:Alarms:test',
+        #     'Platform:DockerSwarm:test',
+        #     'Platform:Logger:test',
+        #     'Platform:Metrics:test'
+        # ]
+        # for service in service_list:
+        #     _key = 'states:service_state:{}'.format(service)
+        #     if not self._db.key_exists(_key):
+        #         self._db.set_hash_values(_key, self._initial_state_config())
 
     ###########################################################################
-    # PubSub functions
+    # Pub/Sub functions
     ###########################################################################
 
     def subscribe(self, subscriber: str) -> events.EventQueue:
-        """Subscribe to Master Controller events.
+        """Subscribe to SDP state events.
 
         Args:
             subscriber (str): Subscriber name.
@@ -69,20 +58,19 @@ class SDPState:
             events.EventQueue, Event queue object for querying PB events.
 
         """
-        return self._events.subscribe(MC_AGGREGATE_TYPE, subscriber)
+        return self._events.subscribe(AGGREGATE_TYPE, subscriber)
 
     def get_subscribers(self):
-        """Get the list of subscribers to Master Controller events.
+        """Get the list of subscribers to SDP state events.
 
         Returns:
             List[str], list of subscriber names.
 
         """
-        return self._events.get_subscribers(MC_AGGREGATE_TYPE)
+        return self._events.get_subscribers(AGGREGATE_TYPE)
 
-    def publish(self, key: str, event_type: str,
-                event_data: dict = None):
-        """Publish a Master Controller event.
+    def publish(self, event_type: str, event_data: dict = None):
+        """Publish an SDP state event.
 
         Args:
             key (str): Master controller or sdp components.
@@ -90,151 +78,106 @@ class SDPState:
             event_data (dict, optional): Event data.
 
         """
-        self._events.publish(MC_AGGREGATE_TYPE, key, event_type,
-                             event_data)
+        self._events.publish(AGGREGATE_TYPE, AGGREGATE_ID,
+                             event_type, event_data)
 
     ###########################################################################
     # Get functions
     ###########################################################################
 
-    def get_value(self, key: str, field: str):
-        """Get value associated to the field in string.
+    def get_current_state(self) -> str:
+        """Get the current SDP state."""
+        state = self._db.get_hash_value(OBJECT_KEY, 'current_state')
+        return state
 
-        Args:
-              key (str) : Master controller or sdp components.
-              field (str): Field
-        Returns:
-            str, value of a specified key and field
+    def get_target_state(self) -> str:
+        """Get the target SDP state."""
+        state = self._db.get_hash_value(OBJECT_KEY, 'target_state')
+        return state
 
-        """
-        aggregate_type = self._get_aggregate_type(key)
-        value = self._db.get_hash_value(self._get_key(key, aggregate_type),
-                                        field)
-        if value:
-            return value
-        return None
+    def get_current_state_timestamp(self) -> datetime:
+        """Get the current state timestamp."""
+        timestamp = self._db.get_hash_value(OBJECT_KEY, 'current_timestamp')
+        return datetime.fromisoformat(timestamp)
 
-    def get_active(self):
-        """Get the list of active master controller from the database.
-
-        Returns:
-            list, list of active master controller
-
-        """
-        return self._db.get_list('{}:active'.format(MC_AGGREGATE_TYPE))
-
-    def get_completed(self):
-        """Get the list of completed master controller from the database.
-
-        Returns:
-            list, list of completed master controller
-
-        """
-        return self._db.get_list('{}:completed'.format(MC_AGGREGATE_TYPE))
+    def get_target_state_timestamp(self) -> datetime:
+        """Get the target state timestamp."""
+        timestamp = self._db.get_hash_value(OBJECT_KEY, 'target_timestamp')
+        return datetime.fromisoformat(timestamp)
 
     ###########################################################################
     # Update functions
     ###########################################################################
 
-    def set_target_state(self, state_field, value):
-        """Set the target state
+    def update_target_state(self, value: str) -> datetime:
+        """Set the target SDP state.
+
+        TODO(BM) check value is an allowed state.
 
         Args:
-            state_field (str): state_field that will be updated
             value (str): New value for target state
 
+        Returns:
+            datetime, update timestamp
+
         """
-        aggregate_type = self._get_aggregate_type(MC_KEY)
-        mc_key = self._get_key(MC_KEY, aggregate_type)
-
-        # Setting UTC time
-        current_time = datetime.utcnow().strftime('%Y/%m/%d %H:%M:%S.%f')
-        self._db.set_hash_value(mc_key, state_field, value, pipeline=True)
-        self._db.set_hash_value(mc_key, "Target_timestamp", current_time,
+        timestamp = datetime.utcnow()
+        self._db.set_hash_value(OBJECT_KEY, 'target_state', value,
                                 pipeline=True)
+        self._db.set_hash_value(OBJECT_KEY, 'target_timestamp',
+                                timestamp.isoformat(), pipeline=True)
         self._db.execute()
-        target_list_key = '{}:active'.format(aggregate_type)
-        self._db.append_to_list(target_list_key, MC_KEY)
 
-        # Publish an event to notify subscribers of the change in target state
-        self.publish(MC_KEY, 'updated')
+        # Publish an event to notify subscribers of the change in state
+        self.publish('target_state_updated')
 
-    def update_sdp_state(self, state_field, value):
-        """Update the SDP state.
+        return timestamp
+
+    def update_current_state(self, value: str) -> datetime:
+        """Update the current SDP state.
+
+        TODO(BM) check value is an allowed state.
 
         Args:
-            state_field (str): State field that will be updated
             value (str): New value for sdp state
 
+        Returns:
+            datetime, update timestamp
+
         """
-        # TODO(NJT) move this hardcoded key and field to a function?
-        aggregate_type = self._get_aggregate_type(MC_KEY)
-        mc_key = self._get_key(MC_KEY, aggregate_type)
-        LOG.debug('State Update is Completed %s', mc_key)
-
-        # Check that the key exists!
-        if not self._db.get_keys(mc_key):
-            raise KeyError('Master Controller key is not found: {}'
-                           .format(mc_key))
-
-        current_time = datetime.utcnow().strftime('%Y/%m/%d %H:%M:%S.%f')
-        self.publish(MC_KEY, 'completed')
-        self._db.set_hash_value(mc_key, state_field, value, pipeline=True)
-        self._db.set_hash_value(mc_key, "State_timestamp", current_time,
+        timestamp = datetime.utcnow()
+        self._db.set_hash_value(OBJECT_KEY, 'current_state', value,
                                 pipeline=True)
-        self._db.remove_element('{}:active'.format(aggregate_type), 0,
-                                MC_KEY, pipeline=True)
-        self._db.append_to_list('{}:completed'.format(aggregate_type),
-                                MC_KEY, pipeline=True)
+        self._db.set_hash_value(OBJECT_KEY, 'current_timestamp',
+                                timestamp.isoformat(), pipeline=True)
         self._db.execute()
 
-    def set_service_state(self, key, field, value):
-        """Update the state of the given key and field.
+        # Publish an event to notify subscribers of the change in state
+        self.publish('current_state_updated')
 
-        Args:
-            key (str): Master controller or sdp components
-            field (str): Field of the value that will be updated
-            value (str): New value for the given state
-
-        """
-        aggregate_type = self._get_aggregate_type(key)
-        component_key = self._get_key(key, aggregate_type)
-        self._db.set_hash_value(component_key, field, value)
+        return timestamp
 
     ###########################################################################
     # Private functions
     ###########################################################################
 
     @staticmethod
-    def _get_key(key_type: str, aggregate_type: str) -> str:
-        """Return a master controller db key.
+    def _initial_state_config() -> dict:
+        """Return a dictionary used to initialise a state object.
 
-        Args:
-            key_type (str): Master controller or sdp components
-            aggregate_type (str): Aggregate type
-
-        Returns:
-            str, db key for the specified type.
-
-        """
-        return '{}:{}'.format(aggregate_type, key_type)
-
-    @staticmethod
-    def _get_aggregate_type(key: str) -> str:
-        """Get the correct aggregate type.
-
-        Args:
-            key (str): Master controller or sdp components
+        This method is used to obtain a dictionary/hash describing the initial
+        state of SDP or a service in SDP.
 
         Returns:
-            str, aggregate type for the specified key
+            dict, Initial state configuration
 
         """
-        if key == 'master_controller':
-            aggregate_type = MC_AGGREGATE_TYPE
-        else:
-            aggregate_type = SDP_AGGREGATE_TYPE
-        return aggregate_type
+        _initial_state = dict(
+            current_state='UNKNOWN',
+            target_state='UNKNOWN',
+            current_timestamp=datetime.utcnow().isoformat(),
+            target_timestamp=datetime.utcnow().isoformat())
+        return _initial_state
 
     # #########################################################################
     # Utility functions
@@ -245,5 +188,7 @@ class SDPState:
 
         Note:
             Use with care!
+
+        FIXME(BM) this should only clear the SDP state keys
         """
         self._db.flush_db()

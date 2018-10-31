@@ -42,7 +42,7 @@ def test_add_sbi():
     assert len(sbi_data['processing_block_ids']) == num_pbs
     events = sbi_event_queue.get_published_events()
     assert len(events) == 1
-    assert events[0].data['type'] == 'created'
+    assert events[0].type == 'created'
     status = sbi_list.get_status(sbi_data['id'])
     assert status == 'created'
 
@@ -78,7 +78,7 @@ def test_abort_sbi():
     sbi_id = sbi_list.get_active()[0]
     sbi_list.abort(sbi_id)
 
-    # Check that the SBI has been canceled.
+    # Check that the SBI has been aborted.
     events = sbi_events.get_published_events()
     assert events[-1].type == 'aborted'
     status = sbi_list.get_status(sbi_id)
@@ -87,7 +87,7 @@ def test_abort_sbi():
     assert len(aborted_list) == 1
     assert aborted_list[0] == sbi_id
 
-    # Check that the PBs associated with the SBI have also been canceled
+    # Check that the PBs associated with the SBI have also been aborted
     events = pb_events.get_published_events()
     for i in range(num_pbs):
         assert events[-1 - i].type == 'aborted'

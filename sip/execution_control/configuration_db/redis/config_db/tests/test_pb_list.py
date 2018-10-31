@@ -27,10 +27,11 @@ def test_pb_events():
     event_queue = pb_list.subscribe(subscriber)
     event_count = 4
 
-    pb_id = '{:03d}'.format(0)
+    pb_id = 'PB-{:03d}'.format(0)
     pb_list.publish(pb_id, 'created')
+    event_types = ['created', 'cancelled', 'queued', 'scheduled']
     for _ in range(event_count):
-        event_type = choice(['cancelled', 'queued', 'scheduled'])
+        event_type = choice(event_types)
         pb_list.publish(pb_id, event_type)
 
     # Note: When calling get() the oldest event is obtained first.
@@ -39,7 +40,9 @@ def test_pb_events():
         event = event_queue.get()
         if event:
             assert event.id == 'pb_event_{:08d}'.format(len(events))
-            assert event.data['pb_id'] == '000'
+            assert event.object_id == pb_id
+            assert event.object_type == 'pb'
+            assert event.type in event_types
             events.append(event)
 
 

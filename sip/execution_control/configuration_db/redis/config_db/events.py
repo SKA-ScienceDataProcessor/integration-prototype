@@ -18,6 +18,7 @@ A higher level events API is also provided in the modules `pb_events.py` and
 """
 from typing import List, Callable
 import ast
+import datetime
 
 from .config_db_redis import ConfigDb
 from . import event_keys as keys
@@ -58,12 +59,22 @@ class Event:
     @property
     def type(self):
         """Return the type of event."""
-        return self._data['type']
+        return self._data['event_type']
 
     @property
     def data(self):
         """Return the event data."""
-        return self._data
+        return self._data['event_data']
+
+    @property
+    def object_type(self):
+        """Return the aggregate/object type associated with the event."""
+        return self._data['object_type']
+
+    @property
+    def object_id(self):
+        """Return the aggregate/object id associated with the event."""
+        return self._data['object_id']
 
     def complete(self):
         """Retire event from the active to history.
@@ -244,20 +255,22 @@ def publish(aggregate_type: str, aggregate_id: str, event_type: str,
     event_id = _get_event_id(aggregate_type)
 
     # Add the aggregate 'id' and 'type' if not already in the event data.
-    if event_data is None:
-        event_data = dict()
-    aggregate_id_key = '{}_id'.format(aggregate_type)
-    if aggregate_id_key not in event_data:
-        event_data[aggregate_id_key] = aggregate_id
-    if 'type' not in event_data:
-        event_data['type'] = event_type
+    event_dict = dict(timestamp=datetime.datetime.utcnow().isoformat())
+    if 'object_type' not in event_dict:
+        event_dict['object_type'] = aggregate_type
+    if 'object_id' not in event_dict:
+        event_dict['object_id'] = aggregate_id
+    if 'event_type' not in event_dict:
+        event_dict['event_type'] = event_type
+    if event_data is not None:
+        event_dict['event_data'] = event_data
 
     # Publish the event to subscribers
-    _publish_to_subscribers(aggregate_type, event_id, event_data)
+    _publish_to_subscribers(aggregate_type, event_id, event_dict)
 
     # Update the aggregate event list and data.
     aggregate_key = '{}:{}'.format(aggregate_type, aggregate_id)
-    _update_aggregate(aggregate_key, event_id, event_data)
+    _update_aggregate(aggregate_key, event_id, event_dict)
 
     # Execute the set of db transactions as an atomic transaction.
     DB.execute()
