@@ -26,6 +26,9 @@ test_reports.xml
 # Setuptools distribution folder.
 /dist/
 
+# Code coverage
+**/.coverage
+
 # Python egg metadata, regenerated from source files by setuptools.
 **/*.egg-info
 **/*.rdb
