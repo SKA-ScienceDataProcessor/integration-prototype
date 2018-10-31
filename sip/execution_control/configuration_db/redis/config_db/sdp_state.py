@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""High Level Master Controller Client API.
+"""High-level SDP state API.
 
 FIXME(BM): should have the following public methods
     * set_target_state
@@ -19,13 +19,41 @@ SDP_AGGREGATE_TYPE = 'sdp_components'
 MC_KEY = 'master_controller'
 
 
-class SDPStates:
-    """Master Controller Client Interface."""
+class SDPState:
+    """SDP state data object."""
 
     def __init__(self):
         """Initialise the client."""
         self._db = ConfigDb()
         self._events = events
+        # TODO(BM) initialise states if not previously set
+        _key = 'state:sdp'
+
+        utc_now = datetime.utcnow()
+        _initial_state = dict(
+            current_state='none',
+            target_state='none',
+            current_timestamp=utc_now.isoformat(),
+            target_timestamp=utc_now.isoformat())
+
+        self._db.set_hash_values(_key, _initial_state)
+
+        # TODO load this from a file...?! or allow services to be registered?
+        service_list = [
+            'ExecutionControl:MasterController:test',
+            'ExecutionControl:ProcessingController:test',
+            'ExecutionControl:Alerts:test',
+            'TangoControl:SDPMaster:test',
+            'TangoControl:ProcessingInterface:test',
+            'TangoControl:Logger:test',
+            'TangoControl:Alarms:test',
+            'Platform:DockerSwarm:test',
+            'Platform:Logger:test',
+            'Platform:Metrics:test'
+        ]
+        for service in service_list:
+            _key = 'state:{}'.format(service)
+            self._db.set_hash_values(_key, _initial_state)
 
     ###########################################################################
     # PubSub functions
@@ -108,8 +136,8 @@ class SDPStates:
     # Update functions
     ###########################################################################
 
-    def update_target_state(self, state_field, value):
-        """Update the target state.
+    def set_target_state(self, state_field, value):
+        """Set the target state
 
         Args:
             state_field (str): state_field that will be updated
@@ -160,7 +188,7 @@ class SDPStates:
                                 MC_KEY, pipeline=True)
         self._db.execute()
 
-    def update_component_state(self, key, field, value):
+    def set_service_state(self, key, field, value):
         """Update the state of the given key and field.
 
         Args:

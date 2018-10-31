@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """Low-level Configuration Database API using Redis."""
-from __future__ import unicode_literals
+import ast
 import os
 import logging
 
