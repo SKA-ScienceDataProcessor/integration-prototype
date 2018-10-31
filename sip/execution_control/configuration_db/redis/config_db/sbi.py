@@ -60,7 +60,7 @@ class SchedulingBlockInstance(SchedulingDataObject):
             pb.abort()
 
     def clear_subarray(self):
-        """Clear the subarray associated with the SBI"""
+        """Clear the subarray associated with the SBI."""
         LOG.debug('Clearing SBI subarray')
         self.update_value(self._id, 'subarray_id', 'none')
 

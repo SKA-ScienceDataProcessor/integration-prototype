@@ -60,13 +60,13 @@ class SubarrayList:
         active = []
         for i in range(NUM_SUBARRAYS):
             key = Subarray.get_key(i)
-            if DB.get_hash_value(key, 'active') == 'true':
+            if DB.get_hash_value(key, 'active').upper() == 'TRUE':
                 active.append(Subarray.get_id(i))
         return active
 
     @staticmethod
     def is_active(subarray_id: Union[int, str]):
-        """Return true if the specified subarray is active"""
+        """Return true if the specified subarray is active."""
         return Subarray(subarray_id).is_active()
 
     @staticmethod
@@ -75,7 +75,7 @@ class SubarrayList:
         inactive = []
         for i in range(NUM_SUBARRAYS):
             key = Subarray.get_key(i)
-            if DB.get_hash_value(key, 'active') == 'false':
+            if DB.get_hash_value(key, 'active').upper() == 'FALSE':
                 inactive.append(Subarray.get_id(i))
         return inactive
 
