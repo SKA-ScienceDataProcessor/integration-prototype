@@ -111,20 +111,10 @@ def generate_sbi_config(num_pbs: int = 3, project: str = 'sip',
         pb_id = pb.get_id(utc_now)
         pb_config = generate_pb_config(pb_id)
         pb_list.append(pb_config)
-    # print(json.dumps(pb_list, indent=2))
-
     sbi_config = dict(
         id=sbi.get_id(utc_now, project),
         version=SBI_VERSION,
         scheduling_block=generate_sb(utc_now, project, programme_block),
         processing_blocks=pb_list
     )
-    # print('=' * 80)
-    # print('=' * 80)
-    # print('=' * 80)
-    # print(json.dumps(sbi_config, indent=2))
-    # print('=' * 80)
-    # print('=' * 80)
-    # print('=' * 80)
-
     return sbi_config

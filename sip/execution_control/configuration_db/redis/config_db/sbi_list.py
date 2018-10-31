@@ -5,7 +5,7 @@ import datetime
 import json
 import logging
 import os
-from typing import List
+from typing import List, Union
 
 from jsonschema import validate
 
@@ -15,6 +15,7 @@ from .scheduling_data_object import (PB_TYPE_PREFIX, SBI_TYPE_PREFIX,
                                      SchedulingDataObject)
 from .workflow_definitions import (get_workflow_definition,
                                    get_workflow_definitions)
+from .subarray import Subarray
 
 LOG = logging.getLogger('SIP.EC.CDB')
 DB = ConfigDb()
@@ -38,7 +39,7 @@ class SchedulingBlockInstanceList(SchedulingDataObject):
     # Add functions
     ###########################################################################
 
-    def add(self, sbi_config: dict, subarray_id: str = None):
+    def add(self, sbi_config: dict, subarray_id: Union[str, int] = None):
         """Add Scheduling Block Instance to the database.
 
         Expected to be used by configure() commands on the Tango Control
@@ -53,7 +54,7 @@ class SchedulingBlockInstanceList(SchedulingDataObject):
 
         Args:
             sbi_config (dict): SBI configuration dictionary.
-            subarray_id (str, optional): SBI subarray ID
+            subarray_id (str or int, optional): SBI subarray Id or index
 
         Raises:
             ValidationError, if the supplied config_dict is invalid.
@@ -77,7 +78,10 @@ class SchedulingBlockInstanceList(SchedulingDataObject):
         # Add the subarray id to the SBI object
         if subarray_id is not None:
             # TODO(BM) Validate subarray id
+            if isinstance(subarray_id, int):
+                subarray_id = Subarray.get_id(subarray_id)
             sbi_data['subarray_id'] = subarray_id
+            Subarray(subarray_id).add_sbi_id(sbi_data['id'])
         else:
             sbi_data['subarray_id'] = 'none'
 

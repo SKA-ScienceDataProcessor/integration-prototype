@@ -90,7 +90,7 @@ class ConfigDb:
         Args:
             key (str): key (name) of the hash
             field (str): Field within the hash to set
-            value (str): Value to set
+            value: Value to set
             pipeline (bool): True, start a transaction block. Default false.
 
         """

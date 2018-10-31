@@ -4,11 +4,12 @@ import ast
 import logging
 
 from .config_db_redis import ConfigDb
+from .sbi import SchedulingBlockInstance
 
 DB = ConfigDb()
 LOG = logging.getLogger('SIP.EC.CDB')
 
-OBJECT_PREFIX = 'subarrays'
+OBJECT_PREFIX = 'subarray'
 
 
 class Subarray:
@@ -41,11 +42,15 @@ class Subarray:
 
     def activate(self):
         """Activate the subarray."""
-        DB.set_hash_value(self.key, 'active', 'true')
+        DB.set_hash_value(self.key, 'active', 'True')
 
     def deactivate(self):
         """Deactivate the subarray."""
-        DB.set_hash_value(self.key, 'active', 'false')
+        DB.set_hash_value(self.key, 'active', 'False')
+        # Remove the subarray from each of the SBIs
+        for sbi_id in self.get_sbi_ids():
+            SchedulingBlockInstance(sbi_id).clear_subarray()
+        DB.set_hash_value(self.key, 'sbi_ids', [])
 
     def get_sbi_ids(self):
         """Get the list of SBI Ids.
@@ -78,7 +83,7 @@ class Subarray:
 
         """
         value = DB.get_hash_value(self.key, 'active')
-        return True if value == 'true' else False
+        return True if value == 'True' else False
 
     @staticmethod
     def get_id(index: int):

@@ -65,6 +65,11 @@ class SubarrayList:
         return active
 
     @staticmethod
+    def is_active(subarray_id: Union[int, str]):
+        """Return true if the specified subarray is active"""
+        return Subarray(subarray_id).is_active()
+
+    @staticmethod
     def get_inactive():
         """Return the list of inactive subarrays."""
         inactive = []

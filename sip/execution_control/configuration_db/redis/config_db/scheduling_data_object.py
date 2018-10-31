@@ -2,7 +2,7 @@
 """Base class for scheduling or processing block data objects."""
 import ast
 import logging
-from typing import List
+from typing import List, Union
 
 from . import events
 from .event_keys import aggregate_events_data, aggregate_events_list
@@ -160,7 +160,7 @@ class SchedulingDataObject:
         """
         return '{}:{}'.format(self.aggregate_type, block_id)
 
-    def get_block_details(self, block_ids: list):
+    def get_block_details(self, block_ids: Union[list, str]):
         """Get the details of a Scheduling Block Instance or Processing block.
 
         Args:
