@@ -1,24 +1,5 @@
 # -*- coding: utf-8 -*-
-"""Tests of the SDP States API.
-
-For instructions of how to run these tests see the README.md file in the
-`sip/configuration_db/redis` folder.
-
-# A sample schema, like what we'd get from json.load()
-schema = {
-    "type": "object",
-    "properties": {
-        "price": {"type": "number"},
-        "name": {"type": "string"},
-    },
-}
-
-# if no exception is raised by validate(), the instance is valid.
-validate({'name': "myname", "price": 34.99}, schema)
-
-FIXME(BM) remove subprocess calls --- \
-          import init function directly and call method!
-"""
+"""Tests of the SDP States API."""
 from ..config_db_redis import ConfigDb
 from ..sdp_state import SDPState
 
@@ -27,10 +8,10 @@ DB = ConfigDb()
 
 
 def test_create_sdp_state_object():
-    """Test creating SDP states data object."""
+    """Test creating SDP state data object."""
     DB.flush_db()
-    sdp_states = SDPState()
-    assert sdp_states is not None
+    sdp_state = SDPState()
+    assert sdp_state is not None
 
 
 def test_set_target_state():
