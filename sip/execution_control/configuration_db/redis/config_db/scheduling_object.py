@@ -13,7 +13,7 @@ PB_TYPE_PREFIX = 'pb'
 SBI_TYPE_PREFIX = 'sbi'
 
 
-class SchedulingDataObject:
+class SchedulingObject:
     """Base class for SBI and PB data objects API."""
 
     def __init__(self, aggregate_type, db):

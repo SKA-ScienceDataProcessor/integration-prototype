@@ -3,18 +3,18 @@
 import logging
 
 from .config_db_redis import ConfigDb
-from .scheduling_data_object import PB_TYPE_PREFIX, SchedulingDataObject
+from .scheduling_object import PB_TYPE_PREFIX, SchedulingObject
 
 LOG = logging.getLogger('SIP.EC.CDB')
 DB = ConfigDb()
 
 
-class ProcessingBlockList(SchedulingDataObject):
+class ProcessingBlockList(SchedulingObject):
     """Configuration Database Processing Block List API."""
 
     def __init__(self):
         """Initialise variables."""
-        SchedulingDataObject.__init__(self, PB_TYPE_PREFIX, DB)
+        SchedulingObject.__init__(self, PB_TYPE_PREFIX, DB)
 
     # #########################################################################
     # Get functions

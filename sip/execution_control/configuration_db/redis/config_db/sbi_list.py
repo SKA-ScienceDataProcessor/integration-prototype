@@ -11,8 +11,8 @@ from jsonschema import validate
 
 from .config_db_redis import ConfigDb
 from .pb_list import ProcessingBlockList
-from .scheduling_data_object import (PB_TYPE_PREFIX, SBI_TYPE_PREFIX,
-                                     SchedulingDataObject)
+from .scheduling_object import (PB_TYPE_PREFIX, SBI_TYPE_PREFIX,
+                                SchedulingObject)
 from .workflow_definitions import (get_workflow_definition,
                                    get_workflow_definitions)
 from .subarray import Subarray
@@ -21,14 +21,14 @@ LOG = logging.getLogger('SIP.EC.CDB')
 DB = ConfigDb()
 
 
-class SchedulingBlockInstanceList(SchedulingDataObject):
+class SchedulingBlockInstanceList(SchedulingObject):
     """Configuration Database client API for Scheduling Block Instances."""
 
     _pb_list = ProcessingBlockList()
 
     def __init__(self, schema_path=None):
         """Initialise variables."""
-        SchedulingDataObject.__init__(self, SBI_TYPE_PREFIX, DB)
+        SchedulingObject.__init__(self, SBI_TYPE_PREFIX, DB)
         if schema_path is None:
             schema_path = os.path.join(os.path.dirname(__file__), 'schema',
                                        'sbi_configure_schema.json')

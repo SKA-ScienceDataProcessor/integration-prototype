@@ -5,14 +5,14 @@ import warnings
 import datetime
 from random import randint
 
-from .scheduling_data_object import SchedulingDataObject
+from .scheduling_object import SchedulingObject
 from .config_db_redis import ConfigDb
 
 
 DB = ConfigDb()
 
 
-class ProcessingBlock(SchedulingDataObject):
+class ProcessingBlock(SchedulingObject):
     """Processing Block Configuration Database API."""
 
     def __init__(self, pb_id):
@@ -21,7 +21,7 @@ class ProcessingBlock(SchedulingDataObject):
         Args:
             pb_id (str): Processing Block Identifier
         """
-        SchedulingDataObject.__init__(self, 'pb', DB)
+        SchedulingObject.__init__(self, 'pb', DB)
         self._id = pb_id
         self._key = self.primary_key(pb_id)
 

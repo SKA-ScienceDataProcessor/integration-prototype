@@ -7,13 +7,13 @@ from random import randint
 
 from .config_db_redis import ConfigDb
 from .pb import ProcessingBlock
-from .scheduling_data_object import SchedulingDataObject
+from .scheduling_object import SchedulingObject
 
 DB = ConfigDb()
 LOG = logging.getLogger('SIP.EC.CDB')
 
 
-class SchedulingBlockInstance(SchedulingDataObject):
+class SchedulingBlockInstance(SchedulingObject):
     """Scheduling Block Instance Configuration Database API."""
 
     def __init__(self, sbi_id: str):
@@ -26,7 +26,7 @@ class SchedulingBlockInstance(SchedulingDataObject):
               KeyError, if the specified SBI does not exist.
 
         """
-        SchedulingDataObject.__init__(self, 'sbi', DB)
+        SchedulingObject.__init__(self, 'sbi', DB)
         self._id = sbi_id
         self._key = self.primary_key(self._id)
 
