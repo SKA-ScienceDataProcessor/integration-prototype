@@ -156,23 +156,6 @@ class ConfigDb:
             self._db.rpush(key, *value)
 
     @check_connection
-    def remove_from_list(self, key: str, value, count: int = 0,
-                         pipeline: bool = False):
-        """Remove specified value(s) from the list stored at key.
-
-        Args:
-            key (str): Key where the list is stored.
-            value: value to remove
-            count (int): Number of entries to remove, default 0 == all
-            pipeline(bool): If True, start a transaction block. Default False.
-
-        """
-        if pipeline:
-            self._pipeline.lrem(key, count, value)
-        else:
-            self._db.lrem(key, count, value)
-
-    @check_connection
     def get_list_value(self, key, index):
         """Get an element from a list by its index.
 
@@ -305,14 +288,15 @@ class ConfigDb:
         return pub_sub
 
     @check_connection
-    def remove_element(self, key, count, value, pipeline=False):
-        """Remove element of the list stored at key.
+    def remove_from_list(self, key: str, value, count: int = 0,
+                         pipeline: bool = False):
+        """Remove specified value(s) from the list stored at key.
 
         Args:
-            key (str): Key where the list is stored
-            count: Number of occurrences to be removed from the list
-            value (str): Value to remove from the list
-            pipeline (bool): True, start a transaction block. Default false
+            key (str): Key where the list is stored.
+            value: value to remove
+            count (int): Number of entries to remove, default 0 == all
+            pipeline(bool): If True, start a transaction block. Default False.
 
         """
         if pipeline:

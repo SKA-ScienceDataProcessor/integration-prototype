@@ -17,56 +17,38 @@ class StateObject:
     def __init__(self, aggregate_id: str):
         """Initialise the client."""
         self._db = ConfigDb()
-        self._events = events
         self._aggregate_id = aggregate_id
         self._key = '{}:{}'.format(AGGREGATE_TYPE, self._aggregate_id)
 
         if not self._db.key_exists(self._key):
             self._db.set_hash_values(self._key, self._initial_state_config())
 
-        # # FIXME(BM) this should not be hardcoded and perhaps moved to the \
-        # # service_state class?
-        # service_list = [
-        #     'ExecutionControl:MasterController:test',
-        #     'ExecutionControl:ProcessingController:test',
-        #     'ExecutionControl:Alerts:test',
-        #     'TangoControl:SDPMaster:test',
-        #     'TangoControl:ProcessingInterface:test',
-        #     'TangoControl:Logger:test',
-        #     'TangoControl:Alarms:test',
-        #     'Platform:DockerSwarm:test',
-        #     'Platform:Logger:test',
-        #     'Platform:Metrics:test'
-        # ]
-        # for service in service_list:
-        #     _key = 'states:service_state:{}'.format(service)
-        #     if not self._db.key_exists(_key):
-        #         self._db.set_hash_values(_key, self._initial_state_config())
-
     ###########################################################################
     # Pub/Sub functions
     ###########################################################################
 
-    def subscribe(self, subscriber: str) -> events.EventQueue:
+    @staticmethod
+    def subscribe(subscriber: str) -> events.EventQueue:
         """Subscribe to state events.
 
         Args:
             subscriber (str): Subscriber name.
 
         Returns:
-            events.EventQueue, Event queue object for querying PB events.
+            events.EventQueue, Event queue object for querying events.
 
         """
-        return self._events.subscribe(AGGREGATE_TYPE, subscriber)
+        return events.subscribe(AGGREGATE_TYPE, subscriber)
 
-    def get_subscribers(self):
+    @staticmethod
+    def get_subscribers():
         """Get the list of subscribers to state events.
 
         Returns:
             List[str], list of subscriber names.
 
         """
-        return self._events.get_subscribers(AGGREGATE_TYPE)
+        return events.get_subscribers(AGGREGATE_TYPE)
 
     def publish(self, event_type: str, event_data: dict = None):
         """Publish an state event.
@@ -76,8 +58,8 @@ class StateObject:
             event_data (dict, optional): Event data.
 
         """
-        self._events.publish(AGGREGATE_TYPE, self._aggregate_id,
-                             event_type, event_data)
+        events.publish(AGGREGATE_TYPE, self._aggregate_id, event_type,
+                       event_data)
 
     ###########################################################################
     # Get functions

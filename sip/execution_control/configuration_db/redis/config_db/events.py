@@ -3,25 +3,13 @@
 
 An aggregate is a domain-driven-design (DDD) concept.
 You apply a command to an aggregate which then produces one or more events.
-
-For SIP the aggregates are the:
-
-    - Processing Block
-    - Scheduling Block Instance
-
-Events are created when a new Processing Block or Scheduling Block Instance
-is created, cancelled etc.
-
-A higher level events API is also provided in the modules `pb_events.py` and
-`sbi_events.py`.
-
 """
-from typing import List, Callable
 import ast
 import datetime
+from typing import Callable, List
 
-from .config_db_redis import ConfigDb
 from . import event_keys as keys
+from .config_db_redis import ConfigDb
 
 DB = ConfigDb()
 
@@ -82,8 +70,8 @@ class Event:
         This should be called when processing of the event by the handler is
         complete.
         """
-        DB.remove_element(keys.active(self.aggregate_type, self.subscriber), 0,
-                          self._id)
+        DB.remove_from_list(keys.active(self.aggregate_type, self.subscriber),
+                            self._id)
 
 
 class EventQueue:
@@ -218,7 +206,7 @@ def subscribe(aggregate_type: str, subscriber: str,
 
     """
     key = keys.subscribers(aggregate_type)
-    DB.remove_element(key, 0, subscriber)
+    DB.remove_from_list(key, subscriber)
     DB.append_to_list(key, subscriber)
     return EventQueue(aggregate_type, subscriber, callback_handler)
 
@@ -264,6 +252,8 @@ def publish(aggregate_type: str, aggregate_id: str, event_type: str,
         event_dict['event_type'] = event_type
     if event_data is not None:
         event_dict['event_data'] = event_data
+
+    # TODO(BM) add origin/publisher to the event?
 
     # Publish the event to subscribers
     _publish_to_subscribers(aggregate_type, event_id, event_dict)

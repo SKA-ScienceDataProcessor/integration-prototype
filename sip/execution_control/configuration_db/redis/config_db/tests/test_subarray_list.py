@@ -15,11 +15,11 @@ def test_initialise():
     assert not subarray_list.get_active()
 
 
-def test_activate():
+def test_get_activate():
     """Test subarray activation."""
     DB.flush_db()
+    Subarray(2).activate()
     subarray_list = SubarrayList()
-    subarray_list.activate(2)
     # Only subarray 2 should now be active
     active = subarray_list.get_active()
     assert len(active) == 1

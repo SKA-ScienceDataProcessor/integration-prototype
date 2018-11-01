@@ -1,39 +1,37 @@
 # coding=utf-8
 """High Level interface to Processing Block (PB) objects."""
 import ast
-import warnings
 import datetime
+import warnings
 from random import randint
 
-from .scheduling_object import SchedulingObject
 from .config_db_redis import ConfigDb
-
+from .scheduling_object import SchedulingObject
 
 DB = ConfigDb()
+AGGREGATE_TYPE = 'pb'
 
 
 class ProcessingBlock(SchedulingObject):
     """Processing Block Configuration Database API."""
 
     def __init__(self, pb_id):
-        """Construct a Configuration Database Processing Block Object.
+        """Create a PB object.
 
         Args:
             pb_id (str): Processing Block Identifier
-        """
-        SchedulingObject.__init__(self, 'pb', DB)
-        self._id = pb_id
-        self._key = self.primary_key(pb_id)
 
-    def get_config(self):
-        """Return the Processing Block Configuration."""
-        return self.get_block_details([self._id])
+        Raises:
+            KeyError, if the specified PB does not exist
+
+        """
+        SchedulingObject.__init__(self, AGGREGATE_TYPE, pb_id)
+        self._check_exists()
 
     def add_assigned_resources(self, resources: dict):
         """Add assigned resources to db.
 
         Args:
-            pb_id (str): Processing block id
             resources (dict): Assigned resources to a specific pb
 
         """
@@ -42,64 +40,44 @@ class ProcessingBlock(SchedulingObject):
         workflow_list = []
         workflow_dict = {}
 
-        # Get key
-        pb_key = self.primary_key(self._id)
-
-        # Check that the key exists!
-        if not DB.get_keys(pb_key):
-            raise KeyError('Processing Block not found: {}'
-                           .format(self._id))
-
         # Add assigned resources to workflow
-        for stages in ast.literal_eval(DB.get_hash_value(
-                pb_key, 'workflow')):
+        workflow = DB.get_hash_value(self._key, 'workflow')
+        for stages in ast.literal_eval(workflow):
             workflow_stage = dict(stages)
             workflow_stage['assigned_resources'] = resources
             workflow_list.append(workflow_stage)
 
         workflow_dict['workflow'] = workflow_list
-        DB.set_hash_values(pb_key, workflow_dict)
+        DB.set_hash_values(self._key, workflow_dict)
 
-    def get_workflow_stage(self, stage: str):
+    def get_workflow_stage(self, stage_id: str):
         """Return details of a workflow stage associated to the PB.
 
         Args:
-            pb_id (str): Processing block id
-            stage (str): Workflow stage name
+            stage_id (str): Workflow stage identifier
 
         Returns:
             dict, resources of a specified pb
 
         """
         warnings.warn("Warning this function is untested", FutureWarning)
-        pb_key = self.primary_key(self._id)
-
-        # Check that the key exists!
-        if not DB.get_keys(pb_key):
-            raise KeyError('Processing Block not found: {}'
-                           .format(self._id))
-
-        workflow_list = DB.get_hash_value(pb_key, 'workflow')
+        workflow_list = DB.get_hash_value(self._key, 'workflow')
         for stages in ast.literal_eval(workflow_list):
-            workflow_stage = dict(stages)[stage]
+            workflow_stage = dict(stages)[stage_id]
             return workflow_stage
 
     def abort(self):
         """Abort the processing_block."""
-        pb_key = self.primary_key(self._id)
-
-        # Check that the key exists!
-        if not DB.get_keys(pb_key):
-            raise KeyError('Processing Block not found: {}'.format(self._id))
-
-        pb_type = DB.get_hash_value(pb_key, 'type')
-        self.publish(self._id, 'aborted')
-        DB.remove_element('{}:active'.format(self.aggregate_type), 0, self._id)
-        DB.remove_element('{}:active:{}'.format(self.aggregate_type,
-                                                pb_type), 0, self._id)
-        DB.append_to_list('{}:aborted'.format(self.aggregate_type), self._id)
-        DB.append_to_list('{}:aborted:{}'.format(self.aggregate_type,
-                                                 pb_type), self._id)
+        pb_type = DB.get_hash_value(self._key, 'type')
+        key = '{}:active'.format(self._type)
+        DB.remove_from_list(key, self._id)
+        key = '{}:active:{}'.format(self._type, pb_type)
+        DB.remove_from_list(key, self._id)
+        key = '{}:aborted'.format(self._type)
+        DB.append_to_list(key, self._id)
+        key = '{}:aborted:{}'.format(self._type, pb_type)
+        DB.append_to_list(key, self._id)
+        self.publish('aborted')
 
     @staticmethod
     def get_id(date: datetime.datetime) -> str:
