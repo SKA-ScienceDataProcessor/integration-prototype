@@ -14,4 +14,5 @@ def execute_processing_block(workflow):
     Args:
         workflow (dict): Workflow description.
     """
+    print("Celery Hello World!")
     pass

@@ -74,8 +74,6 @@ def test_generate_vis_ingest():
     stage_index = 2
     assert config['workflow'][stage_index]['type'] == 'vis_ingest'
     compose_file = generate_compose_file(config['workflow'][stage_index])
-
-    print(compose_file)
     compose_dict = yaml.load(compose_file)
     assert 'services' in compose_dict
     assert 'networks' in compose_dict

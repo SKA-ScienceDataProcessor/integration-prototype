@@ -1,0 +1,77 @@
+{
+   "id": "mock_test",
+   "version": "1.0.0",
+   "stages": [
+   {
+       "id": "A1_setup_test",
+       "version": "0.5.1",
+       "type": "setup",
+       "dependencies:": [],
+       "resources_required": [{
+           "type": "node",
+           "value": 3,
+           "parameters": {
+               "flavour": "compute_a",
+               "exclusive": true
+           }
+       }],
+       "resources_assigned": [{
+           "type": "node",
+           "value": 3,
+           "parameters": {
+               "flavour": "compute_a",
+               "exclusive": true
+           }
+       }],
+       "ee_config": {
+           "compose_template": "./templates/ee/startup.yaml.j2"
+       },
+       "app_config": {
+           "args_template": "./templates/app/startup.j2.json"
+       }
+   },
+   {
+       "id": "A2_processing_test",
+       "version": "test",
+       "type": "processing",
+       "dependencies:": [],
+       "resources_required": [{
+           "type": "node",
+           "value": 3,
+           "parameters": {
+               "flavour": "compute_a",
+               "exclusive": true
+           }
+       }],
+       "ee_config": {
+           "type": "docker_swarm",
+           "compose_template": "./templates/ee/processing.yaml.j2"
+       },
+       "app_config": {
+           "args_template": "./templates/app/processing.j2.json"
+       }
+   },
+   {
+       "id": "B_cleanup_test",
+       "version": "1.0.0",
+       "type": "cleanup",
+       "dependencies:": [{
+           "type": "stages",
+           "value": "A1_setup_test,A2_processing_test",
+           "condition": "complete"
+       }],
+       "resources_required": [{
+           "type": "cpu",
+           "value": 0.5
+       },{
+           "type": "memory",
+           "value": "2GB"
+       }],
+       "ee_type": "NONE",
+       "ee_config": {
+           "compose_template": "./templates/ee/cleanup.yaml.j2"
+       },
+       "app_config": {}
+   }
+   ]
+}

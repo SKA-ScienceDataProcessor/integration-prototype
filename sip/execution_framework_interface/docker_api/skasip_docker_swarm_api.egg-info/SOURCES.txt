@@ -1,0 +1,10 @@
+README.md
+setup.py
+docker_client/__init__.py
+docker_client/docker_client.py
+skasip_docker_swarm_api.egg-info/PKG-INFO
+skasip_docker_swarm_api.egg-info/SOURCES.txt
+skasip_docker_swarm_api.egg-info/dependency_links.txt
+skasip_docker_swarm_api.egg-info/not-zip-safe
+skasip_docker_swarm_api.egg-info/requires.txt
+skasip_docker_swarm_api.egg-info/top_level.txt

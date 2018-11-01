@@ -1,0 +1,4 @@
+redis
+jsonschema
+simplejson
+namesgenerator

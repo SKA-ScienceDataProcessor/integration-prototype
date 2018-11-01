@@ -10,10 +10,9 @@ try:
 except ImportError:
     import dummy_threading as threading
 
-import redis
+from config_db import SchedulingBlockDbClient
 
-
-DB = redis.StrictRedis(decode_responses=True, db=10)
+DB = SchedulingBlockDbClient()
 
 
 class ProcessingBlockQueue:
@@ -28,7 +27,7 @@ class ProcessingBlockQueue:
         self._index = 0
         self._mutex = threading.Lock()
         self._block_map = {}
-        DB.flushall()
+        DB.clear()
 
     def put(self, block_id, priority, pb_type='offline'):
         """Add a Processing Block to the queue.
@@ -38,8 +37,11 @@ class ProcessingBlockQueue:
             priority (int):
             pb_type (str):
         """
+        print(block_id)
         with self._mutex:
             entry = (priority, self._index, block_id, pb_type)
+
+            print(entry)
             self._index += 1
             if self._block_map.get(block_id) is not None:
                 raise KeyError('ERROR: Block id "{}" already exists!'.

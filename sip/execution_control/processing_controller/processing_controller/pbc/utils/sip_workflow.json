@@ -1,0 +1,68 @@
+{
+   "id": "vis_ingest_test",
+   "version": "1.0.0",
+   "stages": [
+   {
+       "id": "A1_vis_emulator",
+       "version": "0.5.1",
+       "type": "emulator",
+       "dependencies:": [],
+       "resources_required": [{
+           "type": "node",
+           "value": 3,
+           "parameters": {
+               "flavour": "compute_a",
+               "exclusive": true
+           }
+       }],
+       "ee_config": {
+           "compose_template": "./templates/ee/emulator.yaml.j2"
+       },
+       "app_config": {
+           "args_template": "./templates/app/emulator.json.j2"
+       }
+   },
+   {
+       "id": "A2_vis_ingest",
+       "version": "test",
+       "type": "processing",
+       "dependencies:": [],
+       "resources_required": [{
+           "type": "node",
+           "value": 3,
+           "parameters": {
+               "flavour": "compute_a",
+               "exclusive": true
+           }
+       }],
+       "ee_config": {
+           "compose_template": "./templates/ee/ingest.yaml.j2"
+       },
+       "app_config": {
+           "args_template": "./templates/app/ingest.json.j2"
+       }
+   },
+   {
+       "id": "B_cleanup_vis_ingest",
+       "version": "1.0.0",
+       "type": "cleanup",
+       "dependencies:": [{
+           "type": "stages",
+           "value": "A1_vis_emulator,A2_vis_ingest",
+           "condition": "complete"
+       }],
+       "resources_required": [{
+           "type": "cpu",
+           "value": 0.5
+       },{
+           "type": "memory",
+           "value": "2GB"
+       }],
+       "ee_type": "NONE",
+       "ee_config": {
+           "compose_template": "./templates/ee/cleanup.yaml.j2"
+       },
+       "app_config": {}
+   }
+   ]
+}

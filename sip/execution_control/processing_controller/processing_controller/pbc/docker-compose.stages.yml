@@ -1,0 +1,32 @@
+# Docker compose script for starting a set of workflow stage services
+# Python command scripts are just temporary
+version: '3.7'
+
+services:
+
+  workflow_stage_setup:
+    image: skasip-pbc
+    command: python3 processing_block_controller/setup_script.py
+    ports:
+      - 4546:4546
+    deploy:
+      mode: replicated
+      replicas: 1
+
+  workflow_stage_processing:
+    image: skasip-pbc
+    command: python3 processing_block_controller/processing_script.py
+    ports:
+      - 4547:4547
+    deploy:
+      mode: replicated
+      replicas: 1
+
+  workflow_stage_cleanup:
+    image: skasip-pbc
+    command: python3 processing_block_controller/cleanup_script.py
+    ports:
+      - 4548:4548
+    deploy:
+      mode: replicated
+      replicas: 1

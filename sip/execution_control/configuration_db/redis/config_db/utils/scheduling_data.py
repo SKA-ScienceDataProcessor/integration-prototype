@@ -39,3 +39,8 @@ def cancel_pb(pb_id):
 
     """
     pb_db.cancel_processing_block(pb_id)
+
+
+if __name__== '__main__':
+    add_sbi()
+

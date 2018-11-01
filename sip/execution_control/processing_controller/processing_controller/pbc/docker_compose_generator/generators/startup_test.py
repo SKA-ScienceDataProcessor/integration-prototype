@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""Module for generating visibility recv compose files."""
+"""Module for startup test compose files."""
 
 import json
 
@@ -7,7 +7,7 @@ from .utils import load_template, validate_config, load_json_file
 
 
 def generate(config):
-    """Generate Docker compose file for the visibility ingest workflow stage.
+    """Generate Docker compose file for startup workflow stage.
 
     This is expected to be run using Docker Swarm as an Execution Engine.
 
@@ -19,31 +19,22 @@ def generate(config):
 
     """
     # Validate the workflow stage configuration
-
-    print("CONFIG - ", config)
-    print("")
-    validate_config(config, stage_type='vis_ingest', ee_type='docker_swarm')
+    validate_config(config, stage_type='processing', ee_type='docker_swarm')
 
     # Get local configuration object references
     ee_config = config['ee_config']
     app_config = config['app_config']
 
-    print("APP CONFIG - ", app_config)
-    print("")
     # TODO(BM) Validate the ee and app configuration schema
 
-    app_args_file = app_config['command_args']['json_file']
+    app_args_file = app_config['args_template']
     json_args = json.dumps(load_json_file(app_args_file))
 
-    print("JSON ARGS - ", json_args)
-    print("")
     template_params = dict(
         json_config=json_args,
-        buffer_path=ee_config['buffer_path'],
-        num_receivers=ee_config['num_receivers']
     )
 
-    # Render the compose template for the ingest serivce configuration
+    # Render the compose template for the ingest service configuration
     compose_template = load_template(ee_config['compose_template'])
     compose_file = compose_template.render(**template_params)
 

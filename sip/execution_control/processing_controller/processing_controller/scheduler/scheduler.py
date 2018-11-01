@@ -51,6 +51,8 @@ class ProcessingBlockScheduler:
 
     def queue(self):
         """Return the processing block queue."""
+
+        print(self._queue)
         return self._queue
 
     def _update_value(self, new_value):
@@ -85,6 +87,8 @@ class ProcessingBlockScheduler:
         # 2. Determine what next to run on the queue
         # 3. Get PB configuration
         # 4. Launch the PBC for the PB
+
+        # This is where the PBC started (celery)
         while True:
             LOG.info('')
             # if num_pbc == 0:

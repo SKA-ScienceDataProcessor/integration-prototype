@@ -19,24 +19,17 @@ def generate(config):
 
     """
     # Validate the workflow stage configuration
-
-    print("CONFIG - ", config)
-    print("")
     validate_config(config, stage_type='vis_ingest', ee_type='docker_swarm')
 
     # Get local configuration object references
     ee_config = config['ee_config']
     app_config = config['app_config']
 
-    print("APP CONFIG - ", app_config)
-    print("")
     # TODO(BM) Validate the ee and app configuration schema
 
     app_args_file = app_config['command_args']['json_file']
     json_args = json.dumps(load_json_file(app_args_file))
 
-    print("JSON ARGS - ", json_args)
-    print("")
     template_params = dict(
         json_config=json_args,
         buffer_path=ee_config['buffer_path'],
