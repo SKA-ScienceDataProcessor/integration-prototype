@@ -8,11 +8,11 @@ from os.path import join, dirname
 from os import listdir
 import json
 
-from ..config_db_redis import ConfigDb
-from ..sdp_state import SDPState
-from ..service_state import ServiceState
-from ..subarray_list import SubarrayList
-from ..workflow_definitions import add_workflow_definition
+from config_db.config_db_redis import ConfigDb
+from config_db.sdp_state import SDPState
+from config_db.service_state import ServiceState
+from config_db.subarray_list import SubarrayList
+from config_db.workflow_definitions import add_workflow_definition
 
 
 def initialise_states():
