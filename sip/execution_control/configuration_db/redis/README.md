@@ -64,14 +64,22 @@ redis-server
 Note - It requires redis to be installed and all python packages in the
 requirements.txt file
 
-### Zip the client
+### Install the client 
 
-To package the client inside a container, you would need to zip the client. This
-can be done by following the instructions. (This is only a temporary solution until 
-the client is in pip)
+To package the client inside a container, you would need to add the following to
+the Dockerfile and also need make sure to install git.
+
 
 ```bash
-zip -r config_db.zip config_db/ requirements.txt setup.py
+pip install git+https://github.com/SKA-ScienceDataProcessor/integration-prototype@master#egg=config_db\&subdirectory=sip/execution_control/configuration_db/redis
+```
+
+You should always pip install from a master unless your updating the config_db.
+To pip install from a branch, change <BRANCHNAME> to the name of the branch in the 
+following command.
+
+```bash
+pip install git+https://github.com/SKA-ScienceDataProcessor/integration-prototype@<BRANCHNAME>#egg=config_db\&subdirectory=sip/execution_control/configuration_db/redis
 ```
 
 ### Package the client
