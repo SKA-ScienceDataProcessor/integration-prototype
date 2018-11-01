@@ -1,7 +1,7 @@
 # coding: utf-8
 """Setup config file to package the configuration database."""
-from setuptools import setup
 import os
+from setuptools import setup
 
 
 def package_files(directory):
