@@ -5,7 +5,7 @@ from ..pb_list import ProcessingBlockList
 from ..pb import ProcessingBlock
 from ..sbi_list import SchedulingBlockInstanceList
 from ..utils.generate_sbi_configuration import generate_sbi_config
-from ..utils.load_test_workflow_definition import load_test_workflow_definition
+from ..utils.workflow_definition_helpers import load_workflow_definition
 from ..workflow_definitions import add_workflow_definition
 from ..subarray import Subarray
 
@@ -25,7 +25,7 @@ def test_add_sbi():
     # HACK: Register test workflow definitions needed for this SBI.
     # TODO(BM) replace with utility function.
     for i in range(len(sbi_config['processing_blocks'])):
-        workflow_config = load_test_workflow_definition(
+        workflow_config = load_workflow_definition(
             sbi_config['processing_blocks'][i]['workflow']['id'],
             sbi_config['processing_blocks'][i]['workflow']['version']
         )
@@ -55,7 +55,7 @@ def test_abort_sbi():
     sbi_config = generate_sbi_config()
     # Register test workflow definitions needed for this SBI.
     for i in range(len(sbi_config['processing_blocks'])):
-        workflow_config = load_test_workflow_definition(
+        workflow_config = load_workflow_definition(
             sbi_config['processing_blocks'][i]['workflow']['id'],
             sbi_config['processing_blocks'][i]['workflow']['version']
         )
@@ -104,7 +104,7 @@ def test_get_active():
 
     # Register test workflow definitions needed for this SBI.
     for i in range(len(sbi_config['processing_blocks'])):
-        workflow_config = load_test_workflow_definition(
+        workflow_config = load_workflow_definition(
             sbi_config['processing_blocks'][i]['workflow']['id'],
             sbi_config['processing_blocks'][i]['workflow']['version']
         )

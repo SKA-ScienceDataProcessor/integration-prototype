@@ -3,7 +3,7 @@
 from ..subarray import Subarray
 from ..config_db_redis import ConfigDb
 from ..utils.generate_sbi_configuration import generate_sbi_config
-from ..utils.load_test_workflow_definition import load_test_workflow_definition
+from ..utils.workflow_definition_helpers import load_workflow_definition
 from ..workflow_definitions import add_workflow_definition
 
 
@@ -35,7 +35,7 @@ def test_subarray_configure_sbi():
     sbi_config = generate_sbi_config()
     # FIXME(BM) HACK: Register test workflow definitions needed for this SBI.
     for i in range(len(sbi_config['processing_blocks'])):
-        workflow_config = load_test_workflow_definition(
+        workflow_config = load_workflow_definition(
             sbi_config['processing_blocks'][i]['workflow']['id'],
             sbi_config['processing_blocks'][i]['workflow']['version']
         )
@@ -54,7 +54,7 @@ def test_subarray_abort():
     sbi_config = generate_sbi_config()
     # FIXME(BM) HACK: Register test workflow definitions needed for this SBI.
     for i in range(len(sbi_config['processing_blocks'])):
-        workflow_config = load_test_workflow_definition(
+        workflow_config = load_workflow_definition(
             sbi_config['processing_blocks'][i]['workflow']['id'],
             sbi_config['processing_blocks'][i]['workflow']['version']
         )

@@ -5,9 +5,9 @@ import json
 import jinja2
 
 
-def load_test_workflow_definition(workflow_id: str = None,
-                                  workflow_version: str = None,
-                                  template_version: int = 2) -> dict:
+def load_workflow_definition(workflow_id: str = None,
+                             workflow_version: str = None,
+                             template_version: int = 2) -> dict:
     """Load a workflow definition.
 
     Returns:
