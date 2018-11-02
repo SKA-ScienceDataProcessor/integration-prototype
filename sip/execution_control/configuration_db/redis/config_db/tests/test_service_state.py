@@ -27,8 +27,8 @@ def test_set_target_state():
                                  service_version)
     event_queue = service_state.subscribe('test_update_target')
 
-    target_state = "OFF"
-    previous_timestamp = service_state.get_target_state_timestamp()
+    target_state = "off"
+    previous_timestamp = service_state.target_timestamp
     set_time = service_state.update_target_state(target_state)
     assert set_time >= previous_timestamp
 
@@ -38,8 +38,8 @@ def test_set_target_state():
     assert events[0].object_id == object_id
     assert events[0].type == 'target_state_updated'
 
-    assert service_state.get_target_state() == target_state
-    assert service_state.get_target_state_timestamp() >= set_time
+    assert service_state.target_state == target_state
+    assert service_state.target_timestamp >= set_time
 
 
 def test_set_current_state():
@@ -54,8 +54,8 @@ def test_set_current_state():
                                  service_version)
     event_queue = service_state.subscribe('test_update_target')
 
-    current_state = "OFF"
-    previous_timestamp = service_state.get_current_state_timestamp()
+    current_state = "off"
+    previous_timestamp = service_state.current_timestamp
     set_time = service_state.update_current_state(current_state)
     assert set_time >= previous_timestamp
 
@@ -65,5 +65,5 @@ def test_set_current_state():
     assert events[0].object_id == object_id
     assert events[0].type == 'current_state_updated'
 
-    assert service_state.get_current_state() == current_state
-    assert service_state.get_current_state_timestamp() >= set_time
+    assert service_state.current_state == current_state
+    assert service_state.current_timestamp >= set_time

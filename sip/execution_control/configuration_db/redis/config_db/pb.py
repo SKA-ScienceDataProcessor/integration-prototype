@@ -28,6 +28,20 @@ class ProcessingBlock(SchedulingObject):
         SchedulingObject.__init__(self, AGGREGATE_TYPE, pb_id)
         self._check_exists()
 
+    @staticmethod
+    def get_id(date: datetime.datetime) -> str:
+        """Generate a Processing Block (PB) Instance ID.
+
+        Args:
+            date (datetime.datetime): UTC date of the PB
+
+        Returns:
+            str, Processing Block ID
+
+        """
+        date = date.strftime('%Y%m%d')
+        return 'PB-{}-{}-{:03d}'.format(date, 'sip', randint(0, 100))
+
     def add_assigned_resources(self, resources: dict):
         """Add assigned resources to db.
 
@@ -68,6 +82,7 @@ class ProcessingBlock(SchedulingObject):
 
     def abort(self):
         """Abort the processing_block."""
+        self.set_status('aborted')
         pb_type = DB.get_hash_value(self._key, 'type')
         key = '{}:active'.format(self._type)
         DB.remove_from_list(key, self._id)
@@ -77,18 +92,3 @@ class ProcessingBlock(SchedulingObject):
         DB.append_to_list(key, self._id)
         key = '{}:aborted:{}'.format(self._type, pb_type)
         DB.append_to_list(key, self._id)
-        self.publish('aborted')
-
-    @staticmethod
-    def get_id(date: datetime.datetime) -> str:
-        """Generate a Processing Block (PB) Instance ID.
-
-        Args:
-            date (datetime.datetime): UTC date of the PB
-
-        Returns:
-            str, Processing Block ID
-
-        """
-        date = date.strftime('%Y%m%d')
-        return 'PB-{}-{}-{:03d}'.format(date, 'sip', randint(0, 100))

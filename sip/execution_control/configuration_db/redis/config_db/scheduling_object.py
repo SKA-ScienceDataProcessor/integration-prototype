@@ -30,39 +30,82 @@ class SchedulingObject:
         self._type = aggregate_type
         self._id = aggregate_id
         self._key = self.get_key(aggregate_type, aggregate_id)
+        self._check_exists()
 
-    # pylint: disable=invalid-name
+    @staticmethod
+    def get_key(aggregate_type: str, aggregate_id: str) -> str:
+        """Get a scheduling object key.
+
+        Args:
+            aggregate_type (str): Scheduling object type
+            aggregate_id (str): Scheduling object id
+
+        Returns:
+            str, database key for the scheduling object.
+
+        """
+        return '{}:{}'.format(aggregate_type, aggregate_id)
+
     @property
-    def id(self):
+    def id(self) -> str:
         """Get the scheduling object ID."""
         return self._id
 
     @property
-    def type(self):
+    def type(self) -> str:
         """Get the scheduling object type."""
         return self._type
 
     @property
-    def key(self):
+    def key(self) -> str:
         """Get the scheduling object key."""
         return self._key
 
     @property
-    def config(self):
+    def config(self) -> dict:
         """Get the scheduling object config."""
-        return self.get_config()
+        # Check that the key exists
+        self._check_exists()
+        config_dict = DB.get_hash_dict(self._key)
+        for _, value in config_dict.items():
+            for char in ['[', '{']:
+                if char in value:
+                    value = ast.literal_eval(value)
+        return config_dict
+
+    def get_property(self, property_key: str) -> str:
+        """Get a scheduling object property."""
+        self._check_exists()
+        return DB.get_hash_value(self._key, property_key)
 
     @property
-    def status(self):
-        """Get the status of the object."""
-        return self.get_status()
+    def status(self) -> str:
+        """Get the status of the scheduling object by querying events.
+
+        Return:
+            str, status of the object.
+
+        """
+        self._check_exists()
+        return DB.get_hash_value(self.key, 'status')
+
+    @status.setter
+    def status(self, value):
+        """Set the status of the scheduling object."""
+        self.set_status(value)
+
+    def set_status(self, value):
+        """Set the status of the scheduling object."""
+        self._check_exists()
+        DB.set_hash_value(self.key, 'status', value)
+        self.publish('status_changed', event_data=dict(status=value))
 
     ###########################################################################
-    # PubSub functions
+    # Pub/sub events functions
     ###########################################################################
 
     def subscribe(self, subscriber: str) -> events.EventQueue:
-        """Subscribe to Scheduling Block Instance or Processing Block events.
+        """Subscribe to scheduling object (SBI or PB).
 
         Args:
             subscriber (str): Subscriber name.
@@ -74,10 +117,7 @@ class SchedulingObject:
         return events.subscribe(self._type, subscriber)
 
     def get_subscribers(self):
-        """Get the list of subscribers.
-
-        Get the list of subscribers to Scheduling Block Instance (SBI) or
-        Processing Block events.
+        """Get the list of subscribers..
 
         Returns:
             List[str], list of subscriber names.
@@ -93,113 +133,28 @@ class SchedulingObject:
             event_data (dict, optional): Event data.
 
         """
-        events.publish(self._type, self._id,
-                       event_type, event_data)
-
-    # #########################################################################
-    # Get functions
-    # #########################################################################
-
-    def get_status(self) -> str:
-        """Get the status of the scheduling data object.
-
-        Returns:
-            str, status of sbi or pb.
-
-        """
-        # Check that the key exists
-        if not DB.get_keys(self._key):
-            raise KeyError('Key not found: {}'.format(self._key))
-
-        events_list_key = event_keys.aggregate_events_list(self._key)
-        events_data_key = event_keys.aggregate_events_data(self._key)
-        last_event = DB.get_hash_value(events_data_key,
-                                       DB.get_list_value(events_list_key, -1))
-        last_event = ast.literal_eval(last_event)
-        return last_event['event_type']
+        # FIXME(BM) also update the status/state of the object?!
+        events.publish(self._type, self._id, event_type, event_data)
 
     def get_events(self) -> List[events.Event]:
-        """Get events associated with the scheduling data object.
-
-        Get event data for the specified Scheduling block instance or
-        processing block.
+        """Get events associated with the scheduling object.
 
         Returns:
-            list of event data dictionaries
+            list of Event objects
 
         """
+        event_data_key = event_keys.aggregate_events_data(self._key)
+        event_list_key = event_keys.aggregate_events_list(self._key)
         events_list = []
-        event_ids = DB.get_list(event_keys.aggregate_events_list(self._key))
-        for event_id in event_ids:
-            data = ast.literal_eval(
-                DB.get_hash_value(event_keys.aggregate_events_data(self._key),
-                                  event_id))
-            events_list.append(events.Event(event_id, self._type, '',
-                                            data))
+        for event_id in DB.get_list(event_list_key):
+            data = DB.get_hash_value(event_data_key, event_id)
+            data = ast.literal_eval(data)
+            events_list.append(events.Event(event_id, self._type, '', data))
         return events_list
 
-    def get_config(self):
-        """Get a dictionary representation of the scheduling object data.
-
-        Returns:
-            dict
-
-        """
-        # Check that the key exists
-        if not DB.get_keys(self._key):
-            raise KeyError('key not found: {}'.format(self._key))
-
-        config_dict = DB.get_hash_dict(self._key)
-        for _, value in config_dict.items():
-            for char in ['[', '{']:
-                if char in value:
-                    value = ast.literal_eval(value)
-        return config_dict
-
-    def get_active(self):
-        """Get list of active scheduling objects.
-
-        Returns:
-            list, list of object/aggregate ids
-
-        """
-        return DB.get_list('{}:active'.format(self._type))
-
-    def get_aborted(self):
-        """Get list of aborted scheduling objects.
-
-        Returns:
-            list, list of object/aggregate ids
-
-        """
-        return DB.get_list('{}:aborted'.format(self._type))
-
-    def get_completed(self):
-        """Get list of completed scheduling objects.
-
-        Returns:
-            list, list of object/aggregate ids
-
-        """
-        return DB.get_list('{}:completed'.format(self._type))
-
-    # #########################################################################
-    # Utility functions
-    # #########################################################################
-
-    @staticmethod
-    def get_key(aggregate_type: str, aggregate_id: str):
-        """Get a scheduling object key.
-
-        Args:
-            aggregate_type (str): Scheduling object type
-            aggregate_id (str): Scheduling object id
-
-        Returns:
-            str, database key for the scheduling object.
-
-        """
-        return '{}:{}'.format(aggregate_type, aggregate_id)
+    ###########################################################################
+    # Private functions
+    ###########################################################################
 
     def _check_exists(self):
         """Raise a KeyError if the scheduling object doesnt exist.

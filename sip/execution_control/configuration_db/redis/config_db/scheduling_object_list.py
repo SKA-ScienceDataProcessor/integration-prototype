@@ -22,8 +22,53 @@ class SchedulingObjectList:
         """
         self.type = aggregate_type
 
+    @property
+    def num_active(self) -> int:
+        """Get the number of active scheduling objects."""
+        return len(self.active)
+
+    @property
+    def num_aborted(self) -> int:
+        """Get the number of aborted scheduling objects."""
+        return len(self.aborted)
+
+    @property
+    def num_completed(self) -> int:
+        """Get the number of completed scheduling objects."""
+        return len(self.completed)
+
+    @property
+    def active(self) -> List[str]:
+        """Get list of active scheduling objects.
+
+        Returns:
+            list, list of object/aggregate ids
+
+        """
+        return DB.get_list('{}:active'.format(self.type))
+
+    @property
+    def aborted(self) -> List[str]:
+        """Get list of aborted scheduling objects.
+
+        Returns:
+            list, list of object/aggregate ids
+
+        """
+        return DB.get_list('{}:aborted'.format(self.type))
+
+    @property
+    def completed(self) -> List[str]:
+        """Get list of completed scheduling objects.
+
+        Returns:
+            list, list of object/aggregate ids
+
+        """
+        return DB.get_list('{}:completed'.format(self.type))
+
     ###########################################################################
-    # PubSub functions
+    # Pub/sub events functions
     ###########################################################################
 
     def subscribe(self, subscriber: str) -> events.EventQueue:
@@ -61,52 +106,3 @@ class SchedulingObjectList:
 
         """
         events.publish(self.type, object_id, event_type, event_data)
-
-    # #########################################################################
-    # Get functions
-    # #########################################################################
-
-    @property
-    def num_active(self) -> int:
-        """Get the number of active scheduling objects."""
-        return len(self.active)
-
-    @property
-    def active(self) -> List[str]:
-        """Get list of active scheduling objects.
-
-        Returns:
-            list, list of object/aggregate ids
-
-        """
-        return DB.get_list('{}:active'.format(self.type))
-
-    @property
-    def num_aborted(self) -> int:
-        """Get the number of aborted scheduling objects."""
-        return len(self.aborted)
-
-    @property
-    def aborted(self) -> List[str]:
-        """Get list of aborted scheduling objects.
-
-        Returns:
-            list, list of object/aggregate ids
-
-        """
-        return DB.get_list('{}:aborted'.format(self.type))
-
-    @property
-    def num_completed(self) -> int:
-        """Get the number of completed scheduling objects."""
-        return len(self.completed)
-
-    @property
-    def completed(self) -> List[str]:
-        """Get list of completed scheduling objects.
-
-        Returns:
-            list, list of object/aggregate ids
-
-        """
-        return DB.get_list('{}:completed'.format(self.type))

@@ -96,7 +96,8 @@ class SchedulingBlockInstance(SchedulingObject):
         DB.append_to_list(key, config_dict['id'])
 
         # Publish notification to subscribers
-        SchedulingObject(AGGREGATE_TYPE, config_dict['id']).publish('created')
+        sbi = SchedulingObject(AGGREGATE_TYPE, config_dict['id'])
+        sbi.publish('status_changed', event_data=dict(status='created'))
 
         for pb in pb_list:
             pb['sbi_id'] = config_dict['id']
@@ -121,7 +122,7 @@ class SchedulingBlockInstance(SchedulingObject):
 
     def abort(self):
         """Abort the SBI (and associated PBs)."""
-        self.publish('aborted')
+        self.set_status('aborted')
         DB.remove_from_list('{}:active'.format(self._type), self._id)
         DB.append_to_list('{}:aborted'.format(self._type), self._id)
         sbi_pb_ids = ast.literal_eval(
@@ -209,7 +210,8 @@ class SchedulingBlockInstance(SchedulingObject):
         DB.append_to_list(key, pb_config['id'])
 
         # Publish an event to to notify subscribers of the new PB
-        SchedulingObject(PB_AGGREGATE_TYPE, pb_config['id']).publish('created')
+        pb = SchedulingObject(PB_AGGREGATE_TYPE, pb_config['id'])
+        pb.publish('status_changed', event_data=dict(status='created'))
 
     @staticmethod
     def _update_workflow_definition(pb_config: dict):

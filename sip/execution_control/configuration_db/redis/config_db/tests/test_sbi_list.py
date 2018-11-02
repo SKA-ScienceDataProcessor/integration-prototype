@@ -44,7 +44,8 @@ def test_add_sbi():
 
     published = sbi_events.get_published_events()
     assert len(published) == 1
-    assert published[0].type == 'created'
+    assert published[0].type == 'status_changed'
+    assert published[0].data['status'] == 'created'
     assert sbi.status == 'created'
 
 
@@ -78,7 +79,8 @@ def test_abort_sbi():
 
     # Check that the SBI has been aborted.
     published = sbi_events.get_published_events()
-    assert published[-1].type == 'aborted'
+    assert published[-1].type == 'status_changed'
+    assert published[-1].data['status'] == 'aborted'
     assert sbi.status == 'aborted'
     assert sbi_list.num_aborted == 1
     assert sbi_list.aborted[0] == sbi.id
@@ -86,12 +88,15 @@ def test_abort_sbi():
     # Check that the PBs associated with the SBI have also been aborted
     published = pb_events.get_published_events()
     for i in range(sbi.num_processing_blocks):
-        assert published[-1 - i].type == 'aborted'
+        assert published[-1 - i].type == 'status_changed'
+        assert published[-1 - i].data['status'] == 'aborted'
     assert sbi.num_processing_blocks == 3
     assert pb_list.num_aborted == 3
     for pb_id in sbi.processing_block_ids:
         assert pb_id in pb_list.aborted
-        assert ProcessingBlock(pb_id).get_events()[-1].type == 'aborted'
+        _pb = ProcessingBlock(pb_id)
+        assert _pb.get_events()[-1].type == 'status_changed'
+        assert _pb.get_events()[-1].data['status'] == 'aborted'
 
 
 def test_get_active():

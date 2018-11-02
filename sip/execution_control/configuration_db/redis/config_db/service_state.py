@@ -10,10 +10,27 @@ LOG = logging.getLogger('SIP.EC.CDB')
 class ServiceState(StateObject):
     """SDP state data object."""
 
+    _states = ['init', 'on', 'off', 'alarm', 'fault']
+    _transitions = dict(
+        init=['on', 'alarm', 'fault'],
+        on=['off', 'alarm', 'fault'],
+        off=['alarm', 'fault'],
+        alarm=['on', 'fault', 'init'],
+        fault=[]
+    )
+    _commands = dict(
+        init=[],
+        on=['off'],
+        off=[],
+        alarm=['reset'],
+        fault=[]
+    )
+
     def __init__(self, subsystem: str, name: str, version: str):
         """Initialise SDP state data object."""
-        StateObject.__init__(self, self.get_service_state_object_id(
-            subsystem, name, version))
+        _id = self.get_service_state_object_id(subsystem, name, version)
+        StateObject.__init__(self, _id, self._states, self._transitions,
+                             self._commands)
 
     @staticmethod
     def get_service_state_object_id(subsystem: str, name: str,
