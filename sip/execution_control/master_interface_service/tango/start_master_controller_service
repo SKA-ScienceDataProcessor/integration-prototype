@@ -1,0 +1,22 @@
+#!/bin/sh
+# start containers for mc_rest
+# First copy files from configuration_db (temporary measure)
+
+package=config_db.zip
+
+mcpath=../../master_controller_service
+mipath=.
+dbpath=../../configuration_db/redis
+# Create package file if necessary
+if [ ! -e ${dbpath}/${package} ]
+then
+    (cd ${dbpath}; zip -r ${package} setup.py ${package%.zip})
+    cp ${dbpath}/${package} ${mcpath}
+    cp ${dbpath}/${package} ${mipath}
+fi
+# copy package file if necessary
+[ -e ${mcpath}/${package} ] || cp ${dbpath}/${package} ${mcpath}
+[ -e ${mipath}/${package} ] || cp ${dbpath}/${package} ${mipath}
+# Build and run docker images
+docker-compose -f docker-compose.yml up -d --build && \
+            (cd ${dbpath}/config_db/utils; python3 set_initial_data.py)
