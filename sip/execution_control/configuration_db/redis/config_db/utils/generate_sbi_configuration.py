@@ -24,7 +24,7 @@ PB_VERSION = "0.4.0"
 
 
 def generate_version(max_major: int = 1, max_minor: int = 7,
-                     max_patch: int = 15):
+                     max_patch: int = 15) -> str:
     """Select a random version.
 
     Args:

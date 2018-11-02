@@ -101,7 +101,7 @@ class StateObject:
         return events.subscribe(AGGREGATE_TYPE, subscriber)
 
     @staticmethod
-    def get_subscribers():
+    def get_subscribers() -> List[str]:
         """Get the list of subscribers to state events.
 
         Returns:
@@ -148,12 +148,15 @@ class StateObject:
         """Return a datetime object from an isoformat string."""
         return datetime.strptime(value, '%Y-%m-%dT%H:%M:%S.%f')
 
-    def _update_state(self, state_type: str, value: str):
+    def _update_state(self, state_type: str, value: str) -> datetime:
         """Update the state of type specified (current or target).
 
         Args:
             state_type(str): Type of state to update, current or target.
             value (str): New state value.
+
+        Returns:
+            timestamp, current time
 
         """
         timestamp = datetime.utcnow()
