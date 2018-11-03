@@ -54,10 +54,10 @@ def data(aggregate_type: str, subscriber: str) -> str:
     return 'events:{}:{}:data'.format(aggregate_type, subscriber)
 
 
-def active(aggregate_type: str, subscriber: str) -> str:
-    """Return the db key used to store active events.
+def processed(aggregate_type: str, subscriber: str) -> str:
+    """Return the db key used to store processed events.
 
-    This is the key where active events for the specified subscriber and
+    This is the key where processed events for the specified subscriber and
     aggregate type are stored.
 
     Args:
@@ -65,10 +65,10 @@ def active(aggregate_type: str, subscriber: str) -> str:
         subscriber (str): Subscriber name
 
     Returns:
-        str, db key where active events are stored.
+        str, db key where processed events are stored.
 
     """
-    return 'events:{}:{}:active'.format(aggregate_type, subscriber)
+    return 'events:{}:{}:processed'.format(aggregate_type, subscriber)
 
 
 def history(aggregate_type: str, subscriber: str) -> str:

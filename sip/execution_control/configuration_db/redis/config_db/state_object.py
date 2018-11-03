@@ -16,16 +16,39 @@ DB = ConfigDb()
 class StateObject:
     """Base class for state objects (service state & sdp state)."""
 
-    def __init__(self, aggregate_id: str, states: List[str],
-                 allowed_transitions: dict, allowed_commands: dict):
-        """Initialise the client."""
+    def __init__(self, aggregate_id: str, allowed_states: List[str],
+                 allowed_transitions: dict, allowed_target_states: dict,
+                 initial_state: str = 'unknown'):
+        """Initialise a state object.
+
+        Args:
+            allowed_states (List[str]): List of allowed states.
+            allowed_transitions (dict): Dict of allowed state transitions
+            allowed_target_states (dict): Dict of allowed target states
+
+        """
         self._id = aggregate_id
         self._key = '{}:{}'.format(AGGREGATE_TYPE, self._id)
-        self._states = states
-        self._allowed_transitions = allowed_transitions
-        self._allowed_commands = allowed_commands
+        self._allowed_states = [state.lower() for state in allowed_states]
+        self._allowed_transitions = self._dict_lower(allowed_transitions)
+        self._allowed_target_states = self._dict_lower(allowed_target_states)
         if not DB.key_exists(self._key):
-            DB.set_hash_values(self._key, self._initial_state_config())
+            DB.set_hash_values(self._key, self._initialise(initial_state))
+
+    @property
+    def allowed_states(self) -> List[str]:
+        """Get list of allowed object states."""
+        return self._allowed_states
+
+    @property
+    def allowed_state_transitions(self) -> dict:
+        """Get dictionary of allowed state transitions."""
+        return self._allowed_transitions
+
+    @property
+    def allowed_target_states(self) -> dict:
+        """Get dictionary of allowed target states / commands."""
+        return self._allowed_target_states
 
     @property
     def current_state(self) -> str:
@@ -57,22 +80,41 @@ class StateObject:
     def update_target_state(self, value: str) -> datetime:
         """Set the target state.
 
-        TODO(BM) check value is an allowed state... this will need to know
-                 the allowed state transitions from the child class.
-
         Args:
             value (str): New value for target state
 
         Returns:
             datetime, update timestamp
 
+        Raises:
+            RuntimeError, if it is not possible to currently set the target
+            state.
+            ValueError, if the specified target stat is not allowed.
+
         """
+        value = value.lower()
+        current_state = self.current_state
+        if current_state == 'unknown':
+            raise RuntimeError("Unable to set target state when current state "
+                               "is 'unknown'")
+
+        allowed_target_states = self._allowed_transitions[current_state]
+
+        # print('')
+        # print('CURRENT STATE = ', current_state)
+        # print('TARGET STATE  = ', value)
+        # print('ALLOWED TARGET STATES = ', allowed_target_states)
+
+        if value not in allowed_target_states:
+            raise ValueError("Invalid target state: '{}'. {} can be "
+                             "commanded to states: {}".
+                             format(value, current_state,
+                                    allowed_target_states))
+
         return self._update_state('target', value)
 
     def update_current_state(self, value: str) -> datetime:
         """Update the current state.
-
-        TODO(BM) check value is an allowed state.
 
         Args:
             value (str): New value for sdp state
@@ -80,7 +122,30 @@ class StateObject:
         Returns:
             datetime, update timestamp
 
+        Raises:
+            ValueError: If the specified current state is not allowed.
+
         """
+        value = value.lower()
+        current_state = self.current_state
+        # IF the current state is unknown, it can be set to any of the allowed
+        # states, otherwise only allow certain transitions.
+        if current_state == 'unknown':
+            allowed_transitions = self._allowed_states
+        else:
+            allowed_transitions = self._allowed_transitions[current_state]
+
+        # print('')
+        # print('OLD CURRENT STATE = ', current_state)
+        # print('NEW CURRENT STATE  = ', value)
+        # print('ALLOWED STATES TRANSITIONS = ', allowed_transitions)
+
+        if value not in allowed_transitions:
+            raise ValueError("Invalid current state update: '{}'. '{}' can be "
+                             "transitioned to states: {}"
+                             .format(value, current_state,
+                                     allowed_transitions))
+
         return self._update_state('current', value)
 
     ###########################################################################
@@ -125,20 +190,26 @@ class StateObject:
     # Private functions
     ###########################################################################
 
-    @staticmethod
-    def _initial_state_config() -> dict:
+    def _initialise(self, initial_state: str = 'unknown') -> dict:
         """Return a dictionary used to initialise a state object.
 
         This method is used to obtain a dictionary/hash describing the initial
         state of SDP or a service in SDP.
 
+        Args:
+            initial_state (str): Initial state.
+
         Returns:
             dict, Initial state configuration
 
         """
+        initial_state = initial_state.lower()
+        if initial_state != 'unknown' and \
+           initial_state not in self._allowed_states:
+            raise ValueError('Invalid initial state: {}', initial_state)
         _initial_state = dict(
-            current_state='unknown',
-            target_state='unknown',
+            current_state=initial_state,
+            target_state=initial_state,
             current_timestamp=datetime.utcnow().isoformat(),
             target_timestamp=datetime.utcnow().isoformat())
         return _initial_state
@@ -169,3 +240,9 @@ class StateObject:
                      event_data=dict(old_state=old_state, new_state=value))
 
         return timestamp
+
+    @staticmethod
+    def _dict_lower(dictionary: dict):
+        """Convert allowed state transitions / target states to lowercase."""
+        return {key.lower(): [value.lower() for value in value]
+                for key, value in dictionary.items()}

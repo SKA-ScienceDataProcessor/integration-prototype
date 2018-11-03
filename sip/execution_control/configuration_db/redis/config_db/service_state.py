@@ -10,7 +10,7 @@ LOG = logging.getLogger('SIP.EC.CDB')
 class ServiceState(StateObject):
     """SDP state data object."""
 
-    _states = ['init', 'on', 'off', 'alarm', 'fault']
+    _allowed_states = ['init', 'on', 'off', 'alarm', 'fault']
     _transitions = dict(
         init=['on', 'alarm', 'fault'],
         on=['off', 'alarm', 'fault'],

@@ -10,7 +10,7 @@ LOG = logging.getLogger('SIP.EC.CDB')
 class SDPState(StateObject):
     """SDP state data object."""
 
-    _states = ['init', 'standby', 'on', 'off', 'disable', 'alarm', 'fault']
+    _allowed_states = ['init', 'standby', 'on', 'off', 'disable', 'alarm', 'fault']
 
     _allowed_transitions = dict(
         init=['standby', 'alarm', 'fault'],
@@ -22,7 +22,7 @@ class SDPState(StateObject):
         fault=[]
     )
 
-    _allowed_commands = dict(
+    _allowed_target_states = dict(
         init=[],
         standby=['off', 'on'],
         on=['off', 'standby', 'disable'],
@@ -35,6 +35,6 @@ class SDPState(StateObject):
     def __init__(self):
         """Initialise SDP state data object."""
         StateObject.__init__(self, 'sdp_state',
-                             self._states,
+                             self._allowed_states,
                              self._allowed_transitions,
-                             self._allowed_commands)
+                             self._allowed_target_states)

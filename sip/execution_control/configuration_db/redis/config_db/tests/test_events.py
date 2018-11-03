@@ -44,13 +44,13 @@ def test_events():
     assert not event_queue.get_published_events()
 
     # There should be one active event.
-    active_events = event_queue.get_active_events()
+    active_events = event_queue.get_processed_events()
     assert len(active_events) == 1
     assert active_events[0].id == '{}_event_00000000'.format(aggregate_type)
 
     # Completing the active event should move it to history.
     event.complete()
-    active_events = event_queue.get_active_events()
+    active_events = event_queue.get_processed_events()
     assert not active_events
 
 
@@ -141,7 +141,7 @@ def test_events_recovery():
 
     # At this point, since we cleared the db for the test, there are no
     # active (previously acknowledged) events
-    active_events = event_queue.get_active_events()
+    active_events = event_queue.get_processed_events()
     assert not active_events
 
     # But there are two published events to get form the subscriber queue.
@@ -149,7 +149,7 @@ def test_events_recovery():
     assert len(published_events) == 2
 
     # After asking for published events they are moved to the active queue.
-    active_events = event_queue.get_active_events()
+    active_events = event_queue.get_processed_events()
     assert len(active_events) == 2
 
     # And there are no longer any published events.
@@ -161,5 +161,5 @@ def test_events_recovery():
         event.complete()
 
     # They are moved to the history queue and are no longer active.
-    active_events = event_queue.get_active_events()
+    active_events = event_queue.get_processed_events()
     assert not active_events

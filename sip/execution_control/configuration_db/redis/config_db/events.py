@@ -65,12 +65,12 @@ class Event:
         return self._data['object_id']
 
     def complete(self):
-        """Retire event from the active to history.
+        """Retire event from the processed list to history.
 
         This should be called when processing of the event by the handler is
         complete.
         """
-        DB.remove_from_list(keys.active(self.aggregate_type, self.subscriber),
+        DB.remove_from_list(keys.processed(self.aggregate_type, self.subscriber),
                             self._id)
 
 
@@ -78,7 +78,7 @@ class EventQueue:
     """Event queue class.
 
     Used to poll for subscribed events and query the list of published
-    and active events for a given aggregate type and subscriber.
+    and processed events for a given aggregate type and subscriber.
     """
 
     def __init__(self, aggregate_type: str, subscriber: str,
@@ -99,7 +99,7 @@ class EventQueue:
             self._queue.subscribe(**{aggregate_type: callback_handler})
         self._pub_key = keys.published(aggregate_type, subscriber)
         self._data_key = keys.data(aggregate_type, subscriber)
-        self._active_key = keys.active(aggregate_type, subscriber)
+        self._processed_key = keys.processed(aggregate_type, subscriber)
         self._aggregate_type = aggregate_type
         self._subscriber = subscriber
 
@@ -126,12 +126,12 @@ class EventQueue:
     def get_published_events(self) -> List[Event]:
         """Get all published events.
 
-        Any event return by this method is made active (ie. removed from the
-        published events list and moved to the active events list).
+        Any event return by this method is made processed (ie. removed from the
+        published events list and moved to the processed events list).
 
         This method is intended to be used to recover events missed by
         the get() method which might be needed if recovering when a subscriber
-        goes down. Events returned are moved to the active list with a
+        goes down. Events returned are moved to the processed list with a
         single atomic transaction.
 
         Return:
@@ -142,7 +142,7 @@ class EventQueue:
         event_ids = DB.get_list(self._pub_key, pipeline=True)
         if event_ids:
             DB.delete_key(self._pub_key, pipeline=True)
-            DB.append_to_list(self._active_key, *event_ids, pipeline=True)
+            DB.append_to_list(self._processed_key, *event_ids, pipeline=True)
         DB.execute()
         events = []
         for event_id in event_ids[::-1]:
@@ -152,18 +152,18 @@ class EventQueue:
                                 self._subscriber, event_data))
         return events
 
-    def get_active_events(self) -> List[Event]:
-        """Get all active events.
+    def get_processed_events(self) -> List[Event]:
+        """Get all processed events.
 
         This method is intended to be used to recover events stuck in the
-        active state which could happen if an event handling processing
-        an active event goes down before completing the event processing.
+        processed state which could happen if an event handling processing
+        an processed event goes down before completing the event processing.
 
         Returns:
             list[Events], list of event objects.
 
         """
-        event_ids = DB.get_list(self._active_key)
+        event_ids = DB.get_list(self._processed_key)
         events = []
         for event_id in event_ids:
             event_data = ast.literal_eval(DB.get_hash_value(self._data_key,
@@ -175,14 +175,14 @@ class EventQueue:
     def _get_event(self) -> Event:
         """Retrieve an event.
 
-        Private method, used to return an active Event object to a subscriber
+        Private method, used to return an processed Event object to a subscriber
         after it has received an event notification.
 
         Returns:
-            Event, (Active) event object
+            Event, (processed) event object
 
         """
-        event_id = DB.get_event(self._pub_key, self._active_key)
+        event_id = DB.get_event(self._pub_key, self._processed_key)
         event_data = ast.literal_eval(DB.get_hash_value(self._data_key,
                                                         event_id))
         return Event(event_id, self._aggregate_type, self._subscriber,
