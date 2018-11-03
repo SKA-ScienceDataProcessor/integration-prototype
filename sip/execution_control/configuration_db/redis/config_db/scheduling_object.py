@@ -116,7 +116,7 @@ class SchedulingObject:
         """
         return events.subscribe(self._type, subscriber)
 
-    def get_subscribers(self):
+    def get_subscribers(self) -> List[str]:
         """Get the list of subscribers..
 
         Returns:

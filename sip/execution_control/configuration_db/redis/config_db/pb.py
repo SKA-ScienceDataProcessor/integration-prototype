@@ -64,7 +64,7 @@ class ProcessingBlock(SchedulingObject):
         workflow_dict['workflow'] = workflow_list
         DB.set_hash_values(self._key, workflow_dict)
 
-    def get_workflow_stage(self, stage_id: str):
+    def get_workflow_stage(self, stage_id: str) -> dict:
         """Return details of a workflow stage associated to the PB.
 
         Args:

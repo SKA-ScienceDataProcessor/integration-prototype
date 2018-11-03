@@ -1,0 +1,2 @@
+Requirement already satisfied: jinja2 in /home/njthykkathu/refactor_config_db/lib/python3.6/site-packages (2.10)
+Requirement already satisfied: MarkupSafe>=0.23 in /home/njthykkathu/refactor_config_db/lib/python3.6/site-packages (from jinja2) (1.0)

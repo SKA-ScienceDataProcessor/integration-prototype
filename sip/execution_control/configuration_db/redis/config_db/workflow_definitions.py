@@ -51,7 +51,7 @@ def register_workflow_definition(workflow_id, workflow_version):
     DB.hmset(name, dict(id=workflow_id, version=workflow_version, stages=[]))
 
 
-def get_workflow_definitions():
+def get_workflow_definitions() -> dict:
     """Get list of known workflow definitions.
 
     Returns
@@ -65,6 +65,7 @@ def get_workflow_definitions():
         if values[1] not in known_workflows:
             known_workflows[values[1]] = list()
         known_workflows[values[1]].append(values[2])
+
     return known_workflows
 
 

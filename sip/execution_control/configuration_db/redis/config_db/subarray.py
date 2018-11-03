@@ -30,7 +30,7 @@ class Subarray:
         if not DB.key_exists(self.key):
             DB.set_hash_values(self.key, subarray_config)
 
-    def get_config(self):
+    def get_config(self) -> dict:
         """Return the subarray configuration.
 
         Returns:
