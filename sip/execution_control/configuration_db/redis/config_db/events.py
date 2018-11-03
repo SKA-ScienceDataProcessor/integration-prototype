@@ -70,8 +70,8 @@ class Event:
         This should be called when processing of the event by the handler is
         complete.
         """
-        DB.remove_from_list(keys.processed(self.aggregate_type, self.subscriber),
-                            self._id)
+        key = keys.processed(self.aggregate_type, self.subscriber)
+        DB.remove_from_list(key, self._id)
 
 
 class EventQueue:
@@ -175,8 +175,8 @@ class EventQueue:
     def _get_event(self) -> Event:
         """Retrieve an event.
 
-        Private method, used to return an processed Event object to a subscriber
-        after it has received an event notification.
+        Private method, used to return an processed Event object to a
+        subscriber after it has received an event notification.
 
         Returns:
             Event, (processed) event object

@@ -7,7 +7,7 @@ from ..service_state import ServiceState
 DB = ConfigDb()
 
 
-def test_create_service_object():
+def test_service_state_create():
     """Test creating a service state data object."""
     DB.flush_db()
     service_state = ServiceState('ExecutionControl', 'MasterController',
@@ -15,7 +15,7 @@ def test_create_service_object():
     assert service_state is not None
 
 
-def test_set_target_state():
+def test_service_state_set_target():
     """Test updating the target state."""
     DB.flush_db()
     service_subsystem = 'TangoControl'
@@ -27,6 +27,11 @@ def test_set_target_state():
                                  service_version)
     event_queue = service_state.subscribe('test_update_target')
 
+    service_state.update_current_state('on')
+
+    events = event_queue.get_published_events()
+    assert len(events) == 1
+
     target_state = "off"
     previous_timestamp = service_state.target_timestamp
     set_time = service_state.update_target_state(target_state)
@@ -37,12 +42,14 @@ def test_set_target_state():
     assert events[0].object_type == 'states'
     assert events[0].object_id == object_id
     assert events[0].type == 'target_state_updated'
+    assert events[0].data['old_state'] == 'unknown'
+    assert events[0].data['new_state'] == 'off'
 
     assert service_state.target_state == target_state
     assert service_state.target_timestamp >= set_time
 
 
-def test_set_current_state():
+def test_service_state_set_current():
     """Test updating the current state."""
     DB.flush_db()
     service_subsystem = 'TangoControl'
@@ -64,6 +71,8 @@ def test_set_current_state():
     assert events[0].object_type == 'states'
     assert events[0].object_id == object_id
     assert events[0].type == 'current_state_updated'
+    assert events[0].data['old_state'] == 'unknown'
+    assert events[0].data['new_state'] == 'off'
 
     assert service_state.current_state == current_state
     assert service_state.current_timestamp >= set_time

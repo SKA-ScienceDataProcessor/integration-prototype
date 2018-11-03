@@ -17,8 +17,7 @@ class StateObject:
     """Base class for state objects (service state & sdp state)."""
 
     def __init__(self, aggregate_id: str, allowed_states: List[str],
-                 allowed_transitions: dict, allowed_target_states: dict,
-                 initial_state: str = 'unknown'):
+                 allowed_transitions: dict, allowed_target_states: dict):
         """Initialise a state object.
 
         Args:
@@ -33,7 +32,7 @@ class StateObject:
         self._allowed_transitions = self._dict_lower(allowed_transitions)
         self._allowed_target_states = self._dict_lower(allowed_target_states)
         if not DB.key_exists(self._key):
-            DB.set_hash_values(self._key, self._initialise(initial_state))
+            DB.set_hash_values(self._key, self._initialise())
 
     @property
     def allowed_states(self) -> List[str]:
@@ -206,7 +205,7 @@ class StateObject:
         initial_state = initial_state.lower()
         if initial_state != 'unknown' and \
            initial_state not in self._allowed_states:
-            raise ValueError('Invalid initial state: {}', initial_state)
+            raise ValueError('Invalid initial state: {}'.format(initial_state))
         _initial_state = dict(
             current_state=initial_state,
             target_state=initial_state,

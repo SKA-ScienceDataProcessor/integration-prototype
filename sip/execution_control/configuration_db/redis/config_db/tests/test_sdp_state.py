@@ -12,8 +12,8 @@ def test_sdp_state_create():
     DB.flush_db()
     sdp_state = SDPState()
     assert sdp_state is not None
-    assert sdp_state.states == ['init', 'standby', 'on', 'off',
-                                'disable', 'alarm', 'fault']
+    assert sdp_state.allowed_states == ['init', 'standby', 'on', 'off',
+                                        'disable', 'alarm', 'fault']
 
 
 def test_sdp_state_set_target_state():
