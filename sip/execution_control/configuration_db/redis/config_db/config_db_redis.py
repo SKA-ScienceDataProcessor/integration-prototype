@@ -360,7 +360,6 @@ class ConfigDb:
     def flush_db(self):
         """Clear the entire database.
 
-        Note:
-            Use with care!
+        *Warning* Use with care!
         """
         self._db.flushdb()

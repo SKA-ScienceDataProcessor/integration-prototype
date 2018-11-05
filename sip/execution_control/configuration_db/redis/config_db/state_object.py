@@ -1,12 +1,13 @@
 # -*- coding: utf-8 -*-
 """Base class for State objects."""
+import inspect
 import logging
+import os
+from datetime import datetime
 from typing import List
 
-from datetime import datetime
-
-from .config_db_redis import ConfigDb
 from . import events
+from .config_db_redis import ConfigDb
 
 LOG = logging.getLogger('SIP.EC.CDB')
 AGGREGATE_TYPE = 'states'
@@ -182,8 +183,11 @@ class StateObject:
             event_data (dict, optional): Event data.
 
         """
-        events.publish(AGGREGATE_TYPE, self._id, event_type,
-                       event_data)
+        _stack = inspect.stack()
+        _origin = (os.path.basename(_stack[3][1]) + '::' +
+                   _stack[3][3]+'::L{}'.format(_stack[3][2]))
+        events.publish(AGGREGATE_TYPE, self._id, event_type, event_data,
+                       origin=_origin)
 
     ###########################################################################
     # Private functions

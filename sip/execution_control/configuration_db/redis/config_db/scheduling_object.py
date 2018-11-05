@@ -134,7 +134,13 @@ class SchedulingObject:
 
         """
         # FIXME(BM) also update the status/state of the object?!
-        events.publish(self._type, self._id, event_type, event_data)
+        import inspect
+        import os.path
+        _stack = inspect.stack()
+        _origin = os.path.basename(_stack[3][1]) + '::' + \
+            _stack[3][3]+'::L{}'.format(_stack[3][2])
+        events.publish(self._type, self._id, event_type, event_data,
+                       origin=_origin)
 
     def get_events(self) -> List[events.Event]:
         """Get events associated with the scheduling object.

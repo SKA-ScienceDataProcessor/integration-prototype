@@ -1,7 +1,8 @@
 # coding=utf-8
 """Test of the Configuration Database events interface.
 
-This is the lower level events API used for PB and SBI events.
+This is the lower-level events API used to add events to objects in the
+database.
 """
 import time
 from threading import Thread

@@ -225,7 +225,7 @@ def get_subscribers(aggregate_type: str) -> List[str]:
 
 
 def publish(aggregate_type: str, aggregate_id: str, event_type: str,
-            event_data: dict = None):
+            event_data: dict = None, origin: str = None):
     """Publish an event.
 
     Writes the event id and event data to all subscribers as well as to the
@@ -236,6 +236,7 @@ def publish(aggregate_type: str, aggregate_id: str, event_type: str,
         aggregate_id (str): Aggregate ID
         event_type (str): The event type
         event_data (dict, optional): Optional event data
+        origin (str): Origin or publisher of the event.
 
     """
     # Get a unique event key
@@ -252,8 +253,8 @@ def publish(aggregate_type: str, aggregate_id: str, event_type: str,
         event_dict['event_type'] = event_type
     if event_data is not None:
         event_dict['event_data'] = event_data
-
-    # TODO(BM) add origin/publisher to the event?
+    if origin is not None and 'origin' not in event_dict:
+        event_dict['origin'] = origin
 
     # Publish the event to subscribers
     _publish_to_subscribers(aggregate_type, event_id, event_dict)
