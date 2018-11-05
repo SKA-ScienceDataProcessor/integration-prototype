@@ -123,27 +123,37 @@ class EventQueue:
             return self._get_event()
         return None
 
-    def get_published_events(self) -> List[Event]:
-        """Get all published events.
+    def get_published_events(self, process=True) -> List[Event]:
+        """Get a list of published (pending) events.
 
-        Any event return by this method is made processed (ie. removed from the
-        published events list and moved to the processed events list).
+        Return a list of event.Event objects which have been published
+        and are therefore pending to be processed. If the process argument
+        is set to true, any events returned from this method will also be
+        marked as processed by moving them to the processed events queue.
 
-        This method is intended to be used to recover events missed by
-        the get() method which might be needed if recovering when a subscriber
-        goes down. Events returned are moved to the processed list with a
-        single atomic transaction.
+        This method is intended to be used either to print the list of
+        pending published events, or also to recover from events
+        missed by the get() method. The latter of these use cases may be needed
+        for recovering when a subscriber drops out.
+
+        Args:
+            process (bool): If true, also move the events to the Processed
+                            event queue.
 
         Return:
             list[Events], list of Event objects
 
         """
-        DB.watch(self._pub_key, pipeline=True)
-        event_ids = DB.get_list(self._pub_key, pipeline=True)
-        if event_ids:
-            DB.delete_key(self._pub_key, pipeline=True)
-            DB.append_to_list(self._processed_key, *event_ids, pipeline=True)
-        DB.execute()
+        if process:
+            DB.watch(self._pub_key, pipeline=True)
+            event_ids = DB.get_list(self._pub_key, pipeline=True)
+            if event_ids:
+                DB.delete_key(self._pub_key, pipeline=True)
+                DB.append_to_list(self._processed_key, *event_ids,
+                                  pipeline=True)
+            DB.execute()
+        else:
+            event_ids = DB.get_list(self._pub_key)
         events = []
         for event_id in event_ids[::-1]:
             event_data = ast.literal_eval(DB.get_hash_value(self._data_key,

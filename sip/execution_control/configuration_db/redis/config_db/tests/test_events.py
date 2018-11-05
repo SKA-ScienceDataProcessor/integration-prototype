@@ -145,6 +145,11 @@ def test_events_recovery():
     active_events = event_queue.get_processed_events()
     assert not active_events
 
+    # Get published events without processing them.
+    # Events returned will not be moved to the processed queue.
+    published_events = event_queue.get_published_events(process=False)
+    assert len(published_events) == 2
+
     # But there are two published events to get form the subscriber queue.
     published_events = event_queue.get_published_events()
     assert len(published_events) == 2
