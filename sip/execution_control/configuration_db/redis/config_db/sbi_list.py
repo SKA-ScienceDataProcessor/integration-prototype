@@ -23,13 +23,11 @@ class SchedulingBlockInstanceList(SchedulingObjectList):
                                        'sbi_configure_schema.json')
         self._schema_path = schema_path
 
-    def add(self, sbi_config: dict,
-            subarray_id: str = None) -> SchedulingBlockInstance:
+    def add(self, sbi_config: dict) -> SchedulingBlockInstance:
         """Add Scheduling Block Instance to the database.
 
         Args:
             sbi_config (dict): SBI configuration dictionary.
-            subarray_id (str, optional): Subarray id
 
         Returns:
             SchedulingBlockInstance
@@ -40,5 +38,5 @@ class SchedulingBlockInstanceList(SchedulingObjectList):
             known.
 
         """
-        return SchedulingBlockInstance.from_config(sbi_config, subarray_id,
+        return SchedulingBlockInstance.from_config(sbi_config,
                                                    self._schema_path)

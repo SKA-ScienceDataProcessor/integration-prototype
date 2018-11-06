@@ -40,17 +40,14 @@ class SchedulingBlockInstance(SchedulingObject):
         self._check_exists()
 
     @classmethod
-    def from_config(cls, config_dict: dict,
-                    subarray_id: str = None,
-                    schema_path: str = None):
+    def from_config(cls, config_dict: dict, schema_path: str = None):
         """Create an SBI object from the specified configuration dict.
+
+        TODO(BM) add everything to the db as an atomic operation.
 
         Args:
             config_dict(dict): SBI configuration dictionary
-            subarray_id (str, optional): Subarray Id
-            schema_path(str, optional): SBI schema path.
-
-        TODO(BM) add everything to the db as an atomic operation.
+            schema_path(str, optional): Path to the SBI config schema.
 
         """
         # Validate the SBI config schema
@@ -64,11 +61,8 @@ class SchedulingBlockInstance(SchedulingObject):
         # Add SBI status field
         config_dict['status'] = 'created'
 
-        # Add subarray id field
-        # TODO(BM) validate the subarray_id
-        if subarray_id:
-            config_dict['subarray_id'] = subarray_id
-        else:
+        # Set the subarray field to None if not defined.
+        if 'subarray_id' not in config_dict:
             config_dict['subarray_id'] = 'None'
 
         # Add created, and updated timestamps.

@@ -1,10 +1,9 @@
 # coding=utf-8
 """Tests of the Subarray API."""
-from ..subarray import Subarray
 from ..config_db_redis import ConfigDb
+from ..subarray import Subarray
 from ..utils.generate_sbi_configuration import generate_sbi_config
-from ..utils.workflow_definition_helpers import load_workflow_definition
-from ..workflow_definitions import add_workflow_definition
+from ..utils.workflow_test_utils import add_test_sbi_workflow_definitions
 
 
 def test_subarray_initialise():
@@ -31,15 +30,8 @@ def test_subarray_configure_sbi():
     subarray = Subarray(0)
     subarray.activate()
 
-    # TODO(BM) register workflow definitions for the SBI config
     sbi_config = generate_sbi_config()
-    # FIXME(BM) HACK: Register test workflow definitions needed for this SBI.
-    for i in range(len(sbi_config['processing_blocks'])):
-        workflow_config = load_workflow_definition(
-            sbi_config['processing_blocks'][i]['workflow']['id'],
-            sbi_config['processing_blocks'][i]['workflow']['version']
-        )
-        add_workflow_definition(workflow_config, '')
+    add_test_sbi_workflow_definitions(sbi_config)
 
     subarray.configure_sbi(sbi_config)
 
@@ -50,17 +42,10 @@ def test_subarray_abort():
     subarray = Subarray(0)
     subarray.activate()
 
-    # TODO(BM) register workflow definitions for the SBI config
     sbi_config = generate_sbi_config()
-    # FIXME(BM) HACK: Register test workflow definitions needed for this SBI.
-    for i in range(len(sbi_config['processing_blocks'])):
-        workflow_config = load_workflow_definition(
-            sbi_config['processing_blocks'][i]['workflow']['id'],
-            sbi_config['processing_blocks'][i]['workflow']['version']
-        )
-        add_workflow_definition(workflow_config, '')
+    add_test_sbi_workflow_definitions(sbi_config)
 
     subarray.configure_sbi(sbi_config)
     subarray.abort()
 
-    # TODO(BM) finish this test
+    # FIXME(BM) finish this test

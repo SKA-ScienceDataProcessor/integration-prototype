@@ -1,7 +1,9 @@
 # coding=utf-8
 """High-level interface for subarray objects."""
 import ast
+import inspect
 import logging
+import os
 from typing import List, Union
 
 from . import events
@@ -82,11 +84,13 @@ class Subarray:
 
         Args:
             sbi_config (dict): SBI configuration.
+            schema_path (str, optional): Path to the SBI config schema.
 
         """
         if not self.is_active():
             raise RuntimeError("Unable to add SBIs to inactive subarray!")
-        SchedulingBlockInstance.from_config(sbi_config, self.id, schema_path)
+        sbi_config['subarray_id'] = self.id
+        SchedulingBlockInstance.from_config(sbi_config, schema_path)
         self._add_sbi_id(sbi_config['id'])
 
     def deactivate(self):
@@ -180,4 +184,8 @@ class Subarray:
             event_data (dict, optional): Event data.
 
         """
-        events.publish(AGGREGATE_TYPE, self.id, event_type, event_data)
+        _stack = inspect.stack()
+        _origin = (os.path.basename(_stack[2][1]) + '::' +
+                   _stack[2][3]+'::L{}'.format(_stack[2][2]))
+        events.publish(AGGREGATE_TYPE, self.id, event_type, event_data,
+                       origin=_origin)

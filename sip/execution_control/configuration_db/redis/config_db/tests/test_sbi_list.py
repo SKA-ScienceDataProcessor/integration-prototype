@@ -1,13 +1,12 @@
 # -*- coding: utf-8 -*-
 """Tests of the Scheduling Block Instance List API."""
 from ..config_db_redis import ConfigDb
-from ..pb_list import ProcessingBlockList
 from ..pb import ProcessingBlock
+from ..pb_list import ProcessingBlockList
 from ..sbi_list import SchedulingBlockInstanceList
-from ..utils.generate_sbi_configuration import generate_sbi_config
-from ..utils.workflow_definition_helpers import load_workflow_definition
-from ..workflow_definitions import add_workflow_definition
 from ..subarray import Subarray
+from ..utils.generate_sbi_configuration import generate_sbi_config
+from ..utils.workflow_test_utils import add_test_sbi_workflow_definitions
 
 
 def test_create_sbi_list_object():
@@ -22,19 +21,12 @@ def test_add_sbi():
     Subarray(1).activate()
 
     sbi_config = generate_sbi_config(num_pbs=1)
-    # HACK: Register test workflow definitions needed for this SBI.
-    # TODO(BM) replace with utility function.
-    for i in range(len(sbi_config['processing_blocks'])):
-        workflow_config = load_workflow_definition(
-            sbi_config['processing_blocks'][i]['workflow']['id'],
-            sbi_config['processing_blocks'][i]['workflow']['version']
-        )
-        add_workflow_definition(workflow_config, '')
+    add_test_sbi_workflow_definitions(sbi_config)
 
     sbi_list = SchedulingBlockInstanceList()
     sbi_events = sbi_list.subscribe('test_add_sbi')
 
-    sbi = sbi_list.add(sbi_config, subarray_id='subarray_01')
+    sbi = sbi_list.add(sbi_config)
 
     assert sbi_list.num_active == 1
     assert sbi_list.active[0] == sbi_config['id']
@@ -54,16 +46,7 @@ def test_abort_sbi():
     ConfigDb().flush_db()
 
     sbi_config = generate_sbi_config()
-    # Register test workflow definitions needed for this SBI.
-    for i in range(len(sbi_config['processing_blocks'])):
-        workflow_config = load_workflow_definition(
-            sbi_config['processing_blocks'][i]['workflow']['id'],
-            sbi_config['processing_blocks'][i]['workflow']['version']
-        )
-        add_workflow_definition(workflow_config, '')
-
-    subarray = Subarray(1)
-    subarray.activate()
+    add_test_sbi_workflow_definitions(sbi_config)
 
     sbi_list = SchedulingBlockInstanceList()
     pb_list = ProcessingBlockList()
@@ -72,7 +55,7 @@ def test_abort_sbi():
     pb_events = pb_list.subscribe('test')
 
     # Add the SBI to the database
-    sbi = sbi_list.add(sbi_config, subarray.id)
+    sbi = sbi_list.add(sbi_config)
 
     # Abort the SBI
     sbi.abort()
@@ -108,12 +91,7 @@ def test_get_active():
     sbi_config = generate_sbi_config()
 
     # Register test workflow definitions needed for this SBI.
-    for i in range(len(sbi_config['processing_blocks'])):
-        workflow_config = load_workflow_definition(
-            sbi_config['processing_blocks'][i]['workflow']['id'],
-            sbi_config['processing_blocks'][i]['workflow']['version']
-        )
-        add_workflow_definition(workflow_config, '')
+    add_test_sbi_workflow_definitions(sbi_config)
 
     sbi = sbi_list.add(sbi_config)
     active_sbi = sbi_list.active
