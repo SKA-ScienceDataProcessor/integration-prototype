@@ -4,7 +4,7 @@ services:
 
   setup_stage:
     image: skasip/mock_workflow_stage:test
-    command: "{{ stage.args }}"
+    command: {{ "stage.args" }}
     deploy:
       mode: replicated
       replicas: 1
