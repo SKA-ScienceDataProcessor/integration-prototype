@@ -1,15 +1,15 @@
 {
     "id": "mock_workflow",
-    "version": "1.0.0",
+    "version": "test",
     "stages": [
         {
             "id": "mock_workflow_stage",
-            "version": "1.0.0",
-            "type": "processing",
+            "version": "test",
+            "type": "setup",
             "dependencies": [],
             "resources_required": [],
-            "ee_config": { "compose_template": "ee.yaml" },
-            "app_config": {}
+            "ee_config": { "compose_template": "docker-compose.yaml.j2" },
+            "app_config": { "args_template": "args.json.j2" }
         }
     ]
 }

@@ -2,7 +2,7 @@ version: '3.7'
 
 services:
 
-  setup_stage:
+  mock_workflow_stage:
     image: skasip/mock_workflow_stage:test
     command: {{ stage.args }}
     deploy:
@@ -12,7 +12,4 @@ services:
         limits:
           cpus: '1.0'
           memory: 1024M
-    logging:
-      driver: fluentd
-      options:
-        tag: {{ '"{{.ImageName}}/{{.Name}}/{{.ID}}"' }}
+
