@@ -59,8 +59,6 @@ def add_test_sbi_workflow_definitions(sbi_config: dict,
     """
     templates_root = os.path.join(os.path.dirname(__file__), '..',
                                   'tests', 'data', 'templates')
-    print('')
-    print("ROOT", templates_root)
     for i in range(len(sbi_config['processing_blocks'])):
         workflow_config = sbi_config['processing_blocks'][i]['workflow']
         workflow_definition = load_workflow_definition(
