@@ -32,7 +32,7 @@ def add_workflow_definition(workflow_definition: dict,
 
     """
     schema_path = os.path.join(
-        os.path.dirname(__file__), 'schema',
+        os.path.dirname(__file__), 'data', 'schema',
         'workflow_definition_schema.json')
     with open(schema_path, 'r') as file:
         schema = json.loads(file.read())

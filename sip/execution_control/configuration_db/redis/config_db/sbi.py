@@ -52,7 +52,7 @@ class SchedulingBlockInstance(SchedulingObject):
         """
         # Validate the SBI config schema
         if schema_path is None:
-            schema_path = join(dirname(__file__), 'schema',
+            schema_path = join(dirname(__file__), 'data', 'schema',
                                'sbi_configure_schema.json')
         with open(schema_path, 'r') as file:
             schema = json.loads(file.read())

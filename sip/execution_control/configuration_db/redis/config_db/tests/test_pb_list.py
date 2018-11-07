@@ -6,10 +6,10 @@ list of PBs known to the configuration database.
 """
 from random import choice
 
+from .workflow_test_utils import add_test_sbi_workflow_definitions
 from ..pb_list import DB, ProcessingBlockList
 from ..sbi import SchedulingBlockInstance
 from ..utils.generate_sbi_configuration import generate_sbi_config
-from ..utils.workflow_test_utils import add_test_sbi_workflow_definitions
 
 
 def test_create_pb_list_object():

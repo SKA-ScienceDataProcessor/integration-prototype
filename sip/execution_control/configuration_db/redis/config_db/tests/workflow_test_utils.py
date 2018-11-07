@@ -1,9 +1,14 @@
 # coding=utf-8
 """Utility module for generating workflow definitions during testing."""
-import os
 import json
+import os
+
 import jinja2
+
 from ..workflow_definitions import add_workflow_definition
+
+
+DATA_PATH = os.path.join(os.path.dirname(__file__), 'data', 'workflows')
 
 
 def load_workflow_definition(workflow_id: str = None,
@@ -22,9 +27,9 @@ def load_workflow_definition(workflow_id: str = None,
         dict, workflow definition dictionary
 
     """
-    workflow_path = os.path.join(
-        os.path.dirname(__file__), '..', 'tests', 'data',
-        'test_workflow_definition_{}.json.j2'.format(test_version))
+    workflow_path = os.path.join(DATA_PATH,
+                                 'test_workflow_definition_{}.json.j2'
+                                 .format(test_version))
 
     if workflow_id is None:
         workflow_id = 'test_workflow'
@@ -57,8 +62,7 @@ def add_test_sbi_workflow_definitions(sbi_config: dict,
         test_version(int): version to select the test workflow definition.
 
     """
-    templates_root = os.path.join(os.path.dirname(__file__), '..',
-                                  'tests', 'data', 'templates')
+    templates_root = os.path.join(DATA_PATH, 'templates')
     for i in range(len(sbi_config['processing_blocks'])):
         workflow_config = sbi_config['processing_blocks'][i]['workflow']
         workflow_definition = load_workflow_definition(

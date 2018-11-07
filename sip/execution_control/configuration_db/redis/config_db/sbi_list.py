@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 """High-level interface for Scheduling Block Instance (SBI) objects."""
 import logging
-import os
 
 from .config_db_redis import ConfigDb
 from .sbi import AGGREGATE_TYPE, SchedulingBlockInstance
@@ -14,16 +13,12 @@ DB = ConfigDb()
 class SchedulingBlockInstanceList(SchedulingObjectList):
     """Configuration Database client API for Scheduling Block Instances."""
 
-    def __init__(self, schema_path=None):
+    def __init__(self):
         """Initialise variables."""
         SchedulingObjectList.__init__(self, AGGREGATE_TYPE)
 
-        if schema_path is None:
-            schema_path = os.path.join(os.path.dirname(__file__), 'schema',
-                                       'sbi_configure_schema.json')
-        self._schema_path = schema_path
-
-    def add(self, sbi_config: dict) -> SchedulingBlockInstance:
+    @staticmethod
+    def add(sbi_config: dict) -> SchedulingBlockInstance:
         """Add Scheduling Block Instance to the database.
 
         Args:
@@ -38,5 +33,4 @@ class SchedulingBlockInstanceList(SchedulingObjectList):
             known.
 
         """
-        return SchedulingBlockInstance.from_config(sbi_config,
-                                                   self._schema_path)
+        return SchedulingBlockInstance.from_config(sbi_config)

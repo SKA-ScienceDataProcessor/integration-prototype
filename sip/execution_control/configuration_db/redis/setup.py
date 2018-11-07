@@ -13,20 +13,22 @@ def package_files(directory):
     return paths
 
 
-FILES1 = package_files('config_db/tests/data')
-FILES2 = package_files('config_db/scripts/data')
-FILES3 = package_files('config_db/schema')
-FILES = FILES1 + FILES2 + FILES3
+DATA = package_files('config_db/data')
+TEST_DATA = package_files('config_db/tests/data')
 
 
 setup(name='skasip_config_db',
-      version='1.0.6',
-      description='SIP Execution Control Configuration Database '
-                  'client library.',
-      author='SKA SIP',
-      packages=['config_db', 'config_db/utils'],
-      # scripts=['config_db/scripts/skasip_initialise_database'],
-      package_data={'': FILES},
+      version='1.0.9',
+      description='SIP Execution Control Configuration Database library.',
+      author='SKA SDP SIP team',
+      packages=['config_db', 'config_db/utils', 'config_db/tests'],
+      scripts=['config_db/scripts/skasip_init_config_db'],
+      package_data={'': DATA + TEST_DATA},
       include_package_data=True,
-      install_requires=['redis', 'jsonschema'],
+      install_requires=[
+          'redis>=2.10.6',
+          'jsonschema>=2.6.0',
+          'jinja2>=2.10',
+          'PyYaml>=3.13'
+      ],
       zip_safe=False)
