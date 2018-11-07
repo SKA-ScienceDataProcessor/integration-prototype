@@ -6,7 +6,7 @@ This workflow script uses a combination of SPEAD asyncio and blocking worker
 threads to asynchronously receive and perform ingest processing on visibility
 data streamed from CSP.
 
-This workflow assumes that each ingest processes receives and processes the 
+This workflow assumes that each ingest process receives and processes the 
 complete time stream for a set of channels (which may be as many as ~300).
 
 The total data from CSP for the scheduling block, which may consist of as much
@@ -16,7 +16,7 @@ The assumption we are taking is that these ingest processes can be deployed
 as a set of Docker containers using container orchestration (currently 
 Docker Swarm).
 
-The main workflow function is in the `recv` folder and a a CSP emulator is 
+The main workflow function is in the `recv` folder and a CSP emulator is 
 provided in the `send` folder.
 
 Docker images for the current version of send and receive can be found in

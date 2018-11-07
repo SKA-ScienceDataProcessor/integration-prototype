@@ -6,14 +6,15 @@
         "num_stations": 512,
         "num_pols": 4
     },
-    "num_streams": 10,
+    "max_duration_sec": -1,
+    "num_streams": 60,
     "num_workers": 4,
-    "reporting_interval": 10,
+    "reporting_interval_sec": 1,
     "start_channel": 0,
     "stream_config":
     {
         "max_packet_size": 9172,
-        "rate": 10e6,
+        "rate": 7.1e6,
         "burst_size": 1472,
         "max_heaps": 2
     }

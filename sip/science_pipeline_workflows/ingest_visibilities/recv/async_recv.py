@@ -38,10 +38,10 @@ class SpeadReceiver(object):
             stream = spead2.recv.asyncio.Stream(
                 spead2.ThreadPool(), max_heaps=1, contiguous_only=False)
             pool = spead2.MemoryPool(
-                self._config['memory_pool']['lower'],
-                self._config['memory_pool']['upper'],
-                self._config['memory_pool']['max_free'],
-                self._config['memory_pool']['initial'])
+                lower=self._config['memory_pool']['lower'],
+                upper=self._config['memory_pool']['upper'],
+                max_free=self._config['memory_pool']['max_free'],
+                initial=self._config['memory_pool']['initial'])
             stream.set_memory_allocator(pool)
             stream.add_udp_reader(port_start + i_stream)
             self._streams.append(stream)
@@ -85,10 +85,7 @@ class SpeadReceiver(object):
 
                 # Check the data for debugging!
                 val = self._block[i_time, i_chan, -1][-1].real
-                # self._log.info("Data: %.3f", val)
-                if int(val) >= self._num_buffer_times * (i_block + 1):
-                    raise RuntimeError('Got time index %i - this '
-                                       'should never happen!' % int(val))
+                self._log.debug("Data: %.3f", val)
 
         if self._block is not None:
             # Process the buffered data here.
@@ -118,11 +115,6 @@ class SpeadReceiver(object):
     async def _run_loop(self, executor):
         """Main loop."""
         loop = asyncio.get_event_loop()
-
-        if self._config['filename']:
-            with open(self._config['filename'] + '.txt', "w") as text_file:
-                text_file.write(
-                    "Waiting for %d streams to start..." % self._num_streams)
 
         # Get first heap in each stream (should be empty).
         self._log.info("Waiting for %d streams to start...", self._num_streams)
@@ -158,7 +150,6 @@ class SpeadReceiver(object):
                 await receive_buffer[i_buffer_recv]
                 self._log.info("Received block %i", i_block)
             except spead2.Stopped:
-                # Not sure why this exception is never raised!
                 self._log.info("Stream Stopped")
                 break
             if processing_tasks:
@@ -168,21 +159,12 @@ class SpeadReceiver(object):
 
     def run(self):
         """Starts the receiver."""
-        # Create the thread pool.
-        executor = concurrent.futures.ThreadPoolExecutor(
-            max_workers=1)
-
-        # Run the event loop.
+        executor = concurrent.futures.ThreadPoolExecutor(max_workers=1)
         loop = asyncio.get_event_loop()
-        try:
-            loop.run_until_complete(self._run_loop(executor))
-        except KeyboardInterrupt:
-            pass
-        finally:
-            # Shut down.
-            self._log.info('Shutting down...')
-            executor.shutdown()
-            # loop.close()  # Not required.
+        loop.run_until_complete(self._run_loop(executor))
+        self._log.info('Shutting down...')
+        executor.shutdown()
+        # loop.close()  # Not required.
 
 
 def main():
@@ -192,11 +174,9 @@ def main():
         raise RuntimeError('Usage: python3 async_recv.py <json config>')
 
     # Set up logging.
-    logging.basicConfig(format='%(asctime)-23s %(name)-12s %(threadName)-22s '
-                               '%(message)s',
+    logging.basicConfig(format='%(asctime)-23s %(name)-12s %(levelname)-8s '
+                               '%(threadName)-22s %(message)s',
                         level=logging.INFO, stream=sys.stdout)
-
-    print(sys.argv[1])
 
     # Load SPEAD configuration from JSON file.
     # with open(sys.argv[-1]) as f:
