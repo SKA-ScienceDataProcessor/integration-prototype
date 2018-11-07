@@ -3,7 +3,7 @@
     "version": "test",
     "stages": [
     {
-        "id": "test_setup",
+        "id": "setup_stage",
         "version": "test",
         "type": "setup",
         "dependencies": [],
@@ -21,7 +21,7 @@
         }
     },
     {
-        "id": "test_processing",
+        "id": "processing_stage",
         "version": "test",
         "type": "processing",
         "dependencies": [
@@ -49,7 +49,7 @@
         }
     },
     {
-        "id": "test_cleanup",
+        "id": "cleanup_stage",
         "version": "test",
         "type": "cleanup",
         "dependencies": [

@@ -8,6 +8,7 @@ from typing import List
 
 from . import events
 from .config_db_redis import ConfigDb
+from .utils.datetime_utils import datetime_from_isoformat
 
 LOG = logging.getLogger('SIP.EC.CDB')
 AGGREGATE_TYPE = 'states'
@@ -64,13 +65,13 @@ class StateObject:
     def current_timestamp(self) -> datetime:
         """Get the current state timestamp."""
         timestamp = DB.get_hash_value(self._key, 'current_timestamp')
-        return self._datetime_from_isoformat(timestamp)
+        return datetime_from_isoformat(timestamp)
 
     @property
     def target_timestamp(self) -> datetime:
         """Get the target state timestamp."""
         timestamp = DB.get_hash_value(self._key, 'target_timestamp')
-        return self._datetime_from_isoformat(timestamp)
+        return datetime_from_isoformat(timestamp)
 
     @target_state.setter
     def target_state(self, value: str):
@@ -216,11 +217,6 @@ class StateObject:
             current_timestamp=datetime.utcnow().isoformat(),
             target_timestamp=datetime.utcnow().isoformat())
         return _initial_state
-
-    @staticmethod
-    def _datetime_from_isoformat(value: str):
-        """Return a datetime object from an isoformat string."""
-        return datetime.strptime(value, '%Y-%m-%dT%H:%M:%S.%f')
 
     def _update_state(self, state_type: str, value: str) -> datetime:
         """Update the state of type specified (current or target).

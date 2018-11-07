@@ -2,15 +2,14 @@
 """Tests of the Scheduling Block Instance API."""
 import datetime
 
-from ..config_db_redis import ConfigDb
-from ..sbi import SchedulingBlockInstance
+from ..sbi import SchedulingBlockInstance, DB
 from ..utils.generate_sbi_configuration import generate_sbi_config
 from ..utils.workflow_test_utils import add_test_sbi_workflow_definitions
 
 
 def test_sbi_get_id():
     """Test static method to generate a valid SBI id."""
-    ConfigDb().flush_db()
+    DB.flush_db()
     utc_now = datetime.datetime.utcnow()
     instance_id = 1
     sbi_id = SchedulingBlockInstance.get_id(utc_now, project='sip',
@@ -31,7 +30,7 @@ def test_sbi_get_id():
 
 def test_sbi_from_config():
     """Test creating an SBI from a configuration dictionary."""
-    ConfigDb().flush_db()
+    DB.flush_db()
     sbi_config = generate_sbi_config(num_pbs=2)
     add_test_sbi_workflow_definitions(sbi_config)
 

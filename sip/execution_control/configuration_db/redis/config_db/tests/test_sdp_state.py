@@ -4,12 +4,9 @@ from ..config_db_redis import ConfigDb
 from ..sdp_state import SDPState
 
 
-DB = ConfigDb()
-
-
 def test_sdp_state_create():
     """Test creating SDP state data object."""
-    DB.flush_db()
+    ConfigDb().flush_db()
     sdp_state = SDPState()
     assert sdp_state is not None
     assert sdp_state.allowed_states == ['init', 'standby', 'on', 'off',
@@ -22,7 +19,7 @@ def test_sdp_state_set_target_state():
         unknown->init->standby->off
 
     """
-    DB.flush_db()
+    ConfigDb().flush_db()
     sdp_state = SDPState()
     event_queue = sdp_state.subscribe('test_update_target')
 
@@ -77,7 +74,7 @@ def test_sdp_state_set_target_state():
 
 def test_sdp_state_set_current_state():
     """Test updating the current state."""
-    DB.flush_db()
+    ConfigDb().flush_db()
     sdp_state = SDPState()
     event_queue = sdp_state.subscribe('test_update_target')
 

@@ -43,7 +43,7 @@ class SchedulingBlockInstance(SchedulingObject):
     def from_config(cls, config_dict: dict, schema_path: str = None):
         """Create an SBI object from the specified configuration dict.
 
-        TODO(BM) add everything to the db as an atomic operation.
+        NOTE(BM) This should really be done as a single atomic db transaction.
 
         Args:
             config_dict(dict): SBI configuration dictionary
@@ -127,8 +127,10 @@ class SchedulingBlockInstance(SchedulingObject):
             pb.abort()
 
     def clear_subarray(self):
-        """Clear the subarray associated with the SBI."""
-        # FIXME(BM) check if this method is needed?!
+        """Clear the subarray_id associated with the SBI.
+
+        This is used when deactivating a subarray.
+        """
         DB.set_hash_value(self._key, 'subarray_id', 'none')
 
     def get_pb_ids(self) -> List[str]:
@@ -228,7 +230,7 @@ class SchedulingBlockInstance(SchedulingObject):
                                .format(workflow_id, workflow_version))
         workflow = get_workflow_definition(workflow_id, workflow_version)
         for stage in workflow['stages']:
-            stage['status'] = 'UNKNOWN'
+            stage['status'] = 'none'
         pb_config['workflow_parameters'] = pb_config['workflow']['parameters']
         pb_config['workflow_id'] = pb_config['workflow']['id']
         pb_config['workflow_version'] = pb_config['workflow']['version']

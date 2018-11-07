@@ -2,14 +2,19 @@
 """High Level interface to Processing Block (PB) objects."""
 import ast
 import datetime
-import warnings
 from random import randint
+from typing import List, Union
 
 from .config_db_redis import ConfigDb
 from .scheduling_object import SchedulingObject
+from .utils.datetime_utils import datetime_from_isoformat
+from .workflow_stage import WorkflowStage
+from .resource import Resource
+from .dependency import Dependency
 
-DB = ConfigDb()
+
 AGGREGATE_TYPE = 'pb'
+DB = ConfigDb()
 
 
 class ProcessingBlock(SchedulingObject):
@@ -42,43 +47,160 @@ class ProcessingBlock(SchedulingObject):
         date = date.strftime('%Y%m%d')
         return 'PB-{}-{}-{:03d}'.format(date, 'sip', randint(0, 100))
 
-    def add_assigned_resources(self, resources: dict):
-        """Add assigned resources to db.
+    ###########################################################################
+    # Properties
+    ###########################################################################
 
-        Args:
-            resources (dict): Assigned resources to a specific pb
+    @property
+    def version(self) -> str:
+        """Return the PB version."""
+        return DB.get_hash_value(self._key, 'version')
 
+    @property
+    def status(self) -> str:
+        """Return the Processing Block status."""
+        return DB.get_hash_value(self._key, 'status')
+
+    @property
+    def updated(self) -> datetime.datetime:
+        """Return the last time the PB was updated."""
+        return datetime_from_isoformat(DB.get_hash_value(self._key, 'updated'))
+
+    @property
+    def created(self) -> datetime.datetime:
+        """Return the datetime the PB was created."""
+        return datetime_from_isoformat(DB.get_hash_value(self._key, 'created'))
+
+    @property
+    def type(self) -> str:
+        """Return the PB type."""
+        return DB.get_hash_value(self._key, 'type')
+
+    @property
+    def priority(self) -> int:
+        """Return the PB priority."""
+        return ast.literal_eval(DB.get_hash_value(self._key, 'priority'))
+
+    @property
+    def sbi_id(self) -> str:
+        """Return the PB SBI Id."""
+        return DB.get_hash_value(self._key, 'sbi_id')
+
+    @property
+    def dependencies(self) -> List[Dependency]:
+        """Return the PB dependencies."""
+        dependencies_str = DB.get_hash_value(self._key, 'dependencies')
+        dependencies = []
+        for dependency in ast.literal_eval(dependencies_str):
+            dependencies.append(Dependency(dependency))
+        return dependencies
+
+    @property
+    def resources_assigned(self) -> List[Resource]:
+        """Return list of resources assigned to the PB."""
+        resources_str = DB.get_hash_value(self._key, 'resources_assigned')
+        resources_assigned = []
+        for resource in ast.literal_eval(resources_str):
+            resources_assigned.append(Resource(resource))
+        return resources_assigned
+
+    @property
+    def resources_required(self) -> List[Resource]:
+        """Return list of resources required by the PB.
+
+        This is resources common to all workflow stages.
         """
-        warnings.warn("Warning this function is untested", FutureWarning)
-        # Initialising empty list
-        workflow_list = []
-        workflow_dict = {}
+        resources_str = DB.get_hash_value(self._key, 'resources_required')
+        resources_assigned = []
+        for resource in ast.literal_eval(resources_str):
+            resources_assigned.append(Resource(resource))
+        return resources_assigned
 
-        # Add assigned resources to workflow
-        workflow = DB.get_hash_value(self._key, 'workflow')
-        for stages in ast.literal_eval(workflow):
-            workflow_stage = dict(stages)
-            workflow_stage['assigned_resources'] = resources
-            workflow_list.append(workflow_stage)
+    @property
+    def workflow_id(self) -> str:
+        """Return the PB workflow ID."""
+        return DB.get_hash_value(self._key, 'workflow_id')
 
-        workflow_dict['workflow'] = workflow_list
-        DB.set_hash_values(self._key, workflow_dict)
+    @property
+    def workflow_version(self) -> str:
+        """Return the PB workflow version."""
+        return DB.get_hash_value(self._key, 'workflow_version')
 
-    def get_workflow_stage(self, stage_id: str) -> dict:
-        """Return details of a workflow stage associated to the PB.
+    @property
+    def workflow_parameters(self) -> dict:
+        """Return the PB workflow parameters."""
+        return ast.literal_eval(DB.get_hash_value(self._key,
+                                                  'workflow_parameters'))
 
-        Args:
-            stage_id (str): Workflow stage identifier
+    @property
+    def workflow_stages(self) -> List[WorkflowStage]:
+        """Return list of workflow stages.
 
         Returns:
             dict, resources of a specified pb
 
         """
-        warnings.warn("Warning this function is untested", FutureWarning)
-        workflow_list = DB.get_hash_value(self._key, 'workflow')
-        for stages in ast.literal_eval(workflow_list):
-            workflow_stage = dict(stages)[stage_id]
-            return workflow_stage
+        workflow_stages = []
+        stages = DB.get_hash_value(self._key, 'workflow_stages')
+        for stage in ast.literal_eval(stages):
+            workflow_stages.append(WorkflowStage(stage))
+        return workflow_stages
+
+    ###########################################################################
+    # Public methods
+    ###########################################################################
+
+    def add_assigned_resource(self, resource_type: str,
+                              value: Union[str, int, float, bool],
+                              parameters: dict = None):
+        """Add assigned resource to the processing block.
+
+        Args:
+            resource_type (str): Resource type
+            value: Resource value
+            parameters (dict, optional): Parameters specific to the resource
+
+        """
+        if parameters is None:
+            parameters = dict()
+        resources = DB.get_hash_value(self._key, 'resources_assigned')
+        resources = ast.literal_eval(resources)
+        resources.append(dict(type=resource_type, value=value,
+                              parameters=parameters))
+        DB.set_hash_value(self._key, 'resources_assigned', resources)
+
+    def clear_assigned_resources(self):
+        """Clear all resources assigned to the processing block."""
+        DB.set_hash_value(self._key, 'resources_assigned', [])
+
+    def remove_assigned_resource(self, resource_type: str,
+                                 value: Union[str, int, float, bool] = None,
+                                 parameters: dict = None):
+        """Remove assigned resources from the processing block.
+
+        All matching resources will be removed. If only type is specified
+        all resources of the specified type will be removed.
+        If value and/or parameters are specified they will be used
+        for matching the resource to remove.
+
+        Args:
+            resource_type (str): Resource type
+            value: Resource value
+            parameters (dict, optional): Parameters specific to the resource
+
+        """
+        resources = DB.get_hash_value(self._key, 'resources_assigned')
+        resources = ast.literal_eval(resources)
+        new_resources = []
+        for resource in resources:
+            if resource['type'] != resource_type:
+                new_resources.append(resource)
+            elif value is not None and resource['value'] != value:
+                new_resources.append(resource)
+            elif parameters is not None and \
+                    resource['parameters'] != parameters:
+                new_resources.append(resource)
+        DB.set_hash_value(self._key, 'resources_assigned', new_resources)
 
     def abort(self):
         """Abort the processing_block."""
@@ -92,3 +214,13 @@ class ProcessingBlock(SchedulingObject):
         DB.append_to_list(key, self._id)
         key = '{}:aborted:{}'.format(self._type, pb_type)
         DB.append_to_list(key, self._id)
+        self._mark_updated()
+
+    ###########################################################################
+    # Private methods
+    ###########################################################################
+
+    def _mark_updated(self):
+        """Update the updated timestamp."""
+        timestamp = datetime.datetime.utcnow().isoformat()
+        DB.set_hash_value(self._key, 'updated', timestamp)

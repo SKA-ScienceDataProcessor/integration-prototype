@@ -14,12 +14,21 @@ DB = redis.StrictRedis(decode_responses=True)
 
 
 def add_workflow_definition(workflow_definition: dict,
-                            templates_dir: str):
+                            templates_root: str):
     """Add a workflow definition to the Configuration Database.
+
+    Templates are expected to be found in a directory tree with the following
+    structure:
+
+        - workflow_id:
+            |- workflow_version
+                |- stage_id
+                    |- stage_version
+                        |- <templates>
 
     Args:
         workflow_definition (dict): Workflow definition.
-        templates_dir (str): Workflow templates path
+        templates_root (str): Workflow templates root path
 
     """
     schema_path = os.path.join(
@@ -32,7 +41,7 @@ def add_workflow_definition(workflow_definition: dict,
 
     _id = workflow_definition['id']
     _version = workflow_definition['version']
-    _load_templates(workflow_definition, templates_dir)
+    _load_templates(workflow_definition, templates_root)
 
     workflow_id = workflow_definition['id']
     version = workflow_definition['version']
@@ -113,15 +122,18 @@ def get_workflow_definition(workflow_id: str, workflow_version: str) -> dict:
     return workflow
 
 
-def _load_templates(workflow: dict, templates_dir: str):
+def _load_templates(workflow: dict, templates_root: str):
     """Load templates keys."""
+    workflow_template_path = os.path.join(templates_root, workflow['id'],
+                                          workflow['version'])
     for i, stage_config in enumerate(workflow['stages']):
+        stage_template_path = os.path.join(workflow_template_path,
+                                           stage_config['id'],
+                                           stage_config['version'])
         for config_type in ['ee_config', 'app_config']:
             for key, value in stage_config[config_type].items():
                 if 'template' in key:
-                    template_path = os.path.join(templates_dir, value)
-                    # print(i, config_type, key, value, template_path)
-                    with open(template_path, 'r') as file:
+                    template_file = os.path.join(stage_template_path, value)
+                    with open(template_file, 'r') as file:
                         template_str = file.read()
-                    workflow['stages'][i][config_type][key] = template_str
-                    # workflow['stages'][i][config_type][key] = ''
+                        workflow['stages'][i][config_type][key] = template_str

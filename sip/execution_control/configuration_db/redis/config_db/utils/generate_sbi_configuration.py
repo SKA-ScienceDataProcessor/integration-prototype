@@ -1,9 +1,11 @@
 # coding=utf-8
 """Module to generate test data for sbi and pb client."""
 import datetime
-from random import randint, choice
-from ..sbi import SchedulingBlockInstance as sbi
-from ..pb import ProcessingBlock as pb
+from random import choice, randint
+from typing import Union, List
+
+from ..pb import ProcessingBlock
+from ..sbi import SchedulingBlockInstance
 
 PB_TYPES = [
     'realtime',
@@ -61,58 +63,87 @@ def generate_sb(date: datetime.datetime, project: str,
     return dict(id=sb_id, project=project, programme_block=programme_block)
 
 
-def generate_pb_config(pb_id: str) -> dict:
+def generate_pb_config(pb_id: str,
+                       pb_config: dict = None,
+                       workflow_config: dict = None) -> dict:
     """Generate a PB configuration dictionary.
 
     Args:
         pb_id (str): Processing Block Id
+        pb_config (dict, optional) PB configuration.
+        workflow_config (dict, optional): Workflow configuration
 
     Returns:
         dict, PB configuration dictionary.
 
     """
-    pb_type = choice(PB_TYPES)
-    if pb_type == 'offline':
-        workflow_id = choice(OFFLINE_WORKFLOWS)
-    else:
-        workflow_id = choice(REALTIME_WORKFLOWS)
+    if workflow_config is None:
+        workflow_config = dict()
+    if pb_config is None:
+        pb_config = dict()
+    pb_type = pb_config.get('type', choice(PB_TYPES))
+    workflow_id = workflow_config.get('id')
+    if workflow_id is None:
+        if pb_type == 'offline':
+            workflow_id = choice(OFFLINE_WORKFLOWS)
+        else:
+            workflow_id = choice(REALTIME_WORKFLOWS)
+    workflow_version = workflow_config.get('version', generate_version())
+    workflow_parameters = workflow_config.get('parameters', dict())
     pb_data = dict(
         id=pb_id,
         version=PB_VERSION,
         type=pb_type,
-        priority=randint(0, 10),
-        dependencies=[],
+        priority=pb_config.get('priority', randint(0, 10)),
+        dependencies=pb_config.get('dependencies', []),
+        resources_required=pb_config.get('resources_required', []),
         workflow=dict(
             id=workflow_id,
-            version=generate_version(),
-            parameters=dict()
+            version=workflow_version,
+            parameters=workflow_parameters
         )
     )
     return pb_data
 
 
 def generate_sbi_config(num_pbs: int = 3, project: str = 'sip',
-                        programme_block: str = 'sip_demos') -> dict:
+                        programme_block: str = 'sip_demos',
+                        pb_config: Union[dict, List[dict]] = None,
+                        workflow_config:
+                        Union[dict, List[dict]] = None) -> dict:
     """Generate a SBI configuration dictionary.
 
     Args:
         num_pbs (int, optional): Number of Processing Blocks (default = 3)
         project (str, optional): Project to associate the SBI with.
-        programme_block (str, optional): Programme block to associate the SBI
-                                         with
+        programme_block (str, optional): SBI programme block
+        pb_config (dict, List[dict], optional): PB configuration
+        workflow_config (dict, List[dict], optional): Workflow configuration
 
     Returns:
         dict, SBI configuration dictionary
 
     """
+    if isinstance(workflow_config, dict):
+        workflow_config = [workflow_config]
+    if isinstance(pb_config, dict):
+        pb_config = [pb_config]
     utc_now = datetime.datetime.utcnow()
     pb_list = []
-    for _ in range(num_pbs):
-        pb_id = pb.get_id(utc_now)
-        pb_config = generate_pb_config(pb_id)
-        pb_list.append(pb_config)
+    for i in range(num_pbs):
+        pb_id = ProcessingBlock.get_id(utc_now)
+        if workflow_config is not None:
+            _workflow_config = workflow_config[i]
+        else:
+            _workflow_config = None
+        if pb_config is not None:
+            _pb_config = pb_config[i]
+        else:
+            _pb_config = None
+        pb_dict = generate_pb_config(pb_id, _pb_config, _workflow_config)
+        pb_list.append(pb_dict)
     sbi_config = dict(
-        id=sbi.get_id(utc_now, project),
+        id=SchedulingBlockInstance.get_id(utc_now, project),
         version=SBI_VERSION,
         scheduling_block=generate_sb(utc_now, project, programme_block),
         processing_blocks=pb_list

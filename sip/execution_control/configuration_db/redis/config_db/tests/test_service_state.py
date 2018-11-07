@@ -4,12 +4,9 @@ from ..config_db_redis import ConfigDb
 from ..service_state import ServiceState
 
 
-DB = ConfigDb()
-
-
 def test_service_state_create():
     """Test creating a service state data object."""
-    DB.flush_db()
+    ConfigDb().flush_db()
     service_state = ServiceState('ExecutionControl', 'MasterController',
                                  'test')
     assert service_state is not None
@@ -17,7 +14,7 @@ def test_service_state_create():
 
 def test_service_state_set_target():
     """Test updating the target state."""
-    DB.flush_db()
+    ConfigDb().flush_db()
     service_subsystem = 'TangoControl'
     service_name = 'SDPMaster'
     service_version = 'test'
@@ -51,7 +48,7 @@ def test_service_state_set_target():
 
 def test_service_state_set_current():
     """Test updating the current state."""
-    DB.flush_db()
+    ConfigDb().flush_db()
     service_subsystem = 'TangoControl'
     service_name = 'SDPMaster'
     service_version = 'test'

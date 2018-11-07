@@ -1,8 +1,9 @@
 # coding=utf-8
 """Test of JSON schema."""
 
-import os
 import json
+import os
+
 import jsonschema
 
 

@@ -128,12 +128,15 @@ class SchedulingObject:
     def publish(self, event_type: str, event_data: dict = None):
         """Publish a Scheduling Block Instance or Processing Block event.
 
+        Note:
+            Ideally publish should not be used directly but by other methods
+            which perform actions on the object.
+
         Args:
             event_type (str): Type of event.
             event_data (dict, optional): Event data.
 
         """
-        # FIXME(BM) also update the status/state of the object?!
         import inspect
         import os.path
         _stack = inspect.stack()

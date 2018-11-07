@@ -28,10 +28,8 @@ def test_add_workflow_definition():
         workflow_definition = json.loads(file.read())
 
     # Set workflow definition templates directory
-    templates_dir = os.path.join(workflows_dir, 'templates',
-                                 workflow_definition['id'],
-                                 workflow_definition['version'])
-    add_workflow_definition(workflow_definition, templates_dir)
+    templates_root = os.path.join(workflows_dir, 'templates')
+    add_workflow_definition(workflow_definition, templates_root)
 
     # Load the workflow definition and test against expected result
     wfd = get_workflow_definition(workflow_definition["id"],

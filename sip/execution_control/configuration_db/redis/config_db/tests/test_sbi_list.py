@@ -1,9 +1,8 @@
 # -*- coding: utf-8 -*-
 """Tests of the Scheduling Block Instance List API."""
-from ..config_db_redis import ConfigDb
 from ..pb import ProcessingBlock
 from ..pb_list import ProcessingBlockList
-from ..sbi_list import SchedulingBlockInstanceList
+from ..sbi_list import DB, SchedulingBlockInstanceList
 from ..subarray import Subarray
 from ..utils.generate_sbi_configuration import generate_sbi_config
 from ..utils.workflow_test_utils import add_test_sbi_workflow_definitions
@@ -17,7 +16,7 @@ def test_create_sbi_list_object():
 
 def test_add_sbi():
     """Test adding SBI data to the EC configuration DB."""
-    ConfigDb().flush_db()
+    DB.flush_db()
     Subarray(1).activate()
 
     sbi_config = generate_sbi_config(num_pbs=1)
@@ -43,7 +42,7 @@ def test_add_sbi():
 
 def test_abort_sbi():
     """Test cancelling SBI data."""
-    ConfigDb().flush_db()
+    DB.flush_db()
 
     sbi_config = generate_sbi_config()
     add_test_sbi_workflow_definitions(sbi_config)
@@ -84,7 +83,7 @@ def test_abort_sbi():
 
 def test_get_active():
     """Test method to get active SBI"""
-    ConfigDb().flush_db()
+    DB.flush_db()
     sbi_list = SchedulingBlockInstanceList()
     pb_list = ProcessingBlockList()
     sbi_list.subscribe('test_add_sbi')
