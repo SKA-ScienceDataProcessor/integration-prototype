@@ -59,8 +59,9 @@ def test_pb_workflow_stage_config():
     workflow_config = dict(
         id='test_workflow',
         version='4.0.0',
-        parameters=dict(setup=dict(duration=5)))
-    sbi_config = generate_sbi_config(1, workflow_config=workflow_config)
+        parameters=dict(setup=dict(duration=5, num_channels=10)))
+    sbi_config = generate_sbi_config(1, workflow_config=workflow_config,
+                                     pb_config=dict(type='offline'))
     add_test_sbi_workflow_definitions(sbi_config, test_version=4)
 
     # Add the SBI to the database.
@@ -78,6 +79,7 @@ def test_pb_workflow_stage_config():
     assert stage.id in pb.workflow_parameters
     assert stage.version == 'test'
     assert stage.type == 'setup'
+    assert stage.status == 'none'
     assert stage.timeout == 20
     assert not stage.dependencies
     assert not stage.resources_required
@@ -96,6 +98,9 @@ def test_pb_workflow_stage_config():
     compose_template = jinja2.Template(stage.compose_template)
     compose_str = compose_template.render(stage=dict(args=args_str))
     assert 'services' in compose_str
+    # print()
+    # print('-------------')
+    # print(compose_str)
     assert yaml.load(compose_str)
 
     stage = workflow_stages[1]
@@ -109,8 +114,7 @@ def test_pb_resources():
     """Test PB / workflow resources methods."""
     DB.flush_db()
     pb_config = dict(
-        resources_required=[dict(type='node',
-                                 value=3,
+        resources_required=[dict(type='node', value=3,
                                  parameters=dict(flavour='compute_a',
                                                  exclusive=True))]
     )

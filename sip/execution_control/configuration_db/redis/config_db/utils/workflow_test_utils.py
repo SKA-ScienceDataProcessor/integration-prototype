@@ -23,7 +23,7 @@ def load_workflow_definition(workflow_id: str = None,
 
     """
     workflow_path = os.path.join(
-        os.path.dirname(__file__), 'data',
+        os.path.dirname(__file__), '..', 'tests', 'data',
         'test_workflow_definition_{}.json.j2'.format(test_version))
 
     if workflow_id is None:
@@ -57,8 +57,10 @@ def add_test_sbi_workflow_definitions(sbi_config: dict,
         test_version(int): version to select the test workflow definition.
 
     """
-    templates_root = os.path.join(os.path.dirname(__file__), 'data',
-                                  'templates')
+    templates_root = os.path.join(os.path.dirname(__file__), '..',
+                                  'tests', 'data', 'templates')
+    print('')
+    print("ROOT", templates_root)
     for i in range(len(sbi_config['processing_blocks'])):
         workflow_config = sbi_config['processing_blocks'][i]['workflow']
         workflow_definition = load_workflow_definition(

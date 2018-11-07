@@ -22,7 +22,7 @@ def test_add_workflow_definition():
         DB.delete(key)
 
     # Load the test workflow definition
-    workflows_dir = os.path.join(os.path.dirname(__file__), 'workflows')
+    workflows_dir = os.path.join(os.path.dirname(__file__), 'data')
     workflow_path = os.path.join(workflows_dir, 'test_workflow.json')
     with open(workflow_path, 'r') as file:
         workflow_definition = json.loads(file.read())
