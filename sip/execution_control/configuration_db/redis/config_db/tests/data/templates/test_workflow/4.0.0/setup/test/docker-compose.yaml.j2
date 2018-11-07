@@ -4,7 +4,7 @@ services:
 
   setup_stage:
     image: skasip/mock_workflow_stage:test
-    command: {{ stage.args }}
+    command: "{{ stage.args }}"
     deploy:
       mode: replicated
       replicas: 1
@@ -12,7 +12,7 @@ services:
         limits:
           cpus: '1.0'
           memory: 1024M
-    logging:
-      driver: fluentd
-      options:
-        tag: {{ '"{{.ImageName}}/{{.Name}}/{{.ID}}"' }}
+{#    logging:#}
+{#      driver: fluentd#}
+{#      options:#}
+{#        tag: {{ '"{{.ImageName}}/{{.Name}}/{{.ID}}"' }}#}
