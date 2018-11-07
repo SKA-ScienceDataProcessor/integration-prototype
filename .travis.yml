@@ -34,9 +34,9 @@ before_install:
   # Install Python testing and linting dependencies
   - pip install -r testing_requirements.txt
   # Install dependencies for SIP packages
+  - pip install -r sip/execution_control/configuration_db/redis/requirements.txt
   - pip install spead2>=1.7.2
   - pip install -r sip/execution_control/processing_controller_interface/flask_api/requirements.txt
-  - pip install -r sip/execution_control/configuration_db/redis/requirements.txt
   - pip install -r sip/execution_framework_interface/docker_api/requirements.txt
   - pip install -r sip/execution_framework_interface/docker_compose_generator/requirements.txt
   - pip install -r sip/science_pipeline_workflows/ical_dask/pipelines/requirements.arl.min.txt
@@ -52,11 +52,11 @@ script:
 
   - pylint --rcfile=.pylintrc --ignore=csp_pss_sender,csp_vis_sender_01,csp_vis_sender_02 emulators
 
-  - python -m pytest -s -v --codestyle --docstyle --pylint --pylint-rcfile=.pylintrc sip/execution_control/configuration_db
   - python -m pytest -s -v --codestyle --docstyle --pylint --pylint-rcfile=.pylintrc sip/execution_framework_interface/docker_api
   - python -m pytest -s -v --codestyle --docstyle --pylint --pylint-rcfile=.pylintrc sip/execution_framework_interface/docker_compose_generator
   - python -m pytest -s -v --codestyle --docstyle --pylint --pylint-rcfile=.pylintrc sip/science_pipeline_workflows/ical_dask
 
+  - python -m pytest -s -v --codestyle --docstyle --pylint --pylint-rcfile=.pylintrc --rootdir=. sip/execution_control/configuration_db
   - pytest --cov=sip/execution_control/configuration_db sip/execution_control/configuration_db
 
 after_success:
