@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""Extremely simple mock workflow task."""
+"""Extremely simple mock workflow stage task."""
 import logging
 import sys
 import json
@@ -7,7 +7,7 @@ import time
 import enlighten
 
 
-LOG = logging.getLogger('sip.mock_task_vis_ingest_processing_01')
+LOG = logging.getLogger('sip.mock_workflow_stage')
 
 
 def main():
@@ -17,7 +17,7 @@ def main():
         return
 
     config = json.loads(sys.argv[1])
-    LOG.info('Running mock workflow task 01.')
+    LOG.info('Running mock workflow stage 01.')
     LOG.info('Received configuration: %s', config)
     LOG.info('Starting task')
 
@@ -25,9 +25,15 @@ def main():
     manager = enlighten.get_manager()
     progress = manager.counter(total=20, desc="task", unit='steps')
 
-    for i in range(20):
-        LOG.info("Processing step %i", i)
-        time.sleep(5/20)
+    i = 0
+    start_time = time.time()
+    duration = config.get('duration', 20)
+    while time.time() - start_time <= duration:
+        time.sleep(duration / 20)
+        elapsed = time.time() - start_time
+        LOG.info("%s", config.get('message', 'hello {}'.format(i + 1)))
+        LOG.info("elapsed = %.2f s", elapsed)
+        i += 1
         progress.update()
 
     LOG.info('Task complete!')
