@@ -10,6 +10,9 @@ import sys
 import logging
 import time
 import json
+import jinja2
+from config_db import ProcessingBlock
+from docker_client import DockerClient
 
 # import docker
 # import docker.types
@@ -37,24 +40,77 @@ init_logger()
 
 @APP.task(name='processing_controller.processing_block_controller.tasks.'
                'execute_processing_block')
-def execute_processing_block(config: dict):
+def execute_processing_block(pb_id: str):
     """Execute a processing block.
 
     Args:
-        config (dict): Processing Block Configuration.
+        pb_id (str): The PB id for the PBC
+
     """
     log = logging.getLogger('sip.ec.pbc')
 
     log.info('**** Executing Processing block! ****')
-    log.info('config: %s', json.dumps(config))
     log.info('Starting workflow')
-    timeout = config.get('timeout', None)
-    start_time = time.time()
+    print('XX', pb_id)
+
+    pb = ProcessingBlock(pb_id)
+    docker = DockerClient()
+
+    workflow_stages = pb.workflow_stages
+    running_service_ids = []
+
     while True:
-        time.sleep(0.5)
-        log.debug('Executing workflow ... %.1f s', (time.time() - start_time))
-        if timeout and time.time() - start_time > timeout:
-            break
+
+        # Check dependencies and get list of stages ready to start.
+        # ...
+        # Check if the stage is complete
+        # while True:
+        #     for service_id in running_service_ids:
+        #         if service is complete:
+        #             del run_service_id[service_id]
+        #
+        #     break
+        # # Check if complete
+        stages = [workflow_stages[0]]
+
+        # Start stages.
+        for stage in stages:
+            # Configure EE
+            log.info('workflow stage: %s', stage.id)
+            log.info('xxx %s', stage.args_template)
+            args_template = jinja2.Template(stage.args_template)
+            log.info('xxx3 %s', json.dumps(stage.config))
+            args = args_template.render(stage=stage.config,
+                                        **pb.workflow_parameters)
+            args = json.dumps(json.loads(args))
+            log.info('**********')
+            log.info('ARGS: %s', args)
+
+            compose_template = jinja2.Template(stage.compose_template)
+            log.info('xxx1  %s', stage.compose_template)
+            compose_str = compose_template.render(stage=dict(args=args))
+            log.info('**********')
+            log.info('COMPOSE_STR: {}'.format(compose_str))
+
+            # Run the compose file
+            docker.create_services(compose_str)
+            # running_service_ids.append(serivce_id)
+            # update db status
+
+        # if there are not more stages -> break
+        break
+
+    # timeout = config.get('timeout', None)
+    # start_time = time.time()
+    # while True:
+    #     time.sleep(0.5)
+    #     log.debug('Executing workflow ... %.1f s', (time.time() - start_time))
+    #     if timeout and time.time() - start_time > timeout:
+    #         break
+
+
+
+
     # The workflow configuration should contain the workflow template
     # and the configuration for each workflow stage.
 

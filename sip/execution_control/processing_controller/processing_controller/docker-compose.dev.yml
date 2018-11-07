@@ -17,6 +17,7 @@ services:
     environment:
       - CELERY_BROKER=redis://config_db/1
       - CELERY_BACKEND=redis://config_db/2
+      - REDIS_HOST=config_db
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
     deploy:

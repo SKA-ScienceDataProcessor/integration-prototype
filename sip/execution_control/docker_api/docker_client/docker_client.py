@@ -29,34 +29,33 @@ class DockerClient:
     # Create functions
     ###########################################################################
 
-    def create_services(self, compose_file):
+    def create_services(self, compose_str):
         """Create new docker services.
 
         Args:
-            compose_file (string): Docker compose file
+            compose_str (string): Docker compose 'file' string
         """
         # Raise an exception if we are not a manager
         if not self._manager:
             raise RuntimeError('Services can only be run on '
                                'swarm manager nodes')
 
-        with open(compose_file, 'r') as file:
-            try:
-                service_config = yaml.load(file)
-                for service_name in service_config['services']:
-                    service_exist = self._client.services.list(
-                        filters={'name': service_name})
-                    if not service_exist:
-                        service_spec = self._parse_services(
-                            service_config, service_name)
-                        for s_spec in service_spec:
-                            LOG.debug('Creating services: %s', s_spec)
-                            self._client.services.create(**s_spec)
-                    else:
-                        LOG.debug('Services already exists')
+        try:
+            service_config = yaml.load(compose_str)
+            for service_name in service_config['services']:
+                service_exist = self._client.services.list(
+                    filters={'name': service_name})
+                if not service_exist:
+                    service_spec = self._parse_services(
+                        service_config, service_name)
+                    for s_spec in service_spec:
+                        LOG.debug('Creating services: %s', s_spec)
+                        self._client.services.create(**s_spec)
+                else:
+                    LOG.debug('Services already exists')
 
-            except yaml.YAMLError as exc:
-                print(exc)
+        except yaml.YAMLError as exc:
+            print(exc)
 
     def create_volume(self, volume_name, driver_spec=None):
         """Create new docker volumes.

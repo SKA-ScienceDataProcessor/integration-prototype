@@ -3,6 +3,8 @@ LABEL maintainer="Benjamin Mort <ben.mort@gmail.com>"
 
 WORKDIR /app
 
+RUN apk add --no-cache git
+
 COPY requirements.txt .
 RUN pip install --no-cache-dir -U "celery[redis]"
 RUN pip install --no-cache-dir -r requirements.txt
