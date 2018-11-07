@@ -40,12 +40,11 @@ def add_workflow_definitions():
                       if fn.endswith('.json')
                       and not fn.startswith('test')
                       and not fn == 'services.json']
+    templates_dir = join(path, 'templates')
     for file_path in workflow_files:
         print('* Loading workflow template: {}'.format(file_path))
         with open(file_path, 'r') as file:
             workflow_dict = json.load(file)
-            templates_dir = join(path, 'templates', workflow_dict['id'],
-                                 workflow_dict['version'])
             add_workflow_definition(workflow_dict, templates_dir)
 
 
