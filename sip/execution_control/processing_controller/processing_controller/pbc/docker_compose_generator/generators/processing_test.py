@@ -27,15 +27,18 @@ def generate(config):
 
     # TODO(BM) Validate the ee and app configuration schema
 
-    app_args_file = app_config['args_template']
+    app_args_file = app_config['compose_template']
     json_args = json.dumps(load_json_file(app_args_file))
 
     template_params = dict(
-        json_config=json_args,
+        # json_config=json_args,
+        buffer_path="/app"
     )
 
     # Render the compose template for the ingest service configuration
+    # TODO this wil eventually comes from DB
     compose_template = load_template(ee_config['compose_template'])
+
     compose_file = compose_template.render(**template_params)
 
     return compose_file

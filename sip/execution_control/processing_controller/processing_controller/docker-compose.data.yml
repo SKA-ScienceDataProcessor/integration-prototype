@@ -1,0 +1,33 @@
+networks:
+  hostnet:
+    external: true
+    name: host
+services:
+  recv:
+    command:
+      filename: test_receive.dat
+      memory_pool:
+        initial: 8
+        lower: 4465152
+        max_free: 16
+        upper: 26214400
+      num_buffer_times: 4
+      num_buffers: 2
+      num_streams: 10
+      port_start: 41000
+      process_data: true
+      write_data: false
+    deploy:
+      mode: replicated
+      placement:
+        constraints:
+        - node.labels.recv == true
+      replicas: null
+    image: skasip/ingest_visibilities
+    networks:
+    - hostnet
+    volumes:
+    - source: null
+      target: /app/output
+      type: bind
+version: '3.6'
