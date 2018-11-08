@@ -3,20 +3,17 @@
 
 http://docs.celeryproject.org/en/latest/userguide/testing.html
 """
-import time
-# import logging
 
-import json  # pylint: disable=unused-import
-import celery  # pylint: disable=unused-import
+import json
 
+import celery
 from celery.app.control import Inspect
+from config_db.sbi import DB, SchedulingBlockInstance
 from config_db.utils.generate_sbi_configuration import generate_sbi_config
-from config_db.utils.workflow_test_utils import \
+from config_db.tests.workflow_test_utils import \
     add_test_sbi_workflow_definitions
-from config_db.sbi import SchedulingBlockInstance, DB
 
-from ..processing_block_controller.tasks import execute_processing_block
-from ..processing_block_controller.tasks import APP
+from ..processing_block_controller.tasks import APP, execute_processing_block
 
 
 def test_pbc_inspect_tasks():

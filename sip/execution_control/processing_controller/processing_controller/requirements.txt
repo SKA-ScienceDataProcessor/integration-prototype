@@ -1,13 +1,9 @@
-# For the Configuration database client.
 redis>=2.10.6
 jsonschema>=2.6.0
-
-# For the Mock Processing Block Controller
 celery>=4.1.0
-
 jinja2>=2.10
-git+https://github.com/SKA-ScienceDataProcessor/integration-prototype@updates/config_db_refactor#egg=config_db&subdirectory=sip/execution_control/configuration_db/redis
-git+https://github.com/SKA-ScienceDataProcessor/integration-prototype@feature/scheduler#egg=docker_client&subdirectory=sip/execution_control/docker_api
-
 docker>=3.3.0
 PyYaml>=3.1.3
+git+https://github.com/SKA-ScienceDataProcessor/integration-prototype@master#egg=config_db&subdirectory=sip/execution_control/configuration_db
+git+https://github.com/SKA-ScienceDataProcessor/integration-prototype@feature/scheduler#egg=docker_client&subdirectory=sip/execution_control/docker_api
+

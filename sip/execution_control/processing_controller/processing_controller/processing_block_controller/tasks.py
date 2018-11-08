@@ -5,19 +5,18 @@ export CELERY_BROKER=redis://localhost:6379/1
 export CELERY_BACKEND=redis://localhost:6379/2
 celery -A mock_processing_block_controller.tasks worker -l info
 """
+import json
+import logging
 import os
 import sys
-import logging
-import time
-import json
+
 import jinja2
-from config_db import ProcessingBlock
+from celery import Celery
+from config_db.pb import ProcessingBlock
 from docker_client import DockerClient
 
 # import docker
 # import docker.types
-
-from celery import Celery
 
 BROKER = os.getenv('CELERY_BROKER', 'redis://localhost:6379/1')
 BACKEND = os.getenv('CELERY_BACKEND', 'redis://localhost:6379/2')
