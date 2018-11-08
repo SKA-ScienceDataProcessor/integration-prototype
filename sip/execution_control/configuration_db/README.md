@@ -87,6 +87,12 @@ To add an SBI to the database
 skasip_config_db_add_sbi [--subarray N] [--activate] [--help]
 ```
 
+To update the state of a service or the state of sdp:
+
+```bash
+skasip_config_db_update_state [--service SUBSYSTEM.NAME.VERSION] [--help] new_state
+```
+
 
 ### Running tests
 
