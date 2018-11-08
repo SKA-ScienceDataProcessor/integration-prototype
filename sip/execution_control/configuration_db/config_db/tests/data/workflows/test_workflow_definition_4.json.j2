@@ -1,0 +1,52 @@
+{
+    "id": "{{ workflow_id }}",
+    "version": "{{ workflow_version }}",
+    "stages": [
+    {
+        "id": "setup",
+        "version": "test",
+        "type": "setup",
+        "timeout": 20,
+        "dependencies": [],
+        "resources_required": [],
+        "ee_config": {
+          "compose_template": "docker-compose.yaml.j2"
+        },
+        "app_config": {
+          "args_template": "args.json.j2"
+        }
+    },
+    {
+        "id": "processing",
+        "version": "test",
+        "type": "processing",
+        "timeout": 20,
+        "dependencies": [
+            {
+              "type": "stage",
+              "value": "setup",
+              "condition": "complete"
+            }
+        ],
+        "resources_required": [],
+        "ee_config": {},
+        "app_config": {}
+    },
+    {
+        "id": "cleanup",
+        "version": "test",
+        "type": "cleanup",
+        "timeout": 20,
+        "dependencies": [
+            {
+              "type": "stage",
+              "value": "processing",
+              "condition": "complete"
+            }
+        ],
+        "resources_required": [],
+        "ee_config": {},
+        "app_config": {}
+    }
+    ]
+}
