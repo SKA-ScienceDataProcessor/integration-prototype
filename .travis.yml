@@ -34,7 +34,7 @@ before_install:
   # Install Python testing and linting dependencies
   - pip install -r testing_requirements.txt
   # Install dependencies for SIP packages
-  - pip install -r sip/execution_control/configuration_db/redis/requirements.txt
+  - pip install -r sip/execution_control/configuration_db/requirements.txt
   - pip install spead2>=1.7.2
   - pip install -r sip/execution_control/processing_controller_interface/flask_api/requirements.txt
   - pip install -r sip/execution_framework_interface/docker_api/requirements.txt

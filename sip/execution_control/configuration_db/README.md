@@ -59,41 +59,18 @@ redis-server
 Note - It requires redis to be installed and all python packages in the
 requirements.txt file
 
-### Install the client 
+### Installation using `pip`
 
-To package the client inside a container, you would need to add the following 
-to the Dockerfile and also need make sure to install git.
-
+This library can be installed using `pip` with the following command: 
 
 ```bash
 pip install git+https://github.com/SKA-ScienceDataProcessor/integration-prototype@master#egg=config_db\&subdirectory=sip/execution_control/config_db
 ```
 
-You should always pip install from a master unless your updating the config_db.
-To pip install from a branch, change <BRANCHNAME> to the name of the branch in 
-the following command.
+It can also be installed from a local copy of the code using:
 
 ```bash
-pip install git+https://github.com/SKA-ScienceDataProcessor/integration-prototype@<BRANCHNAME>#egg=config_db\&subdirectory=sip/execution_control/config_db
-```
-
-### Package the client
-
-Following instructions shows have to package the client
-
-Go to `sip/execution_control/configuration_db/redis` folder:
-
-```bash
-pip install .
-```
-
-You should now be able to run the config_db anywhere in the system. 
-e.g.
-
-```python
-from config_db.sdp_state import SDPState
-sdp_state = SDPState()
-print(sdp_state.current_state)
+pip install sip/execution_control/configuration/db
 ```
 
 ### Utility Scripts
@@ -104,7 +81,7 @@ To set initial data into the configuration database run the following command:
 skasip_init_config_db [data_path]
 ```
 
-### Test Scripts
+### Running tests
 
 While unit tests are run automatically the 
 [SIP CI/CD service](https://travis-ci.com/SKA-ScienceDataProcessor/integration-prototype),
@@ -120,5 +97,6 @@ source venv/bin/activate
 pip install -r testing_requirements.txt
 pip install -r sip/execution_control/configuration_db/requirements.txt
 python3 -m pytest --pylint --codestyle --docstyle -s -v \
-    --pylint-rcfile=.pylintrc sip/execution_control/configuration_db
+    --pylint-rcfile=.pylintrc --rootdir=. \
+    sip/execution_control/configuration_db
 ```
