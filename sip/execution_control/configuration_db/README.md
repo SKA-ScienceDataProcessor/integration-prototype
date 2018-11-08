@@ -64,7 +64,7 @@ requirements.txt file
 This library can be installed using `pip` with the following command: 
 
 ```bash
-pip install git+https://github.com/SKA-ScienceDataProcessor/integration-prototype@master#egg=config_db\&subdirectory=sip/execution_control/config_db
+pip install git+https://github.com/SKA-ScienceDataProcessor/integration-prototype@master#egg=config_db\&subdirectory=sip/execution_control/configuration_db
 ```
 
 It can also be installed from a local copy of the code using:
