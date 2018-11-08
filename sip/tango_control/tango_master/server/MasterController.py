@@ -1,18 +1,5 @@
 # -*- coding: utf-8 -*-
-#
-# This file is part of the MasterController project
-#
-#
-#
-# Distributed under the terms of the GPL license.
-# See LICENSE.txt for more info.
-
-""" 
-
-SKA SDP Master Controller prototype
-"""
-
-# PyTango imports
+"""SKA SDP Master Controller prototype."""
 import PyTango
 from PyTango import DebugIt
 from PyTango.server import run
@@ -28,7 +15,7 @@ import redis
 __all__ = ["MasterController", "main"]
 
 
-class MasterController(SKADevice,metaclass=DeviceMeta):
+class MasterController(SKADevice, metaclass=DeviceMeta):
     """
     SKA SDP Master Controller prototype
     """
@@ -62,7 +49,7 @@ class MasterController(SKADevice,metaclass=DeviceMeta):
 
     @attribute(label="Target", dtype=str)
     def targetState(self):
-        db = masterClient() 
+        db = masterClient()
         try:
            self._targetState = db.get_value(self.MC, "Target_state")
            self._targetTimeStamp = db.get_value(self.MC, "Target_timestamp")
@@ -71,7 +58,7 @@ class MasterController(SKADevice,metaclass=DeviceMeta):
 
         self.debug_stream("Target_state = {} TimeStamp={}".
                           format(self._targetState, self._targetTimeStamp))
-      
+
         return  self._targetState
 
     @targetState.write
@@ -85,7 +72,7 @@ class MasterController(SKADevice,metaclass=DeviceMeta):
                 "NOTVALID",\
                 newState + " is not a valid target state")
 
-        db = masterClient() 
+        db = masterClient()
         try:
             self.debug_stream('updating state')
             db.update_target_state( 'Target_state', newState)

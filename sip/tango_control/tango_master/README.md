@@ -1,1 +1,3 @@
-# SIP prototype of the SDP Tango Master device & device server.
+# Master Controller (Tango variant)
+
+Development folder for Tango Master Controller (SDP Element Master)
