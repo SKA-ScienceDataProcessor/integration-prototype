@@ -13,9 +13,11 @@ from PyTango.server import attribute, command
 from PyTango import AttrQuality, DispLevel, DevState
 from PyTango import AttrWriteType, PipeWriteType
 from SKADevice import SKADevice
+from tango import Database, DbDevInfo
 from config_db import SDPState, ServiceState
 from config_db import SchedulingBlockInstanceList, ProcessingBlockList
 from config_db import SchedulingBlockInstance
+from config_db import ProcessingBlock
 
 
 __all__ = ["MasterController", "main"]
@@ -48,7 +50,7 @@ class MasterController(SKADevice, metaclass=DeviceMeta):
         # iterate over sdp services to be able to call the current state
         # property on each
         # For now this is mocked by this sleep
-        time.sleep(2)
+        time.sleep(0.1)
         # FIXME(BMo) Fix the state logic so that we dont have to check the
         # current state when reinitialising device.
         if self._service_state.current_state == 'unknown':
@@ -75,14 +77,39 @@ class MasterController(SKADevice, metaclass=DeviceMeta):
     # Commands
     # ---------------
 
-    @command(dtype_in='str', dtype_out='str')
+    @command(dtype_in=str)
+    @DebugIt()
     def configure(self, sbi_config):
         """Schedule an offline only SBI with SDP."""
-        try:
-            sbi = SchedulingBlockInstance.from_config(sbi_config)
-        except jsonschema.exceptions.ValidationError:
-            return 'failed to parse json'
-        return 'added SBI with ID = {}'.format(sbi.id)
+        # FIXME(BMo) something in from_config is not respecting REDIS_HOST!
+        # config_dict = json.loads(sbi_config)
+        # sbi = SchedulingBlockInstance.from_config(config_dict)
+        # try:
+        #
+        # except jsonschema.exceptions.ValidationError as error:
+        #     raise
+        #     # return 'failed to parse json'
+        # return 'added SBI with ID = {}'.format(sbi.id)
+
+        # sdp/pb/PB - xxxxxx
+        db = Database()
+        # devices = db.get_server_list("PB*").value_string
+
+        pb_list = self._pb_list.active
+
+        for pb in pb_list:
+            device_name = 'sdp/ProcessingBlock/{}'.format(pb)
+            new_device_info = DbDevInfo()
+            new_device_info._class = "ProcessingBlockDevice"
+            new_device_info.server = "ProcessingController/test"
+            new_device_info.name = device_name
+            db.add_device(new_device_info)
+            print('CREATING DEVICE', device_name)
+        print(pb_list)
+        # self.debug_stream(pb_list)
+        pb = ProcessingBlock(pb_list[0])
+        print(pb.id)
+        return 'added SBI to db!'
 
     # ------------------
     # Attributes methods
