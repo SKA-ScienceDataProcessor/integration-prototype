@@ -18,6 +18,14 @@ services:
     volumes:
       - ./tango_test_device:/app
 
+  tango_master:
+    image: skasip/tango_master:latest
+    command: sleep 36000
+    environment:
+      - TANGO_HOST=tango_host:20000
+    volumes:
+      - ./tango_master:/app
+
   tango_mysql:
     image: skasip/tango_mysql:1.0.0
     environment:
