@@ -62,10 +62,16 @@ def add_test_sbi_workflow_definitions(sbi_config: dict,
         test_version(int): version to select the test workflow definition.
 
     """
+    registered_workflows = []
     templates_root = os.path.join(DATA_PATH, 'templates')
     for i in range(len(sbi_config['processing_blocks'])):
         workflow_config = sbi_config['processing_blocks'][i]['workflow']
+        workflow_name = '{}:{}'.format(workflow_config['id'],
+                                       workflow_config['version'])
+        if workflow_name in registered_workflows:
+            continue
         workflow_definition = load_workflow_definition(
             workflow_config['id'], workflow_config['version'],
             test_version)
         add_workflow_definition(workflow_definition, templates_root)
+        registered_workflows.append(workflow_name)
