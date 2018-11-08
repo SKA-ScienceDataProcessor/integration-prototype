@@ -1,0 +1,76 @@
+{
+    "id": "test_workflow",
+    "version": "test",
+    "stages": [
+    {
+        "id": "setup_stage",
+        "version": "test",
+        "type": "setup",
+        "dependencies": [],
+        "resources_required": [
+            {
+                "type": "cpu",
+                "value": 0.1
+            }
+        ],
+        "ee_config": {
+            "compose_template": "setup.yaml.j2"
+        },
+        "app_config": {
+            "args_template": "setup.json.j2"
+        }
+    },
+    {
+        "id": "processing_stage",
+        "version": "test",
+        "type": "processing",
+        "dependencies": [
+            {
+                "type": "stage",
+                "value": "test_setup",
+                "condition": "complete"
+            }
+        ],
+        "resources_required": [
+            {
+                "type": "node",
+                "value": 3,
+                "parameters": {
+                    "flavour": "compute_a",
+                    "exclusive": true
+                }
+            }
+        ],
+        "ee_config": {
+            "compose_template": "processing.yaml.j2"
+        },
+        "app_config": {
+            "args_template": "processing.json.j2"
+        }
+    },
+    {
+        "id": "cleanup_stage",
+        "version": "test",
+        "type": "cleanup",
+        "dependencies": [
+            {
+                "type": "stage",
+                "value": "test_processing",
+                "condition": "complete"
+            }
+        ],
+        "resources_required": [
+            {
+                "type": "cpu",
+                "value": 0.1
+            }
+        ],
+        "ee_config": {
+            "compose_template": "cleanup.yaml.j2"
+        },
+        "app_config": {
+            "args_template": "cleanup.json.j2"
+        }
+    }
+    ]
+}

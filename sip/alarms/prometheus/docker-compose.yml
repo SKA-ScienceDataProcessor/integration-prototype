@@ -1,0 +1,37 @@
+version: '3.4'
+
+services:
+  redis:
+    image: redis:4.0.6-alpine
+    ports:
+      - 6379:6379
+
+  prometheus:
+    image: sip-prometheus
+    ports:
+      - 9090:9090
+    build: prometheus
+
+  pushgateway:
+    image: prom/pushgateway
+    ports:
+      - 9091:9091
+
+  alarm_receiver:
+    image: sip-alarm-receiver
+    build: alarm_receiver
+    ports:
+      - 9095:9095
+
+  alert_manager:
+    image: sip-alert-manager
+    build: alert_manager
+    ports:
+      - 9093:9093
+
+  demo:
+    image: demo-app
+    build: demo_app
+    depends_on:
+      - "pushgateway"
+

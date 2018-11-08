@@ -1,3 +1,5 @@
+[![Build Status](https://travis-ci.com/SKA-ScienceDataProcessor/integration-prototype.svg?branch=master)](https://travis-ci.com/SKA-ScienceDataProcessor/integration-prototype)
+
 # SDP Integration Prototype
 
 ## Introduction

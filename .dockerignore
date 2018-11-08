@@ -10,4 +10,3 @@
 
 # Test directories
 **/tests
-**/.pytest_cache/

@@ -1,0 +1,78 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+"""Utility module to set initial data into the Configuration Database."""
+import json
+import sys
+from os import listdir
+from os.path import dirname, join
+
+import config_db
+from config_db.config_db_redis import ConfigDb
+from config_db.sdp_state import SDPState
+from config_db.service_state import ServiceState
+from config_db.subarray_list import SubarrayList
+from config_db.workflow_definitions import add_workflow_definition
+
+
+def initialise_states(data_path: str):
+    """Initialise fields for the state of SDP."""
+    print('* Initialising SDP state')
+    SDPState()
+    with open(join(data_path, 'services.json'), 'r') as file:
+        services = json.load(file)
+        for service in services['services']:
+            print('* Initialising service state: {}'.format(service))
+            subsystem, name, version = service.split('.')
+            ServiceState(subsystem, name, version)
+
+
+def initialise_subarrays():
+    """Initialise subarrays."""
+    print('* Initialising subarrays')
+    SubarrayList()
+
+
+def add_workflow_definitions(workflows_path: str):
+    """Add workflow definitions.
+
+    Args:
+        workflows_path (str): Path used to store workflow definitions
+    """
+    workflow_files = [join(workflows_path, fn)
+                      for fn in listdir(workflows_path)
+                      if fn.endswith('.json')
+                      and not fn.startswith('test')
+                      and not fn == 'services.json']
+    for file_path in workflow_files:
+        print('* Loading workflow template: {}'.format(file_path))
+        with open(file_path, 'r') as file:
+            workflow_dict = json.load(file)
+            add_workflow_definition(workflow_dict, join(workflows_path,
+                                                        'templates'))
+
+
+def main():
+    """Initialise the database.
+
+    If specified by the first command line argument, a data path containing
+    service and workflow definitions is used to initialise the database
+    instead of the default data path installed as part of the config_db
+    library.
+
+    A data path should be a directory containing the following:
+
+        - services.json  (a file defining the set of services registered with
+                          the MC)
+        - workflows/     (a directory of SIP workflow definitions)
+
+    """
+    ConfigDb().flush_db()
+    default_data_path = join(dirname(config_db.__file__), 'data')
+    data_path = sys.argv[1] if len(sys.argv) > 1 else default_data_path
+    initialise_subarrays()
+    initialise_states(data_path)
+    add_workflow_definitions(join(data_path, 'workflows'))
+
+
+if __name__ == '__main__':
+    main()

@@ -1,0 +1,19 @@
+FROM ubuntu:18.04
+LABEL maintainer="Vlad Stolyarov"
+
+ENV DEBIAN_FRONTEND=noninteractive
+
+RUN apt-get update && \
+    apt-get install -y python3-pip && \
+    pip3 install -U pip && \
+    pip install dask distributed
+
+ENV LC_ALL=C.UTF-8
+ENV LANG=C.UTF-8
+
+WORKDIR /scheduler
+
+# Install Bokeh - needed for scheduler web UI
+RUN pip install bokeh
+
+ENTRYPOINT ["dask-scheduler"]
