@@ -27,12 +27,12 @@ services:
  #    depends_on:
  #      - tango_host
 
-    config_db:
+    master_db:
       image: redis:4.0.6-alpine
       ports:
         - 6379:6379
       volumes:
-        - sip_config_db:/data/db
+        - master_db:/data/db
 
     services_watchdog:
       image: skasip/master_controller_service
@@ -42,5 +42,5 @@ services:
 
 
 volumes:
-  sip_config_db:
+  master_db:
   tango_db:
