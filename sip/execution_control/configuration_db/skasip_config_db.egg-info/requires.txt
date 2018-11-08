@@ -1,4 +1,0 @@
-redis
-jsonschema
-simplejson
-namesgenerator
