@@ -1,0 +1,24 @@
+{
+    "id": "{{ workflow_id }}",
+    "version": "{{ workflow_version }}",
+    "stages": [
+    {
+        "id": "stage1",
+        "version": "test",
+        "type": "setup",
+        "dependencies": [],
+        "resources_required": [],
+        "ee_config": { },
+        "app_config": { }
+    },
+    {
+        "id": "stage2",
+        "type": "processing",
+        "version": "test",
+        "dependencies": [],
+        "resources_required": [],
+        "ee_config": { },
+        "app_config": { }
+    }
+    ]
+}
