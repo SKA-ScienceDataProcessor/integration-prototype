@@ -1,0 +1,57 @@
+version: '3.7'
+
+services:
+
+  test_client:
+    image: skasip/tango_test_client:latest
+    command: sleep 36000
+    environment:
+      - TANGO_HOST=tango_host:10000
+    volumes:
+      - ./tango_test_client:/app
+
+  test_device:
+    image: skasip/tango_test_device:latest
+    command: sleep 36000
+    environment:
+      - TANGO_HOST=tango_host:10000
+    volumes:
+      - ./tango_test_device:/app
+
+  tango_mysql:
+    image: skasip/tango_mysql:1.0.0
+    environment:
+      - MYSQL_ROOT_PASSWORD=sip1
+    volumes:
+      - tangodb:/var/lib/mysql
+
+  tango_host:
+    image: skasip/tango_databaseds:1.0.0
+    ports:
+      - 10000:10000
+    environment:
+      - TANGO_HOST=localhost:10000
+      - MYSQL_HOST=tango_mysql:3306
+      - MYSQL_USER=tango
+      - MYSQL_PASSWORD=tango
+      - MYSQL_DATABASE=tango_db
+    depends_on:
+      - tango_mysql
+
+  config_database:
+    image: redis:4.0.6-alpine
+    ports:
+      - 6379:6379
+    volumes:
+      - config_database:/data/db
+
+  redis-commander-db0:
+    image: rediscommander/redis-commander:latest
+    environment:
+    - REDIS_HOSTS=config_db:config_database:6379:0
+    ports:
+    - 8081:8081
+
+volumes:
+  config_database:
+  tangodb:
