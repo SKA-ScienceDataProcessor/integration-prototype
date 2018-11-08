@@ -90,8 +90,9 @@ class Subarray:
         if not self.is_active():
             raise RuntimeError("Unable to add SBIs to inactive subarray!")
         sbi_config['subarray_id'] = self.id
-        SchedulingBlockInstance.from_config(sbi_config, schema_path)
+        sbi = SchedulingBlockInstance.from_config(sbi_config, schema_path)
         self._add_sbi_id(sbi_config['id'])
+        return sbi
 
     def deactivate(self):
         """Deactivate the subarray."""

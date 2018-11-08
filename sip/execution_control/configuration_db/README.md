@@ -78,8 +78,15 @@ pip install sip/execution_control/configuration/db
 To set initial data into the configuration database run the following command:
 
 ```bash
-skasip_init_config_db [data_path]
+skasip_config_db_init [data_path]
 ```
+
+To add an SBI to the database
+
+```bash
+skasip_config_db_add_sbi [--subarray N] [--activate] [--help]
+```
+
 
 ### Running tests
 
