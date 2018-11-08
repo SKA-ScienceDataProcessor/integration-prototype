@@ -101,7 +101,7 @@ class MasterController(SKADevice, metaclass=DeviceMeta):
             device_name = 'sdp/ProcessingBlock/{}'.format(pb)
             new_device_info = DbDevInfo()
             new_device_info._class = "ProcessingBlockDevice"
-            new_device_info.server = "ProcessingController/test"
+            new_device_info.server = "ProcessingControllerDS/test"
             new_device_info.name = device_name
             db.add_device(new_device_info)
             print('CREATING DEVICE', device_name)
