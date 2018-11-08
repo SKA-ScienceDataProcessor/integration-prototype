@@ -7,8 +7,8 @@ from setuptools import setup
 def package_files(directory):
     """Get list of data files to add to the package."""
     paths = []
-    for (path, _, filenames) in os.walk(directory):
-        for filename in filenames:
+    for (path, _, file_names) in os.walk(directory):
+        for filename in file_names:
             paths.append(os.path.join('..', path, filename))
     return paths
 
@@ -18,11 +18,15 @@ TEST_DATA = package_files('config_db/tests/data')
 
 
 setup(name='skasip_config_db',
-      version='1.0.10',
+      version='1.0.13',
       description='SIP Execution Control Configuration Database library.',
       author='SKA SDP SIP team',
       packages=['config_db', 'config_db/utils', 'config_db/tests'],
-      scripts=['config_db/scripts/skasip_init_config_db'],
+      scripts=[
+          'config_db/scripts/skasip_config_db_init',
+          'config_db/scripts/skasip_config_db_add_sbi',
+          'config_db/scripts/skasip_config_db_update_state',
+      ],
       package_data={'': DATA + TEST_DATA},
       include_package_data=True,
       install_requires=[

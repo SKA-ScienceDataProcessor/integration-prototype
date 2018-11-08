@@ -64,7 +64,7 @@ requirements.txt file
 This library can be installed using `pip` with the following command: 
 
 ```bash
-pip install git+https://github.com/SKA-ScienceDataProcessor/integration-prototype@master#egg=config_db\&subdirectory=sip/execution_control/config_db
+pip install git+https://github.com/SKA-ScienceDataProcessor/integration-prototype@master#egg=config_db\&subdirectory=sip/execution_control/configuration_db
 ```
 
 It can also be installed from a local copy of the code using:
@@ -78,8 +78,21 @@ pip install sip/execution_control/configuration/db
 To set initial data into the configuration database run the following command:
 
 ```bash
-skasip_init_config_db [data_path]
+skasip_config_db_init [data_path]
 ```
+
+To add an SBI to the database
+
+```bash
+skasip_config_db_add_sbi [--subarray N] [--activate] [--help]
+```
+
+To update the state of a service or the state of sdp:
+
+```bash
+skasip_config_db_update_state [--service SUBSYSTEM.NAME.VERSION] [--help] new_state
+```
+
 
 ### Running tests
 
