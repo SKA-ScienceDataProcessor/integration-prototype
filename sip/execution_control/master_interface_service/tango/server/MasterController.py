@@ -98,7 +98,7 @@ class MasterController(SKADevice,metaclass=DeviceMeta):
     def HeartBeat(self):
         mc = masterClient()
         value = mc.get_value('execution_control:master_controller',
-                    'state_timestamp')
+                    'State_timestamp')
         return value
 
     # --------
