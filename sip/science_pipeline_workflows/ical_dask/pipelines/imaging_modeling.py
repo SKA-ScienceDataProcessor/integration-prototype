@@ -44,7 +44,7 @@ def init_logging():
 
 
 def main():
-    """Main workflow function."""
+    """Workflow stage application."""
     init_logging()
 
     # Get Dask client
