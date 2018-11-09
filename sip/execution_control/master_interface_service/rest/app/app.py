@@ -97,25 +97,45 @@ def root():
                 {"Link":"Version", "href": "{}version".format(request.url)}
                 ,{"Link":"State", "href": "{}state".format(request.url)}
                 ,{"Link":"SchedulingBlockInstances", "href": "{}SchedBlock".format(request.url)}
-                ,{"Link":"ProcessingBlocks", "href": "{}ProcBlock".format(request.url)}
+                ,{"Link":"ProcessingBlocks-all", "href": "{}ProcBlock/all".format(request.url)}
+                ,{"Link":"ProcessingBlocks-offline", "href": "{}ProcBlock/offline".format(request.url)}
+                ,{"Link":"ProcessingBlocks-realtime", "href": "{}ProcBlock/realtime".format(request.url)}
             ]
         }
     }
 
-@APP.route('/ProcBlock')
+
+@APP.route('/ProcBlock/all')
 def ProcessingBlocks():
+    return { "message" : "Processing Blocks under construction" }
+
+
+@APP.route('/ProcBlock/offline')
+def offlineProcessingBlocks():
+    return { "message" : "Processing Blocks under construction" }
+
+
+@APP.route('/ProcBlock/realtime')
+def realtimeProcessingBlocks():
     return { "message" : "Processing Blocks under construction" }
 
 
 @APP.route('/SchedBlock')
 def SchedulingBlocks():
-    return { "message" : "Scheduling Blocks under construction" }
+    from config_db.sbi_list import DB, SchedulingBlockInstanceList
+    sbi_list = SchedulingBlockInstanceList()
+    return {
+            'message':'This is the Scheduling Block Instance List',
+            'num_instances':sbi_list.num_active,
+            'instances':sbi_list.active
+    }
+
 
 @APP.route('/version')
 def version():
     """Return the Master version."""
     return {
-        "version": "Version {}".format(VERSION)
+        "message": "Version {}".format(VERSION)
     }
 
 
