@@ -1,1 +1,0 @@
-git+https://github.com/SKA-ScienceDataProcessor/integration-prototype@master#egg=config_db&subdirectory=sip/execution_control/configuration_db

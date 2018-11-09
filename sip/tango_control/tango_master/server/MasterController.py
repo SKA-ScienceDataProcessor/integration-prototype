@@ -1,40 +1,27 @@
 # -*- coding: utf-8 -*-
 """SKA SDP Master Controller prototype."""
+import json
 import time
 from random import randrange
-import json
-import jsonschema
 
-import PyTango
-from PyTango import DebugIt
-from PyTango.server import run
-from PyTango.server import Device, DeviceMeta
-from PyTango.server import attribute, command
-from PyTango import AttrQuality, DispLevel, DevState
-from PyTango import AttrWriteType, PipeWriteType
-from SKADevice import SKADevice
-from tango import Database, DbDevInfo
-from config_db import SDPState, ServiceState
-from config_db import SchedulingBlockInstanceList, ProcessingBlockList
-from config_db import SchedulingBlockInstance
-from config_db import ProcessingBlock
+from config_db import ProcessingBlock, ProcessingBlockList, SDPState, \
+    SchedulingBlockInstanceList, ServiceState
+from tango import Database, DbDevInfo, DebugIt
+from tango.server import Device, DeviceMeta, attribute, command, run
 
 
-__all__ = ["MasterController", "main"]
-VERSION = 'test'
-
-
-class MasterController(SKADevice, metaclass=DeviceMeta):
+class MasterController(Device, metaclass=DeviceMeta):
     """
     SKA SDP Master Controller prototype
     """
+    _device_version = 'test'
     MC = 'execution_control:master_controller'
     _targetState = 'UNKNOWN'
     _targetTimeStamp = "Unknown"
     _sdp_state = SDPState()
     _sbi_list = SchedulingBlockInstanceList()
     _pb_list = ProcessingBlockList()
-    _service_state = ServiceState('TangoControl', 'SDPMaster', VERSION)
+    _service_state = ServiceState('TangoControl', 'SDPMaster', _device_version)
 
     # ---------------
     # General methods
@@ -42,7 +29,6 @@ class MasterController(SKADevice, metaclass=DeviceMeta):
 
     def init_device(self):
         """Device constructor."""
-        SKADevice.init_device(self)
         self._start_time = time.time()
         self.set_status('INIT')
         # TODO(BMo) Check if the current state of all services are 'on'
@@ -118,7 +104,7 @@ class MasterController(SKADevice, metaclass=DeviceMeta):
     @attribute(dtype=str)
     def version(self):
         """Return the version of the Master Controller Device."""
-        return VERSION
+        return self._device_version
 
     @attribute(dtype=str)
     def current_state(self):

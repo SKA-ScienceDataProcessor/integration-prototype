@@ -2,26 +2,8 @@ version: '3.7'
 
 services:
 
-  tango_master:
-    image: skasip/tango_master:latest
-    command: sleep 36000
-    environment:
-      - TANGO_HOST=tango_host:20000
-      - REDIS_HOST=config_database
-    volumes:
-      - ./tango_master:/app
-
-  tango_processing_controller:
-    image: skasip/tango_processing_controller:latest
-    command: sleep 36000
-    environment:
-    - TANGO_HOST=tango_host:20000
-    - REDIS_HOST=config_database
-    volumes:
-    - ./tango_processing_controller:/app
-
   test_client:
-    image: skasip/tango_test_client:latest
+    image: skasip/tango_test_client:1.0.0
     command: sleep 36000
     environment:
       - TANGO_HOST=tango_host:20000
@@ -29,8 +11,26 @@ services:
     volumes:
       - ./tango_test_client:/app
 
+  master:
+    image: skasip/tango_master:1.0.0
+    command: sleep 36000
+    environment:
+      - TANGO_HOST=tango_host:20000
+      - REDIS_HOST=config_database
+    volumes:
+      - ./tango_master:/app
+
+  processing_controller:
+    image: skasip/tango_processing_controller:1.0.0
+    command: sleep 36000
+    environment:
+    - TANGO_HOST=tango_host:20000
+    - REDIS_HOST=config_database
+    volumes:
+    - ./tango_processing_controller:/app
+
   test_device:
-    image: skasip/tango_test_device:latest
+    image: skasip/tango_test_device:1.0.0
     command: sleep 36000
     environment:
       - TANGO_HOST=tango_host:20000
