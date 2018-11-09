@@ -1,8 +1,18 @@
 sudo: required
 
+notifications:
+  slack: ska-sip:zgaO4jJWwB4UjFRulowC5g56
+
 language: python
 
-#services: docker
+env:
+  global:
+    - SIP_PCI_LOG_LEVEL=NOTSET
+    - SIP_PCI_LOG_LEVEL=WARN
+    - SIP_DOCKER_API_LOG_LEVEL=INFO
+
+services:
+  - docker
 
 python:
   - "3.6"
@@ -10,43 +20,44 @@ python:
 cache: pip
 
 # https://github.com/travis-ci/travis-ci/issues/5358
-#before_install:
-#  - docker pull $(REPO):$(TRAVIS_BRANCH)
 before_install:
+  # Add Docker repo to apt.
+  - curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add -
+  - sudo add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable"
+  # Install API packages
   - sudo apt-get -qq update
   - sudo apt-get install -y gcc
   - sudo apt-get install -y g++
   - sudo apt-get install -y libboost-program-options-dev
   - sudo apt-get install -y libboost-system-dev
-
-install:
-  - pip install pylint>=1.9.0
-  - pip install pycodestyle>=2.4.0
+  - sudo apt-get install -y docker-ce
+  # Install Python testing and linting dependencies
+  - pip install -r testing_requirements.txt
+  # Install dependencies for SIP packages
+  - pip install -r sip/execution_control/configuration_db/requirements.txt
   - pip install spead2>=1.7.2
-  - pip install redis>=2.10.6
-  - pip install jsonschema>=2.6.0
-  - pip install simplejson>=3.15.0
-
-before_script:
-  # Run pycodestyle
-  - pycodestyle --config=.pycodestyle emulators
-  - pycodestyle --config=.pycodestyle --exclude=receive_visibilities sip
-  # Run PyLint
-  - pylint --ignore=csp_pss_sender,csp_vis_sender_01,csp_vis_sender_02 emulators
-  - (cd sip && pylint --rcfile=../.pylintrc core_processing || echo "FAIL")
-  - (cd sip && pylint --rcfile=../.pylintrc execution_control || echo "FAIL")
-  - (cd sip && pylint --rcfile=../.pylintrc execution_framework_interface || echo "FAIL")
-  - (cd sip && pylint --rcfile=../.pylintrc execution_frameworks || echo "FAIL")
-  - (cd sip && pylint --rcfile=../.pylintrc science_pipeline_workflows || echo "FAIL")
+  - pip install -r sip/execution_control/processing_controller_interface/flask_api/requirements.txt
+  - pip install -r sip/execution_framework_interface/docker_api/requirements.txt
+  - pip install -r sip/execution_framework_interface/docker_compose_generator/requirements.txt
+  - pip install -r sip/science_pipeline_workflows/ical_dask/pipelines/requirements.arl.min.txt
+  # Start Docker containers needed for unit tests
+  - docker run -d -p 6379:6379 --name=config_db redis:4.0.6-alpine
+  # Start Docker Swarm
+  - docker swarm init
 
 script:
-  - echo "Build script"
+  - pycodestyle --config=.pycodestyle emulators
+  - pycodestyle --config=.pycodestyle --exclude=zookeeper examples
+  - pycodestyle --config=.pycodestyle --exclude=receive_visibilities sip
 
-#after_success:
-#  - echo "Build successful! building docker containers ..."
-#
-#after_failure:
-#  - echo "Build failed :("
+  - pylint --rcfile=.pylintrc --ignore=csp_pss_sender,csp_vis_sender_01,csp_vis_sender_02 emulators
 
-#https://docs.travis-ci.com/user/docker/
-#deploy:
+  - python -m pytest -s -v --codestyle --docstyle --pylint --pylint-rcfile=.pylintrc sip/execution_framework_interface/docker_api
+  - python -m pytest -s -v --codestyle --docstyle --pylint --pylint-rcfile=.pylintrc sip/execution_framework_interface/docker_compose_generator
+  - python -m pytest -s -v --codestyle --docstyle --pylint --pylint-rcfile=.pylintrc sip/science_pipeline_workflows/ical_dask
+
+  - python -m pytest -s -v --codestyle --docstyle --pylint --pylint-rcfile=.pylintrc --rootdir=. sip/execution_control/configuration_db
+  - pytest --cov=sip/execution_control/configuration_db sip/execution_control/configuration_db
+
+after_success:
+  - codecov

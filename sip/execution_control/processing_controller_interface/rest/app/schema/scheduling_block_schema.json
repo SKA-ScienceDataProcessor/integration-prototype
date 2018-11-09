@@ -1,9 +1,0 @@
-{
-    "type": "object",
-    "required": ["processing_blocks"],
-    "properties": {
-        "processing_blocks": {
-            "type": "array"
-        }
-    }
-}

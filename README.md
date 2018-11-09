@@ -1,4 +1,5 @@
 [![Build Status](https://travis-ci.com/SKA-ScienceDataProcessor/integration-prototype.svg?branch=master)](https://travis-ci.com/SKA-ScienceDataProcessor/integration-prototype)
+[![codecov](https://codecov.io/gh/SKA-ScienceDataProcessor/integration-prototype/branch/master/graph/badge.svg)](https://codecov.io/gh/SKA-ScienceDataProcessor/integration-prototype)
 
 # SDP Integration Prototype
 
@@ -37,3 +38,6 @@ In order to test collections of SIP code which providing various test
 deployments scripts facilitating this can be found in the `deploy` directory 
 and at higher levels in the code tree. 
 
+## SIP Docker Containers
+
+<https://hub.docker.com/r/skasip/>

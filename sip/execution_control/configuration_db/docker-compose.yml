@@ -1,0 +1,23 @@
+version: '3.6'
+
+services:
+
+  config_database:
+    image: redis:4.0.6-alpine
+    ports:
+      - 6379:6379
+    volumes:
+      - config_database:/data/db
+
+  # https://github.com/joeferner/redis-commander
+  # REDIS_HOSTS string format:
+  #    [label]:[hostname]:[port]:[dbIndex]:[password]
+  redis-commander-db0:
+    image: rediscommander/redis-commander:latest
+    environment:
+    - REDIS_HOSTS=config_db:config_database:6379:0
+    ports:
+    - 8081:8081
+
+volumes:
+  config_database:

@@ -18,3 +18,17 @@
 test_reports.xml
 
 **/.cache
+**/.pytest_cache/
+
+# Compiled python modules.
+**/.pyc
+
+# Setuptools distribution folder.
+/dist/
+
+# Code coverage
+**/.coverage
+
+# Python egg metadata, regenerated from source files by setuptools.
+**/*.egg-info
+**/*.rdb
