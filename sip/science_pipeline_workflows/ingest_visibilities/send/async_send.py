@@ -51,7 +51,7 @@ import spead2.send
 import spead2.send.asyncio
 
 
-class SpeadSender(object):
+class SpeadSender:
     """Sends dummy visibility data using SPEAD."""
     def __init__(self, spead_config):
         self._config = spead_config
@@ -93,7 +93,8 @@ class SpeadSender(object):
         # Write the data into the buffer.
         heap_data['visibility_timestamp_count'] = time_count
         heap_data['visibility_timestamp_fraction'] = time_fraction
-        heap_data['correlator_output_data']['VIS'][:][:] = time_data + i_chan * 1j
+        heap_data['correlator_output_data']['VIS'][:][:] = \
+            time_data + i_chan * 1j
 
     # pylint: disable=too-many-locals
     async def _run_loop(self, executor):
@@ -232,7 +233,7 @@ class SpeadSender(object):
                 timer1 = now
 
             # Check for completion.
-            if max_duration_sec > 0 and (now - start_time > max_duration_sec):
+            if now - start_time > max_duration_sec > 0:
                 done = True
 
         # End the streams.
