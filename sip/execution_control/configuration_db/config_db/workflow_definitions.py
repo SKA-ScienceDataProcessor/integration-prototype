@@ -8,9 +8,10 @@ import json
 import os
 
 import jsonschema
-import redis
 
-DB = redis.StrictRedis(decode_responses=True)
+from .config_db_redis import ConfigDb
+
+DB = ConfigDb()
 
 
 def add_workflow_definition(workflow_definition: dict,
@@ -47,17 +48,18 @@ def add_workflow_definition(workflow_definition: dict,
     version = workflow_definition['version']
     name = "workflow_definitions:{}:{}".format(workflow_id, version)
 
-    if DB.keys(name):
+    if DB.get_keys(name):
         raise KeyError("Error: Workflow definition already exists for '{}'"
                        .format(name))
 
-    DB.hmset(name, workflow_definition)
+    DB.set_hash_values(name, workflow_definition)
 
 
 def register_workflow_definition(workflow_id, workflow_version):
     """Register an (empty) workflow definition in the database."""
     name = "workflow_definitions:{}:{}".format(workflow_id, workflow_version)
-    DB.hmset(name, dict(id=workflow_id, version=workflow_version, stages=[]))
+    DB.set_hash_values(name, dict(id=workflow_id, version=workflow_version,
+                                  stages=[]))
 
 
 def get_workflow_definitions() -> dict:
@@ -67,7 +69,7 @@ def get_workflow_definitions() -> dict:
         list[dict]
 
     """
-    keys = DB.keys("workflow_definitions:*")
+    keys = DB.get_keys("workflow_definitions:*")
     known_workflows = dict()
     for key in keys:
         values = key.split(':')
@@ -91,13 +93,14 @@ def delete_workflow_definitions(workflow_id: str = None,
 
     """
     if workflow_id is None and workflow_version is None:
-        keys = DB.keys("workflow_definitions:*")
+        keys = DB.get_keys("workflow_definitions:*")
         DB.delete(*keys)
     elif workflow_id is not None and workflow_version is None:
-        keys = DB.keys("workflow_definitions:{}:*".format(workflow_id))
+        keys = DB.get_keys("workflow_definitions:{}:*".format(workflow_id))
         DB.delete(*keys)
     elif workflow_id is None and workflow_version is not None:
-        keys = DB.keys("workflow_definitions:*:{}".format(workflow_version))
+        keys = DB.get_keys("workflow_definitions:*:{}"
+                           .format(workflow_version))
         DB.delete(*keys)
     else:
         name = "workflow_definitions:{}:{}".format(workflow_id,
@@ -117,7 +120,7 @@ def get_workflow_definition(workflow_id: str, workflow_version: str) -> dict:
 
     """
     name = "workflow_definitions:{}:{}".format(workflow_id, workflow_version)
-    workflow = DB.hgetall(name)
+    workflow = DB.get_hash_dict(name)
     workflow['stages'] = ast.literal_eval(workflow['stages'])
     return workflow
 

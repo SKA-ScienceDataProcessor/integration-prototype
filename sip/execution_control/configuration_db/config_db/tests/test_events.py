@@ -112,8 +112,8 @@ def test_events_recovery():
     events.DB.flush_db()
     aggregate_type = 'test'
     subscriber = 'test_subscriber'
-    event_type = 'test_event'
-    aggregate_id = 'test-02'
+    event_type = 'test_event'  # == object type
+    aggregate_id = 'test-02'   # == object id
 
     # Start a subscriber that goes away. eg it crashes, or in this case is a
     # temp thread that finishes after subscribing.
@@ -145,22 +145,23 @@ def test_events_recovery():
     active_events = event_queue.get_processed_events()
     assert not active_events
 
-    # Get published events without processing them.
-    # Events returned will not be moved to the processed queue.
+    # Get published events without processing them (ie. process == False)
+    # (Events returned with process=False will not be marked as processed.
     published_events = event_queue.get_published_events(process=False)
     assert len(published_events) == 2
 
-    # But there are two published events to get form the subscriber queue.
+    # Get published events again, this time mark as processed..
     published_events = event_queue.get_published_events()
     assert len(published_events) == 2
+
+    # Get published events yet again, this time there should be none as
+    # they have been 'processed'.
+    published_events = event_queue.get_published_events()
+    assert not published_events
 
     # After asking for published events they are moved to the active queue.
     active_events = event_queue.get_processed_events()
     assert len(active_events) == 2
-
-    # And there are no longer any published events.
-    published_events = event_queue.get_published_events()
-    assert not published_events
 
     # If we complete the active events.
     for event in active_events:

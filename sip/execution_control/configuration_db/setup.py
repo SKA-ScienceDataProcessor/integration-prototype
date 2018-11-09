@@ -18,7 +18,7 @@ TEST_DATA = package_files('config_db/tests/data')
 
 
 setup(name='skasip_config_db',
-      version='1.0.13',
+      version='1.0.14',
       description='SIP Execution Control Configuration Database library.',
       author='SKA SDP SIP team',
       packages=['config_db', 'config_db/utils', 'config_db/tests'],
