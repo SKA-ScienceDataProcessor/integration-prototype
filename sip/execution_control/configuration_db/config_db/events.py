@@ -148,12 +148,13 @@ class EventQueue:
             DB.watch(self._pub_key, pipeline=True)
             event_ids = DB.get_list(self._pub_key, pipeline=True)
             if event_ids:
-                DB.delete_key(self._pub_key, pipeline=True)
+                DB.delete(self._pub_key, pipeline=True)
                 DB.append_to_list(self._processed_key, *event_ids,
                                   pipeline=True)
             DB.execute()
         else:
             event_ids = DB.get_list(self._pub_key)
+
         events = []
         for event_id in event_ids[::-1]:
             event_data = ast.literal_eval(DB.get_hash_value(self._data_key,
