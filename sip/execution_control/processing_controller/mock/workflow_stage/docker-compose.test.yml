@@ -1,0 +1,12 @@
+# Docker compose test for the mock workflow stage
+
+version: '3.7'
+services:
+  start_stage:
+    image: skasip/mock_workflow_stage:test
+    command: >-
+      '{"duration": 20}'
+    deploy:
+      mode: replicated
+      replicas: 1
+
