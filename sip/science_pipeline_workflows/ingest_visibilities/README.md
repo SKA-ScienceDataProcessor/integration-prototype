@@ -178,15 +178,10 @@ docker node update --label-rm key <node id>
 
 In the current SIP shared swarm cluster on P3:
 
-- node 0, id=iyhivectz5j9gt936fi8dqfqm, is labeled with `send=01` and,
-- node 1, id=9hjhf71gn8tkshxjwr5oyziiw, is labeled with `recv=01`.
+- primary master 0, id=372v0yjv5qt57ym1lwgrgq76u, is labeled with `send=01` and,
+- node 0,           id=nmup1esjdre205xuiahmomk9j, is labeled with `recv=01`.
 
 The BDN IPs are:
-- node 0 is `10.11.0.12`
-- node 1 is `10.11.0.11`
-
-
-
-
-
+- primary master 0 is `10.1.0.19`
+- node 0           is `10.1.0.27`
  
