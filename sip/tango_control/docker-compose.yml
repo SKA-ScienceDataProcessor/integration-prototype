@@ -9,7 +9,7 @@ services:
       - TANGO_HOST=tango_host:20000
       - REDIS_HOST=config_database
     volumes:
-      - ./tango_test_client:/app
+      - ./tango_test_client:/home/sip/tango_test_client
 
   master:
     image: skasip/tango_master:1.0.0
@@ -18,7 +18,7 @@ services:
       - TANGO_HOST=tango_host:20000
       - REDIS_HOST=config_database
     volumes:
-      - ./tango_master:/app
+      - ./tango_master:/home/sip/tango_master
 
   processing_controller:
     image: skasip/tango_processing_controller:1.0.0
@@ -27,7 +27,7 @@ services:
     - TANGO_HOST=tango_host:20000
     - REDIS_HOST=config_database
     volumes:
-    - ./tango_processing_controller:/app
+    - ./tango_processing_controller:/home/sip/tango_processing_controller
 
   test_device:
     image: skasip/tango_test_device:1.0.0
@@ -36,7 +36,7 @@ services:
       - TANGO_HOST=tango_host:20000
       - REDIS_HOST=config_database
     volumes:
-      - ./tango_test_device:/app
+      - ./tango_test_device:/home/sip/tagno_test_device
 
   tango_mysql:
     image: skasip/tango_mysql:1.0.0
