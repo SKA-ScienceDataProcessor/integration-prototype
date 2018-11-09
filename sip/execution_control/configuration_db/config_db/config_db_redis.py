@@ -215,17 +215,17 @@ class ConfigDb:
         return self._db.keys(pattern)
 
     @check_connection
-    def delete_key(self, key, pipeline=False):
-        """Delete a key in the database (and associated values).
+    def delete(self, *names: str, pipeline=False):
+        """Delete one or more keys specified by names.
 
         Args:
-            key (str): Key to delete
+            names (str): Names of keys to delete
             pipeline (bool): True, start a transaction block. Default false.
         """
         if pipeline:
-            self._pipeline.delete(key)
+            self._pipeline.delete(*names)
         else:
-            self._db.delete(key)
+            self._db.delete(*names)
 
     @check_connection
     def key_exists(self, key):
