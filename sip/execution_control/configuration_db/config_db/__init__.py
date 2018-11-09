@@ -8,4 +8,4 @@ from .sbi_list import SchedulingBlockInstanceList
 from .sbi import SchedulingBlockInstance
 from .pb_list import ProcessingBlockList
 from .pb import ProcessingBlock
-from .utils import generate_sbi_configuration
+from .utils.generate_sbi_configuration import generate_sbi_config
