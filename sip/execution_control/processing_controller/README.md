@@ -1,36 +1,77 @@
-# SIP Processing Controller Scheduler
+# Processing Controller Scheduler (Celery variant)
 
-## Introduction
+This is an extremely lightweight prototype of the Processing Controller
+Scheduler which offloads the execution of Processing Blocks to Processing
+Block Controllers implemented as a set of 
+[Celery](http://www.celeryproject.org/) tasks.
 
-This component implements a prototype of the SDP Processing Controller
-Scheduler service. This service uses instructions from TM, provided
-via the Processing Controller Interface service(s), to schedule tasks in the
-form of Processing Blocks (PBs) for execution on the SDP system.
+For testing and stand-alone operation, a number of mock components are 
+provided.
 
-This service is backed by the Execution Control Configuration Database
-service which provides a data resource (the source of truth) and event queue
-for reasoning about all Processing Blocks known to SDP. In SIP this is
-currently implemented using Redis via a Configuration Database client API.
 
-As described in the SDP architecture documentation, SDP expects to schedule
-processing tasks using a two level scheduling model. In this model,
-the high level (coarse grain) scheduling Processing Blocks is largely
-determined a priori by TM using a model of SDP resources and estimated
-resource costs of each task. It is this level of scheduling that is performed
-by this service.
+## Quick-start
 
-Below this level, the scheduling of the workflow which define the
-staging, processing, and cleanup operations needed to execute each Processing
-Block is handled by instances of the Processing Block Controller service.
 
-The scheduling of Processing Blocks, performed by this Service therefore
-requires the following functions:
+1. (optional) Build the Processing Block Controller Docker image
+   
+   ```bash
+   docker build -t skasip/pbc processing_block_controller
+   ```
 
-- Registration of Processing Blocks with the scheduler
-- Removal of Processing Blocks from the scheduler (including aborting
-  processing if required).
-- Retrieval of information on Processing Blocks.
-- Evaluation of resource availability for running Processing Blocks
-- Provisioning of available resources for running Processing Blocks
-- Initialising the execution of a Processing Block (which also involves
-  a Processing Block Controller Service)
+1.  Start backing services
+
+    ```bash
+    docker stack deploy -c docker-compose.dev.yml pc
+    ```
+    
+    This consists of:
+    
+    - a Redis database used for the Celery broker, Celery
+      backend, and mock Execution Control Configuration database,
+    - the Processing Block Controller Service,
+    - and a Redis Commander Web UI for viewing the contents of the 
+      Configuration database.
+    
+    *Note: that the Redis service is not backed by a docker volume in this
+     compose file as this is not needed during testing*
+
+1.  Create a virtualenv for application dependencies:
+
+    ```bash
+    python3 -m venv venv    
+    source venv/bin/activate
+    pip install -r requirements.txt
+    ```
+
+1. Start the Scheduler application:
+
+    ```bash
+    python3 -m app
+    ```
+
+1.  Use the provided utilities for adding and removing Processing and Scheduling
+    blocks from the mock Configuration database.
+
+    ```bash
+    python3 -m utils.create_scheduling_block
+    python3 -m utils.delete_scheduling_block
+    python3 -m utils.delete_processing_block
+    ```
+
+1.  Clean up:
+
+    ```bash
+    docker stack rm pc
+    ```
+    
+## Debugging
+
+* If you have started the development backing services a web UI to the 
+  configuration database can be viewed at <http://localhost:8081>
+
+
+## Unit tests
+
+```bash
+pytest -s -v --codestyle --docstyle --pylint tests/
+```

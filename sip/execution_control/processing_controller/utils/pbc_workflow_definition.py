@@ -27,6 +27,3 @@ def add_workflow_definitions(workflows_path: str):
             workflow_dict = json.load(file)
             add_workflow_definition(workflow_dict, join(workflows_path,
                                                         'templates'))
-
-
-
