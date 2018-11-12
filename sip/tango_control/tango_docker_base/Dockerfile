@@ -6,9 +6,7 @@ ENV DEBIAN_FRONTEND=noninteractive
 RUN apt-get update && \
     apt-get install -y python3-tango python3-pip git
 
-# SIP configuration data library
-RUN pip3 install -e \
-    git+https://github.com/SKA-ScienceDataProcessor/integration-prototype@master#egg=skasip-config-db\&subdirectory=sip/execution_control/configuration_db
+RUN pip3 install -U skasip-config-db skasip-logging
 
 RUN useradd -ms /bin/bash sip
 USER sip
