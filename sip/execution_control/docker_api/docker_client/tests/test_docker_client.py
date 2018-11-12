@@ -3,7 +3,6 @@
 
 import logging
 import os
-import yaml
 
 from ..docker_client import DockerClient
 
@@ -19,12 +18,13 @@ def test_create_services():
     service_names = []
     config_path = os.path.join(FILE_PATH, '..', 'compose-file',
                                'docker-compose.visibility.yml')
-    DC.create_services(config_path)
-    service_list = DC.get_service_list()
-    for services in service_list:
-        names = DC.get_service_name(services)
-        service_names.append(names)
-    assert "recv1" in service_names
+    with open(config_path, 'r') as compose_str:
+        DC.create_services(compose_str)
+        service_list = DC.get_service_list()
+        for services in service_list:
+            names = DC.get_service_name(services)
+            service_names.append(names)
+        assert "recv1" in service_names
 
     # Cleaning
     DC.delete_service("recv1")
@@ -35,12 +35,18 @@ def test_create_start_stage():
     config_path = os.path.join(FILE_PATH, '..', 'compose-file',
                                'docker-compose.workflow.yml')
     with open(config_path, 'r') as compose_str:
-        DC.create_services(compose_str)
+        s_names = DC.create_services(compose_str)
+
         service_list = DC.get_service_list()
         for services in service_list:
             names = DC.get_service_name(services)
             service_names.append(names)
         assert "start_stage" in service_names
+        for s_name in s_names:
+            assert s_name in service_names
+
+    # Cleaning
+    DC.delete_service("start_stage")
 
 
 def test_create_volume():

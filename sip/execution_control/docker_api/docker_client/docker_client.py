@@ -8,7 +8,7 @@ import docker
 import yaml
 
 
-LOG = logging.getLogger('SIP.EFI.DC')
+LOG = logging.getLogger('SIP.EF.DC')
 
 
 class DockerClient:
@@ -29,16 +29,22 @@ class DockerClient:
     # Create functions
     ###########################################################################
 
-    def create_services(self, compose_str):
+    def create_services(self, compose_str: str) -> list:
         """Create new docker services.
 
         Args:
             compose_str (string): Docker compose 'file' string
+
+        Return:
+            service_names, list
         """
         # Raise an exception if we are not a manager
         if not self._manager:
             raise RuntimeError('Services can only be run on '
                                'swarm manager nodes')
+
+        # Initialise empty list
+        service_names = []
 
         try:
             service_config = yaml.load(compose_str)
@@ -50,13 +56,18 @@ class DockerClient:
                     service_spec = self._parse_services(
                         service_config, service_name)
                     for s_spec in service_spec:
-                        LOG.debug('Creating services: %s', s_spec)
-                        self._client.services.create(**s_spec)
+                        created_service = self._client.services.create(**s_spec)
+                        service_name = created_service.name
+                        LOG.debug('Service created: %s', service_name)
+                        service_names.append(service_name)
                 else:
                     LOG.debug('Services already exists')
 
         except yaml.YAMLError as exc:
             print(exc)
+
+        # Returning list of services created
+        return service_names
 
     def create_volume(self, volume_name, driver_spec=None):
         """Create new docker volumes.

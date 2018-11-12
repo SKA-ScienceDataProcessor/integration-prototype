@@ -92,7 +92,11 @@ def execute_processing_block(pb_id: str):
             log.info('COMPOSE_STR: {}'.format(compose_str))
 
             # Run the compose file
-            docker.create_services(compose_str)
+            created_services = docker.create_services(compose_str)
+            for service in created_services:
+                # TODO (NJT) Maybe better to return service ids
+                log.info('CREATED SERVICES: {}'.format(service))
+
             # running_service_ids.append(serivce_id)
             # update db status
 
