@@ -33,7 +33,7 @@ def add_workflow_definition(workflow_definition: dict,
 
     """
     schema_path = os.path.join(
-        os.path.dirname(__file__), 'data', 'schema',
+        os.path.dirname(__file__), 'schema',
         'workflow_definition_schema.json')
     with open(schema_path, 'r') as file:
         schema = json.loads(file.read())
@@ -49,8 +49,7 @@ def add_workflow_definition(workflow_definition: dict,
     name = "workflow_definitions:{}:{}".format(workflow_id, version)
 
     if DB.get_keys(name):
-        raise KeyError("Error: Workflow definition already exists for '{}'"
-                       .format(name))
+        raise KeyError('Workflow definition already exists: {}'.format(name))
 
     DB.set_hash_values(name, workflow_definition)
 

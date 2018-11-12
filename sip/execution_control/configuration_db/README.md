@@ -1,20 +1,115 @@
-# SIP Configuration Service (Redis variant)
+# SIP Configuration Service
 
 ## Introduction
 
-The Configuration Database is a backing service for use by Execution
-Control and Tango Control components. This package contains a library 
-providing specialised functions for interfacing with the Configuration
-Database at the abstraction of the Execution Control data objects.
+The Configuration Database is a backing service for use by SKA SIP Execution
+Control (EC) and Tango Control components. This package contains a library 
+providing specialised functions for interfacing with data objects in the 
+EC Configuration Database.
 
 For a description of the Data Model used by this library see Sections 7.4.4 
-and 7.5.6 of the SIP Report.   
+and 7.5.6 of the SIP Report.
 
-This library is written as a set of Python modules which are structured 
-such that there is a low level abstraction layer on top of the database's 
-[Python API](https://redis-py.readthedocs.io/en/latest/) `config_db_redis.py`
-and a set of higher level classes providing interfaces to data objects
-stored in the database.
+This library provides modules for each of the data objects stored within
+the EC configuration database. These are built on top of a simple low-level 
+wrapper to the [Python Redis API](https://redis-py.readthedocs.io/en/latest/),
+which handles connections to the database and abstraction from the Python
+Redis API.
+
+## Installation
+
+This library can be installed using `pip` with the following command: 
+
+```bash
+pip install -U skasip-config-db
+```
+
+## Usage
+
+Example usage:
+
+```python
+import config_db
+
+sdp_state = config_db.SDPState()
+print(sdp_state.current_state)
+
+subarray = config_db.Subarray(0)
+subarray.activate()
+print(subarray.active)
+
+sbi_config = config_db.generate_sbi_config(register_workflows=True)
+sbi = config_db.SchedulingBlockInstance.from_config(sbi_config)
+print(sbi.id)
+```
+
+
+## Utility Scripts
+
+The package installs a number of utility scripts, described below:
+
+#### Initialise the database.
+
+`skasip_config_db_init [--data-path=PATH]`
+
+Can be used to initialise the configuration database. The optional 
+`--data-path=PATH` argument, can be used to defined a custom 
+path containing the initial set of SDP services and workflows used to
+initialise the database. If specifying `--data-path`, and the specified `PATH`
+does not exist a copy of the default data pat will be created at the specified
+path.
+
+#### Register workflows
+
+Register workflows from the specified workflow path.
+
+```bash
+skasip_config_db_register_workflows [workflow path]
+```
+
+#### Add an SBI to the database
+
+Adds an SBI to the database.
+
+```bash
+skasip_config_db_add_sbi [--subarray N] [--activate] [--help]
+```
+
+#### Generate an SBI JSON configuration
+
+Generate an SBI JSON configuration.
+
+```bash
+skasip_config_db_sbi_json
+```
+
+#### Update the current state
+
+Updates the current state of SDP or a specified service.
+
+```bash
+skasip_config_db_update_state [--service SUBSYSTEM.NAME.VERSION] [--help] new_state
+```
+
+## Running tests
+
+While unit tests are run automatically the 
+[SIP CI/CD service](https://travis-ci.com/SKA-ScienceDataProcessor/integration-prototype),
+it is possible to run them manually with the following command from the
+root sip code folder using the following commands:
+
+***Note**: a Redis db container must be started first in order for most of
+these tests to pass*
+
+```bash
+virtualenv -p python3 venv
+source venv/bin/activate
+pip install -r testing_requirements.txt
+pip install -r sip/execution_control/configuration_db/requirements.txt
+python3 -m pytest --pylint --codestyle --docstyle -s -v \
+    --pylint-rcfile=.pylintrc --rootdir=. \
+    sip/execution_control/configuration_db
+```
 
 ## Quickstart
 
@@ -59,57 +154,3 @@ redis-server
 Note - It requires redis to be installed and all python packages in the
 requirements.txt file
 
-### Installation using `pip`
-
-This library can be installed using `pip` with the following command: 
-
-```bash
-pip install git+https://github.com/SKA-ScienceDataProcessor/integration-prototype@master#egg=config_db\&subdirectory=sip/execution_control/configuration_db
-```
-
-It can also be installed from a local copy of the code using:
-
-```bash
-pip install sip/execution_control/configuration/db
-```
-
-### Utility Scripts
-
-To set initial data into the configuration database run the following command:
-
-```bash
-skasip_config_db_init [data_path]
-```
-
-To add an SBI to the database
-
-```bash
-skasip_config_db_add_sbi [--subarray N] [--activate] [--help]
-```
-
-To update the state of a service or the state of sdp:
-
-```bash
-skasip_config_db_update_state [--service SUBSYSTEM.NAME.VERSION] [--help] new_state
-```
-
-
-### Running tests
-
-While unit tests are run automatically the 
-[SIP CI/CD service](https://travis-ci.com/SKA-ScienceDataProcessor/integration-prototype),
-it is possible to run them manually with the following command from the
-root sip code folder using the following commands:
-
-***Note**: a Redis db container must be started first in order for most of
-these tests to pass*
-
-```bash
-virtualenv -p python3 venv
-source venv/bin/activate
-pip install -r testing_requirements.txt
-pip install -r sip/execution_control/configuration_db/requirements.txt
-python3 -m pytest --pylint --codestyle --docstyle -s -v \
-    --pylint-rcfile=.pylintrc --rootdir=. \
-    sip/execution_control/configuration_db
-```

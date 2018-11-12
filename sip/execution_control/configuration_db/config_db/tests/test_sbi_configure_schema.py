@@ -9,7 +9,7 @@ import jsonschema
 
 def test_sbi_schema():
     """Test SBI configuration schema validation."""
-    schema_path = os.path.join(os.path.dirname(__file__), '..', 'data',
+    schema_path = os.path.join(os.path.dirname(__file__), '..',
                                'schema', 'sbi_configure_schema.json')
     with open(schema_path, 'r') as file:
         schema_data = file.read()
