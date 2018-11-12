@@ -1,0 +1,23 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+"""Utility module to generate JSON SBI configuration."""
+import argparse
+import json
+
+from config_db import generate_sbi_config
+
+
+def main():
+    """Main function."""
+    parser = argparse.ArgumentParser(
+        description='Generate a JSON SBI config.')
+    parser.add_argument('--num-pbs', default=1, type=int,
+                        help='Number of PBs.')
+    args = parser.parse_args()
+
+    sbi_config = generate_sbi_config(args.num_pbs)
+    print(json.dumps(sbi_config, indent=2))
+
+
+if __name__ == '__main__':
+    main()
