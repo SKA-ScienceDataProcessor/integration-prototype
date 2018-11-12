@@ -22,17 +22,38 @@ class Subarray:
     def __init__(self, subarray_id: Union[int, str]):
         """Initialise the subarray object."""
         if isinstance(subarray_id, int):
-            self.id = self.get_id(subarray_id)
+            self._id = self.get_id(subarray_id)
         else:
-            self.id = subarray_id
-        LOG.debug("Initialising subarray %s.", self.id)
-        subarray_config = dict(id=self.id, active=False, parameters={},
+            self._id = subarray_id
+        LOG.debug("Initialising subarray %s.", self._id)
+        subarray_config = dict(id=self._id, active=False, parameters={},
                                sbi_ids=[], state='UNKNOWN')
-        self.key = '{}:{}'.format(AGGREGATE_TYPE, self.id)
+        self.key = '{}:{}'.format(AGGREGATE_TYPE, self._id)
         if not DB.key_exists(self.key):
             DB.set_hash_values(self.key, subarray_config)
 
-    def get_config(self) -> dict:
+    # -------------------------------------------------------------------------
+    # Properties / attributes
+    # -------------------------------------------------------------------------
+
+    @property
+    def id(self) -> str:
+        """Return the subarrary Id."""
+        return self._id
+
+    @property
+    def active(self) -> bool:
+        """Return True if the subarray is active, otherwise False.
+
+        Returns:
+            bool, True if the subarray is active, otherwise False
+
+        """
+        value = DB.get_hash_value(self.key, 'active')
+        return True if value == 'True' else False
+
+    @property
+    def config(self) -> dict:
         """Return the subarray configuration.
 
         Returns:
@@ -40,6 +61,21 @@ class Subarray:
 
         """
         return DB.get_hash_dict(self.key)
+
+    @property
+    def parameters(self) -> dict:
+        """Get the subarray parameters dictionary.
+
+        Returns:
+            dict, dictionary of subarray parameters.
+
+        """
+        return ast.literal_eval(DB.get_hash_value(self.key, 'parameters'))
+
+    @property
+    def get_state(self) -> str:
+        """Get the state of the subarray."""
+        return DB.get_hash_value(self.key, 'state')
 
     def set_parameters(self, parameters_dict):
         """Set the subarray parameters.
@@ -50,18 +86,41 @@ class Subarray:
         DB.set_hash_value(self.key, 'parameters', parameters_dict)
         self.publish("parameters_updated")
 
-    def get_parameters(self) -> dict:
-        """Get the subarray parameters dictionary.
+    @property
+    def sbi_ids(self) -> List[str]:
+        """Get the list of SBI Ids.
 
         Returns:
-            dict, dictionary of subarray parameters.
+            list, list of SBI ids associated with this subarray.
 
         """
-        return ast.literal_eval(DB.get_hash_value(self.key, 'parameters'))
+        return ast.literal_eval(DB.get_hash_value(self.key, 'sbi_ids'))
 
-    def get_state(self) -> str:
-        """Get the state of the subarray."""
-        return DB.get_hash_value(self.key, 'state')
+    # -------------------------------------------------------------------------
+    # Methods / commands
+    # -------------------------------------------------------------------------
+
+    def configure_sbi(self, sbi_config: dict, schema_path: str = None):
+        """Add a new SBI to the database associated with this subarray.
+
+        Args:
+            sbi_config (dict): SBI configuration.
+            schema_path (str, optional): Path to the SBI config schema.
+
+        """
+        if not self.active:
+            raise RuntimeError("Unable to add SBIs to inactive subarray!")
+        sbi_config['subarray_id'] = self._id
+        sbi = SchedulingBlockInstance.from_config(sbi_config, schema_path)
+        self._add_sbi_id(sbi_config['id'])
+        return sbi
+
+    def abort(self):
+        """Abort all SBIs associated with the subarray."""
+        for sbi_id in self.sbi_ids:
+            sbi = SchedulingBlockInstance(sbi_id)
+            sbi.abort()
+        self.set_state('ABORTED')
 
     def set_state(self, value):
         """Set the state of the subarray."""
@@ -72,67 +131,20 @@ class Subarray:
         DB.set_hash_value(self.key, 'active', 'True')
         self.publish('subarray_activated')
 
-    def abort(self):
-        """Abort all SBIs associated with the subarray."""
-        for sbi_id in self.get_sbi_ids():
-            sbi = SchedulingBlockInstance(sbi_id)
-            sbi.abort()
-        self.set_state('ABORTED')
-
-    def configure_sbi(self, sbi_config: dict, schema_path: str = None):
-        """Add a new SBI to the database associated with this subarray.
-
-        Args:
-            sbi_config (dict): SBI configuration.
-            schema_path (str, optional): Path to the SBI config schema.
-
-        """
-        if not self.is_active():
-            raise RuntimeError("Unable to add SBIs to inactive subarray!")
-        sbi_config['subarray_id'] = self.id
-        sbi = SchedulingBlockInstance.from_config(sbi_config, schema_path)
-        self._add_sbi_id(sbi_config['id'])
-        return sbi
-
     def deactivate(self):
         """Deactivate the subarray."""
         DB.set_hash_value(self.key, 'active', 'False')
         # Remove the subarray from each of the SBIs
-        for sbi_id in self.get_sbi_ids():
+        for sbi_id in self.sbi_ids:
             SchedulingBlockInstance(sbi_id).clear_subarray()
         DB.set_hash_value(self.key, 'sbi_ids', [])
         self.publish('subarray_deactivated')
 
-    def get_sbi_ids(self) -> List[str]:
-        """Get the list of SBI Ids.
-
-        Returns:
-            list, list of SBI ids associated with this subarray.
-
-        """
-        return ast.literal_eval(DB.get_hash_value(self.key, 'sbi_ids'))
-
-    def _add_sbi_id(self, sbi_id):
-        """Add a SBI Identifier."""
-        sbi_ids = self.get_sbi_ids()
-        sbi_ids.append(sbi_id)
-        DB.set_hash_value(self.key, 'sbi_ids', sbi_ids)
-
     def remove_sbi_id(self, sbi_id):
         """Remove an SBI Identifier."""
-        sbi_ids = self.get_sbi_ids()
+        sbi_ids = self.sbi_ids
         sbi_ids.remove(sbi_id)
         DB.set_hash_value(self.key, 'sbi_ids', sbi_ids)
-
-    def is_active(self) -> bool:
-        """Return True if the subarray is active, otherwise False.
-
-        Returns:
-            bool, True if the subarray is active, otherwise False
-
-        """
-        value = DB.get_hash_value(self.key, 'active')
-        return True if value == 'True' else False
 
     @staticmethod
     def get_id(index: int):
@@ -153,6 +165,16 @@ class Subarray:
 
         """
         return '{}:{}'.format(AGGREGATE_TYPE, Subarray.get_id(index))
+
+    def _add_sbi_id(self, sbi_id):
+        """Add a SBI Identifier."""
+        sbi_ids = self.sbi_ids
+        sbi_ids.append(sbi_id)
+        DB.set_hash_value(self.key, 'sbi_ids', sbi_ids)
+
+    # -------------------------------------------------------------------------
+    # Event queue methods
+    # -------------------------------------------------------------------------
 
     @staticmethod
     def subscribe(subscriber: str) -> events.EventQueue:
@@ -188,5 +210,5 @@ class Subarray:
         _stack = inspect.stack()
         _origin = (os.path.basename(_stack[2][1]) + '::' +
                    _stack[2][3]+'::L{}'.format(_stack[2][2]))
-        events.publish(AGGREGATE_TYPE, self.id, event_type, event_data,
+        events.publish(AGGREGATE_TYPE, self._id, event_type, event_data,
                        origin=_origin)
