@@ -42,6 +42,7 @@ class DockerClient:
 
         try:
             service_config = yaml.load(compose_str)
+            print(service_config)
             for service_name in service_config['services']:
                 service_exist = self._client.services.list(
                     filters={'name': service_name})

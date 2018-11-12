@@ -8,5 +8,6 @@ RUN pip install --no-cache-dir -r requirements.txt
 
 COPY task.py .
 
+# ENTRYPOINT ["python3", "task.py", "{}"]
 ENTRYPOINT ["python3", "task.py"]
 CMD []
