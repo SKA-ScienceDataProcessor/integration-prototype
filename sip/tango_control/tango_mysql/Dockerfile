@@ -1,4 +1,5 @@
 FROM mysql:5.7
+LABEL maintainer="Benjamin Mort <ben.mort@gmail.com>"
 
 ENV MYSQL_DATABASE=tango_db
 ENV MYSQL_USER=tango

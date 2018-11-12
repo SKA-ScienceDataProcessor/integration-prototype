@@ -1,1 +1,0 @@
-# Test Tango client container

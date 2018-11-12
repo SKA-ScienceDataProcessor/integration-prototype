@@ -59,5 +59,7 @@ script:
   - python -m pytest -s -v --codestyle --docstyle --pylint --pylint-rcfile=.pylintrc --rootdir=. sip/execution_control/configuration_db
   - pytest --cov=sip/execution_control/configuration_db sip/execution_control/configuration_db
 
+  - python -m pytest -s -v --codestyle --docstyle --pylint --pylint-rcfile=.pylintrc --rootdir=. sip/tango_control
+
 after_success:
   - codecov

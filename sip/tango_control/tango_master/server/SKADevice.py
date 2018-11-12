@@ -141,4 +141,3 @@ class SKADevice(Device):
     @DebugIt()
     def SetTargetState(self, argin):
         pass
-

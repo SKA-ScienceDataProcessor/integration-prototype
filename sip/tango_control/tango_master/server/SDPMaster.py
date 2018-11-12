@@ -1,20 +1,19 @@
 # -*- coding: utf-8 -*-
-"""SKA SDP Master Controller prototype."""
+"""SKA SDP Master Device prototype."""
 import json
 import time
 from random import randrange
 
 from config_db import ProcessingBlock, ProcessingBlockList, SDPState, \
     SchedulingBlockInstanceList, ServiceState
-from tango import Database, DbDevInfo, DebugIt
+from tango import Database, DbDevInfo, DebugIt, DevState
 from tango.server import Device, DeviceMeta, attribute, command, run
 
 
-class MasterController(Device, metaclass=DeviceMeta):
-    """
-    SKA SDP Master Controller prototype
-    """
-    _device_version = 'test'
+class SDPMaster(Device, metaclass=DeviceMeta):
+    """SIP SDP Master device."""
+
+    _device_version = '1.0.0'
     MC = 'execution_control:master_controller'
     _targetState = 'UNKNOWN'
     _targetTimeStamp = "Unknown"
@@ -22,15 +21,15 @@ class MasterController(Device, metaclass=DeviceMeta):
     _sbi_list = SchedulingBlockInstanceList()
     _pb_list = ProcessingBlockList()
     _service_state = ServiceState('TangoControl', 'SDPMaster', _device_version)
+    _start_time = time.time()
 
-    # ---------------
+    # -------------------------------------------------------------------------
     # General methods
-    # ---------------
-
+    # -------------------------------------------------------------------------
     def init_device(self):
         """Device constructor."""
-        self._start_time = time.time()
-        self.set_status('INIT')
+        Device.init_device(self)
+        self.set_state(DevState.INIT)
         # TODO(BMo) Check if the current state of all services are 'on'
         # TODO(BMo) add methods on database for ServiceList to be able to
         # iterate over sdp services to be able to call the current state
@@ -48,7 +47,7 @@ class MasterController(Device, metaclass=DeviceMeta):
             self._sdp_state.update_current_state('standby')
         if self._service_state.current_state != 'on':
             self._service_state.update_current_state('on')
-        self.set_status('STANDBY')
+        self.set_state(DevState.STANDBY)
         # TODO(BM) Work out to set the device state (as opposed to status)
         # self.set_state('STANDBY')
 
@@ -115,10 +114,11 @@ class MasterController(Device, metaclass=DeviceMeta):
     def target_state(self):
         """Return the target state of SDP."""
         # TODO(BMo) add exception handling if the database goes down.
+        target_state = self._sdp_state.target_state
+        target_timestamp = self._sdp_state.target_timestamp
         self.debug_stream('Fetched target state. value = {}, timestamp = {}'
-                          .format(self._sdp_state.target_state,
-                                  self._sdp_state.target_timestamp.isoformat()))
-        return self._sdp_state.target_state
+                          .format(target_state, target_timestamp.isoformat()))
+        return target_state
 
     @target_state.write
     def target_state(self, new_state):
@@ -165,15 +165,12 @@ class MasterController(Device, metaclass=DeviceMeta):
         # TODO(BMo) add property to ProcessingBlockList to get realtime \
         # processing
 
-
-# ----------
-# Run server
-# ----------
-
-
-def main(args=None, **kwargs):
-    return run((MasterController,), args=args, **kwargs)
-
-
-if __name__ == '__main__':
-    main()
+    @attribute(dtype=str)
+    def processing_block_devices(self):
+        """Get list of processing block devices."""
+        # https://intranet.cells.es/Members/srubio/howto/HowToPyTango#Getalldevicesofaserveroragivenclass
+        db = Database()
+        # server name, class name
+        devices = db.get_device_name('ProcessingController/pcont',
+                                     'ProcessingBlockDevice')
+        print(devices.value_string)
