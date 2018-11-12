@@ -91,15 +91,23 @@ Updates the current state of SDP or a specified service.
 skasip_config_db_update_state [--service SUBSYSTEM.NAME.VERSION] [--help] new_state
 ```
 
+#### List workflow definitions
+
+List known workflow definitions.
+
+```bash
+skasip_config_db_workflow_definitions
+```
+
 ## Running tests
 
-While unit tests are run automatically the 
-[SIP CI/CD service](https://travis-ci.com/SKA-ScienceDataProcessor/integration-prototype),
-it is possible to run them manually with the following command from the
-root sip code folder using the following commands:
+Unit tests are run automatically the 
+[SIP CI/CD service](https://travis-ci.com/SKA-ScienceDataProcessor/integration-prototype).
+It is also possible to run them manually with the following commands from the
+root SIP:
 
 ***Note**: a Redis db container must be started first in order for most of
-these tests to pass*
+these tests to pass (See below)*
 
 ```bash
 virtualenv -p python3 venv
@@ -111,46 +119,25 @@ python3 -m pytest --pylint --codestyle --docstyle -s -v \
     sip/execution_control/configuration_db
 ```
 
-## Quickstart
+## Starting Configuration Database Redis containers.
 
 To start Docker containers for a Redis Db instance (with a persistent volume)
 as well as a [Redis Commander](https://github.com/joeferner/redis-commander)
 instance (useful for debugging) issue the following command:
 
 ```bash
-docker-compose up -d
-```
-
-This will deploy the containers to the local Docker installation. If wanting
-to deploy to Docker Swarm instead use the following command:
-
-```bash
 docker stack deploy -c docker-compose.yml [stack name]
 ```
 
-Once finished, to stop this service and remove its running containers, if
-started using `docker-compose` (with the local Docker engine) issue the
-command:
-
-```bash
-docker-compose rm -s -f
-```
-
-or if using Docker Swarm mode:
+Once finished, to clean up.
 
 ```bash
 docker stack rm [stack name]
 ```
 
-It is also possible to run redis server natively (without Docker). This is
-useful for development and debugging.
-
-Start redis server
+It is also possible to run redis server natively (without Docker) with:
 
 ```bash
 redis-server
 ```
-
-Note - It requires redis to be installed and all python packages in the
-requirements.txt file
 
