@@ -1,10 +1,10 @@
 {
     "id": "mock_workflow",
-    "version": "test",
+    "version": "1",
     "stages": [
         {
             "id": "mock_workflow_stage",
-            "version": "test",
+            "version": "1.0.0",
             "type": "setup",
             "dependencies": [],
             "resources_required": [],
