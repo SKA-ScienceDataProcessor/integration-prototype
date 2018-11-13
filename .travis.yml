@@ -34,7 +34,7 @@ before_install:
   - sudo apt-get install -y libboost-program-options-dev
   - sudo apt-get install -y libboost-system-dev
   - sudo apt-get install -y docker-ce
-  - sudo apt-get install -y python3-pytango
+#  - sudo apt-get install -y python3-pytango
   - sudo apt-cache search tango
   # Install Python testing and linting dependencies
   - pip install -r testing_requirements.txt
