@@ -1,1 +1,2 @@
+skasip-logging>=1.0.1
 enlighten>=1.0.7
