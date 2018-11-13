@@ -7,7 +7,7 @@
         "num_pols": 4
     },
     "max_duration_sec": -1,
-    "num_streams": 60,
+    "num_streams": 10,
     "num_workers": 4,
     "reporting_interval_sec": 1,
     "start_channel": 0,

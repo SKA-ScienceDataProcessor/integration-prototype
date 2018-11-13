@@ -15,10 +15,10 @@ services:
                 },
                 "num_buffers": 2,
                 "num_buffer_times": 4,
-                "num_streams": 10,
+                "num_streams": 100,
                 "process_data": true,
                 "write_data": false,
-                "filename": "test_receive.dat"
+                "filename": "/app/output/test_receive.dat"
             }'
         volumes:
             - type: bind
@@ -47,13 +47,13 @@ services:
                     "num_pols": 4
                 },
                 "max_duration_sec": -1,
-                "num_streams": 10,
-                "num_workers": 4,
+                "num_streams": 100,
+                "num_workers": 1,
                 "reporting_interval_sec": 1,
                 "start_channel": 0,
                 "stream_config":
                 {
-                    "max_packet_size": 9172,
+                    "max_packet_size": 8972,
                     "rate": 7.1e6,
                     "burst_size": 1472,
                     "max_heaps": 2
