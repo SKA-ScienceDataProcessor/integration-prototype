@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """Tango Processing Controller Device server."""
 from tango.server import run

@@ -1,12 +1,12 @@
-#!/usr/bin/env python3
-"""Register Processing Controller devices with the TANGO Database."""
+#!/usr/bin/python3
+"""Delete Processing Block devices from the TANGO Database."""
 import logging
 
 from sip_logging import init_logger
-from tango import Database, DbDevInfo
+from tango import Database
 
 
-def register_pb_devices():
+def delete_pb_devices():
     """Register PBs devices.
 
     Note(BMo): Ideally we do not want to register any devices here. There
@@ -16,16 +16,12 @@ def register_pb_devices():
     """
     log = logging.getLogger('sip.tango_control.subarray')
     tango_db = Database()
-    log.info("Registering PB devices:")
-    dev_info = DbDevInfo()
-    # pylint: disable=protected-access
-    dev_info._class = 'ProcessingBlockDevice'
-    dev_info.server = 'processing_controller_ds/1'
+    log.info("Deleting PB devices:")
 
-    for index in range(10):
-        dev_info.name = 'sip_sdp/pb/PB-{:03d}'.format(index)
-        log.info("\t%s", dev_info.name)
-        tango_db.add_device(dev_info)
+    for index in range(1000):
+        name = 'sip_sdp/pb/PB-{:03d}'.format(index)
+        log.info("\t%s", name)
+        tango_db.delete_device(name)
 
     # tango_db.add_server(dev_info.server, dev_info, with_dserver=True)
     # tango_db.delete_device(dev_info.name)
@@ -33,4 +29,4 @@ def register_pb_devices():
 
 if __name__ == '__main__':
     init_logger()
-    register_pb_devices()
+    delete_pb_devices()

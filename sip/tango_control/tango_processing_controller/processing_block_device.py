@@ -1,5 +1,7 @@
 # -*- coding: utf-8 -*-
 """SKA SDP Tango Processing Block Device."""
+import time
+
 # pylint: disable=no-self-use
 from tango import DevState
 from tango.server import Device, DeviceMeta
@@ -16,8 +18,11 @@ class ProcessingBlockDevice(Device, metaclass=DeviceMeta):
 
     def init_device(self):
         """Device constructor."""
+        start_time = time.time()
         self.set_state(DevState.STANDBY)
         self._pb_id = ''
+        print('init {}, time taken ... {:.6f}'.format(self.get_name(),
+                                                      time.time() - start_time))
 
     # ---------------
     # Commands

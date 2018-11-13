@@ -9,7 +9,7 @@ services:
       - TANGO_HOST=tango_database:20000
       - REDIS_HOST=config_database
     volumes:
-      - ./tango_interactive_client:/home/sip/tango_interactive_client
+      - ./tango_interactive_client:/home/sip
 
   master:
     image: skasip/tango_master:latest
@@ -18,7 +18,7 @@ services:
       - TANGO_HOST=tango_database:20000
       - REDIS_HOST=config_database
     volumes:
-      - ./tango_master:/home/sip/tango_master
+      - ./tango_master:/home/sip
 
   processing_controller:
     image: skasip/tango_processing_controller:latest
@@ -27,7 +27,7 @@ services:
     - TANGO_HOST=tango_database:20000
     - REDIS_HOST=config_database
     volumes:
-    - ./tango_processing_controller:/home/sip/tango_processing_controller
+    - ./tango_processing_controller:/home/sip
 
   subarray:
     image: skasip/tango_subarray:latest
@@ -36,7 +36,7 @@ services:
     - TANGO_HOST=tango_database:20000
     - REDIS_HOST=config_database
     volumes:
-    - ./tango_subarray:/home/sip/tango_subarray
+    - ./tango_subarray:/home/sip
 
   tango_database:
     image: skasip/tango_database:latest

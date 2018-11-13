@@ -97,6 +97,22 @@ class SDPMasterDevice(Device, metaclass=DeviceMeta):
         active_pbs = ProcessingBlockList.active
         print('ACTIVE', active_pbs)
 
+        # https://pytango.readthedocs.io/en/stable/howto.html#dynamic-device-from-a-known-tango-class-name
+        # See if this will work if it is moved to a command on the
+        # Processing Block Device?
+        # from tango import Util
+        # # FIXME first need to register the device?
+        # tango_db = Database()
+        # dev_info = DbDevInfo()
+        # # pylint: disable=protected-access
+        # dev_info._class = 'ProcessingBlockDevice'
+        # dev_info.server = 'processing_controller_ds/1'
+        # dev_info.name = 'sip_sdp/pb/test1'
+        # tango_db.add_device(dev_info)
+        # util = Util.instance()
+        # # cb == callback
+        # util.create_device('ProcessingBlockDevice', 'sip_sdp/pb/test1')
+
         # Get a PB device which has not been assigned.
         for pb in pb_list:
             for ii in range(100):
