@@ -1,5 +1,7 @@
 sudo: required
 
+dist: xenial
+
 notifications:
   slack: ska-sip:zgaO4jJWwB4UjFRulowC5g56
 
@@ -31,7 +33,7 @@ before_install:
   - sudo apt-get install -y libboost-program-options-dev
   - sudo apt-get install -y libboost-system-dev
   - sudo apt-get install -y docker-ce
-  - sudo apt-get install -y python3-tango
+  - sudo apt-get install -y python3-pytango
   # Install Python testing and linting dependencies
   - pip install -r testing_requirements.txt
   # Install dependencies for SIP packages
