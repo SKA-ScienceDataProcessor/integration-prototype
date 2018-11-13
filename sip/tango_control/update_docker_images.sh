@@ -32,11 +32,11 @@ fi
 VERSION=$1
 PS3='Please select an option : '
 options=(
+    "docker_base"
     "master"
     "processing_controller"
     "subarray"
     "interactive_client"
-    "docker_base"
     "mysql"
     "database"
     "all"

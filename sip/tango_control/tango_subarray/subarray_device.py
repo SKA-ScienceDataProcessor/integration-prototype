@@ -1,13 +1,12 @@
 # -*- coding: utf-8 -*-
-import time
+"""Tango subarray device class."""
 import json
+import time
+
 import jsonschema
-
-from tango import DevState, DeviceImpl, DebugIt
-from tango.server import Device, BaseDevice, command, attribute, pipe
-from tango.server import class_property
-
-from config_db import Subarray, SchedulingBlockInstance
+from config_db import SchedulingBlockInstance, Subarray
+from tango import DebugIt, DevState
+from tango.server import Device, attribute, class_property, command, pipe
 
 
 class SubarrayDevice(Device):
@@ -64,7 +63,7 @@ class SubarrayDevice(Device):
     @attribute(dtype=bool)
     def active(self):
         """Return true if the subarray is active."""
-        return Subarray(self.get_name()).is_active()
+        return Subarray(self.get_name()).active
 
     @attribute(dtype=str)
     def id(self):
@@ -74,7 +73,7 @@ class SubarrayDevice(Device):
     @pipe
     def scheduling_block_instances(self):
         """Return list of SBIs associated with this subarray."""
-        return 'SBI', []
+        return 'SBI', Subarray(self.get_name()).sbi_ids
 
     @pipe
     def processing_blocks(self):
@@ -82,7 +81,9 @@ class SubarrayDevice(Device):
 
         <http://www.esrf.eu/computing/cs/tango/pytango/v920/server_api/server.html#PyTango.server.pipe>
         """
-        return 'PB', []
-
-
-
+        sbi_ids = Subarray(self.get_name()).sbi_ids
+        pbs = []
+        for sbi_id in sbi_ids:
+            sbi = SchedulingBlockInstance(sbi_id)
+            pbs.append(sbi.processing_block_ids)
+        return 'PB', pbs

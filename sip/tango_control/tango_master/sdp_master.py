@@ -2,15 +2,22 @@
 """SKA SDP Master Device prototype."""
 import json
 import time
+import logging
 from random import randrange
 
 from config_db import ProcessingBlock, ProcessingBlockList, SDPState, \
-    SchedulingBlockInstanceList, ServiceState
-from tango import Database, DbDevInfo, DebugIt, DevState
-from tango.server import Device, DeviceMeta, attribute, command, run
+    SchedulingBlockInstanceList, ServiceState, generate_sbi_config, \
+    SchedulingBlockInstance
+from config_db.config_db_redis import ConfigDb
+from tango import Database, DbDevInfo, DebugIt, DevState, Util
+from tango import DeviceProxy
+from tango.server import Device, DeviceMeta, attribute, command
 
 
-class SDPMaster(Device, metaclass=DeviceMeta):
+LOG = logging.getLogger('sip.tango_control.SDPMaster')
+
+
+class SDPMasterDevice(Device, metaclass=DeviceMeta):
     """SIP SDP Master device."""
 
     _device_version = '1.0.0'
@@ -52,6 +59,7 @@ class SDPMaster(Device, metaclass=DeviceMeta):
         # self.set_state('STANDBY')
 
     def always_executed_hook(self):
+        """FIXME Add docstring."""
         pass
 
     def delete_device(self):
@@ -64,7 +72,7 @@ class SDPMaster(Device, metaclass=DeviceMeta):
 
     @command(dtype_in=str)
     @DebugIt()
-    def configure(self, sbi_config):
+    def configure(self, value):
         """Schedule an offline only SBI with SDP."""
         # FIXME(BMo) something in from_config is not respecting REDIS_HOST!
         # config_dict = json.loads(sbi_config)
@@ -76,24 +84,48 @@ class SDPMaster(Device, metaclass=DeviceMeta):
         #     # return 'failed to parse json'
         # return 'added SBI with ID = {}'.format(sbi.id)
 
-        # sdp/pb/PB - xxxxxx
-        db = Database()
         # devices = db.get_server_list("PB*").value_string
 
-        pb_list = self._pb_list.active
+        # pb_list = self._pb_list.active
+        # pb_list = ['PB-{:02d}'.format(ii) for ii in range(5)]
+        #
+        ConfigDb().flush_db()
+        sbi_config = generate_sbi_config(register_workflows=True)
+        sbi = SchedulingBlockInstance.from_config(sbi_config)
+        pb_list = sbi.processing_block_ids
+        print('PB_LIST', pb_list)
+        active_pbs = ProcessingBlockList.active
+        print('ACTIVE', active_pbs)
 
+        # Get a PB device which has not been assigned.
         for pb in pb_list:
-            device_name = 'sdp/ProcessingBlock/{}'.format(pb)
-            new_device_info = DbDevInfo()
-            new_device_info._class = "ProcessingBlockDevice"
-            new_device_info.server = "ProcessingControllerDS/test"
-            new_device_info.name = device_name
-            db.add_device(new_device_info)
-            print('CREATING DEVICE', device_name)
-        print(pb_list)
+            for ii in range(100):
+                pb_dev = 'sip_sdp/pb/PB-{:03d}'.format(ii)
+                device = DeviceProxy(pb_dev)
+                if not device.pb_id:
+                    LOG.info('Assigning PB device = %s to PB id = %s',
+                             device.name(), pb)
+                    device.pb_id = pb
+                    break
+
+        # # https://pytango.readthedocs.io/en/stable/howto.html#dynamic-device-from-a-known-tango-class-name
+        # tango_db = Database()
+        # for pb in pb_list:
+        #     device_name = 'sip_sdp/pb/{}'.format(pb)
+        #     device_info = DbDevInfo()
+        #     # pylint: disable=protected-access
+        #     device_info._class = "ProcessingBlockDevice"
+        #     device_info.server = "processing_controller_ds/1"
+        #     device_info.name = device_name
+        #     tango_db.add_device(device_info)
+        #     # util = Util.instance()
+        #     # util.create_device('ProcessingBlockDevice', device_name,
+        #     #                    alias=None, cb=None)
+        #     print('CREATING DEVICE', device_name)
+        # print(pb_list)
         # self.debug_stream(pb_list)
-        pb = ProcessingBlock(pb_list[0])
-        print(pb.id)
+        # pb = ProcessingBlock(pb_list[0])
+        # print(pb.id)
         return 'added SBI to db!'
 
     # ------------------
@@ -131,9 +163,10 @@ class SDPMaster(Device, metaclass=DeviceMeta):
         """Health check method, returns the up-time of the device."""
         return time.time() - self._start_time
 
+    # pylint: disable=no-self-use
     @attribute(dtype=str)
     def resource_availability(self):
-        """Return the a JSON dict describing the SDP resource amiability. """
+        """Return the a JSON dict describing the SDP resource amiability."""
         # TODO(BMo) change this to a pipe?
         return json.dumps(dict(nodes_free=randrange(0, 500)))
 
@@ -169,8 +202,8 @@ class SDPMaster(Device, metaclass=DeviceMeta):
     def processing_block_devices(self):
         """Get list of processing block devices."""
         # https://intranet.cells.es/Members/srubio/howto/HowToPyTango#Getalldevicesofaserveroragivenclass
-        db = Database()
+        tango_db = Database()
         # server name, class name
-        devices = db.get_device_name('ProcessingController/pcont',
-                                     'ProcessingBlockDevice')
+        devices = tango_db.get_device_name('ProcessingController/pcont',
+                                           'ProcessingBlockDevice')
         print(devices.value_string)

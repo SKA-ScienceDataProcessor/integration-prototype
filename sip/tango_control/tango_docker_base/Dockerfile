@@ -4,7 +4,7 @@ LABEL maintainer="Benjamin Mort <ben.mort@gmail.com>"
 ENV DEBIAN_FRONTEND=noninteractive
 
 RUN apt-get update && \
-    apt-get install -y python3-tango python3-pip git
+    apt-get install -y python3-tango python3-pip
 
 RUN pip3 install -U skasip-config-db skasip-logging
 

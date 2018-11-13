@@ -1,11 +1,12 @@
 # -*- coding: utf-8 -*-
-"""Experimental SIP SKA base class for ELT devices
+"""Experimental SKA base class for ELT devices.
 
 A test base class for use with Pogo in SIP prototyping - taken from
 SKA1 TANGO Developers Guideline - Rev01
 
 * Likely to be superseded *
 """
+# pylint: disable-all
 from tango import DebugIt
 from tango.server import Device, DeviceMeta, attribute, command
 

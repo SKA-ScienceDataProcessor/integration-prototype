@@ -1,4 +1,4 @@
-version: '3.7'
+version: '3.6'
 
 services:
 
@@ -18,16 +18,16 @@ services:
       - TANGO_HOST=tango_database:20000
       - REDIS_HOST=config_database
     volumes:
-      - ./tango_master/server:/home/sip/tango_master
+      - ./tango_master:/home/sip/tango_master
 
   processing_controller:
-    image: skasip/tango_processing_controller:1.0.0
+    image: skasip/tango_processing_controller:latest
     command: sleep 36000
     environment:
     - TANGO_HOST=tango_database:20000
     - REDIS_HOST=config_database
     volumes:
-    - ./tango_processing_controller/server:/home/sip/tango_processing_controller
+    - ./tango_processing_controller:/home/sip/tango_processing_controller
 
   subarray:
     image: skasip/tango_subarray:latest
