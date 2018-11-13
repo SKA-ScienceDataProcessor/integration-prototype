@@ -70,9 +70,9 @@ def test_pbc_execute():
     result = execute_processing_block.apply_async((pb_ids[0], ))
 
     print('\nresult =', result)
-    start_time = time.time()
-    _inspect = Inspect(app=APP)
-    while not result.ready():
-        print('XX', _inspect.active())
-        print('XX', result.ready(), (time.time() - start_time))
-        time.sleep(0.5)
+    # start_time = time.time()
+    # _inspect = Inspect(app=APP)
+    # while not result.ready():
+    #     print('XX', _inspect.active())
+    #     print('XX', result.ready(), (time.time() - start_time))
+    #     time.sleep(0.5)
