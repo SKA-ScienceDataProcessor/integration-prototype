@@ -24,6 +24,7 @@ cache: pip
 # https://github.com/travis-ci/travis-ci/issues/5358
 before_install:
   # Add Docker repo to apt.
+  - cat /etc/issue
   - curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add -
   - sudo add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable"
   # Install API packages
@@ -34,13 +35,14 @@ before_install:
   - sudo apt-get install -y libboost-system-dev
   - sudo apt-get install -y docker-ce
   - sudo apt-get install -y python3-pytango
+  - sudo apt-cache search tango
   # Install Python testing and linting dependencies
   - pip install -r testing_requirements.txt
   # Install dependencies for SIP packages
   - pip install -r sip/execution_control/configuration_db/requirements.txt
-  - pip install spead2>=1.7.2
-  - pip install skasip-logging>=1.0.1
-  - pip install skasip-config-db>=1.0.17
+#  - pip install spead2>=1.7.2
+#  - pip install skasip-logging>=1.0.1
+#  - pip install skasip-config-db>=1.0.17
   - pip install -r sip/execution_control/processing_controller_interface/flask_api/requirements.txt
   - pip install -r sip/execution_framework_interface/docker_api/requirements.txt
   - pip install -r sip/execution_framework_interface/docker_compose_generator/requirements.txt
@@ -64,7 +66,7 @@ script:
   - python -m pytest -s -v --codestyle --docstyle --pylint --pylint-rcfile=.pylintrc --rootdir=. sip/execution_control/configuration_db
   - pytest --cov=sip/execution_control/configuration_db sip/execution_control/configuration_db
 
-  - python -m pytest -s -v --codestyle --docstyle --pylint --pylint-rcfile=.pylintrc --rootdir=. --ignore=sip/tango_control/tango_ska_device sip/tango_control
+#  - python -m pytest -s -v --codestyle --docstyle --pylint --pylint-rcfile=.pylintrc --rootdir=. --ignore=sip/tango_control/tango_ska_device sip/tango_control
   - python -m pytest -s -v --codestyle --docstyle --pylint --pylint-rcfile=.pylintrc --rootdir=. sip/execution_control/logging
 
 after_success:
