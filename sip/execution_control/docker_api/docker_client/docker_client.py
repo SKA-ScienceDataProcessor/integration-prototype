@@ -44,7 +44,7 @@ class DockerClient:
                                'swarm manager nodes')
 
         # Initialise empty list
-        service_names = []
+        services_ids = []
 
         try:
             service_config = yaml.load(compose_str)
@@ -57,9 +57,10 @@ class DockerClient:
                         service_config, service_name)
                     for s_spec in service_spec:
                         created_service = self._client.services.create(**s_spec)
-                        service_name = created_service.name
-                        LOG.debug('Service created: %s', service_name)
-                        service_names.append(service_name)
+                        # service_name = created_service.name
+                        service_id = created_service.short_id
+                        LOG.debug('Service created: %s', service_id)
+                        services_ids.append(service_id)
                 else:
                     LOG.debug('Services already exists')
 
@@ -67,7 +68,7 @@ class DockerClient:
             print(exc)
 
         # Returning list of services created
-        return service_names
+        return services_ids
 
     def create_volume(self, volume_name, driver_spec=None):
         """Create new docker volumes.

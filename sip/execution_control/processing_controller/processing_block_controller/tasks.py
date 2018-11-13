@@ -92,13 +92,14 @@ def execute_processing_block(pb_id: str):
             log.info('COMPOSE_STR: {}'.format(compose_str))
 
             # Run the compose file
-            created_services = docker.create_services(compose_str)
-            for service in created_services:
-                # TODO (NJT) Maybe better to return service ids
-                log.info('CREATED SERVICES: {}'.format(service))
+            service_ids = docker.create_services(compose_str)
+            for service_ids in service_ids:
+                log.info('Created Services: {}'.format(service_ids))
 
-            # running_service_ids.append(serivce_id)
-            # update db status
+            running_service_ids.append(service_ids)
+            # Update DB status
+            # TODO (NJT): Update status not the priority
+
 
         # if there are not more stages -> break
         break

@@ -2,7 +2,7 @@
 from setuptools import setup
 
 setup(name='skasip-docker_swarm',
-      version='0.0.3',
+      version='0.0.4',
       description='SIP Docker Swarm client library.',
       author='SKA SIP',
       packages=['docker_client'],

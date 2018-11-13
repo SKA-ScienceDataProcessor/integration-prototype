@@ -38,12 +38,11 @@ def test_create_start_stage():
         s_names = DC.create_services(compose_str)
 
         service_list = DC.get_service_list()
-        for services in service_list:
-            names = DC.get_service_name(services)
-            service_names.append(names)
+        for service_id in service_list:
+            service_details = DC.get_service_details(service_id)
+            print(service_details['Spec']['Name'])
+            service_names.append(service_details['Spec']['Name'])
         assert "start_stage" in service_names
-        for s_name in s_names:
-            assert s_name in service_names
 
     # Cleaning
     DC.delete_service("start_stage")
