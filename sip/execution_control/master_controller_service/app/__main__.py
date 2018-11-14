@@ -38,7 +38,7 @@ from sched import scheduler
 import json
 import logging
 import logging.config
-#~ from config_db.master_client import MasterDbClient as masterClient
+
 from config_db.sdp_state import SDPState
 from config_db.service_state import ServiceState
 

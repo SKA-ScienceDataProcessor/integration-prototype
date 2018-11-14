@@ -107,6 +107,19 @@ def root():
 
 @APP.route('/ProcBlock/all')
 def ProcessingBlocks():
+    from config_db.pb import ProcessingBlock
+    from config_db.sbi import SchedulingBlockInstance
+    from config_db.sbi_list import SchedulingBlockInstanceList
+    # apparently use pb not pb_list
+    pb_ids = list()
+    for sbi in (SchedulingBlockInstance(sbi) for sbi in SchedulingBlockInstanceList().active):
+        pb_ids += sbi.get_pb_ids()
+    pb_list = pb_ids
+    return {
+            'message':'This is the Processing Block Instance List',
+            'num_instances':len(pb_list),
+            'instances':pb_list
+    }
     return { "message" : "Processing Blocks under construction" }
 
 

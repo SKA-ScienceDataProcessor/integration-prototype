@@ -9,4 +9,5 @@ MarkupSafe==1.0
 namesgenerator==0.3
 redis==2.10.6
 simplejson==3.16.0
+skasip-config-db>=1.0.17
 Werkzeug==0.14.1

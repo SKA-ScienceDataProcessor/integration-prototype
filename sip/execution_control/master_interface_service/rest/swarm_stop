@@ -1,8 +1,6 @@
 #!/bin/sh
 # stop and destroy containers for  the master interface service (Rest Variant)
 
-# End the stack and delete the containers
-docker stack rm master_controller_stack
-
-# Delete the images
-docker rmi skasip/master_controller_service skasip/master_interface_service
+# End the stack and delete the containers; Delete the images
+docker stack rm master_controller_stack && \
+  docker rmi skasip/master_controller_service skasip/master_interface_service

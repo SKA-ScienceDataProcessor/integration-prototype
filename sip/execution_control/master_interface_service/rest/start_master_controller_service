@@ -6,20 +6,6 @@ mipath=.
 dbpath=../../configuration_db/redis
 
 
-# First copy files from configuration_db (temporary measure)
-
-package=config_db.zip
-#~ # Create package file if necessary
-#~ if [ ! -e ${dbpath}/${package} ]
-#~ then
-    #~ (cd ${dbpath}; zip -r ${package} setup.py ${package%.zip})
-    #~ cp ${dbpath}/${package} ${mcpath}
-    #~ cp ${dbpath}/${package} ${mipath}
-#~ fi
-#~ # copy package file if necessary
-#~ [ -e ${mcpath}/${package} ] || cp ${dbpath}/${package} ${mcpath}
-#~ [ -e ${mipath}/${package} ] || cp ${dbpath}/${package} ${mipath}
-
 # Build and run docker images
 docker-compose -f docker-compose.yml -f docker-compose.dev.yml up -d --build && \
             (cd ${dbpath}/config_db/utils; python3 set_initial_data.py)

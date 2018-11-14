@@ -1,1 +1,2 @@
 redis>=2.10.6
+skasip-config-db==1.0.17

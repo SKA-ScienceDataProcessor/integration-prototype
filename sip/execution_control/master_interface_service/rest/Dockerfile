@@ -9,7 +9,6 @@ RUN apk update && \
     apk add --no-cache git && \
     pip install --upgrade pip && \
     pip install --no-cache-dir -r requirements.txt && \
-    pip install --no-cache-dir git+https://github.com/SKA-ScienceDataProcessor/integration-prototype#egg=config_db\&subdirectory=sip/execution_control/configuration_db/redis && \
     apk del git && \
     apk add --no-cache curl && \
     find /usr/local/lib/python3.6/ -name 'tests' -exec rm -r '{}' + && \
