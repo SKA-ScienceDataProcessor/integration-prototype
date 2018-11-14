@@ -2,19 +2,36 @@
 
 See description in the SIP report for more details on this service.
 
-Start using the `docker-compose.yaml` file from the parent tango_control folder.
+
+## Quick-start
 
 
-## Running the SDP Master
-
-For an interactive prompt inside the running container:
+Start using the `docker-compose.yaml` file from the parent `tango_control`
+folder.
 
 ```bash
-docker exec -it $(docker ps -q -f name=tango_master) /bin/bash
+docker stack deploy -c docker-compose.yml tagno
 ```
 
-To start the MasterController Device server.
+Get an interactive prompt inside the running container:
 
 ```bash
-python3 SDPMasterDeviceServer.py 1
+docker exec -it -w /home/sip/tango_master $(docker ps -q -f name=tango_master) /bin/bash
+```
+
+This can also be done by using the script found in the `tango_control` folder:
+
+```bash
+./get_interactive_prompt.sh
+```
+
+and select option '3'.
+
+
+Register the SDP Master device (`sip_sdp/elt/master`) and start the 
+Device server (`sdp_master_ds/1`):
+
+```bash
+python3 register_device.py
+python3 sdp_master_ds.py 1 -v4
 ```

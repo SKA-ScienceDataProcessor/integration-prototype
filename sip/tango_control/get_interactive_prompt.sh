@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+# Script to get an interactive prompt in a named Tango Service container.
 
 function get_prompt () {
     RED='\033[0;31m'
@@ -7,9 +8,9 @@ function get_prompt () {
     NAME=tango_${1}
     VERSION=${2}
     echo -e "${RED}----------------------------------------------------${NC}"
-    echo -e "${BLUE} docker exec -it $(docker ps -q -f name=${NAME}) /bin/bash"
+    echo -e "${BLUE} docker exec -it -w /home/sip/${NAME} $(docker ps -q -f name=${NAME}) /bin/bash"
     echo -e "${RED}----------------------------------------------------${NC}"
-    docker exec -it $(docker ps -q -f name=${NAME}) /bin/bash
+    docker exec -it -w /home/sip/${NAME} $(docker ps -q -f name=${NAME}) /bin/bash
 }
 
 
@@ -25,13 +26,13 @@ options=(
     "interactive_client"
     "itango"
     "master"
-    "processing_controller"
+    "processing_block"
     "subarray"
     "quit"
 )
 select opt in "${options[@]}"
 do
-    case $opt in
+    case ${opt} in
         "interactive_client")
             (get_prompt "${opt}")
             break
@@ -44,7 +45,7 @@ do
             (get_prompt "${opt}")
             break
             ;;
-        "processing_controller")
+        "processing_block")
             (get_prompt "${opt}")
             break
             ;;

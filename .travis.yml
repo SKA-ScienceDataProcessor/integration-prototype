@@ -57,6 +57,7 @@ before_script:
   # ---------------------------------------------------------------------------
   - docker run -d -p 6379:6379 --name=config_db redis:4.0.6-alpine
   - docker swarm init
+  - docker node ls
 
 script:
   # Execute all of the commands which should make the build pass or fail.
@@ -66,12 +67,13 @@ script:
 #  - pycodestyle --config=.pycodestyle --exclude=receive_visibilities sip
 #  - pylint --rcfile=.pylintrc --ignore=csp_pss_sender,csp_vis_sender_01,csp_vis_sender_02 emulators
 
-  - python -m pytest -s -v --codestyle --docstyle --pylint --pylint-rcfile=.pylintrc --rootdir=. sip/execution_framework_interface/docker_api
-  - python -m pytest -s -v --codestyle --docstyle --pylint --pylint-rcfile=.pylintrc --rootdir=. sip/execution_framework_interface/docker_compose_generator
+#  - python -m pytest -s -v --codestyle --docstyle --pylint --pylint-rcfile=.pylintrc --rootdir=. sip/execution_framework_interface/docker_api
+#  - python -m pytest -s -v --codestyle --docstyle --pylint --pylint-rcfile=.pylintrc --rootdir=. sip/execution_framework_interface/docker_compose_generator
   - python -m pytest -s -v --codestyle --docstyle --pylint --pylint-rcfile=.pylintrc --rootdir=. sip/science_pipeline_workflows/ical_dask
   - python -m pytest -s -v --codestyle --docstyle --pylint --pylint-rcfile=.pylintrc --rootdir=. sip/execution_control/configuration_db
   - python -m pytest -s -v --codestyle --docstyle --pylint --pylint-rcfile=.pylintrc --rootdir=. --ignore=sip/tango_control/tango_ska_device sip/tango_control
   - python -m pytest -s -v --codestyle --docstyle --pylint --pylint-rcfile=.pylintrc --rootdir=. sip/execution_control/logging
+
   - pytest --cov=sip/execution_control/configuration_db sip/execution_control/configuration_db
 
 after_success:

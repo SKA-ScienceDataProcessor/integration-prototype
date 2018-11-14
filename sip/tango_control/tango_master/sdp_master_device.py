@@ -5,6 +5,7 @@ import time
 import logging
 from random import randrange
 
+from _version import __version__
 from config_db import ProcessingBlock, ProcessingBlockList, SDPState, \
     SchedulingBlockInstanceList, ServiceState, generate_sbi_config, \
     SchedulingBlockInstance
@@ -17,18 +18,11 @@ from tango.server import Device, DeviceMeta, attribute, command
 LOG = logging.getLogger('sip.tango_control.SDPMaster')
 
 
-class SDPMasterDevice(Device, metaclass=DeviceMeta):
+class SDPMasterDevice(Device):
     """SIP SDP Master device."""
 
-    _device_version = '1.0.0'
-    MC = 'execution_control:master_controller'
-    _targetState = 'UNKNOWN'
-    _targetTimeStamp = "Unknown"
-    _sdp_state = SDPState()
-    _sbi_list = SchedulingBlockInstanceList()
-    _pb_list = ProcessingBlockList()
-    _service_state = ServiceState('TangoControl', 'SDPMaster', _device_version)
     _start_time = time.time()
+    _service_state = ServiceState('TangoControl', 'SDPMaster', __version__)
 
     # -------------------------------------------------------------------------
     # General methods
@@ -36,30 +30,16 @@ class SDPMasterDevice(Device, metaclass=DeviceMeta):
     def init_device(self):
         """Device constructor."""
         Device.init_device(self)
-        self.set_state(DevState.INIT)
-        # TODO(BMo) Check if the current state of all services are 'on'
-        # TODO(BMo) add methods on database for ServiceList to be able to
-        # iterate over sdp services to be able to call the current state
-        # property on each
-        # For now this is mocked by this sleep
-        time.sleep(0.1)
-        # FIXME(BMo) Fix the state logic so that we dont have to check the
-        # current state when reinitialising device.
-        if self._service_state.current_state == 'unknown':
-            self._service_state.update_current_state('init')
-        if self._sdp_state.current_state == 'unknown':
-            self._sdp_state.update_current_state('init')
+        self._set_state('init')
 
-        if self._sdp_state.current_state == 'standby':
-            self._sdp_state.update_current_state('standby')
-        if self._service_state.current_state != 'on':
-            self._service_state.update_current_state('on')
-        self.set_state(DevState.STANDBY)
-        # TODO(BM) Work out to set the device state (as opposed to status)
-        # self.set_state('STANDBY')
+        # FIXME(BMo) blocking wait until all other SDP services are online.
+        time.sleep(5)
+
+        self._set_state('standby')
 
     def always_executed_hook(self):
         """FIXME Add docstring."""
+        print('always executed hook!')
         pass
 
     def delete_device(self):
@@ -97,22 +77,6 @@ class SDPMasterDevice(Device, metaclass=DeviceMeta):
         active_pbs = ProcessingBlockList.active
         print('ACTIVE', active_pbs)
 
-        # https://pytango.readthedocs.io/en/stable/howto.html#dynamic-device-from-a-known-tango-class-name
-        # See if this will work if it is moved to a command on the
-        # Processing Block Device?
-        # from tango import Util
-        # # FIXME first need to register the device?
-        # tango_db = Database()
-        # dev_info = DbDevInfo()
-        # # pylint: disable=protected-access
-        # dev_info._class = 'ProcessingBlockDevice'
-        # dev_info.server = 'processing_controller_ds/1'
-        # dev_info.name = 'sip_sdp/pb/test1'
-        # tango_db.add_device(dev_info)
-        # util = Util.instance()
-        # # cb == callback
-        # util.create_device('ProcessingBlockDevice', 'sip_sdp/pb/test1')
-
         # Get a PB device which has not been assigned.
         for pb in pb_list:
             for ii in range(100):
@@ -124,20 +88,6 @@ class SDPMasterDevice(Device, metaclass=DeviceMeta):
                     device.pb_id = pb
                     break
 
-        # # https://pytango.readthedocs.io/en/stable/howto.html#dynamic-device-from-a-known-tango-class-name
-        # tango_db = Database()
-        # for pb in pb_list:
-        #     device_name = 'sip_sdp/pb/{}'.format(pb)
-        #     device_info = DbDevInfo()
-        #     # pylint: disable=protected-access
-        #     device_info._class = "ProcessingBlockDevice"
-        #     device_info.server = "processing_controller_ds/1"
-        #     device_info.name = device_name
-        #     tango_db.add_device(device_info)
-        #     # util = Util.instance()
-        #     # util.create_device('ProcessingBlockDevice', device_name,
-        #     #                    alias=None, cb=None)
-        #     print('CREATING DEVICE', device_name)
         # print(pb_list)
         # self.debug_stream(pb_list)
         # pb = ProcessingBlock(pb_list[0])
@@ -151,7 +101,7 @@ class SDPMasterDevice(Device, metaclass=DeviceMeta):
     @attribute(dtype=str)
     def version(self):
         """Return the version of the Master Controller Device."""
-        return self._device_version
+        return __version__
 
     @attribute(dtype=str)
     def current_state(self):
@@ -223,3 +173,15 @@ class SDPMasterDevice(Device, metaclass=DeviceMeta):
         devices = tango_db.get_device_name('ProcessingController/pcont',
                                            'ProcessingBlockDevice')
         print(devices.value_string)
+
+    def _set_state(self, state):
+        """Set the state of the SDPMaster."""
+        if state == 'init':
+            self._set_state(DevState.INIT)
+            # FIXME(BMo) Updating the current state to init should \
+            #            be allowed if already in init!
+            self._service_state.update_current_state('init')
+
+        elif state == 'standby':
+            self._set_state(DevState.STANDBY)
+            self._service_state.update_current_state('standby')

@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+# Script build and upload Tango docker images.
 
 function build_tango_image () {
     RED='\033[0;31m'
@@ -23,9 +24,9 @@ function build_tango_image () {
 }
 
 
-if [ $# -ne 1 ]; then
+if [ $# -ne 0 ]; then
     echo $#
-    echo "Usage: $0 VERSION"
+    echo "Usage: $0"
     exit 1
 fi
 
@@ -34,14 +35,16 @@ PS3='Please select an option : '
 options=(
     "docker_base"
     "master"
-    "processing_controller"
+    "processing_block"
     "subarray"
     "interactive_client"
     "mysql"
     "database"
-    "all"
     "quit"
 )
+
+VERSION=$(python -c "from tango_${opt}._version import __version__; print(__version__)")
+
 select opt in "${options[@]}"
 do
     case $opt in
@@ -49,7 +52,7 @@ do
             (build_tango_image "${opt}" "${VERSION}")
             break
             ;;
-        "processing_controller")
+        "processing_block")
             (build_tango_image "${opt}" "${VERSION}")
             break
             ;;
@@ -71,15 +74,6 @@ do
             ;;
         "database")
             (build_tango_image "${opt}" "${VERSION}")
-            break
-            ;;
-        "all")
-            for value in "${options[@]}";
-            do
-                if [[ ${value} != "all" && ${value} != "quit" ]]; then
-                   (build_tango_image "${value}" "${VERSION}")
-                fi
-            done
             break
             ;;
         "quit")

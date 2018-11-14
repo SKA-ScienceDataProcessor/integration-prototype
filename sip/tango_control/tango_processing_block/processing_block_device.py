@@ -1,32 +1,39 @@
 # -*- coding: utf-8 -*-
 """SKA SDP Tango Processing Block Device."""
 import time
+import logging
 
 # pylint: disable=no-self-use
-from tango import DevState
+from tango import DevState, Database, DbDevInfo
 from tango.server import Device, DeviceMeta
-from tango.server import attribute
+from tango.server import attribute, command
 
 from config_db import ProcessingBlock
 
 
 VERSION = '0.0.1'
+LOG = logging.getLogger('sip.tango_control.pb_device')
 
 
-class ProcessingBlockDevice(Device, metaclass=DeviceMeta):
+class ProcessingBlockDevice(Device):
     """Tango Processing Block Device."""
+
+    _start_time = time.time()
 
     def init_device(self):
         """Device constructor."""
         start_time = time.time()
-        self.set_state(DevState.STANDBY)
+        Device.init_device(self)
         self._pb_id = ''
-        print('init {}, time taken ... {:.6f}'.format(self.get_name(),
-                                                      time.time() - start_time))
+        LOG.debug('init PB device %s, time taken %.6f s (total: %.2f s)',
+                  self.get_name(), (time.time() - start_time),
+                  (time.time() - self._start_time))
+        self.set_state(DevState.STANDBY)
 
     # ---------------
     # Commands
     # ---------------
+
 
     # ------------------
     # Attributes methods
