@@ -60,16 +60,22 @@ def execute_processing_block(pb_id: str):
 
     while True:
 
-        # Check dependencies and get list of stages ready to start.
-        # ...
-        # Check if the stage is complete
+        # # Check dependencies and get list of stages ready to start.
+        # # ...
         # while True:
         #     for service_id in running_service_ids:
-        #         if service is complete:
-        #             del run_service_id[service_id]
+        #         service_state = docker.get_service_state(service_id)
+        #         log.info("Running Docker Services: {}".format(service_id))
+        #         if service_state == 'shutdown':
+        #             docker.delete_service(service_id)
+        #             log.info("Docker Services Deleted: {}".format(service_id))
+        #             running_service_ids.remove(service_id)
+        #         # if service is complete:
+        #         #     del run_service_id[service_id]
         #
         #     break
-        # # Check if complete
+
+        # Check if complete
         stages = [workflow_stages[0]]
 
         # Start stages.
@@ -95,35 +101,23 @@ def execute_processing_block(pb_id: str):
             service_ids = docker.create_services(compose_str)
             for service_ids in service_ids:
                 log.info('Created Services: {}'.format(service_ids))
-
             running_service_ids.append(service_ids)
-
+            log.info("Running Service IDS: {}".format(running_service_ids))
             # Update DB status
-            # TODO (NJT): Update status not the priority
+            # TODO (NJT): Need to update the state into the database
+
+        # Check the state of the running services
+        while running_service_ids:
+            for service_id in running_service_ids:
+                service_state = docker.get_service_state(service_id)
+                log.info("Running Docker Services: {}".format(service_id))
+                if service_state == 'shutdown':
+                    docker.delete_service(service_id)
+                    log.info("Docker Services Deleted: {}".format(service_id))
+                    running_service_ids.remove(service_id)
 
         # if there are not more stages -> break
         break
-
-    # Check the state of the service
-    while running_service_ids:
-        for service_id in running_service_ids:
-            service_state = docker.get_service_state(service_id)
-            log.info("Running Docker Services: {}".format(service_id))
-            if service_state == 'shutdown':
-                docker.delete_service(service_id)
-                log.info("Docker Services Deleted: {}".format(service_id))
-                running_service_ids.remove(service_id)
-
-    # timeout = config.get('timeout', None)
-    # start_time = time.time()
-    # while True:
-    #     time.sleep(0.5)
-    #     log.debug('Executing workflow ... %.1f s', (time.time() - start_time))
-    #     if timeout and time.time() - start_time > timeout:
-    #         break
-
-
-
 
     # The workflow configuration should contain the workflow template
     # and the configuration for each workflow stage.
