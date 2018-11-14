@@ -2,6 +2,7 @@
 """Setup config file to package the configuration database."""
 import os
 from setuptools import setup
+import config_db
 
 
 def package_files(directory):
@@ -24,9 +25,11 @@ SCRIPTS = [os.path.join(SCRIPTS_DIR, file)
 with open('README.md', 'r') as file:
     LONG_DESCRIPTION = file.read()
 
+VERSION = config_db.__version__
+
 
 setup(name='skasip_config_db',
-      version='1.0.17',
+      version=VERSION,
       author='SKA SDP SIP team.',
       description='SIP Execution Control Configuration Database library.',
       long_description=LONG_DESCRIPTION,
