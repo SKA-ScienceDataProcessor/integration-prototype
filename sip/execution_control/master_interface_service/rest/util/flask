@@ -12,14 +12,17 @@
 # brew install jq
 # (curl is a standard OSX utility?)
 
-: ${DOCKER_HOST:=localhost}
-url2=${DOCKER_HOST%:*}:5000/state
-URL=http://${url2#*//}
+: ${DOCKER_HOST:=uri://localhost:0}
+url2=http://${DOCKER_HOST#*//}
+vanilla_url=${url2%:*}:5000/
+URL=${vanilla_url}state
 unset url2
-states=("OFF" "STANDBY" "ON" "DISABLE")
+allstates=$(curl -s "${vanilla_url}allowed_state_transitions")
 
 do_put() {
     local PS3="Enter required state: "
+    current_state=$(curl -s "${URL}" | jq .state | tr -d '\"' )
+    states=($(<<< "$allstates" jq .$current_state[] | tr -d '\"'))
     select state in "${states[@]}"
     do
         printf "\n"

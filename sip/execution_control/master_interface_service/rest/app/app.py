@@ -176,6 +176,11 @@ def version():
         "message": "Version {}".format(VERSION)
     }
 
+@APP.route('/allowed_state_transitions')
+def allowed_transitions():
+    """Return the allowed state transitions"""
+    db = SDPState()
+    return db.allowed_state_transitions
 
 @APP.route('/state', methods=['GET', 'PUT'])
 def state():
