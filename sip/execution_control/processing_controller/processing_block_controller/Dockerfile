@@ -7,7 +7,7 @@ RUN apk add --no-cache git
 
 COPY requirements.txt .
 RUN pip install --no-cache-dir -U "celery[redis]"
-RUN pip install --no-cache-dir -r requirements.txt
+RUN pip install --no-cache-dir -r requirements.txt -U
 
 COPY *.py processing_block_controller/
 # COPY /utils/step_one/*.py processing_block_controller/

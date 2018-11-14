@@ -45,7 +45,7 @@ def test_pbc_execute():
     workflow_config = dict(
         id='mock_workflow',
         version='1.0.0',
-        parameters=dict(setup=dict(duration=5, num_channels=10)))
+        parameters=dict(setup=dict(duration=20, num_channels=10)))
     workflows_dir = os.path.join(os.path.dirname(__file__), 'data',
                                  'workflows')
     # TODO (NJT) Need to add the workflow definition to the database
