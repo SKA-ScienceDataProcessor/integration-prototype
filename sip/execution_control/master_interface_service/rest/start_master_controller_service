@@ -8,4 +8,8 @@ dbpath=../../configuration_db/redis
 
 # Build and run docker images
 docker-compose -f docker-compose.yml -f docker-compose.dev.yml up -d --build && \
-            (cd ${dbpath}/config_db/utils; python3 set_initial_data.py)
+            (mytmpdir=$(mktemp -d --tmpdir venv.XXXXXXXXXX )
+            python3 -m venv $mytmpdir && \
+            $mytmpdir/bin/pip install skasip-config-db && \
+            $mytmpdir/bin/skasip_config_db_init && \
+            rm -rf $mytmpdir)

@@ -120,17 +120,42 @@ def ProcessingBlocks():
             'num_instances':len(pb_list),
             'instances':pb_list
     }
-    return { "message" : "Processing Blocks under construction" }
 
 
 @APP.route('/ProcBlock/offline')
 def offlineProcessingBlocks():
-    return { "message" : "Processing Blocks under construction" }
+    from config_db.pb import ProcessingBlock
+    from config_db.sbi import SchedulingBlockInstance
+    from config_db.sbi_list import SchedulingBlockInstanceList
+    # apparently use pb not pb_list
+    pb_ids = list()
+    for sbi in (SchedulingBlockInstance(sbi) for sbi in SchedulingBlockInstanceList().active):
+        pb_ids += sbi.get_pb_ids()
+    pb_list = list(pb_id for pb_id in pb_ids 
+        if ProcessingBlock(pb_id).type == 'offline')
+    return {
+            'message':'This is the Processing Block Instance List',
+            'num_instances':len(pb_list),
+            'instances':pb_list
+    }
 
 
 @APP.route('/ProcBlock/realtime')
 def realtimeProcessingBlocks():
-    return { "message" : "Processing Blocks under construction" }
+    from config_db.pb import ProcessingBlock
+    from config_db.sbi import SchedulingBlockInstance
+    from config_db.sbi_list import SchedulingBlockInstanceList
+    # apparently use pb not pb_list
+    pb_ids = list()
+    for sbi in (SchedulingBlockInstance(sbi) for sbi in SchedulingBlockInstanceList().active):
+        pb_ids += sbi.get_pb_ids()
+    pb_list = list(pb_id for pb_id in pb_ids 
+        if ProcessingBlock(pb_id).type == 'realtime')
+    return {
+            'message':'This is the Processing Block Instance List',
+            'num_instances':len(pb_list),
+            'instances':pb_list
+    }
 
 
 @APP.route('/SchedBlock')

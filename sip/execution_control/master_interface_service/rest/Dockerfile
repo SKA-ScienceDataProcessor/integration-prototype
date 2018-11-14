@@ -4,12 +4,9 @@ LABEL maintainer="Benjamin Mort <ben.mort@gmail.com>"
 WORKDIR /app
 
 COPY requirements.txt .
-#COPY config_db.zip .
 RUN apk update && \
-    apk add --no-cache git && \
     pip install --upgrade pip && \
     pip install --no-cache-dir -r requirements.txt && \
-    apk del git && \
     apk add --no-cache curl && \
     find /usr/local/lib/python3.6/ -name 'tests' -exec rm -r '{}' + && \
     rm -r /root/.cache

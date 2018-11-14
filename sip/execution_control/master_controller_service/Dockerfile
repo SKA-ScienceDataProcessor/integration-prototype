@@ -5,10 +5,8 @@ WORKDIR /app
 
 COPY requirements.txt .
 RUN apk update && \
-    apk add --no-cache git && \
     pip install --upgrade pip && \
-    pip install --no-cache-dir -r requirements.txt && \
-    apk del git 
+    pip install --no-cache-dir -r requirements.txt
 
 COPY app app
 
