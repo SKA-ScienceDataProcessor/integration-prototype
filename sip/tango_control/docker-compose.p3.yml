@@ -8,6 +8,10 @@ services:
     environment:
       - TANGO_HOST=tango_database:10000
       - REDIS_HOST=config_database
+    deploy:
+      placement:
+        constraints:
+          - node.hostname == swarm-sip-6loq4vispawj-primary-master-0.novalocal
 
   tango_database:
     image: skasip/tango_database:1.0.4
