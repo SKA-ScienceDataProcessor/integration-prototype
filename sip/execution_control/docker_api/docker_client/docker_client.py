@@ -162,6 +162,26 @@ class DockerClient:
     # Get functions
     ###########################################################################
 
+    def get_service_state(self, service_id: str) -> str:
+        """Get the state of the service.
+
+        Only the manager nodes can retrieve service state
+
+        Args:
+            service_id (str): Service id
+
+        Returns:
+            str, state of the service
+
+        """
+        # Get service
+        service = self._client.services.get(service_id)
+
+        # Get the state of the service
+        for service_task in service.tasks():
+            service_state = service_task['DesiredState']
+        return service_state
+
     def get_node_list(self):
         """Get a list of nodes.
 

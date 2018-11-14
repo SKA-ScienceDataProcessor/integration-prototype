@@ -35,10 +35,9 @@ def test_create_start_stage():
     config_path = os.path.join(FILE_PATH, '..', 'compose-file',
                                'docker-compose.workflow.yml')
     with open(config_path, 'r') as compose_str:
-        s_names = DC.create_services(compose_str)
+        s_ids = DC.create_services(compose_str)
 
-        service_list = DC.get_service_list()
-        for service_id in service_list:
+        for service_id in s_ids:
             service_details = DC.get_service_details(service_id)
             print(service_details['Spec']['Name'])
             service_names.append(service_details['Spec']['Name'])
@@ -58,6 +57,33 @@ def test_create_volume():
     # Cleaning
     DC.delete_volume(volume_name)
     assert "test_volume" not in DC.get_volume_list()
+
+
+def test_service_state():
+    """Test function to check if the service is still running."""
+    config_path = os.path.join(FILE_PATH, '..', 'compose-file',
+                               'docker-compose.workflow.yml')
+    running_service_ids = []
+    test_ids = []
+    with open(config_path, 'r') as compose_str:
+        s_ids = DC.create_services(compose_str)
+        for s_id in s_ids:
+            running_service_ids.append(s_id)
+            test_ids.append(s_id)
+
+    print("Service Ids: {}".format(running_service_ids))
+    while running_service_ids:
+        for service_id in running_service_ids:
+            service_state = DC.get_service_state(service_id)
+            if service_state == 'shutdown':
+                DC.delete_service(service_id)
+                print("Service Deleted")
+                running_service_ids.remove(service_id)
+
+    # Get all service ids
+    service_list = DC.get_service_list()
+    for s_id in test_ids:
+        assert s_id not in service_list
 
 
 def test_get_service_list():

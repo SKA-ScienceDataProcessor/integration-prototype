@@ -97,12 +97,22 @@ def execute_processing_block(pb_id: str):
                 log.info('Created Services: {}'.format(service_ids))
 
             running_service_ids.append(service_ids)
+
             # Update DB status
             # TODO (NJT): Update status not the priority
 
-
         # if there are not more stages -> break
         break
+
+    # Check the state of the service
+    while running_service_ids:
+        for service_id in running_service_ids:
+            service_state = docker.get_service_state(service_id)
+            log.info("Running Docker Services: {}".format(service_id))
+            if service_state == 'shutdown':
+                docker.delete_service(service_id)
+                log.info("Docker Services Deleted: {}".format(service_id))
+                running_service_ids.remove(service_id)
 
     # timeout = config.get('timeout', None)
     # start_time = time.time()

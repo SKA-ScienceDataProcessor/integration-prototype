@@ -1,6 +1,6 @@
 # Docker compose script for starting a set of mock services used to develop
 # the Processing Controller Scheduler.
-version: '3.7'
+version: '3.6'
 
 services:
 
