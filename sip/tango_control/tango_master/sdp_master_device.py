@@ -1,9 +1,14 @@
 # -*- coding: utf-8 -*-
-"""SKA SDP Master Device prototype."""
+"""SKA SDP Master Device prototype.
+
+TODO(BMo): Exception handling if the config database is dead.
+
+"""
 import json
 import time
 import logging
 from random import randrange
+import datetime
 
 from _version import __version__
 from config_db import ProcessingBlock, ProcessingBlockList, SDPState, \
@@ -12,7 +17,7 @@ from config_db import ProcessingBlock, ProcessingBlockList, SDPState, \
 from config_db.config_db_redis import ConfigDb
 from tango import Database, DbDevInfo, DebugIt, DevState, Util
 from tango import DeviceProxy
-from tango.server import Device, DeviceMeta, attribute, command
+from tango.server import Device, DeviceMeta, attribute, command, pipe
 
 
 LOG = logging.getLogger('sip.tango_control.SDPMaster')
@@ -23,6 +28,7 @@ class SDPMasterDevice(Device):
 
     _start_time = time.time()
     _service_state = ServiceState('TangoControl', 'SDPMaster', __version__)
+    _sdp_state = SDPState()
 
     # -------------------------------------------------------------------------
     # General methods
@@ -30,16 +36,15 @@ class SDPMasterDevice(Device):
     def init_device(self):
         """Device constructor."""
         Device.init_device(self)
-        self._set_state('init')
+        self._set_master_state('init')
 
-        # FIXME(BMo) blocking wait until all other SDP services are online.
-        time.sleep(5)
+        # Add anything here that has to be done before the device is set to
+        # its ON state.
 
-        self._set_state('standby')
+        self._set_master_state('on')
 
     def always_executed_hook(self):
-        """FIXME Add docstring."""
-        print('always executed hook!')
+        """This method is executed every time another method is called."""
         pass
 
     def delete_device(self):
@@ -104,22 +109,17 @@ class SDPMasterDevice(Device):
         return __version__
 
     @attribute(dtype=str)
-    def current_state(self):
+    def current_sdp_state(self):
         """Return the current state of the SDP."""
         return self._sdp_state.current_state
 
     @attribute(label="Target", dtype=str)
-    def target_state(self):
+    def target_sdp_state(self):
         """Return the target state of SDP."""
-        # TODO(BMo) add exception handling if the database goes down.
-        target_state = self._sdp_state.target_state
-        target_timestamp = self._sdp_state.target_timestamp
-        self.debug_stream('Fetched target state. value = {}, timestamp = {}'
-                          .format(target_state, target_timestamp.isoformat()))
-        return target_state
+        return self._sdp_state.target_state
 
-    @target_state.write
-    def target_state(self, new_state):
+    @target_sdp_state.write
+    def target_sdp_state(self, new_state):
         """Update the target state of SDP."""
         self._sdp_state.update_target_state(new_state)
 
@@ -129,12 +129,17 @@ class SDPMasterDevice(Device):
         """Health check method, returns the up-time of the device."""
         return time.time() - self._start_time
 
-    # pylint: disable=no-self-use
-    @attribute(dtype=str)
+    # # pylint: disable=no-self-use
+    # @attribute(dtype=str)
+    # def resource_availability(self):
+    #     """Return the a JSON dict describing the SDP resource availability."""
+    #     # TODO(BMo) change this to a pipe?
+    #     return json.dumps(dict(nodes_free=randrange(1, 500)))
+
+    @pipe
     def resource_availability(self):
-        """Return the a JSON dict describing the SDP resource amiability."""
-        # TODO(BMo) change this to a pipe?
-        return json.dumps(dict(nodes_free=randrange(0, 500)))
+        """Return the a dict describing the SDP resource availability."""
+        return 'resource_availability', dict(nodes_free=randrange(1, 500))
 
     @attribute(dtype=str)
     def scheduling_block_instances(self):
@@ -174,14 +179,20 @@ class SDPMasterDevice(Device):
                                            'ProcessingBlockDevice')
         print(devices.value_string)
 
-    def _set_state(self, state):
+    def _set_master_state(self, state):
         """Set the state of the SDPMaster."""
         if state == 'init':
-            self._set_state(DevState.INIT)
-            # FIXME(BMo) Updating the current state to init should \
-            #            be allowed if already in init!
-            self._service_state.update_current_state('init')
+            self.set_state(DevState.INIT)
+            if self._service_state.current_state == 'on':
+                # FIXME(BMo) add @property id to the StateObject.
+                LOG.debug('%s is already on! (cant be reinitialised)',
+                          self._service_state._id)
+                return
+            try:
+                self._service_state.update_current_state('init')
+            except ValueError as error:
+                LOG.warning('%s', str(error))
 
-        elif state == 'standby':
-            self._set_state(DevState.STANDBY)
-            self._service_state.update_current_state('standby')
+        elif state == 'on':
+            self.set_state(DevState.STANDBY)
+            self._service_state.update_current_state('on')

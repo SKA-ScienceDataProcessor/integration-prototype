@@ -6,16 +6,25 @@ services:
     image: skasip/tango_interactive_client
     command: sleep 36000
     environment:
-      - TANGO_HOST=tango_database:20000
+      - TANGO_HOST=tango_database:10000
       - REDIS_HOST=config_database
     volumes:
       - ./tango_interactive_client:/home/sip/tango_interactive_client
+
+  master_client:
+    image: skasip/tango_master_client
+    command: sleep 36000
+    environment:
+      - TANGO_HOST=tango_database:10000
+      - REDIS_HOST=config_database
+    volumes:
+      - ./tango_master_client:/home/sip/tango_master_client
 
   master:
     image: skasip/tango_master
     command: sleep 36000
     environment:
-      - TANGO_HOST=tango_database:20000
+      - TANGO_HOST=tango_database:10000
       - REDIS_HOST=config_database
     volumes:
       - ./tango_master:/home/sip/tango_master
@@ -24,7 +33,7 @@ services:
     image: skasip/tango_processing_block
     command: sleep 36000
     environment:
-    - TANGO_HOST=tango_database:20000
+    - TANGO_HOST=tango_database:10000
     - REDIS_HOST=config_database
     volumes:
     - ./tango_processing_block:/home/sip/tango_processing_block
@@ -33,17 +42,16 @@ services:
     image: skasip/tango_subarray
     command: sleep 36000
     environment:
-    - TANGO_HOST=tango_database:20000
+    - TANGO_HOST=tango_database:10000
     - REDIS_HOST=config_database
     volumes:
     - ./tango_subarray:/home/sip/tango_subarray
 
   tango_database:
-    image: skasip/tango_database
+    image: skasip/tango_database:1.0.4
     ports:
       - 20000:10000
     environment:
-      - TANGO_HOST=localhost:20000
       - MYSQL_HOST=tango_mysql:3306
       - MYSQL_USER=tango
       - MYSQL_PASSWORD=tango

@@ -6,7 +6,12 @@ function build_tango_image () {
     BLUE='\033[0;34m'
     NC='\033[0m'
     NAME=tango_${1}
-    VERSION=$(python -c "from tango_${opt}._version import __version__; print(__version__)")
+    VERSION="$(python -c "from tango_${opt}._version import __version__; print(__version__)")"
+    echo -e "${RED}----------------------------------------------------${NC}"
+    echo -e "${BLUE}Building and uploading images:"
+    echo -e "${BLUE}  skasip/${NAME}:latest"
+    echo -e "${BLUE}  skasip/${NAME}:${VERSION}"
+    echo -e "${RED}----------------------------------------------------${NC}"
     echo -e "${RED}----------------------------------------------------${NC}"
     echo -e "${BLUE}Building image: skasip/${NAME}:latest${NC}"
     echo -e "${RED}----------------------------------------------------${NC}"
@@ -25,12 +30,10 @@ function build_tango_image () {
 
 
 if [ $# -ne 0 ]; then
-    echo $#
     echo "Usage: $0"
     exit 1
 fi
 
-VERSION=$1
 PS3='Please select an option : '
 options=(
     "docker_base"
@@ -38,12 +41,11 @@ options=(
     "processing_block"
     "subarray"
     "interactive_client"
+    "master_client"
     "mysql"
     "database"
     "quit"
 )
-
-
 
 
 select opt in "${options[@]}"
@@ -62,6 +64,10 @@ do
             break
             ;;
         "interactive_client")
+            (build_tango_image "${opt}")
+            break
+            ;;
+        "master_client")
             (build_tango_image "${opt}")
             break
             ;;
