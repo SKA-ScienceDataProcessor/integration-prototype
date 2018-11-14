@@ -56,8 +56,6 @@ services:
       - MYSQL_USER=tango
       - MYSQL_PASSWORD=tango
       - MYSQL_DATABASE=tango_db
-    depends_on:
-      - tango_mysql
 
   tango_mysql:
     image: skasip/tango_mysql
