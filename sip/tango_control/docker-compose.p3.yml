@@ -18,7 +18,7 @@ services:
       - MYSQL_DATABASE=tango_db
 
   tango_mysql:
-    image: skasip/tango_mysql:1.0.4
+    image: skasip/tango_mysql:1.0.3
     environment:
       - MYSQL_ROOT_PASSWORD=sip1
     volumes:
