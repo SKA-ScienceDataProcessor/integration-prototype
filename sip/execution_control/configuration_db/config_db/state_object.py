@@ -56,10 +56,20 @@ class StateObject:
         """Get the current state."""
         return DB.get_hash_value(self._key, 'current_state')
 
+    @current_state.setter
+    def current_state(self, value):
+        """Set the current state."""
+        self.update_current_state(value)
+
     @property
     def target_state(self) -> str:
         """Get the target state."""
         return DB.get_hash_value(self._key, 'target_state')
+
+    @target_state.setter
+    def target_state(self, value):
+        """Set the target state."""
+        self.update_target_state(value)
 
     @property
     def current_timestamp(self) -> datetime:
@@ -72,11 +82,6 @@ class StateObject:
         """Get the target state timestamp."""
         timestamp = DB.get_hash_value(self._key, 'target_timestamp')
         return datetime_from_isoformat(timestamp)
-
-    @target_state.setter
-    def target_state(self, value: str):
-        """Set the target state."""
-        self.update_current_state(value)
 
     def update_target_state(self, value: str) -> datetime:
         """Set the target state.
@@ -135,6 +140,7 @@ class StateObject:
             allowed_transitions = self._allowed_states
         else:
             allowed_transitions = self._allowed_transitions[current_state]
+            allowed_transitions.append(current_state)
 
         # print('')
         # print('OLD CURRENT STATE = ', current_state)
