@@ -6,7 +6,7 @@ function build_tango_image () {
     BLUE='\033[0;34m'
     NC='\033[0m'
     NAME=tango_${1}
-    VERSION=${2}
+    VERSION=$(python -c "from tango_${opt}._version import __version__; print(__version__)")
     echo -e "${RED}----------------------------------------------------${NC}"
     echo -e "${BLUE}Building image: skasip/${NAME}:latest${NC}"
     echo -e "${RED}----------------------------------------------------${NC}"
@@ -43,37 +43,38 @@ options=(
     "quit"
 )
 
-VERSION=$(python -c "from tango_${opt}._version import __version__; print(__version__)")
+
+
 
 select opt in "${options[@]}"
 do
     case $opt in
         "master")
-            (build_tango_image "${opt}" "${VERSION}")
+            (build_tango_image "${opt}")
             break
             ;;
         "processing_block")
-            (build_tango_image "${opt}" "${VERSION}")
+            (build_tango_image "${opt}")
             break
             ;;
         "subarray")
-            (build_tango_image "${opt}" "${VERSION}")
+            (build_tango_image "${opt}")
             break
             ;;
         "interactive_client")
-            (build_tango_image "${opt}" "${VERSION}")
+            (build_tango_image "${opt}")
             break
             ;;
         "docker_base")
-            (build_tango_image "${opt}" "${VERSION}")
+            (build_tango_image "${opt}")
             break
             ;;
         "mysql")
-            (build_tango_image "${opt}" "${VERSION}")
+            (build_tango_image "${opt}")
             break
             ;;
         "database")
-            (build_tango_image "${opt}" "${VERSION}")
+            (build_tango_image "${opt}")
             break
             ;;
         "quit")

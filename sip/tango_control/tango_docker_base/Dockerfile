@@ -6,7 +6,9 @@ ENV DEBIAN_FRONTEND=noninteractive
 RUN apt-get update && \
     apt-get install -y python3-pytango python3-pip
 
-RUN pip3 install -U skasip-config-db skasip-logging
+RUN pip3 install -U \
+    skasip-config-db \
+    skasip-logging
 
 RUN useradd -ms /bin/bash sip
 USER sip
