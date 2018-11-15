@@ -4,21 +4,19 @@
 TODO(BMo): Exception handling if the config database is dead.
 
 """
+# pylint: disable=no-self-use
 import json
-import time
 import logging
+import time
 from random import randrange
-import datetime
 
-from _version import __version__
-from config_db import ProcessingBlock, ProcessingBlockList, SDPState, \
-    SchedulingBlockInstanceList, ServiceState, generate_sbi_config, \
-    SchedulingBlockInstance
+from tango import Database, DebugIt, DevState, DeviceProxy
+from tango.server import Device, attribute, command
+
+from config_db import ProcessingBlockList, SDPState, SchedulingBlockInstance, \
+    ServiceState, generate_sbi_config
 from config_db.config_db_redis import ConfigDb
-from tango import Database, DbDevInfo, DebugIt, DevState, Util
-from tango import DeviceProxy
-from tango.server import Device, DeviceMeta, attribute, command, pipe
-
+from _version import __version__
 
 LOG = logging.getLogger('sip.tango_control.SDPMaster')
 
@@ -44,7 +42,7 @@ class SDPMasterDevice(Device):
         self._set_master_state('on')
 
     def always_executed_hook(self):
-        """This method is executed every time another method is called."""
+        """Run for each command."""
         pass
 
     def delete_device(self):
@@ -74,6 +72,8 @@ class SDPMasterDevice(Device):
         # pb_list = self._pb_list.active
         # pb_list = ['PB-{:02d}'.format(ii) for ii in range(5)]
         #
+        print(value)
+
         ConfigDb().flush_db()
         sbi_config = generate_sbi_config(register_workflows=True)
         sbi = SchedulingBlockInstance.from_config(sbi_config)
@@ -84,8 +84,8 @@ class SDPMasterDevice(Device):
 
         # Get a PB device which has not been assigned.
         for pb in pb_list:
-            for ii in range(100):
-                pb_dev = 'sip_sdp/pb/PB-{:03d}'.format(ii)
+            for index in range(100):
+                pb_dev = 'sip_sdp/pb/{:03d}'.format(index)
                 device = DeviceProxy(pb_dev)
                 if not device.pb_id:
                     LOG.info('Assigning PB device = %s to PB id = %s',
@@ -129,17 +129,15 @@ class SDPMasterDevice(Device):
         """Health check method, returns the up-time of the device."""
         return time.time() - self._start_time
 
-    # # pylint: disable=no-self-use
-    # @attribute(dtype=str)
-    # def resource_availability(self):
-    #     """Return the a JSON dict describing the SDP resource availability."""
-    #     # TODO(BMo) change this to a pipe?
-    #     return json.dumps(dict(nodes_free=randrange(1, 500)))
-
-    @pipe
+    @attribute(dtype=str)
     def resource_availability(self):
-        """Return the a dict describing the SDP resource availability."""
-        return 'resource_availability', dict(nodes_free=randrange(1, 500))
+        """Return the a JSON dict describing the SDP resource availability."""
+        return json.dumps(dict(nodes_free=randrange(1, 500)))
+
+    # @pipe
+    # def resource_availability(self):
+    #     """Return the a dict describing the SDP resource availability."""
+    #     return 'resource_availability', dict(nodes_free=randrange(1, 500))
 
     @attribute(dtype=str)
     def scheduling_block_instances(self):
@@ -184,9 +182,8 @@ class SDPMasterDevice(Device):
         if state == 'init':
             self.set_state(DevState.INIT)
             if self._service_state.current_state == 'on':
-                # FIXME(BMo) add @property id to the StateObject.
                 LOG.debug('%s is already on! (cant be reinitialised)',
-                          self._service_state._id)
+                          self._service_state.id)
                 return
             try:
                 self._service_state.update_current_state('init')
