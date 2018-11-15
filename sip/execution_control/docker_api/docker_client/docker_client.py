@@ -48,7 +48,6 @@ class DockerClient:
 
         try:
             service_config = yaml.load(compose_str)
-            print(service_config)
             for service_name in service_config['services']:
                 service_exist = self._client.services.list(
                     filters={'name': service_name})
@@ -56,8 +55,9 @@ class DockerClient:
                     service_spec = self._parse_services(
                         service_config, service_name)
                     for s_spec in service_spec:
-                        created_service = self._client.services.create(**s_spec)
-                        # service_name = created_service.name
+                        print(s_spec)
+                        created_service = self._client.services.create(
+                            **s_spec)
                         service_id = created_service.short_id
                         LOG.debug('Service created: %s', service_id)
                         services_ids.append(service_id)
@@ -243,7 +243,7 @@ class DockerClient:
 
         service_list = self._client.services.list()
         for s_list in service_list:
-            services.append(s_list.id)
+            services.append(s_list.short_id)
         return services
 
     def get_service_name(self, service_id):
@@ -381,6 +381,9 @@ class DockerClient:
 
         service_spec['name'] = service_name
         for key, value in service_config['services'][service_name].items():
+            # TODO (NJT): Look into a better way of doing this
+            if 'command' in key:
+                key = "args"
             if 'ports' in key:
                 endpoint_spec = self._parse_ports(value)
                 service_spec['endpoint_spec'] = endpoint_spec
@@ -414,6 +417,10 @@ class DockerClient:
                 restart_spec = docker.types.RestartPolicy(
                     **deploy_values[d_value])
                 service_spec['restart_policy'] = restart_spec
+            if 'placement' in d_value:
+                for constraints_key, constraints_value in \
+                        deploy_values[d_value].items():
+                    service_spec[constraints_key] = constraints_value
             if 'mode' in d_value:
                 if 'replicas' in d_value:
                     mode[d_value] = deploy_values[d_value]

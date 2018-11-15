@@ -4,7 +4,7 @@ version: '3.6'
 services:
   start_stage:
     image: skasip/mock_workflow_stage:test
-    args: ['{"duration": 2}']
+    command: ['{"duration": 1}']
     deploy:
       mode: replicated
       replicas: 1
@@ -14,7 +14,7 @@ services:
         hostnet: {}
   mock_stage:
     image: skasip/mock_workflow_stage:test
-    args: ['{"duration": 5}']
+    command: ['{"duration": 2}']
     deploy:
       mode: replicated
       replicas: 1

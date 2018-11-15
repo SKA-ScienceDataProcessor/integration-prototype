@@ -17,17 +17,18 @@ def test_create_services():
     # Passing in a test compose file
     service_names = []
     config_path = os.path.join(FILE_PATH, '..', 'compose-file',
-                               'docker-compose.visibility.yml')
+                               'docker-compose-run-local.yml')
     with open(config_path, 'r') as compose_str:
-        DC.create_services(compose_str)
-        service_list = DC.get_service_list()
-        for services in service_list:
-            names = DC.get_service_name(services)
-            service_names.append(names)
-        assert "recv1" in service_names
+        s_ids = DC.create_services(compose_str)
+        for service_id in s_ids:
+            service_details = DC.get_service_details(service_id)
+            service_names.append(service_details['Spec']['Name'])
+        assert "recv" in service_names
+        assert "send" in service_names
 
-    # Cleaning
-    DC.delete_service("recv1")
+    # # Cleaning
+    DC.delete_service("recv")
+    DC.delete_service("send")
 
 
 def test_create_start_stage():
@@ -39,7 +40,7 @@ def test_create_start_stage():
 
         for service_id in s_ids:
             service_details = DC.get_service_details(service_id)
-            print(service_details['Spec']['Name'])
+            # print(service_details['Spec']['Name'])
             service_names.append(service_details['Spec']['Name'])
         assert "start_stage" in service_names
 
@@ -71,7 +72,6 @@ def test_service_state():
             running_service_ids.append(s_id)
             test_ids.append(s_id)
 
-    print("Service Ids: {}".format(running_service_ids))
     while running_service_ids:
         for service_id in running_service_ids:
             service_state = DC.get_service_state(service_id)
@@ -85,33 +85,45 @@ def test_service_state():
     for s_id in test_ids:
         assert s_id not in service_list
 
+    # Cleaning
+    DC.delete_service("mock_stage")
+
 
 def test_get_service_list():
     """Test function for getting service list."""
     # Create new services
     service_names = []
     config_path = os.path.join(FILE_PATH, '..', 'compose-file',
-                               'docker-compose.yml')
-    DC.create_services(config_path)
-    service_list = DC.get_service_list()
-    for services in service_list:
-        names = DC.get_service_name(services)
-        service_names.append(names)
-    assert "config_database" in service_names
-    assert "config_database1" in service_names
-    assert "config_database2" in service_names
+                               'docker-compose.hostnet.yml')
+    with open(config_path, 'r') as compose_str:
+        service_ids = DC.create_services(compose_str)
+        for service_id in service_ids:
+            service_list = DC.get_service_list()
+            assert service_id in service_list
+
+            # service_list = DC.get_service_list()
+            for services in service_list:
+                names = DC.get_service_name(services)
+                service_names.append(names)
+            assert "scheduler" in service_names
+            assert "worker" in service_names
 
     # Create more services
     config_path_ = os.path.join(FILE_PATH, '..', 'compose-file',
                                 'docker-compose.shorter.yml')
-    DC.create_services(config_path_)
-    more_service_list = DC.get_service_list()
-    for services in more_service_list:
-        names = DC.get_service_name(services)
-        if names not in service_names:
-            service_names.append(names)
-    assert "scheduler1" in service_names
-    assert "scheduler2" in service_names
+    with open(config_path_, 'r') as compose_str:
+        service_ids = DC.create_services(compose_str)
+        for service_id in service_ids:
+            service_list = DC.get_service_list()
+            assert service_id in service_list
+
+            # more_service_list = DC.get_service_list()
+            for services in service_list:
+                names = DC.get_service_name(services)
+                if names not in service_names:
+                    service_names.append(names)
+            assert "scheduler1" in service_names
+            assert "scheduler2" in service_names
 
     # Cleaning
     for services in service_names:
@@ -142,17 +154,14 @@ def test_get_volume_list():
 def test_delete_service():
     """Test function for deleting a service."""
     # Passing in a test compose file
-    service_names = []
     config_path = os.path.join(FILE_PATH, '..', 'compose-file',
                                'docker-compose.visibility.yml')
-    DC.create_services(config_path)
-    DC.delete_service("recv1")
-
-    service_list = DC.get_service_list()
-    for services in service_list:
-        names = DC.get_service_name(services)
-        service_names.append(names)
-    assert "recv1" not in service_names
+    with open(config_path, 'r') as compose_str:
+        s_ids = DC.create_services(compose_str)
+        for service_id in s_ids:
+            DC.delete_service(service_id)
+            service_list = DC.get_service_list()
+            assert service_id not in service_list
 
 
 def test_delete_volume():

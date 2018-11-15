@@ -16,7 +16,8 @@ services:
           restart_policy:
             condition: none
             delay: 0
-        command: ifconfig
+        command:
+           - 'ifconfig'
         networks:
             hostnet: {}
 networks:
