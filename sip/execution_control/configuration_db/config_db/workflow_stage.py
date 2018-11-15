@@ -2,9 +2,18 @@
 """High Level interface to workflow stage objects."""
 import json
 from typing import List
+import ast
 
 from .dependency import Dependency
 from .resource import Resource
+from .config_db_redis import ConfigDb
+from .scheduling_object import SchedulingObject
+
+# FIXME(BM) it would be nice for this to be able to import ProcessingBlock
+# but it breaks import rules as ProcessingBlock also imports this module.
+PB_AGGREGATE_TYPE = 'pb'
+
+DB = ConfigDb()
 
 
 class WorkflowStage:
@@ -20,14 +29,26 @@ class WorkflowStage:
                        'aborted',
                        'failed']
 
-    def __init__(self, config_dict: dict):
+    def __init__(self, pb_id: str, index: int):
         """Create a workflow stage object from a workflow stage dict."""
-        self._config = config_dict
+        self._pb_id = pb_id
+        self._index = index
+        self._config = self._load_config()
 
     @property
     def id(self) -> str:
         """Return the workflow stage Id."""
         return self._config.get('id')
+
+    @property
+    def pb_id(self) -> str:
+        """Return the PB id that the workflow stage belongs to."""
+        return self._pb_id
+
+    @property
+    def index(self) -> int:
+        """Return the workflow stage index in the PB workflow list."""
+        return self._index
 
     @property
     def version(self) -> str:
@@ -42,7 +63,22 @@ class WorkflowStage:
     @property
     def status(self) -> str:
         """Return the workflow stage status."""
+        # As status is a modifiable property, have to reload from the db.
+        self._config = self._load_config()
         return self._config.get('status')
+
+    @status.setter
+    def status(self, value):
+        """Set the workflow stage status."""
+        # FIXME(BM) This is currently a hack because workflow stages
+        #           don't each have their own db entry.
+        pb_key = SchedulingObject.get_key(PB_AGGREGATE_TYPE, self._pb_id)
+        stages = DB.get_hash_value(pb_key, 'workflow_stages')
+        stages = ast.literal_eval(stages)
+        stages[self._index]['status'] = value
+        DB.set_hash_value(pb_key, 'workflow_stages', stages)
+        # FIXME(BM) This method should also publish a workflow status changed
+        # event on the PB?!
 
     @property
     def timeout(self) -> int:
@@ -92,6 +128,13 @@ class WorkflowStage:
     def config(self) -> dict:
         """Return the workflow stage as a configuration dictionary."""
         return self._config
+
+    def _load_config(self):
+        """Load the workflow stage config from the database."""
+        pb_key = SchedulingObject.get_key(PB_AGGREGATE_TYPE, self._pb_id)
+        stages = DB.get_hash_value(pb_key, 'workflow_stages')
+        stages = ast.literal_eval(stages)
+        return stages[self._index]
 
     def __repr__(self) -> str:
         """Return a unambiguous representation of the stage."""

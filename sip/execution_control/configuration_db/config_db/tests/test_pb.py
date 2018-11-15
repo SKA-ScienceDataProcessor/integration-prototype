@@ -76,6 +76,8 @@ def test_pb_workflow_stage_config():
 
     stage = workflow_stages[0]
     assert stage.id == 'setup'
+    assert stage.pb_id == pb.id
+    assert stage.index == 0
     assert stage.id in pb.workflow_parameters
     assert stage.version == 'test'
     assert stage.type == 'setup'
@@ -86,6 +88,10 @@ def test_pb_workflow_stage_config():
     assert not stage.resources_assigned
     assert isinstance(stage.app_config, dict)
     assert stage.args_template
+    stage.status = 'started'
+    assert stage.status == 'started'
+    pb.update_workflow_state_status(stage.index, 'complete')
+    assert stage.status == 'complete'
 
     # --- Example use of templates:
     # --- Generating a compose file which can be used to run the workflow.
@@ -105,9 +111,12 @@ def test_pb_workflow_stage_config():
 
     stage = workflow_stages[1]
     assert stage.id == 'processing'
+    assert stage.pb_id == pb.id
+    assert stage.index == 1
 
     stage = workflow_stages[2]
     assert stage.id == 'cleanup'
+    assert stage.index == 2
 
 
 def test_pb_resources():
