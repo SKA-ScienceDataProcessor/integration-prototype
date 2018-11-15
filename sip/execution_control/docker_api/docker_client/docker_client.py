@@ -55,6 +55,7 @@ class DockerClient:
                     service_spec = self._parse_services(
                         service_config, service_name)
                     for s_spec in service_spec:
+                        print(s_spec)
                         created_service = self._client.services.create(
                             **s_spec)
                         service_id = created_service.short_id
@@ -398,7 +399,15 @@ class DockerClient:
                             network_spec = self._parse_networks(service_config)
                             service_spec['networks'] = network_spec
                         else:
-                            service_spec[key] = value
+                            if 'logging' in key:
+                                for log_key, log_value in value.items():
+                                    if 'driver' in log_key:
+                                        service_spec['log_driver'] = log_value
+                                    if 'options' in log_key:
+                                        service_spec[
+                                            'log_driver_options'] = log_value
+                            else:
+                                service_spec[key] = value
         yield service_spec
 
     def _parse_deploy(self, deploy_values, service_spec):
