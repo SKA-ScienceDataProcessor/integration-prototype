@@ -95,7 +95,8 @@ def root():
         "_links": {
             "items": [
                 {"Link":"Version", "href": "{}version".format(request.url)}
-                ,{"Link":"State", "href": "{}state".format(request.url)}
+                ,{"Link":"State", "href": "{}target_state".format(request.url)}
+                ,{"Link":"Target state", "href": "{}state".format(request.url)}
                 ,{"Link":"SchedulingBlockInstances", "href": "{}SchedBlock".format(request.url)}
                 ,{"Link":"ProcessingBlocks-all", "href": "{}ProcBlock/all".format(request.url)}
                 ,{"Link":"ProcessingBlocks-offline", "href": "{}ProcBlock/offline".format(request.url)}
@@ -181,6 +182,45 @@ def allowed_transitions():
     """Return the allowed state transitions"""
     db = SDPState()
     return db.allowed_state_transitions
+
+@APP.route('/target_state')
+def target_state():
+    """Return the SDP target State."""
+    db = SDPState()
+    try:
+        APP.logger.debug('getting target state')
+        target_state = db.target_state
+        APP.logger.debug('got(?) target state')
+        if target_state is None:
+            APP.logger.debug('target state set to none')
+            return {'target_state': 'UNKNOWN',
+                    'reason': 'database not initialised.'}
+        APP.logger.debug(target_state)
+
+        # Check the timestamp to be sure that the watchdog is alive
+        APP.logger.debug('getting timestamp')
+        state_tmstmp = db.current_timestamp
+        target_tmstmp = db.target_timestamp
+        if state_tmstmp is None or target_tmstmp is None:
+            APP.logger.warning('Timestamp not available')
+            return {'state': 'UNKNOWN',
+                    'reason': 'Master Controller Services may have died.'}
+        else:
+            APP.logger.debug("State timestamp: {}".format(state_tmstmp))
+            APP.logger.debug("Target timestamp: {}".format(target_tmstmp))
+            if target_tmstmp < state_tmstmp:
+                APP.logger.debug('timestamp okay')
+                return {'target_state': target_state}
+            else:
+                APP.logger.warning(
+                        'Timestamp for Master Controller Services is stale')
+                return {'target_state': 'UNKNOWN',
+                        'reason': 'Master Controller Services may have died.'}
+    except redis.exceptions.ConnectionError:
+        APP.logger.debug('error connecting to DB')
+        return {'state': 'UNKNOWN',
+                'reason': 'Unable to connect to database.'}
+
 
 @APP.route('/state', methods=['GET', 'PUT'])
 def state():
