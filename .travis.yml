@@ -75,18 +75,19 @@ script:
   - python -m pytest -s -v --codestyle --docstyle --pylint --pylint-rcfile=.pylintrc --rootdir=. sip/platform/logging
 
   - |
-    python -m pytest -s -v --codestyle --docstyle --pylint
-    --pylint-rcfile=.pylintrc --rootdir=.
-    --ignore=sip/tango_control/tango_ska_device
-    --ignore=sip/tango_control/tango_master/tests
-    sip/tango_control
+    python -m pytest -s -v --codestyle --docstyle --pylint \
+        --pylint-rcfile=.pylintrc --rootdir=. \
+        --ignore=sip/tango_control/tango_ska_device \
+        --ignore=sip/tango_control/tango_master/tests \
+        sip/tango_control
 
   - |
-    pytest --cov=sip/platform/logging
-           --cov=sip/execution_control/configuration_db
-           --rootdir=.
-           sip/platform/logging
-           sip/execution_control/configuration_db
+    python -m pytest \
+        --cov=sip/platform/logging \
+        --cov=sip/execution_control/configuration_db \
+        --rootdir=. \
+        sip/platform/logging \
+        sip/execution_control/configuration_db
 
 after_success:
   - codecov
