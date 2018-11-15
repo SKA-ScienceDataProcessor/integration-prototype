@@ -18,9 +18,9 @@ class ServiceState(StateObject):
     _allowed_transitions = dict(
         init=['on', 'alarm', 'fault'],
         on=['off', 'alarm', 'fault'],
-        off=['alarm', 'fault'],
-        alarm=['on', 'fault', 'init'],
-        fault=[]
+        alarm=['off', 'on', 'fault', 'init'],
+        fault=['off'],
+        off=[]
     )
 
     # Allowed transitions when setting the target state.
@@ -28,9 +28,9 @@ class ServiceState(StateObject):
     _allowed_target_states = dict(
         init=[],
         on=['off'],
-        off=[],
-        alarm=['reset'],
-        fault=[]
+        alarm=['reset', 'off'],
+        fault=['off'],
+        off=[]
     )
 
     def __init__(self, subsystem: str, name: str, version: str):

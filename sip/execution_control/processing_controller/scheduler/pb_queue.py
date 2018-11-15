@@ -10,9 +10,7 @@ try:
 except ImportError:
     import dummy_threading as threading
 
-from config_db import SchedulingBlockDbClient
-
-DB = SchedulingBlockDbClient()
+from config_db import ProcessingBlockList
 
 
 class ProcessingBlockQueue:

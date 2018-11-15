@@ -90,23 +90,28 @@ def main():
 
     """
     parser = argparse.ArgumentParser(description='Initialise the database.')
+    parser.add_argument('--clear', required=False, action='store_true',
+                        help='Clear the database. USE WITH CARE!')
     parser.add_argument('--data-dir', default=None, type=str, required=False,
                         help='Data dir to use. If does not exist, create.')
     args = parser.parse_args()
 
-    default_data_dir = join(dirname(config_db.__file__), 'data')
-    if args.data_dir is None:
-        data_dir = default_data_dir
-        print('Using default data path: ', data_dir)
-        init_db(data_dir)
+    if args.clear:
+        ConfigDb().flush_db()
     else:
-        data_dir = os.path.abspath(args.data_dir)
-        if os.path.isdir(data_dir):
-            print('Using user specified data path: ', data_dir)
+        default_data_dir = join(dirname(config_db.__file__), 'data')
+        if args.data_dir is None:
+            data_dir = default_data_dir
+            print('Using default data path: ', data_dir)
             init_db(data_dir)
         else:
-            print('Creating default data path: ', data_dir)
-            shutil.copytree(src=default_data_dir, dst=data_dir)
+            data_dir = os.path.abspath(args.data_dir)
+            if os.path.isdir(data_dir):
+                print('Using user specified data path: ', data_dir)
+                init_db(data_dir)
+            else:
+                print('Creating default data path: ', data_dir)
+                shutil.copytree(src=default_data_dir, dst=data_dir)
 
 
 if __name__ == '__main__':

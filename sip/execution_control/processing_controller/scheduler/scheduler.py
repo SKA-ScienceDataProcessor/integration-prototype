@@ -9,7 +9,7 @@ from threading import Thread, Lock
 import sys
 
 # from .db.scheduling_data import ConfigDb
-from .queue import ProcessingBlockQueue
+from .pb_queue import ProcessingBlockQueue
 # from processing_block_controller.tasks import execute_processing_block
 
 

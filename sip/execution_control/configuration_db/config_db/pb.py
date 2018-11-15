@@ -4,6 +4,7 @@ import ast
 import datetime
 from random import randint
 from typing import List, Union
+import warnings
 
 from .config_db_redis import ConfigDb
 from .scheduling_object import SchedulingObject
@@ -142,13 +143,23 @@ class ProcessingBlock(SchedulingObject):
         """
         workflow_stages = []
         stages = DB.get_hash_value(self._key, 'workflow_stages')
-        for stage in ast.literal_eval(stages):
-            workflow_stages.append(WorkflowStage(stage))
+        for index in range(len(ast.literal_eval(stages))):
+            workflow_stages.append(WorkflowStage(self.id, index))
         return workflow_stages
 
     ###########################################################################
     # Public methods
     ###########################################################################
+
+    def update_workflow_state_status(self, index: int, value: str):
+        """Update the workflow stage of the specified index to value."""
+        warnings.warn("This method has the same function as the"
+                      "WorkflowStage.status setter", FutureWarning)
+        stages = DB.get_hash_value(self._key, 'workflow_stages')
+        stages = ast.literal_eval(stages)
+        stages[index]['status'] = value
+        DB.set_hash_value(self._key, 'workflow_stages', stages)
+        self.publish('workflow_stage_status_update', dict(status=value))
 
     def add_assigned_resource(self, resource_type: str,
                               value: Union[str, int, float, bool],

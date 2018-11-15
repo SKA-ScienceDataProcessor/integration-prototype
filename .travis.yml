@@ -37,8 +37,8 @@ before_install:
   - pip install -r sip/execution_control/configuration_db/requirements.txt
   - pip install spead2>=1.7.2
   - pip install -r sip/execution_control/processing_controller_interface/flask_api/requirements.txt
-  - pip install -r sip/execution_framework_interface/docker_api/requirements.txt
-  - pip install -r sip/execution_framework_interface/docker_compose_generator/requirements.txt
+  - pip install -r sip/execution_control/docker_api/requirements.txt
+  - pip install -r sip/execution_control/docker_compose_generator/requirements.txt
   - pip install -r sip/science_pipeline_workflows/ical_dask/pipelines/requirements.arl.min.txt
   # Start Docker containers needed for unit tests
   - docker run -d -p 6379:6379 --name=config_db redis:4.0.6-alpine
@@ -52,14 +52,15 @@ script:
 
   - pylint --rcfile=.pylintrc --ignore=csp_pss_sender,csp_vis_sender_01,csp_vis_sender_02 emulators
 
-  - python -m pytest -s -v --codestyle --docstyle --pylint --pylint-rcfile=.pylintrc sip/execution_framework_interface/docker_api
-  - python -m pytest -s -v --codestyle --docstyle --pylint --pylint-rcfile=.pylintrc sip/execution_framework_interface/docker_compose_generator
+  - python -m pytest -s -v --codestyle --docstyle --pylint --pylint-rcfile=.pylintrc --rootdir=. sip/execution_control/docker_api
+  - python -m pytest -s -v --codestyle --docstyle --pylint --pylint-rcfile=.pylintrc --rootdir=. sip/execution_control/docker_compose_generator
   - python -m pytest -s -v --codestyle --docstyle --pylint --pylint-rcfile=.pylintrc sip/science_pipeline_workflows/ical_dask
 
   - python -m pytest -s -v --codestyle --docstyle --pylint --pylint-rcfile=.pylintrc --rootdir=. sip/execution_control/configuration_db
   - pytest --cov=sip/execution_control/configuration_db sip/execution_control/configuration_db
 
-  - python -m pytest -s -v --codestyle --docstyle --pylint --pylint-rcfile=.pylintrc --rootdir=. sip/execution_control/logging
+  - python -m pytest -s -v --codestyle --docstyle --pylint --pylint-rcfile=.pylintrc --rootdir=. sip/platform/logging
+  - pytest --cov=sip/platform/logging sip/platform/logging
 
 after_success:
   - codecov
