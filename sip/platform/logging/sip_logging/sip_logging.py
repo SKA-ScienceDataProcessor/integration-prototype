@@ -38,7 +38,7 @@ class SIPFormatter(logging.Formatter):
         return time_string
 
 
-def init_logger(log_level=None):
+def init_logger(log_level=None, p3_mode: bool = True):
     """Initialise the SIP logger.
 
     Attaches a stdout stream handler to the 'sip' logger. This will
@@ -49,13 +49,20 @@ def init_logger(log_level=None):
 
     Args:
         log_level (str or int, optional): Logging level for the SIP logger.
+        p3_mode (bool, optional): Print logging statements in a format that
+                                  P3 can support.
 
     """
     log = logging.getLogger('sip')
     handler = logging.StreamHandler(stream=sys.stdout)
-    fmt = os.getenv('SIP_LOG_FORMAT', '%(asctime)s | %(name)s | '
-                                      '%(levelname)-7s | %(message)s')
-    formatter = SIPFormatter(fmt, datefmt='%Y-%m-%dT%H:%M:%S.%f')
+    if p3_mode:
+        _format = '%(asctime)s.%(msecs)03d | %(name)s | ' \
+                  '%(levelname)-7s | %(message)s'
+        formatter = logging.Formatter(_format)
+    else:
+        _format = '%(asctime)s | %(name)s | %(levelname)-7s | %(message)s'
+        formatter = SIPFormatter(_format, datefmt='%Y-%m-%dT%H:%M:%S.%f')
+
     handler.setFormatter(formatter)
     log.addHandler(handler)
     if log_level:
