@@ -3,8 +3,8 @@ version: '3.6'
 services:
     recv:
         image: skasip/ingest_visibilities
-        command: >
-            '{
+        command:
+            ['{
                 "port_start": 41000,
                 "memory_pool":
                 {
@@ -19,7 +19,7 @@ services:
                 "process_data": true,
                 "write_data": false,
                 "filename": "/app/output/test_receive.dat"
-            }'
+            }']
         volumes:
             - type: bind
               source: /mnt/ceph
@@ -37,8 +37,8 @@ services:
         stop_signal: INT
     send:
         image: skasip/csp_vis_sender
-        command: >
-            '{
+        command:
+            ['{
                 "destination_host": "10.1.0.27",
                 "destination_port_start": 41000,
                 "heap":
@@ -58,7 +58,7 @@ services:
                     "burst_size": 1472,
                     "max_heaps": 2
                 }
-            }'
+            }']
         deploy:
             restart_policy:
                 condition: none

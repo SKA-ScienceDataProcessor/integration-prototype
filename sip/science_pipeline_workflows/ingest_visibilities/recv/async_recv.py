@@ -15,6 +15,7 @@ import sys
 import time
 
 import numpy
+import sip_logging
 import spead2
 import spead2.recv
 import spead2.recv.asyncio
@@ -174,9 +175,7 @@ def main():
         raise RuntimeError('Usage: python3 async_recv.py <json config>')
 
     # Set up logging.
-    logging.basicConfig(format='%(asctime)-23s %(name)-12s %(levelname)-8s '
-                               '%(threadName)-22s %(message)s',
-                        level=logging.INFO, stream=sys.stdout)
+    sip_logging.init_logger(show_thread=True)
 
     # Load SPEAD configuration from JSON file.
     # with open(sys.argv[-1]) as f:

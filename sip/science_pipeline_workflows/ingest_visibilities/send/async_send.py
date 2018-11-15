@@ -46,6 +46,7 @@ import os
 
 import numpy
 from jsonschema import ValidationError, validate
+import sip_logging
 import spead2
 import spead2.send
 import spead2.send.asyncio
@@ -273,9 +274,7 @@ def main():
         raise RuntimeError('Usage: python3 async_send.py <json config>')
 
     # Set up logging.
-    logging.basicConfig(format='%(asctime)-23s %(name)-12s %(levelname)-8s '
-                               '%(threadName)-22s %(message)s',
-                        level=logging.INFO, stream=sys.stdout)
+    sip_logging.init_logger(show_thread=False)
 
     # Load SPEAD configuration from JSON file.
     # _path = os.path.dirname(os.path.abspath(__file__))
