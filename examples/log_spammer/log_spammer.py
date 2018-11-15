@@ -4,7 +4,8 @@ import argparse
 import logging
 import time
 
-from sip_logging import init_logger
+import _version
+from sip_logging import init_logger, __version__
 
 
 def main(sleep_length=0.1):
@@ -15,7 +16,8 @@ def main(sleep_length=0.1):
     counter = 0
     try:
         while True:
-            log.info('Hello %i', counter)
+            log.info('Hello %06i (log_spammer: %s, sip logging: %s)',
+                     counter, _version.__version__, __version__)
             counter += 1
             time.sleep(sleep_length)
     except KeyboardInterrupt:
@@ -23,11 +25,18 @@ def main(sleep_length=0.1):
 
 
 if __name__ == '__main__':
-    init_logger()
     PARSER = argparse.ArgumentParser(description='Spam stdout with Python '
                                                  'logging.')
     PARSER.add_argument('sleep_length', type=float,
                         help='number of seconds to sleep between messages.')
-
+    PARSER.add_argument('--timestamp-us', required=False, action='store_true',
+                        help='Use microsecond timestamps.')
+    PARSER.add_argument('--show-thread', required=False, action='store_true',
+                        help='Show the thread in the logging output.')
     args = PARSER.parse_args()
+
+    P3_MODE = False if args.timestamp_us else True
+    show_thread = True if args.show_thread else False
+    init_logger(p3_mode=P3_MODE, show_thread=show_thread)
+
     main(args.sleep_length)
