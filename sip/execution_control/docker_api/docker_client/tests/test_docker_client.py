@@ -31,7 +31,9 @@ def test_create_services():
     DC.delete_service("send")
 
 
-def test_create_start_stage():
+def test_workflow():
+    """Test function to start workflow."""
+    # Passing in a test workflow compose file
     service_names = []
     config_path = os.path.join(FILE_PATH, '..', 'compose-file',
                                'docker-compose.workflow.yml')
@@ -100,12 +102,12 @@ def test_get_service_list():
             service_list = DC.get_service_list()
             assert service_id in service_list
 
-            for services in service_list:
-                names = DC.get_service_name(services)
-                service_names.append(names)
-
-            assert "scheduler1" in service_names
-            assert "scheduler2" in service_names
+        service_list = DC.get_service_list()
+        for services in service_list:
+            names = DC.get_service_name(services)
+            service_names.append(names)
+        assert "scheduler1" in service_names
+        assert "scheduler2" in service_names
 
     # Cleaning
     for services in service_names:
