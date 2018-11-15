@@ -3,9 +3,11 @@
 import datetime
 from random import choice, randint
 from typing import Union, List
+import json
 
 from ..pb import ProcessingBlock
 from ..sbi import SchedulingBlockInstance
+from ..config_db_redis import ConfigDb
 
 PB_TYPES = [
     'realtime',
@@ -21,8 +23,38 @@ OFFLINE_WORKFLOWS = [
 ]
 
 
+DB = ConfigDb()
 SBI_VERSION = "0.4.0"
 PB_VERSION = "0.4.0"
+
+
+def add_workflow_definitions(sbi_config: dict):
+    """Add any missing SBI workflow definitions as placeholders.
+
+    This is a utility function used in testing and adds mock / test workflow
+    definitions to the database for workflows defined in the specified
+    SBI config.
+
+    Args:
+        sbi_config (dict): SBI configuration dictionary.
+
+    """
+    registered_workflows = []
+    for i in range(len(sbi_config['processing_blocks'])):
+        workflow_config = sbi_config['processing_blocks'][i]['workflow']
+        workflow_name = '{}:{}'.format(workflow_config['id'],
+                                       workflow_config['version'])
+        if workflow_name in registered_workflows:
+            continue
+        workflow_definition = dict(
+            id=workflow_config['id'],
+            version=workflow_config['version'],
+            stages=[]
+        )
+        key = "workflow_definitions:{}:{}".format(workflow_config['id'],
+                                                  workflow_config['version'])
+        DB.set_hash_values(key, workflow_definition)
+        registered_workflows.append(workflow_name)
 
 
 def generate_version(max_major: int = 1, max_minor: int = 7,
@@ -110,7 +142,8 @@ def generate_sbi_config(num_pbs: int = 3, project: str = 'sip',
                         programme_block: str = 'sip_demos',
                         pb_config: Union[dict, List[dict]] = None,
                         workflow_config:
-                        Union[dict, List[dict]] = None) -> dict:
+                        Union[dict, List[dict]] = None,
+                        register_workflows=False) -> dict:
     """Generate a SBI configuration dictionary.
 
     Args:
@@ -119,6 +152,7 @@ def generate_sbi_config(num_pbs: int = 3, project: str = 'sip',
         programme_block (str, optional): SBI programme block
         pb_config (dict, List[dict], optional): PB configuration
         workflow_config (dict, List[dict], optional): Workflow configuration
+        register_workflows (bool, optional): If true also register workflows.
 
     Returns:
         dict, SBI configuration dictionary
@@ -148,4 +182,18 @@ def generate_sbi_config(num_pbs: int = 3, project: str = 'sip',
         scheduling_block=generate_sb(utc_now, project, programme_block),
         processing_blocks=pb_list
     )
+    if register_workflows:
+        add_workflow_definitions(sbi_config)
     return sbi_config
+
+
+def generate_sbi_json(num_pbs: int = 3, project: str = 'sip',
+                      programme_block: str = 'sip_demos',
+                      pb_config: Union[dict, List[dict]] = None,
+                      workflow_config:
+                      Union[dict, List[dict]] = None,
+                      register_workflows=True) -> str:
+    """Return a JSON string used to configure an SBI."""
+    return json.dumps(generate_sbi_config(num_pbs, project, programme_block,
+                                          pb_config,
+                                          workflow_config, register_workflows))

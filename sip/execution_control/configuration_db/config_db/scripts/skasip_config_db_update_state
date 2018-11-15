@@ -2,8 +2,8 @@
 # -*- coding: utf-8 -*-
 """Utility module to set update config db sdp or service states."""
 import argparse
-from config_db.service_state import ServiceState
-from config_db.sdp_state import SDPState
+
+from config_db import SDPState, ServiceState
 
 
 def main():
@@ -14,7 +14,6 @@ def main():
     args = parser.parse_args()
 
     print('New state =', args.new_state)
-    print(args.service)
     if args.service is None:
         state = SDPState()
         state.update_current_state(args.new_state)

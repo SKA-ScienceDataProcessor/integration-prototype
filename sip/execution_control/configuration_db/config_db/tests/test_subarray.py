@@ -9,7 +9,7 @@ def test_subarray_initialise():
     """Test initialising the subarray list."""
     DB.flush_db()
     subarray = Subarray(0)
-    assert not subarray.is_active()
+    assert not subarray.active
 
 
 def test_subarray_activate_deactivate():
@@ -18,9 +18,9 @@ def test_subarray_activate_deactivate():
     Subarray.subscribe('test_activate_deactivate')
     subarray = Subarray(0)
     subarray.activate()
-    assert subarray.is_active()
+    assert subarray.active
     subarray.deactivate()
-    assert not subarray.is_active()
+    assert not subarray.active
 
 
 def test_subarray_configure_sbi():

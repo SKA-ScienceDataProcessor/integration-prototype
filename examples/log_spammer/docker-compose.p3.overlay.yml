@@ -3,7 +3,7 @@ version: "3.6"
 services:
 
     log_spammer:
-        image: skasip/log_spammer:latest
+        image: skasip/log_spammer:1.0.4
         command: ["0.1"]
         deploy:
             replicas: 1
@@ -11,12 +11,3 @@ services:
             driver: fluentd
             options:
                 tag: "{{.ImageName}}/{{.Name}}/{{.ID}}"
-        networks:
-            - host
-        build: .
-
-
-networks:
-    host:
-        external: true
-        name: host

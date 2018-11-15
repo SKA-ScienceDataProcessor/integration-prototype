@@ -1,108 +1,113 @@
-# SIP Configuration Service (Redis variant)
+# SIP Configuration Service
 
 ## Introduction
 
-The Configuration Database is a backing service for use by Execution
-Control and Tango Control components. This package contains a library 
-providing specialised functions for interfacing with the Configuration
-Database at the abstraction of the Execution Control data objects.
+The Configuration Database is a backing service for use by SKA SIP Execution
+Control (EC) and Tango Control components. This package contains a library 
+providing specialised functions for interfacing with data objects in the 
+EC Configuration Database.
 
 For a description of the Data Model used by this library see Sections 7.4.4 
-and 7.5.6 of the SIP Report.   
+and 7.5.6 of the SIP Report.
 
-This library is written as a set of Python modules which are structured 
-such that there is a low level abstraction layer on top of the database's 
-[Python API](https://redis-py.readthedocs.io/en/latest/) `config_db_redis.py`
-and a set of higher level classes providing interfaces to data objects
-stored in the database.
+This library provides modules for each of the data objects stored within
+the EC configuration database. These are built on top of a simple low-level 
+wrapper to the [Python Redis API](https://redis-py.readthedocs.io/en/latest/),
+which handles connections to the database and abstraction from the Python
+Redis API.
 
-## Quickstart
-
-To start Docker containers for a Redis Db instance (with a persistent volume)
-as well as a [Redis Commander](https://github.com/joeferner/redis-commander)
-instance (useful for debugging) issue the following command:
-
-```bash
-docker-compose up -d
-```
-
-This will deploy the containers to the local Docker installation. If wanting
-to deploy to Docker Swarm instead use the following command:
-
-```bash
-docker stack deploy -c docker-compose.yml [stack name]
-```
-
-Once finished, to stop this service and remove its running containers, if
-started using `docker-compose` (with the local Docker engine) issue the
-command:
-
-```bash
-docker-compose rm -s -f
-```
-
-or if using Docker Swarm mode:
-
-```bash
-docker stack rm [stack name]
-```
-
-It is also possible to run redis server natively (without Docker). This is
-useful for development and debugging.
-
-Start redis server
-
-```bash
-redis-server
-```
-
-Note - It requires redis to be installed and all python packages in the
-requirements.txt file
-
-### Installation using `pip`
+## Installation
 
 This library can be installed using `pip` with the following command: 
 
 ```bash
-pip install git+https://github.com/SKA-ScienceDataProcessor/integration-prototype@master#egg=config_db\&subdirectory=sip/execution_control/configuration_db
+pip install -U skasip-config-db
 ```
 
-It can also be installed from a local copy of the code using:
+## Usage
+
+Example usage:
+
+```python
+import config_db
+
+sdp_state = config_db.SDPState()
+print(sdp_state.current_state)
+
+subarray = config_db.Subarray(0)
+subarray.activate()
+print(subarray.active)
+
+sbi_config = config_db.generate_sbi_config(register_workflows=True)
+sbi = config_db.SchedulingBlockInstance.from_config(sbi_config)
+print(sbi.id)
+```
+
+
+## Utility Scripts
+
+The package installs a number of utility scripts, described below:
+
+#### Initialise the database.
+
+`skasip_config_db_init [--data-path=PATH]`
+
+Can be used to initialise the configuration database. The optional 
+`--data-path=PATH` argument, can be used to defined a custom 
+path containing the initial set of SDP services and workflows used to
+initialise the database. If specifying `--data-path`, and the specified `PATH`
+does not exist a copy of the default data pat will be created at the specified
+path.
+
+#### Register workflows
+
+Register workflows from the specified workflow path.
 
 ```bash
-pip install sip/execution_control/configuration/db
+skasip_config_db_register_workflows [workflow path]
 ```
 
-### Utility Scripts
+#### Add an SBI to the database
 
-To set initial data into the configuration database run the following command:
-
-```bash
-skasip_config_db_init [data_path]
-```
-
-To add an SBI to the database
+Adds an SBI to the database.
 
 ```bash
 skasip_config_db_add_sbi [--subarray N] [--activate] [--help]
 ```
 
-To update the state of a service or the state of sdp:
+#### Generate an SBI JSON configuration
+
+Generate an SBI JSON configuration.
+
+```bash
+skasip_config_db_sbi_json
+```
+
+#### Update the current state
+
+Updates the current state of SDP or a specified service.
 
 ```bash
 skasip_config_db_update_state [--service SUBSYSTEM.NAME.VERSION] [--help] new_state
 ```
 
+#### List workflow definitions
 
-### Running tests
+List known workflow definitions.
 
-While unit tests are run automatically the 
-[SIP CI/CD service](https://travis-ci.com/SKA-ScienceDataProcessor/integration-prototype),
-it is possible to run them manually with the following command from the
-root sip code folder using the following commands:
+```bash
+skasip_config_db_workflow_definitions
+```
+
+## Running tests
+
+Unit tests are run automatically the 
+[SIP CI/CD service](https://travis-ci.com/SKA-ScienceDataProcessor/integration-prototype).
+It is also possible to run them manually with the following commands from the
+root SIP:
 
 ***Note**: a Redis db container must be started first in order for most of
-these tests to pass*
+these tests to pass (See below)*
 
 ```bash
 virtualenv -p python3 venv
@@ -113,3 +118,26 @@ python3 -m pytest --pylint --codestyle --docstyle -s -v \
     --pylint-rcfile=.pylintrc --rootdir=. \
     sip/execution_control/configuration_db
 ```
+
+## Starting Configuration Database Redis containers.
+
+To start Docker containers for a Redis Db instance (with a persistent volume)
+as well as a [Redis Commander](https://github.com/joeferner/redis-commander)
+instance (useful for debugging) issue the following command:
+
+```bash
+docker stack deploy -c docker-compose.yml [stack name]
+```
+
+Once finished, to clean up.
+
+```bash
+docker stack rm [stack name]
+```
+
+It is also possible to run redis server natively (without Docker) with:
+
+```bash
+redis-server
+```
+
