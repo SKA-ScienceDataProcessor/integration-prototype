@@ -8,7 +8,7 @@ import docker
 import yaml
 
 
-LOG = logging.getLogger('SIP.EF.DC')
+LOG = logging.getLogger('sip.ec.docker_swarm_client')
 
 
 class DockerClient:
