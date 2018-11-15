@@ -36,6 +36,11 @@ class StateObject:
         if not DB.key_exists(self._key):
             DB.set_hash_values(self._key, self._initialise())
 
+    @ property
+    def id(self) -> str:
+        """Return the object id."""
+        return self._id
+
     @property
     def allowed_states(self) -> List[str]:
         """Get list of allowed object states."""
