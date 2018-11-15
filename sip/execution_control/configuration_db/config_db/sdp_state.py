@@ -20,10 +20,10 @@ class SDPState(StateObject):
         init=['standby', 'alarm', 'fault'],
         standby=['off', 'on', 'alarm', 'fault'],
         on=['off', 'standby', 'disable', 'alarm', 'fault'],
-        off=['alarm', 'fault'],
         disable=['on', 'off', 'standby'],
         alarm=['fault', 'init', 'standby', 'on', 'off', 'disable'],
-        fault=[]
+        fault=['off'],
+        off=[]
     )
 
     # Allowed transitions when setting the target state.
@@ -32,10 +32,10 @@ class SDPState(StateObject):
         init=[],
         standby=['off', 'on'],
         on=['off', 'standby', 'disable'],
-        off=[],
         disable=['off', 'on', 'standby'],
-        alarm=['reset'],
-        fault=[]
+        alarm=['off', 'reset'],
+        fault=['off'],
+        off=[]
     )
 
     def __init__(self):

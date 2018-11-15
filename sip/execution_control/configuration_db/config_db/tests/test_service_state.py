@@ -1,5 +1,7 @@
 # -*- coding: utf-8 -*-
 """Tests of the Service States API."""
+import pytest
+
 from ..config_db_redis import ConfigDb
 from ..service_state import ServiceState
 
@@ -44,6 +46,25 @@ def test_service_state_set_target():
 
     assert service_state.target_state == target_state
     assert service_state.target_timestamp >= set_time
+
+
+def test_service_state_current_state_simple():
+    """Basic test of setting and getting the current state.
+
+    For Service state transitions, see Fig4 of the SIP Report.
+    """
+    ConfigDb().flush_db()
+    service_state = ServiceState('Subsystem', 'Service', '1.0.0')
+    assert service_state.current_state == 'unknown'
+    # Set the current state to 'init'.
+    service_state.current_state = 'init'
+    # From the 'init' state it should be possible to stay in init!
+    service_state.current_state = 'init'
+    service_state.current_state = 'on'
+    service_state.current_state = 'alarm'
+    service_state.current_state = 'fault'
+    with pytest.raises(ValueError, message='Invalid current state update'):
+        service_state.current_state = 'alarm'
 
 
 def test_service_state_set_current():
