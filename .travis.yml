@@ -37,8 +37,8 @@ before_install:
   - pip install -r sip/execution_control/configuration_db/requirements.txt
   - pip install spead2>=1.7.2
   - pip install -r sip/execution_control/processing_controller_interface/flask_api/requirements.txt
-  - pip install -r sip/execution_framework_interface/docker_api/requirements.txt
-  - pip install -r sip/execution_framework_interface/docker_compose_generator/requirements.txt
+  - pip install -r sip/execution_control/docker_api/requirements.txt
+  - pip install -r sip/execution_control/docker_compose_generator/requirements.txt
   - pip install -r sip/science_pipeline_workflows/ical_dask/pipelines/requirements.arl.min.txt
   # Start Docker containers needed for unit tests
   - docker run -d -p 6379:6379 --name=config_db redis:4.0.6-alpine
