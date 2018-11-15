@@ -40,7 +40,6 @@ def test_create_start_stage():
 
         for service_id in s_ids:
             service_details = DC.get_service_details(service_id)
-            # print(service_details['Spec']['Name'])
             service_names.append(service_details['Spec']['Name'])
         assert "start_stage" in service_names
 
@@ -77,7 +76,7 @@ def test_service_state():
             service_state = DC.get_service_state(service_id)
             if service_state == 'shutdown':
                 DC.delete_service(service_id)
-                print("Service Deleted")
+
                 running_service_ids.remove(service_id)
 
     # Get all service ids
@@ -94,34 +93,17 @@ def test_get_service_list():
     # Create new services
     service_names = []
     config_path = os.path.join(FILE_PATH, '..', 'compose-file',
-                               'docker-compose.hostnet.yml')
+                               'docker-compose.shorter.yml')
     with open(config_path, 'r') as compose_str:
         service_ids = DC.create_services(compose_str)
         for service_id in service_ids:
             service_list = DC.get_service_list()
             assert service_id in service_list
 
-            # service_list = DC.get_service_list()
             for services in service_list:
                 names = DC.get_service_name(services)
                 service_names.append(names)
-            assert "scheduler" in service_names
-            assert "worker" in service_names
 
-    # Create more services
-    config_path_ = os.path.join(FILE_PATH, '..', 'compose-file',
-                                'docker-compose.shorter.yml')
-    with open(config_path_, 'r') as compose_str:
-        service_ids = DC.create_services(compose_str)
-        for service_id in service_ids:
-            service_list = DC.get_service_list()
-            assert service_id in service_list
-
-            # more_service_list = DC.get_service_list()
-            for services in service_list:
-                names = DC.get_service_name(services)
-                if names not in service_names:
-                    service_names.append(names)
             assert "scheduler1" in service_names
             assert "scheduler2" in service_names
 

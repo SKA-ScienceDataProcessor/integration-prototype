@@ -55,7 +55,6 @@ class DockerClient:
                     service_spec = self._parse_services(
                         service_config, service_name)
                     for s_spec in service_spec:
-                        print(s_spec)
                         created_service = self._client.services.create(
                             **s_spec)
                         service_id = created_service.short_id
