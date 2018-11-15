@@ -1,6 +1,6 @@
 # coding=utf-8
 """SIP Execution Control Configuration Database client library."""
-__version_info__ = (1, 0, 22)
+__version_info__ = (1, 0, 23)
 __version__ = '.'.join(map(str, __version_info__))
 from .sdp_state import SDPState
 from .service_state import ServiceState

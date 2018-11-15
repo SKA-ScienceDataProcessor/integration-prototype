@@ -2,6 +2,7 @@
 """Setup script for the SIP logging libary."""
 import setuptools
 
+import sip_logging
 
 with open('README.md', 'r') as file:
     LONG_DESCRIPTION = file.read()
@@ -9,7 +10,7 @@ with open('README.md', 'r') as file:
 
 setuptools.setup(
     name='skasip_logging',
-    version='1.0.2',
+    version=sip_logging.__version__,
     author='SKA SDP SIP team.',
     description="SIP logging module.",
     long_description=LONG_DESCRIPTION,

@@ -1,7 +1,14 @@
 FROM python:3.6.2-alpine3.6
-WORKDIR /app
-RUN pip install skasip-logging
+LABEL maintainer="Benjamin Mort <ben.mort@gmail.com>"
 
-COPY log_spammer.py /app/log_spammer.py
+RUN pip install skasip-logging==1.0.9
+
+RUN addgroup -S sip && adduser -S sip -G sip
+USER sip
+WORKDIR /home/sip
+
+COPY _version.py /home/sip
+COPY log_spammer.py /home/sip
+
 ENTRYPOINT ["python3", "log_spammer.py"]
 CMD ["0.1"]

@@ -16,6 +16,7 @@ if __name__ == '__main__':
 ```
 
 """
+import time
 import sys
 import logging
 import os
@@ -29,16 +30,21 @@ class SIPFormatter(logging.Formatter):
 
     def formatTime(self, record, datefmt=None):
         """Format the log timestamp."""
-        _created = self.converter(record.created)
+        _seconds_fraction = record.created - int(record.created)
+        _datetime_utc = time.mktime(time.gmtime(record.created))
+        _datetime_utc += _seconds_fraction
+        _created = self.converter(_datetime_utc)
+
         if datefmt:
             time_string = _created.strftime(datefmt)
         else:
-            time_string = _created.strftime("%Y-%m-%d %H:%M:%S")
+            time_string = _created.strftime('%Y-%m-%dT%H:%M:%S.%fZ')
             time_string = "%s,%03d" % (time_string, record.msecs)
         return time_string
 
 
-def init_logger(log_level=None):
+def init_logger(log_level=None, p3_mode: bool = True,
+                show_thread: bool = False):
     """Initialise the SIP logger.
 
     Attaches a stdout stream handler to the 'sip' logger. This will
@@ -49,13 +55,34 @@ def init_logger(log_level=None):
 
     Args:
         log_level (str or int, optional): Logging level for the SIP logger.
+        p3_mode (bool, optional): Print logging statements in a format that
+                                  P3 can support.
+        show_thread (bool, optional): Display the thread in the log message.
 
     """
     log = logging.getLogger('sip')
+    # Remove existing handlers (to avoid duplicate messages if the log is
+    #                           initialised twice)
+    for handler in log.handlers:
+        log.removeHandler(handler)
+    if p3_mode:
+        if show_thread:
+            _format = '%(asctime)s.%(msecs)03dZ | %(name)s ' \
+                      '| %(levelname)-7s | %(threadName)-22s | %(message)s'
+        else:
+            _format = '%(asctime)s.%(msecs)03dZ | %(name)s ' \
+                      '| %(levelname)-7s | %(message)s'
+        formatter = logging.Formatter(_format, '%Y-%m-%dT%H:%M:%S')
+        formatter.converter = time.gmtime
+    else:
+        if show_thread:
+            _format = '%(asctime)s | %(name)s | %(levelname)-7s | ' \
+                      '%(threadName)-22s | %(message)s'
+        else:
+            _format = '%(asctime)s | %(name)s | %(levelname)-7s | %(message)s'
+        formatter = SIPFormatter(_format, datefmt='%Y-%m-%dT%H:%M:%S.%fZ')
+
     handler = logging.StreamHandler(stream=sys.stdout)
-    fmt = os.getenv('SIP_LOG_FORMAT', '%(asctime)s | %(name)s | '
-                                      '%(levelname)-7s | %(message)s')
-    formatter = SIPFormatter(fmt, datefmt='%Y-%m-%dT%H:%M:%S.%f')
     handler.setFormatter(formatter)
     log.addHandler(handler)
     if log_level:
