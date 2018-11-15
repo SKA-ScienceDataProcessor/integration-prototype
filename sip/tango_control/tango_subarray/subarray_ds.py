@@ -1,8 +1,9 @@
 # -*- coding: utf-8 -*-
 """Tango Processing Controller Device server."""
+from sip_logging import init_logger
+
 from tango.server import run
 
-from sip_logging import init_logger
 from subarray_device import SubarrayDevice
 
 

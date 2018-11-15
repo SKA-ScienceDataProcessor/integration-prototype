@@ -2,9 +2,9 @@
 """Register the SDP Subarray devices with the TANGO Database."""
 import logging
 
-from tango import Database, DbDevInfo
-
 from sip_logging import init_logger
+
+from tango import Database, DbDevInfo
 
 
 def register_subarray_devices():

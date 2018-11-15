@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """Tango Processing Controller Device server."""
-from tango.server import run
-
 from sip_logging import init_logger
+
+from tango.server import run
 
 from processing_block_device import ProcessingBlockDevice
 

@@ -8,9 +8,10 @@ Run with:
 python3 sdp_master_ds.py 1 -v4
 ```
 """
+from sip_logging import init_logger
+
 from tango.server import run
 
-from sip_logging import init_logger
 from sdp_master_device import SDPMasterDevice
 
 

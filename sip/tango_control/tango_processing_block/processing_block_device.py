@@ -4,10 +4,11 @@
 import logging
 import time
 
+from config_db import ProcessingBlock
+
 from tango import DevState
 from tango.server import Device, attribute
 
-from config_db import ProcessingBlock
 
 VERSION = '0.0.1'
 LOG = logging.getLogger('sip.tango_control.pb_device')

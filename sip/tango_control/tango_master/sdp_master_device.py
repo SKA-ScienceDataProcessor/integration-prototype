@@ -10,12 +10,13 @@ import logging
 import time
 from random import randrange
 
-from tango import Database, DebugIt, DevState, DeviceProxy
-from tango.server import Device, attribute, command
-
 from config_db import ProcessingBlockList, SDPState, SchedulingBlockInstance, \
     ServiceState, generate_sbi_config
 from config_db.config_db_redis import ConfigDb
+
+from tango import Database, DebugIt, DevState, DeviceProxy
+from tango.server import Device, attribute, command
+
 from _version import __version__
 
 LOG = logging.getLogger('sip.tango_control.SDPMaster')
