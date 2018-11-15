@@ -15,7 +15,7 @@ setuptools.setup(
     long_description=LONG_DESCRIPTION,
     long_description_content_type='text/markdown',
     url='https://github.com/SKA-ScienceDataProcessor/integration-prototype'
-        '/tree/master/sip/execution_control/logging',
+        '/tree/master/sip/platform/logging',
     packages=['sip_logging'],
     classifiers=[
         "Programming Language :: Python :: 3 :: Only",
