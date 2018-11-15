@@ -16,8 +16,8 @@ services:
             - host
 
     log_spammer:
-        image: skasip/log_spammer:1.0.1
-        command: ["0.1"]
+        image: skasip/log_spammer:1.0.4
+        command: ["0.1", "--timestamp-us", "--show-thread"]
         deploy:
             replicas: 1
         logging:
