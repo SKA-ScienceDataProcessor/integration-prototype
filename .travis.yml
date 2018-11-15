@@ -57,10 +57,16 @@ script:
   - python -m pytest -s -v --codestyle --docstyle --pylint --pylint-rcfile=.pylintrc sip/science_pipeline_workflows/ical_dask
 
   - python -m pytest -s -v --codestyle --docstyle --pylint --pylint-rcfile=.pylintrc --rootdir=. sip/execution_control/configuration_db
-  - pytest --cov=sip/execution_control/configuration_db sip/execution_control/configuration_db
+
 
   - python -m pytest -s -v --codestyle --docstyle --pylint --pylint-rcfile=.pylintrc --rootdir=. sip/platform/logging
-  - pytest --cov=sip/platform/logging sip/platform/logging
+
+  - |
+    pytest --cov=sip/platform/logging \
+           --cov=sip/execution_control/configuration_db \
+           --rootdir=. \
+           sip/platform/logging \
+           sip/execution_control/configuration_db \
 
 after_success:
   - codecov
