@@ -46,19 +46,19 @@ before_install:
   - docker swarm init
 
 script:
-  - pycodestyle --config=.pycodestyle emulators
-  - pycodestyle --config=.pycodestyle --exclude=zookeeper examples
-  - pycodestyle --config=.pycodestyle --exclude=receive_visibilities sip
+#  - pycodestyle --config=.pycodestyle emulators
+#  - pycodestyle --config=.pycodestyle --exclude=zookeeper examples
+#  - pycodestyle --config=.pycodestyle --exclude=receive_visibilities sip
+#  - pylint --rcfile=.pylintrc --ignore=csp_pss_sender,csp_vis_sender_01,csp_vis_sender_02 emulators
 
-  - pylint --rcfile=.pylintrc --ignore=csp_pss_sender,csp_vis_sender_01,csp_vis_sender_02 emulators
+#  - python -m pytest -s -v --codestyle --docstyle --pylint --pylint-rcfile=.pylintrc sip/execution_framework_interface/docker_api
+#  - python -m pytest -s -v --codestyle --docstyle --pylint --pylint-rcfile=.pylintrc sip/execution_framework_interface/docker_compose_generator
 
-  - python -m pytest -s -v --codestyle --docstyle --pylint --pylint-rcfile=.pylintrc sip/execution_framework_interface/docker_api
-  - python -m pytest -s -v --codestyle --docstyle --pylint --pylint-rcfile=.pylintrc sip/execution_framework_interface/docker_compose_generator
+  - python -m pytest -s -v --codestyle --docstyle --pylint --pylint-rcfile=.pylintrc sip/execution_control/master_controller_service
+  - python -m pytest -s -v --codestyle --docstyle --pylint --pylint-rcfile=.pylintrc sip/execution_control/master_interface_service
+
   - python -m pytest -s -v --codestyle --docstyle --pylint --pylint-rcfile=.pylintrc sip/science_pipeline_workflows/ical_dask
-
   - python -m pytest -s -v --codestyle --docstyle --pylint --pylint-rcfile=.pylintrc --rootdir=. sip/execution_control/configuration_db
-
-
   - python -m pytest -s -v --codestyle --docstyle --pylint --pylint-rcfile=.pylintrc --rootdir=. sip/platform/logging
 
   - |
