@@ -56,9 +56,9 @@ def init_logger(log_level=None, p3_mode: bool = True):
     log = logging.getLogger('sip')
     handler = logging.StreamHandler(stream=sys.stdout)
     if p3_mode:
-        _format = '%(asctime)s.%(msecs)03d | %(name)s | ' \
-                  '%(levelname)-7s | %(message)s'
-        formatter = logging.Formatter(_format)
+        _format = '%(asctime)s.%(msecs)03d | %(name)s | %(levelname)-7s | ' \
+                  '%(message)s'
+        formatter = logging.Formatter(_format, '%Y-%m-%d %H:%M:%S')
     else:
         _format = '%(asctime)s | %(name)s | %(levelname)-7s | %(message)s'
         formatter = SIPFormatter(_format, datefmt='%Y-%m-%dT%H:%M:%S.%f')
