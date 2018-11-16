@@ -59,6 +59,21 @@ substates = ((mc_db,MC),(pc_db,PC),(pdc_db,PDC),(al_db,AL))
 state_ready = { MC:False, PC:False, PDC:False, AL:False }
 db_handles = { SDP: sdp_db, MC: mc_db, PC: pc_db, PDC: pdc_db, AL: al_db }
 
+
+def break_me():
+    """ 
+    Randomly generate a fault or alarm state for one of the substates
+    """
+    logger.debug('randomly generate a fault or alarm')
+    state = (None, None, None, None, None, 'fault', 'alarm')[random.randint(0,6)]
+    if state is not None:
+        service = (mc_db,pc_db,pdc_db,al_db)[random.randint(0,3)]
+        logger.debug('Changing random service to {}'.format(state))
+        service.update_current_state(state)
+    sch.enter(random.random()*500,1,break_me)
+    #~ sch.enter(random.random()*50,1,break_me)
+
+
 def waiting_on_states():
     """
     Look for events from updating current state for each component and 
@@ -75,8 +90,7 @@ def waiting_on_states():
             for key in state_ready.keys():
                 if key in service_name:
                     state_ready[key] = True
-            if state_ready[MC] and state_ready[PC] and \
-                    state_ready[PDC] and state_ready[AL]:
+            if all(state_ready.values()):
                 logger.debug("Setting current state from target state for SDP State")
                 sdp_db.update_current_state(sdp_db.target_state)
                 state_ready = { MC:False, PC:False, PDC:False, AL:False }
@@ -110,7 +124,8 @@ def update_components(target_state):
     wait_on_states = False
     for db,name in substates:
         logger.debug('Setting target state of {} to be {}'.format(name,target_state))
-        if db.current_state != target_state:
+        if db.current_state != target_state and \
+                target_state in db.allowed_state_transitions[db.current_state]:
             db.update_target_state(target_state)
             logger.debug('Schedule {} current state to be updated'.format(name))
             sch.enter(random.random()*5, 1, update_sub_state, argument=(db,name))
@@ -126,23 +141,6 @@ def update_components(target_state):
         sdp_db.update_current_state(sdp_db.target_state)
         sch.enter(0, 1, check_event_queue)
 
-    # What SHOULD we do if the target state is OFF?
-    # Everything will go off.
-    # For the time being we will run subroutines to change the target
-    # states for the subsystems.
-    # I will use the scheduler to run the other subroutines at a randomly
-    # generated time.
-    
-    # Presumably in a later version we would actually set target state, eg:
-    # db.update_component_state(PC, "Target_state", target_state)
-    # We could then use the scheduler schedule another function to check 
-    # that they have changed.
-    ## this belongs in another routine!!
-    #~ db.update_component_state(PC, "Current_state", target_state)
-    #~ ## this belongs in another routine!!
-    #~ db.update_component_state(LOG, "Current_state", target_state)
-    #~ logger.debug('Pretend to do work. New state is {}.'.format(target_state))
-    #~ return(target_state)
 
 
 def handle_event(event):
@@ -168,7 +166,7 @@ def handle_event(event):
                 logger.warn('No allowed states; cannot continue')
                 return
             if not target_state in states:
-                logger.warn('Target state {} not in valide list ({})'.format(target_state,states))
+                logger.warn('Target state {} not in valid list ({})'.format(target_state,states))
                 return
             logger.debug(
                 'Communicating target_state to component systems')
@@ -176,10 +174,6 @@ def handle_event(event):
                 update_components('on')
             else:
                 update_components(target_state)
-            #~ logger.debug(
-              #~ 'Setting SDP_state to be the new state {}.'.
-              #~ format(updated_state))
-            #~ ts = sdp_db.update_current_state(updated_state)
         else:
             logger.warning('Target state does not exist in database.')
     except Exception as err:
@@ -195,10 +189,18 @@ def check_event_queue():
     """
     event = event_queue.get()
     logger.debug('Event is {}'.format(event))
-    if event and event.type == 'target_state_updated':
-        logger.debug('Event ID is {}'.format(event.id))
-        handle_event(event)
-        return
+    if event:
+        if event.type == 'target_state_updated' and event.object_id == 'sdp_state':
+            logger.debug('Event ID is {}'.format(event.id))
+            handle_event(event)
+            return
+        elif event.type == 'current_state_updated' and event.object_id != 'sdp_state':
+            logger.debug('Event ID is {}'.format(event.id))
+            new_state = event.data['new_state']
+            if new_state in ('fault','alarm'):
+                logger.warn('We have a {} on {}'.format(new_state, event.object_id))
+                if sdp_db.current_state not in ('disable','fault','off'):
+                    sdp_db.update_current_state(new_state)
     # Return to this function after one second
     sch.enter(1, 1, check_event_queue)
 
@@ -223,62 +225,13 @@ if __name__ == '__main__':
         subscriber = 'SDP'
         logger.debug('About to register with event queue')
         event_queue = sdp_db.subscribe(subscriber)
-        event_queue2 = mc_db.subscribe(MC)
         active_subs = sdp_db.get_subscribers()
         logger.debug('Subscribers: {}'.format(active_subs))
         sch.enter(0, 1, check_event_queue)
+        sch.enter(100+random.random()*500,1,break_me)
+        #~ sch.enter(50+random.random()*100,1,break_me)
         sch.run()
     except KeyboardInterrupt as err:
         logger.debug('Keyboard Interrupt {}'.format(err))
         logger.info('Exiting!')
 
-'''
-From https://docs.google.com/document/d/1KEFKL2NHxgt05EqyEUMJkhot6ycwIx1CJ5nRp3hIBFU/edit#heading=h.pafi558x88t1
-
-The primary state that can be reported by the SDP Master device is derived from 
-the set of predefined TANGO states inherited by all TANGO Devices. It is for 
-this reason that SKA specifies additional state variables, such as health state 
-and admin mode. 
-
-The SDP Primary states are:
- - INIT: Reported when the SDP Master TANGO Device is available, but when one 
-   or more of the persistent SDP services are still starting up. During this 
-   state the SDP will not accept scheduling commands.
- - ON: Reported when the SDP is fully operational and will accept configure 
-   commands, which schedule processing on the SDP system.
- - DISABLE:  Reported when the SDP is in a drain state with respect to 
-   processing. In this state, the SDP will allow any running Processing 
-   Block workflows to complete, but not accept new scheduling commands or 
-   start any new Processing Blocks.
- - STANDBY: Reported when SDP is not accepting any new scheduling commands 
-   or running any Processing Block workflows.
- - ALARM: Reported when the SDP is still operational but an alarm condition 
-   has been triggered.
- - FAULT: Reported when SDP detects an unrecoverable error.
- - OFF: Reported when only the SDP Master TANGO device, Configuration
-   Database, and SDP Master Controller is running. The rest of SDP is 
-   powered off.
- - UNKNOWN: Reported when the state can not be obtained.
-
-Ben and Nijin have rewritten the database API to enforce the above (and also 
-use lower-case letters in the values held in the DB). I think I want to 
-enforce the rules myself rather than rely on the DB, on the other hand, all
-of the rules can be picked up from the API
-
-
-
-For me the Flask will produce the states as in the DB or UNKNOWN when it
-cannot find the proper state in the DB.
-
-For now the flask will stay the same; all faults, ie wrong requests, will be
-reported to the logs.
-
-System will start in INIT; I will find it in that state.
-For now I will ignore ALARM and FAULT states.
-
-When the system "wakes up" it will check for INIT state and request subsystems
-to go into STANDBY.
-I will rewrite code so that "subsystem" subroutines will change states from 
-INIT to STANDBY; another routine will monitor and log their status before
-setting its own status to standby when all the subs are set.
-'''
