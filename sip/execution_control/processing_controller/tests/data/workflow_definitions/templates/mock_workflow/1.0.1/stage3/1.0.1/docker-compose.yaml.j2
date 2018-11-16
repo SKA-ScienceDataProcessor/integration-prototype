@@ -2,9 +2,9 @@ version: '3.6'
 
 services:
 
-  mock_workflow_stage:
+  stage3:
     image: skasip/mock_workflow_stage:1.0.1
-    command: {{ stage.args }}
+    command: [ '{{ stage.args }}' ]
     deploy:
       restart_policy:
         condition: none
