@@ -5,13 +5,14 @@ version: '3.6'
 services:
 
   pbc:
-    image: skasip/processing_block_controller:1.0.1
+    image: skasip/processing_block_controller:1.0.4
     environment:
       - CELERY_BROKER=redis://config_db/1
       - CELERY_BACKEND=redis://config_db/2
       - REDIS_HOST=config_db
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
+      - ./processing_block_controller:/home/sip/processing_block_controller
     deploy:
       mode: replicated
       replicas: 1

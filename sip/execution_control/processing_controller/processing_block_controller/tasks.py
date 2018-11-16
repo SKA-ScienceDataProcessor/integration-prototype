@@ -52,98 +52,102 @@ def execute_processing_block(pb_id: str):
         pb_id (str): The PB id for the PBC
 
     """
+    log = logging.getLogger('sip')
+    log.propagate = False  # FIXME(BMo) Make propagate a option on
+                           # init_logger (default = False)?
+
     log = logging.getLogger('sip.ec.pbc')
 
-    log.info('**** Executing Processing block! ****')
-    log.info('Starting workflow')
-    print('XX', pb_id)
+    log.info('**** Executing Processing block: %s! ****', pb_id)
+    log.info('Starting workflow ... ')
 
-    # pb = ProcessingBlock(pb_id)
-    # docker = DockerClient()
-    #
-    # workflow_stages = pb.workflow_stages
-    # running_service_ids = []
-    #
-    # while True:
-    #
-    #     # # Check dependencies and get list of stages ready to start.
-    #     # # ...
-    #     # while True:
-    #     #     for service_id in running_service_ids:
-    #     #         service_state = docker.get_service_state(service_id)
-    #     #         log.info("Running Docker Services: {}".format(service_id))
-    #     #         if service_state == 'shutdown':
-    #     #             docker.delete_service(service_id)
-    #     #             log.info("Docker Services Deleted: {}".format(service_id))
-    #     #             running_service_ids.remove(service_id)
-    #     #         # if service is complete:
-    #     #         #     del run_service_id[service_id]
-    #     #
-    #     #     break
-    #
-    #     # Check if complete
-    #     stages = [workflow_stages[0]]
-    #
-    #     # Start stages.
-    #     for stage in stages:
-    #         # Configure EE
-    #         log.info('workflow stage: %s', stage.id)
-    #         log.info('xxx %s', stage.args_template)
-    #         args_template = jinja2.Template(stage.args_template)
-    #         log.info('xxx3 %s', json.dumps(stage.config))
-    #         args = args_template.render(stage=stage.config,
-    #                                     **pb.workflow_parameters)
-    #         args = json.dumps(json.loads(args))
-    #         log.info('**********')
-    #         log.info('ARGS: %s', args)
-    #
-    #         compose_template = jinja2.Template(stage.compose_template)
-    #         log.info('xxx1  %s', stage.compose_template)
-    #         compose_str = compose_template.render(stage=dict(args=args))
-    #         log.info('**********')
-    #         log.info('COMPOSE_STR: {}'.format(compose_str))
-    #
-    #         # Run the compose file
-    #         service_ids = docker.create_services(compose_str)
-    #         for service_ids in service_ids:
-    #             log.info('Created Services: {}'.format(service_ids))
-    #         running_service_ids.append(service_ids)
-    #         log.info("Running Service IDS: {}".format(running_service_ids))
-    #         # Update DB status
-    #         # TODO (NJT): Need to update the state into the database
-    #
-    #     # Check the state of the running services
-    #     while running_service_ids:
-    #         for service_id in running_service_ids:
-    #             service_state = docker.get_service_state(service_id)
-    #             log.info("Running Docker Services: {}".format(service_id))
-    #             if service_state == 'shutdown':
-    #                 docker.delete_service(service_id)
-    #                 log.info("Docker Services Deleted: {}".format(service_id))
-    #                 running_service_ids.remove(service_id)
-    #
-    #     # if there are not more stages -> break
-    #     break
-    #
-    # # The workflow configuration should contain the workflow template
-    # # and the configuration for each workflow stage.
-    #
-    # # Workflow stages are expected to be run as one or more Docker containers.
-    # # using an API to the container orchestration.
-    #
-    # # client = docker.from_env()
-    # # Make sure we are on a manager node ...
-    # # manager = client.info()['Swarm']['ControlAvailable']
-    # # if not manager:
-    # #     log.critical()
-    # # images = client.images.list()
-    # # for image in images:
-    # #     log.debug(image)
-    # # Run the docker task
-    # # https://github.com/bmort/docker_tests/blob/master/volume_bind/launch_service.py
-    # # service = client.services.create(
-    # #     image='skasip/mock_workflow_task_01:latest',
-    # #     name="mock_workflow_task_01",
-    # #     restart_policy=docker.types.RestartPolicy(condition='none'),
-    # #     mode=docker.types.ServiceMode(mode='replicated', replicas=1))
-    # # log.info('Service ID: %s', service.id)
+    pb = ProcessingBlock(pb_id)
+    docker = DockerClient()
+
+    workflow_stages = pb.workflow_stages
+    running_service_ids = []
+
+    while True:
+
+        # # Check dependencies and get list of stages ready to start.
+        # # ...
+        # while True:
+        #     for service_id in running_service_ids:
+        #         service_state = docker.get_service_state(service_id)
+        #         log.info("Running Docker Services: {}".format(service_id))
+        #         if service_state == 'shutdown':
+        #             docker.delete_service(service_id)
+        #             log.info("Docker Services Deleted: {}".format(service_id))
+        #             running_service_ids.remove(service_id)
+        #         # if service is complete:
+        #         #     del run_service_id[service_id]
+        #
+        #     break
+
+        # Check if complete
+        stages = [workflow_stages[0]]
+
+        # Start stages.
+        for stage in stages:
+            # Configure EE
+            log.info('workflow stage: %s', stage.id)
+            log.info('xxx %s', stage.args_template)
+            args_template = jinja2.Template(stage.args_template)
+            log.info('xxx3 %s', json.dumps(stage.config))
+            log.info('{}'.format(pb.workflow_parameters))
+            stage_params = pb.workflow_parameters[stage.id]
+            args = args_template.render(stage={**stage.config, **stage_params})
+            args = json.dumps(json.loads(args))
+            log.info('**********')
+            log.info('ARGS: %s', args)
+
+            compose_template = jinja2.Template(stage.compose_template)
+            log.info('xxx1  %s', stage.compose_template)
+            compose_str = compose_template.render(stage=dict(args=args))
+            log.info('**********')
+            log.info('COMPOSE_STR: {}'.format(compose_str))
+
+            # Run the compose file
+            service_ids = docker.create_services(compose_str)
+            for service_ids in service_ids:
+                log.info('Created Services: {}'.format(service_ids))
+            running_service_ids.append(service_ids)
+            log.info("Running Service IDS: {}".format(running_service_ids))
+            # Update DB status
+            # TODO (NJT): Need to update the state into the database
+
+        # Check the state of the running services
+        while running_service_ids:
+            for service_id in running_service_ids:
+                service_state = docker.get_service_state(service_id)
+                log.info("Running Docker Services: {}".format(service_id))
+                if service_state == 'shutdown':
+                    docker.delete_service(service_id)
+                    log.info("Docker Services Deleted: {}".format(service_id))
+                    running_service_ids.remove(service_id)
+
+        # if there are not more stages -> break
+        break
+
+    # The workflow configuration should contain the workflow template
+    # and the configuration for each workflow stage.
+
+    # Workflow stages are expected to be run as one or more Docker containers.
+    # using an API to the container orchestration.
+
+    # client = docker.from_env()
+    # Make sure we are on a manager node ...
+    # manager = client.info()['Swarm']['ControlAvailable']
+    # if not manager:
+    #     log.critical()
+    # images = client.images.list()
+    # for image in images:
+    #     log.debug(image)
+    # Run the docker task
+    # https://github.com/bmort/docker_tests/blob/master/volume_bind/launch_service.py
+    # service = client.services.create(
+    #     image='skasip/mock_workflow_task_01:latest',
+    #     name="mock_workflow_task_01",
+    #     restart_policy=docker.types.RestartPolicy(condition='none'),
+    #     mode=docker.types.ServiceMode(mode='replicated', replicas=1))
+    # log.info('Service ID: %s', service.id)

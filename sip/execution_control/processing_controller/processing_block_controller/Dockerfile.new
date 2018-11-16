@@ -1,5 +1,6 @@
 #
 # docker-in-docker base image for SIP.
+# --- This not actually needed due to using the python API!!
 #
 # docker run -it -v /var/run/docker.sock:/var/run/docker.sock skasip/pbc_base:latest /bin/bash
 #

@@ -14,6 +14,8 @@ from celery.app.control import Inspect
 from config_db.sbi import DB, SchedulingBlockInstance
 from .test_utils import add_workflow_definitions
 from ..processing_block_controller.tasks import APP, execute_processing_block
+from ..processing_block_controller.tasks import version, add
+from ..processing_block_controller import __version__ as pbc_version
 
 
 def test_pbc_inspect_tasks():
@@ -67,9 +69,17 @@ def test_pbc_execute():
     assert pb_ids[0] == 'PB-20181116-sip-000'
     assert isinstance(pb_ids[0], str)
 
-    print('starting PBC ...')
-    result = execute_processing_block.apply_async((pb_ids[0], ))
-    print('result =', result)
+    result = version.delay()
+    assert result.get(timeout=1) == pbc_version
+
+    result = add.delay(2, 3)
+    assert result.get(timeout=1) == 5
+
+    result = execute_processing_block.delay(pb_ids[0])
+    print('result = ', result)
+
+    # result = execute_processing_block.apply_async((pb_ids[0], ))
+    # print('result =', result)
 
     # start_time = time.time()
     # _inspect = Inspect(app=APP)
