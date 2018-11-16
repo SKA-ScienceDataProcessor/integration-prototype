@@ -1,0 +1,64 @@
+{
+    "id": "{{ workflow_id }}",
+    "version": "{{ workflow_version }}",
+    "stages": [
+    {
+        "id": "mock_setup",
+        "version": "test",
+        "type": "setup",
+        "dependencies": [],
+        "resources_required": [
+            {
+                "type": "cpu",
+                "value": 0.1
+            }
+        ],
+        "ee_config": { "compose_template": "setup_ee.yaml.j2" },
+        "app_config": { "args_template": "setup_args.json.j2" }
+    },
+    {
+        "id": "mock_processing",
+        "version": "test",
+        "type": "processing",
+        "dependencies": [
+            {
+                "type": "stage",
+                "value": "mock_setup",
+                "condition": "complete"
+            }
+        ],
+        "resources_required": [
+            {
+                "type": "node",
+                "value": 2,
+                "parameters": {
+                    "flavour": "compute_a",
+                    "exclusive": true
+                }
+            }
+        ],
+        "ee_config": { "compose_template": "processing_ee.yaml.j2" },
+        "app_config": { "args_template": "processing_args.json.j2" }
+    },
+    {
+        "id": "mock_cleanup",
+        "version": "test",
+        "type": "cleanup",
+        "dependencies": [
+            {
+                "type": "stage",
+                "value": "mock_processing",
+                "condition": "complete"
+            }
+        ],
+        "resources_required": [
+            {
+                "type": "cpu",
+                "value": 0.1
+            }
+        ],
+        "ee_config": { "compose_template": "cleanup_ee.yaml.j2" },
+        "app_config": { "args_template": "cleanup_args.json.j2" }
+    }
+    ]
+}
