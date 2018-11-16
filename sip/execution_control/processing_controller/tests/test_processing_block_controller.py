@@ -6,13 +6,13 @@ http://docs.celeryproject.org/en/latest/userguide/testing.html
 
 import json
 import os
-import celery
-import time
+from os.path import join, dirname
 
+import celery
 from celery.app.control import Inspect
+
 from config_db.sbi import DB, SchedulingBlockInstance
-from config_db.utils.generate_sbi_configuration import generate_sbi_config
-from ..utils.pbc_workflow_definition import add_sbi_workflow_definitions
+from .test_utils import add_workflow_definitions
 from ..processing_block_controller.tasks import APP, execute_processing_block
 
 
@@ -38,38 +38,39 @@ def test_pbc_inspect_workers():
 
 def test_pbc_execute():
     """.
-
     http://docs.celeryproject.org/en/latest/userguide/tasks.html
+
+    python3 -m pytest -s -v -x --rootdir=. -k test_pbc_execute sip/execution_control/processing_controller
+
     """
     DB.flush_db()
-    workflow_config = dict(
-        id='mock_workflow',
-        version='1.0.0',
-        parameters=dict(setup=dict(duration=20, num_channels=10)))
-    workflows_dir = os.path.join(os.path.dirname(__file__), 'data',
-                                 'workflows')
-    # TODO (NJT) Need to add the workflow definition to the database
-    # and read from it and then generate sbi config
-    sbi_config = generate_sbi_config(1, workflow_config=workflow_config,
-                                     pb_config=dict(type='offline'))
-    add_sbi_workflow_definitions(sbi_config, workflows_dir, test_version=1)
+    data_dir = join(dirname(__file__), 'data')
+    add_workflow_definitions(join(data_dir, 'workflow_definitions'))
+    with open(join(data_dir, 'sbi_config_1.json')) as _file:
+        sbi_config = json.load(_file)
 
-    # Add the SBI to the database.
+    # print()
+    # print(json.dumps(sbi_config, indent=2))
+
     sbi = SchedulingBlockInstance.from_config(sbi_config)
 
-    print('NAME=', execute_processing_block.name)
+    # print()
+    # print(json.dumps(sbi.config, indent=2))
+
+    print()
+    print('NAME:', execute_processing_block.name)
     state = celery.current_app.events.State()
-    print("STATE", state)
+    print("STATE:", state)
 
     pb_ids = sbi.processing_block_ids
-    print('PB IDS', pb_ids)
     assert len(pb_ids) == 1
-    print('pb_ids[0]', pb_ids[0])
-    print('type', type(pb_ids[0]))
+    assert pb_ids[0] == 'PB-20181116-sip-000'
+    assert isinstance(pb_ids[0], str)
 
+    print('starting PBC ...')
     result = execute_processing_block.apply_async((pb_ids[0], ))
+    print('result =', result)
 
-    print('\nresult =', result)
     # start_time = time.time()
     # _inspect = Inspect(app=APP)
     # while not result.ready():

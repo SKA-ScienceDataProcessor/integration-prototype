@@ -3,8 +3,8 @@
     "version": "1.0.0",
     "stages": [
         {
-            "id": "mock_workflow_stage",
-            "version": "1.0.1",
+            "id": "stage1",
+            "version": "1.0.0",
             "type": "processing",
             "dependencies": [],
             "resources_required": [],

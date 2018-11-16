@@ -1,17 +1,16 @@
 FROM python:3.6.4-alpine3.7
 LABEL maintainer="Benjamin Mort <ben.mort@gmail.com>"
 
-WORKDIR /app
-
-RUN apk add --no-cache git
-
 COPY requirements.txt .
 RUN pip install --no-cache-dir -U "celery[redis]"
 RUN pip install --no-cache-dir -r requirements.txt -U
 
-COPY *.py processing_block_controller/
-# COPY /utils/step_one/*.py processing_block_controller/
+RUN addgroup -S sip && adduser -S sip -G sip
+USER sip
+WORKDIR /home/sip
 
-ENTRYPOINT ["celery", "-C", \
-            "-A", "processing_block_controller.tasks", \
-            "worker", "--loglevel=info"]
+COPY *.py processing_block_controller/
+
+ENTRYPOINT ["celery"]
+CMD ["-C", "-A", "processing_block_controller.tasks", \
+     "worker", "--loglevel=info"]

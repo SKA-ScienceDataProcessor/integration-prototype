@@ -4,16 +4,8 @@ version: '3.6'
 
 services:
 
-  config_db:
-    image: redis:4.0.6-alpine
-    ports:
-      - 6379:6379
-    deploy:
-      mode: replicated
-      replicas: 1
-
   pbc:
-    image: skasip/pbc
+    image: skasip/processing_block_controller:1.0.1
     environment:
       - CELERY_BROKER=redis://config_db/1
       - CELERY_BACKEND=redis://config_db/2
@@ -23,8 +15,14 @@ services:
     deploy:
       mode: replicated
       replicas: 1
-    depends_on:
-      - conf_db
+
+  config_db:
+    image: redis:4.0.6-alpine
+    ports:
+      - 6379:6379
+    deploy:
+      mode: replicated
+      replicas: 1
 
   redis_ui_config_db:
     image: rediscommander/redis-commander:latest
@@ -32,8 +30,6 @@ services:
       - REDIS_HOSTS=config_db:config_db:6379:0
     ports:
       - 8081:8081
-    depends_on:
-      - conf_db
 
   redis_ui_celery_broker:
     image: rediscommander/redis-commander:latest
@@ -41,8 +37,6 @@ services:
       - REDIS_HOSTS=config_db:config_db:6379:1
     ports:
       - 8082:8081
-    depends_on:
-      - conf_db
 
   redis_ui_celery_backend:
     image: rediscommander/redis-commander:latest
@@ -50,8 +44,6 @@ services:
       - REDIS_HOSTS=config_db:config_db:6379:2
     ports:
       - 8083:8081
-    depends_on:
-      - conf_db
 
   redis_ui_celery_pb_queue:
       image: rediscommander/redis-commander:latest
@@ -59,5 +51,3 @@ services:
         - REDIS_HOSTS=config_db:config_db:6379:10
       ports:
         - 8084:8081
-      depends_on:
-        - conf_db
