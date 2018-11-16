@@ -25,6 +25,10 @@ def test_log_driver():
         s_ids = DC.create_services(compose_str)
         # TODO (NJT) nEED TO COMPLETE THIS UNIT TEST
         # GET SERVICE DETAILS AND GET THE LOG DRIVE AND LOG OPTIONS FROM IT
-        # for s_id in s_ids:
-        #     running_service_ids.append(s_id)
-        #     test_ids.append(s_id)
+        for s_id in s_ids:
+            running_service_ids.append(s_id)
+            test_ids.append(s_id)
+
+    # Cleaning
+    DC.delete_service("workflow_stage_1_a")
+    DC.delete_service("workflow_stage_1_b")

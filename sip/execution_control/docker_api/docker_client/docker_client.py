@@ -399,12 +399,7 @@ class DockerClient:
                             service_spec['networks'] = network_spec
                         else:
                             if 'logging' in key:
-                                for log_key, log_value in value.items():
-                                    if 'driver' in log_key:
-                                        service_spec['log_driver'] = log_value
-                                    if 'options' in log_key:
-                                        service_spec[
-                                            'log_driver_options'] = log_value
+                                self._parse_logging(value, service_spec)
                             else:
                                 service_spec[key] = value
         yield service_spec
@@ -543,3 +538,17 @@ class DockerClient:
                 if 'name' in n_key:
                     networks.append(n_value)
         return networks
+
+    @staticmethod
+    def _parse_logging(log_values, service_spec):
+        """Parse log key.
+
+        Args:
+            log_values (dict): logging configuration values
+            service_spec (dict): Service specification
+        """
+        for log_key, log_value in log_values.items():
+            if 'driver' in log_key:
+                service_spec['log_driver'] = log_value
+            if 'options' in log_key:
+                service_spec['log_driver_options'] = log_value
