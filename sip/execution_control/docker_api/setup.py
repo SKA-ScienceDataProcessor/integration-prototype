@@ -1,23 +1,20 @@
 """Setup config file to package docker swarm api."""
 from setuptools import setup
-import docker_client
+from sip_docker_swarm.version import __version__
 
 
 with open('README.md', 'r') as file:
     LONG_DESCRIPTION = file.read()
 
 
-VERSION = docker_client.__version__
-
-
 setup(name='skasip-docker_swarm',
-      version=VERSION,
+      version=__version__,
       author='SKA SDP SIP team.',
       description='SIP Docker Swarm client library.',
       long_description=LONG_DESCRIPTION,
       url='https://github.com/SKA-ScienceDataProcessor/integration-prototype'
           '/tree/master/sip/execution_control/docker_swarm_api',
-      packages=['docker_client'],
+      packages=['sip_docker_swarm'],
       install_requires=[
           'docker'
       ],

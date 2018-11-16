@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
 """Docker Client API."""
-
 import re
 import os
 import logging

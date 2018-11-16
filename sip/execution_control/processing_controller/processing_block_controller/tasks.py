@@ -13,7 +13,7 @@ import sys
 import jinja2
 from celery import Celery
 from config_db.pb import ProcessingBlock
-from docker_client import DockerClient
+from sip_docker_swarm import DockerClient
 
 # import docker
 # import docker.types

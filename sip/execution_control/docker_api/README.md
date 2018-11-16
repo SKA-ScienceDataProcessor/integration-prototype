@@ -1,4 +1,4 @@
-# Docker Client API
+# Docker Swarm Client API
 
 ## Introduction
 
@@ -12,11 +12,16 @@ delete services, manage nodes etc
 
 ## Quick-start
 
-To use the client, simply make a copy of the `docker_client.py` module.
-This can then be imported and initialised as follows:
+Install with:
+
+```bash
+pip3 install -U skasip-docker-swarm
+```
+
+Example usage:
 
 ```python
-from docker_client import DockerClient
+from sip_docker_swarm import DockerClient
 DC = DockerClient()
 ```
 
