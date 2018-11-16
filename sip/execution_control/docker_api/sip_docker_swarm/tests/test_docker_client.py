@@ -26,7 +26,7 @@ def test_create_services():
         assert "recv" in service_names
         assert "send" in service_names
 
-    # # Cleaning
+    # Cleaning
     DC.delete_service("recv")
     DC.delete_service("send")
 
@@ -110,10 +110,8 @@ def test_get_service_list():
         assert "scheduler2" in service_names
 
     # Cleaning
-    for services in service_names:
-        DC.delete_service(services)
-    # DC.delete_service("scheduler1")
-    # DC.delete_service("scheduler2")
+    DC.delete_service("scheduler1")
+    DC.delete_service("scheduler2")
 
 
 def test_get_node_list():
