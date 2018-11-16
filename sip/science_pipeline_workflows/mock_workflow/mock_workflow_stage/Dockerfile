@@ -6,8 +6,12 @@ COPY requirements.txt .
 
 RUN pip install --no-cache-dir -r requirements.txt
 
-COPY task.py .
+RUN addgroup -S sip && adduser -S sip -G sip
+USER sip
+WORKDIR /home/sip
 
-# ENTRYPOINT ["python3", "task.py", "{}"]
+COPY task.py .
+COPY _version.py .
+
 ENTRYPOINT ["python3", "task.py"]
-CMD []
+CMD [ "{\"duration\": 20}" ]

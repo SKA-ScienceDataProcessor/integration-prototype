@@ -5,8 +5,7 @@ import logging
 import sys
 import time
 
-import enlighten
-
+from _version import __version__
 from sip_logging import init_logger
 
 
@@ -19,13 +18,9 @@ def main():
         return
 
     config = json.loads(sys.argv[1])
-    log.info('Running mock workflow stage 01.')
-    log.info('Received configuration: %s', config)
+    log.info('Running mock_workflow_stage (version: %s).', __version__)
+    log.info('Received configuration: %s', json.dumps(config))
     log.info('Starting task')
-
-    # Setup progress bar
-    manager = enlighten.get_manager()
-    progress = manager.counter(total=20, desc="task", unit='steps')
 
     i = 0
     start_time = time.time()
@@ -33,10 +28,10 @@ def main():
     while time.time() - start_time <= duration:
         time.sleep(duration / 20)
         elapsed = time.time() - start_time
-        log.info("%s", config.get('message', 'hello {}'.format(i + 1)))
-        log.info("elapsed = %.2f s", elapsed)
+        log.info("  %s %2i / 20 (elapsed %.2f s)",
+                 config.get('message', 'Progress '),
+                 i + 1, elapsed)
         i += 1
-        progress.update()
 
     log.info('Task complete!')
 
