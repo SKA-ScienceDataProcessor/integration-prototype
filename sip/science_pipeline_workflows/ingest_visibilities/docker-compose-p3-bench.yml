@@ -1,0 +1,36 @@
+version: '3.6'
+
+services:
+    recv:
+        image: skasip/spead_base
+        entrypoint: spead2_bench.py
+        command: ["slave", "41000"]
+        volumes:
+            - type: bind
+              source: /mnt/ceph
+              target: /app/output
+        deploy:
+            mode: replicated
+            replicas: 1
+            placement:
+                constraints:
+                    - node.labels.recv == 01
+        networks:
+            - hostnet
+    send:
+        image: skasip/spead_base
+        entrypoint: spead2_bench.py
+        command: ["master", "--packet", "8972", "--heap-size", "4456448", "10.1.0.27", "41000"]
+        deploy:
+            mode: replicated
+            replicas: 1
+            placement:
+                constraints:
+                    - node.labels.send == 01
+        networks:
+            - hostnet
+
+networks:
+    hostnet:
+        external: true
+        name: host
