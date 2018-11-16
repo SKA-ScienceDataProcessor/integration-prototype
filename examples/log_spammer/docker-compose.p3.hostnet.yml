@@ -3,7 +3,7 @@ version: "3.6"
 services:
 
     log_spammer:
-        image: skasip/log_spammer:1.0.4
+        image: skasip/log_spammer:1.0.6
         command: ["0.1"]
         deploy:
             replicas: 1

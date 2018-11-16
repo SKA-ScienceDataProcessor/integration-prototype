@@ -67,12 +67,16 @@ def init_logger(log_level=None, p3_mode: bool = True,
         log.removeHandler(handler)
     if p3_mode:
         if show_thread:
-            _format = '%(asctime)s.%(msecs)03dZ | %(name)s ' \
-                      '| %(levelname)-7s | %(threadName)-22s | %(message)s'
+            # _format = '%(asctime)s.%(msecs)03dZ | %(name)s ' \
+            #           '| %(levelname)-7s | %(threadName)-22s | %(message)s'
+            _format = '%(asctime)s - %(name)s ' \
+                      '- %(levelname)s - %(threadName)-22s - %(message)s'
         else:
-            _format = '%(asctime)s.%(msecs)03dZ | %(name)s ' \
-                      '| %(levelname)-7s | %(message)s'
-        formatter = logging.Formatter(_format, '%Y-%m-%dT%H:%M:%S')
+            # _format = '%(asctime)s.%(msecs)03dZ | %(name)s ' \
+            #           '| %(levelname)-7s | %(message)s'
+            _format = '%(asctime)s - %(name)s ' \
+                      '- %(levelname)s - %(message)s'
+        formatter = logging.Formatter(_format)
         formatter.converter = time.gmtime
     else:
         if show_thread:
