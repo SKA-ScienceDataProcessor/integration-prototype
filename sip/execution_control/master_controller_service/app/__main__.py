@@ -203,9 +203,6 @@ def main():
 
 
 if __name__ == '__main__':
-    LOG = logging.getLogger('sip')
-    LOG.propagate = False
-
     # TODO(BMo) wait for DB to be available
 
     init_logger()
