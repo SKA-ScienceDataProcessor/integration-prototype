@@ -2,17 +2,24 @@
 """Master Controller Service.
 
 This version polls REDIS Events rather than the database directly.
+
+FIXME(BMo): Make sure this is resilient to the REDIS database connection
+            not being present.
 """
 from time import time, sleep
 from sched import scheduler
 import random
 import logging
+import argparse
 
 from sip_logging import init_logger
 from config_db import SDPState
 from config_db import ServiceState
 
-from .__init__ import __version__
+from .__init__ import __version__, __subsystem__, __service_name__
+
+
+SERVICE_NAME = '{}.{}.{}'.format(__subsystem__, __service_name__, __version__)
 
 SDP = 'sdp_state'
 MC = 'MasterController'
@@ -20,11 +27,15 @@ PC = 'ProcessingController'
 PDC = "ProcessingBlockController"
 AL = "Alerts"
 
+
 SDP_DB = SDPState()
 MC_DB = ServiceState("ExecutionControl", "MasterController", "test")
 PC_DB = ServiceState("ExecutionControl", "ProcessingController", "test")
 PBC_DB = ServiceState("ExecutionControl", "ProcessingBlockController", "test")
 AL_DB = ServiceState("ExecutionControl", "Alerts", "test")
+
+SDP_STATE_EVENT_QUEUE = None   # EventQueue for SDPState events.
+SERVICES = []
 
 SUB_STATES = ((MC_DB, MC), (PC_DB, PC), (PBC_DB, PDC), (AL_DB, AL))
 STATE_READY = {MC: False, PC: False, PDC: False, AL: False}
@@ -36,7 +47,7 @@ SCH = scheduler(time, sleep)
 
 def break_me():
     """Randomly generate a fault or alarm state for one of the substates."""
-    LOG.debug('randomly generate a fault or alarm')
+    LOG.debug('Randomly generate a fault or alarm')
     state = (None, None, None, None, None, 'fault', 'alarm')[
         random.randint(0, 6)]
     if state is not None:
@@ -55,7 +66,7 @@ def waiting_on_states():
     """
     global STATE_READY
     LOG.debug('waiting_on_states')
-    event = EVENT_QUEUE.get()
+    event = SDP_STATE_EVENT_QUEUE.get()
     if event and event.type == 'current_state_updated':
         LOG.debug('handling event %s', event.id)
         if event.type == 'current_state_updated':
@@ -164,7 +175,7 @@ def check_event_queue():
     Call handle_event if there is an event of type updated.
     Reset the scheduler to call this function again in 1 second.
     """
-    event = EVENT_QUEUE.get()
+    event = SDP_STATE_EVENT_QUEUE.get()
     LOG.debug('Event is %s', event)
     if event:
 
@@ -189,6 +200,17 @@ def check_event_queue():
     SCH.enter(1, 1, check_event_queue)
 
 
+def _parse_args():
+    """Command line parser."""
+    parser = argparse.ArgumentParser(description='{} service.'.
+                                     format(SERVICE_NAME))
+    parser.add_argument('--random_errors', action='store_true',
+                        help='Enable random errors')
+    parser.add_argument('-v', action='store_true',
+                        help='Verbose mode (enable debug printing)')
+    return parser.parse_args()
+
+
 def main():
     """Start the Master Controller service.
 
@@ -198,30 +220,42 @@ def main():
     registered with a Python Event Scheduler
     (https://docs.python.org/3/library/sched.html)
     """
-    pass
+    global SDP_STATE_EVENT_QUEUE
 
+    # Parse command line arguments.
+    args = _parse_args()
 
-if __name__ == '__main__':
-    # TODO(BMo) wait for DB to be available
+    init_logger(log_level='DEBUG' if args.v else 'INFO')
 
-    init_logger()
-    # FIXME(BMo) Using globals defined from __main__ makes the code hard \
-    #            to follow.
+    sdp_state = SDPState()
+
+    LOG.info("Starting service: %s", SERVICE_NAME)
+
+    SDP_STATE_EVENT_QUEUE = sdp_state.subscribe(subscriber=SERVICE_NAME)
+    LOG.debug('Subscribed to SDP state events.')
+
     try:
-        LOG.debug("Starting Master Controller (version: %s)", __version__)
         for db in (SDP_DB, MC_DB, PC_DB, PBC_DB, AL_DB):
             if db.current_state in ('unknown',):
                 LOG.debug("Required to switch current_state to init")
                 db.update_current_state('init')
-        SUBSCRIBER = 'ExecutionControl.MasterController'
-        LOG.debug('About to register with event queue')
-        EVENT_QUEUE = SDP_DB.subscribe(SUBSCRIBER)
-        ACTIVE_SUBS = SDP_DB.get_subscribers()
-        LOG.debug('Subscribers: %s', ACTIVE_SUBS)
+
+        # Schedule function to check for state change events.
         SCH.enter(0, 1, check_event_queue)
-        SCH.enter(100 + random.random() * 500, 1, break_me)
-        # sch.enter(50 + random.random()*100, 1, break_me)
+
+        if args.random_errors:
+            # Schedule a random error (fault or alarm)
+            _delay = random.uniform(5, 10)
+            LOG.debug('Scheduling a random error in %.2f s', _delay)
+            SCH.enter(_delay, 1, break_me)
+
         SCH.run()
     except KeyboardInterrupt as err:
         LOG.debug('Keyboard Interrupt %s', err)
         LOG.info('Exiting!')
+
+
+if __name__ == '__main__':
+    # TODO(BMo) wait for DB to be available (maybe not needed if not using \
+    # globals for the db)
+    main()
