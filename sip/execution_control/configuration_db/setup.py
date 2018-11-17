@@ -41,10 +41,10 @@ setup(name='skasip_config_db',
       package_data={'': DATA + TEST_DATA + SCHEMA},
       include_package_data=True,
       install_requires=[
-          'redis>=2.10.6',
-          'jsonschema>=2.6.0',
-          'jinja2>=2.10',
-          'PyYaml>=3.13'
+          'redis==2.10.6',
+          'jsonschema==2.6.0',
+          'jinja2==2.10',
+          'PyYaml==3.13'
       ],
       zip_safe=False,
       classifiers=[
