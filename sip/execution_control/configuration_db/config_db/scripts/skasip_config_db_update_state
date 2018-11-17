@@ -1,0 +1,27 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+"""Utility module to set update config db sdp or service states."""
+import argparse
+
+from config_db import SDPState, ServiceState
+
+
+def main():
+    """Main function."""
+    parser = argparse.ArgumentParser(description='Add an SBI to the config db.')
+    parser.add_argument('new_state', default=None, type=str)
+    parser.add_argument('--service', default=None, type=str, required=False)
+    args = parser.parse_args()
+
+    print('New state =', args.new_state)
+    if args.service is None:
+        state = SDPState()
+        state.update_current_state(args.new_state)
+    else:
+        service = args.service.split('.')
+        state = ServiceState(*service)
+        state.update_current_state(args.new_state)
+
+
+if __name__ == '__main__':
+    main()
