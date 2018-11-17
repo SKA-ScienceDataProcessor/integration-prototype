@@ -44,7 +44,7 @@ class SIPFormatter(logging.Formatter):
 
 
 def init_logger(log_level=None, p3_mode: bool = True,
-                show_thread: bool = False):
+                show_thread: bool = False, propagate: bool = False):
     """Initialise the SIP logger.
 
     Attaches a stdout stream handler to the 'sip' logger. This will
@@ -58,9 +58,12 @@ def init_logger(log_level=None, p3_mode: bool = True,
         p3_mode (bool, optional): Print logging statements in a format that
                                   P3 can support.
         show_thread (bool, optional): Display the thread in the log message.
+        propagate (bool, optional): Propagate settings to parent loggers.
 
     """
     log = logging.getLogger('sip')
+    log.propagate = propagate
+
     # Remove existing handlers (to avoid duplicate messages if the log is
     #                           initialised twice)
     for handler in log.handlers:
