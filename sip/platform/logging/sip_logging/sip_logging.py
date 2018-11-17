@@ -74,6 +74,9 @@ def init_logger(log_level=None, p3_mode: bool = True,
     else:
         _debug = ''
 
+    # P3 mode is intended to work with the fluentd configuration on P3.
+    # This has ms timestamp precision and uses '-' as a delimiter
+    # between statements in the log file.
     if p3_mode:
         _prefix = '%(asctime)s - %(name)s - %(levelname)s'
         if show_thread:
@@ -83,6 +86,8 @@ def init_logger(log_level=None, p3_mode: bool = True,
             _format = '{} - {}%(message)s'.format(_prefix, _debug)
         formatter = logging.Formatter(_format)
         formatter.converter = time.gmtime
+    # If not in P3 mode, the timestamp will be us precision and use '|'
+    # as a separator.
     else:
         _prefix = '%(asctime)s | %(name)s | %(levelname)s'
         if show_thread:
@@ -95,6 +100,8 @@ def init_logger(log_level=None, p3_mode: bool = True,
     handler = logging.StreamHandler(stream=sys.stdout)
     handler.setFormatter(formatter)
     log.addHandler(handler)
+
+    # Set the logging level.
     if log_level:
         log.setLevel(log_level)
     else:
