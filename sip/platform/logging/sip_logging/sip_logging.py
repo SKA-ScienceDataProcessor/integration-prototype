@@ -64,29 +64,32 @@ def init_logger(log_level=None, p3_mode: bool = True,
     log = logging.getLogger('sip')
     log.propagate = propagate
 
-    # Remove existing handlers (to avoid duplicate messages if the log is
-    #                           initialised twice)
+    # Remove existing handlers (avoids duplicate messages)
     for handler in log.handlers:
         log.removeHandler(handler)
+
+    # If the log level is set to debug show the filename and line number
+    if log_level in ['DEBUG', logging.DEBUG]:
+        _debug = '%(filename)s:%(lineno)d | '
+    else:
+        _debug = ''
+
     if p3_mode:
+        _prefix = '%(asctime)s - %(name)s - %(levelname)s'
         if show_thread:
-            # _format = '%(asctime)s.%(msecs)03dZ | %(name)s ' \
-            #           '| %(levelname)-7s | %(threadName)-22s | %(message)s'
-            _format = '%(asctime)s - %(name)s ' \
-                      '- %(levelname)s - %(threadName)-22s - %(message)s'
+            _format = '{} - %(threadName)s - {}%(message)s'\
+                .format(_prefix, _debug)
         else:
-            # _format = '%(asctime)s.%(msecs)03dZ | %(name)s ' \
-            #           '| %(levelname)-7s | %(message)s'
-            _format = '%(asctime)s - %(name)s ' \
-                      '- %(levelname)s - %(message)s'
+            _format = '{} - {}%(message)s'.format(_prefix, _debug)
         formatter = logging.Formatter(_format)
         formatter.converter = time.gmtime
     else:
+        _prefix = '%(asctime)s | %(name)s | %(levelname)s'
         if show_thread:
-            _format = '%(asctime)s | %(name)s | %(levelname)-7s | ' \
-                      '%(threadName)-22s | %(message)s'
+            _format = '{} | %(threadName)s | {}%(message)s'\
+                .format(_prefix, _debug)
         else:
-            _format = '%(asctime)s | %(name)s | %(levelname)-7s | %(message)s'
+            _format = '{} | {}%(message)s'.format(_prefix, _debug)
         formatter = SIPFormatter(_format, datefmt='%Y-%m-%dT%H:%M:%S.%fZ')
 
     handler = logging.StreamHandler(stream=sys.stdout)
