@@ -126,9 +126,8 @@ def update_components(target_state):
         SCH.enter(0, 1, check_event_queue)
 
 
-# FIXME(BMo): rename to handle_target_state_updated_event
-def handle_target_state_updated_event():
-    """Retrieve the target state and update the SDP state."""
+def handle_sdp_target_state_updated_event():
+    """Respond to an SDP target state change event."""
     LOG.debug('Getting target state')
     target_state = SDP_DB.target_state
     if target_state is not None:
@@ -172,7 +171,7 @@ def check_event_queue():
         if event.type == 'target_state_updated' \
                 and event.object_id == 'sdp_state':
             LOG.debug('Event ID is %s', event.id)
-            handle_target_state_updated_event()
+            handle_sdp_target_state_updated_event()
             return
 
         if event.type == 'current_state_updated' \
