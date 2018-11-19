@@ -54,19 +54,18 @@ script:
 #  - python -m pytest -s -v --codestyle --docstyle --pylint --pylint-rcfile=.pylintrc sip/execution_framework_interface/docker_api
 #  - python -m pytest -s -v --codestyle --docstyle --pylint --pylint-rcfile=.pylintrc sip/execution_framework_interface/docker_compose_generator
 
-  - python -m pytest -s -v --codestyle --docstyle --pylint --pylint-rcfile=.pylintrc sip/execution_control/master_controller
-  - python -m pytest -s -v --codestyle --docstyle --pylint --pylint-rcfile=.pylintrc sip/tango_control/flask_master
-
-  - python -m pytest -s -v --codestyle --docstyle --pylint --pylint-rcfile=.pylintrc sip/science_pipeline_workflows/ical_dask
-  - python -m pytest -s -v --codestyle --docstyle --pylint --pylint-rcfile=.pylintrc --rootdir=. sip/execution_control/configuration_db
-  - python -m pytest -s -v --codestyle --docstyle --pylint --pylint-rcfile=.pylintrc --rootdir=. sip/platform/logging
+  - ./tools/run_tests.sh sip/tango/control/flask_master
+  - ./tools/run_tests.sh sip/execution_control/master_controller
+  - ./tools/run_tests.sh sip/execution_framework_interface/docker_api
+  - ./tools/run_tests.sh sip/execution_framework_interface/docker_compose_generator
+  - ./tools/run_tests.sh sip/science_pipeline_workflows/ical_dask
+  - ./tools/run_tests.sh sip/platform/logging
+  - ./tools/run_tests.sh sip/execution_control/configuration_db
 
   - |
-    pytest --cov=sip/platform/logging \
-           --cov=sip/execution_control/configuration_db \
-           --rootdir=. \
-           sip/platform/logging \
-           sip/execution_control/configuration_db \
+    ./tools/run_test_coverage.sh \
+    sip/platform/logging \
+    sip/execution_control/configuration_db
 
 after_success:
   - codecov
