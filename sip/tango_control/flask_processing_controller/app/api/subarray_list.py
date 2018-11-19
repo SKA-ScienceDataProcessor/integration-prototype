@@ -6,17 +6,17 @@ from flask import Blueprint, request
 from flask_api import status
 
 from .utils import get_root_url, missing_db_response
-from ..db.client import ConfigDb
+from config_db import SchedulingBlockDbClient
 
-BP = Blueprint('sub-array-list', __name__)
-DB = ConfigDb()
+BP = Blueprint('subarray_list:', __name__)
+DB = SchedulingBlockDbClient()
 LOG = logging.getLogger('SIP.EC.PCI')
 
 
-@BP.route('/sub-arrays', methods=['GET'])
+@BP.route('/subarrays', methods=['GET'])
 @missing_db_response
 def get():
-    """Sub array list resource.
+    """Subarray list.
 
     This method will list all sub-arrays known to SDP.
     """
@@ -37,4 +37,21 @@ def get():
         }
         response['sub_arrays'].append(array_summary)
     response['links'] = dict(self=request.url, home=_url)
+    return response, status.HTTP_200_OK
+
+
+@BP.route('/subarrays/schedule', methods=['POST'])
+@missing_db_response
+def post():
+    """Generate a SBI."""
+    _url = get_root_url()
+    LOG.debug("POST subarray SBI.")
+
+    # TODO(BM) generate sbi_config .. see report ...
+    # ... will need to add this as a util function on the db...
+    sbi_config = {}
+
+    DB.add_sbi(sbi_config)
+
+    response = dict()
     return response, status.HTTP_200_OK
