@@ -6,23 +6,25 @@ from functools import wraps
 import jsonschema
 from flask import request
 
-from ..db.client import ConfigDb
+from config_db.sbi_client import SchedulingBlockDbClient
 
-DB = ConfigDb()
+
+DB = SchedulingBlockDbClient()
 
 
 def get_root_url():
     """Return the root URL for this resource."""
-    path = request.path
-    path = path[1:].split('/')
-    path = '/'.join(path[:2])
-    return request.url_root + path
+    # path = request.path
+    # path = path[1:].split('/')
+    # path = '/'.join(path[:2])
+    # return request.url_root + path
+    return request.url_root
 
 
 def add_scheduling_block(config):
     """Adds a scheduling block to the database, returning a response object"""
     try:
-        DB.add_sched_block_instance(config)
+        DB.add_sbi(config)
     except jsonschema.ValidationError as error:
         error_dict = error.__dict__
         for key in error_dict:
@@ -53,6 +55,6 @@ def missing_db_response(func):
         except ConnectionError as error:
             return (dict(error='Unable to connect to Configuration Db.',
                          error_message=str(error),
-                         links=dict(api_root='{}'.format(get_root_url()))),
+                         links=dict(root='{}'.format(get_root_url()))),
                     HTTPStatus.NOT_FOUND)
     return with_exception_handling

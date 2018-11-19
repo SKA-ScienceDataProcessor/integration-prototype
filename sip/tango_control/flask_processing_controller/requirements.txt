@@ -1,0 +1,6 @@
+Flask>=1.0.2
+Flask-API>=1.0
+Flask-Cors>=3.0.4
+jsonschema>=2.6.0
+skasip-config-db>=1.1.1
+skasip-logging>=1.0.13

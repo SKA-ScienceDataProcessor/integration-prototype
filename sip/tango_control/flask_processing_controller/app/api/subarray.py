@@ -7,16 +7,17 @@ import re
 from flask import Blueprint, request
 
 from .utils import add_scheduling_block, get_root_url, missing_db_response
-from ..db.client import ConfigDb
+# from ..db.client import ConfigDb
+from config_db import SchedulingBlockDbClient
 
-BP = Blueprint('sub-array', __name__)
-DB = ConfigDb()
+BP = Blueprint('subarray:', __name__)
+DB = SchedulingBlockDbClient()
 LOG = logging.getLogger('SIP.EC.PCI')
 
 
 @BP.route('/sub-array/<sub_array_id>', methods=['GET'])
 @missing_db_response
-def _get(sub_array_id):
+def get(sub_array_id):
     """Sub array detail resource.
 
     This method will list scheduling blocks and processing blocks
@@ -53,7 +54,7 @@ def _get(sub_array_id):
 
 @BP.route('/sub-array/<sub_array_id>', methods=['POST'])
 @missing_db_response
-def _create(sub_array_id):
+def create(sub_array_id):
     """Create / register a Scheduling Block instance with SDP."""
     config = request.data
     config['sub_array_id'] = 'subarray-{:02d}'.format(sub_array_id)
@@ -62,7 +63,7 @@ def _create(sub_array_id):
 
 @BP.route('/sub-array/<sub_array_id>/scheduling-blocks', methods=['GET'])
 @missing_db_response
-def _get_scheduling_blocks(sub_array_id):
+def get_scheduling_blocks(sub_array_id):
     """Return the list of scheduling blocks instances associated with the sub
     array"""
     block_ids = DB.get_sub_array_sbi_ids(sub_array_id)
@@ -72,7 +73,7 @@ def _get_scheduling_blocks(sub_array_id):
 @BP.route('/sub-array/<sub_array_id>/scheduling-block/<block_id>',
           methods=['GET'])
 @missing_db_response
-def _get_scheduling_block(sub_array_id, block_id):
+def get_scheduling_block(sub_array_id, block_id):
     """Return the list of scheduling blocks instances associated with the sub
     array"""
     block_ids = DB.get_sub_array_sbi_ids(sub_array_id)
