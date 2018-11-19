@@ -1,17 +1,20 @@
 # -*- coding: utf-8 -*-
-"""Demo alarm handler."""
+"""Demo alarm hander."""
 
 import logging
+import time
+import json
 from flask import request
 from flask_api import FlaskAPI
-from .alarm_client import AlarmDbClient
+from kafka import KafkaProducer
 
 APP = FlaskAPI(__name__)
 
 logging.basicConfig(level=logging.INFO)
 
-DB = AlarmDbClient()
-
+# This sleep is needed to give kafka time to start up.
+time.sleep(2)
+producer = KafkaProducer(bootstrap_servers='kafka:9092')
 
 @APP.route('/')
 def root():
@@ -34,6 +37,7 @@ def alarm():
         logging.info('alarm POSTED!')
         data = request.data
         logging.info(data)
-        DB.update_value(data)
+        string = json.dumps(data)
+        producer.send('SIP-alarms', string.encode())
         return response
     return ""
