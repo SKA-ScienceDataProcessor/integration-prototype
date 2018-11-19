@@ -1,0 +1,11 @@
+{
+    "services": [
+        "ExecutionControl:MasterController:1.0.0",
+        "ExecutionControl:MasterController:test",
+        "ExecutionControl:ProcessingController:1.0.0",
+        "ExecutionControl:ProcessingBlockController:1.0.0",
+        "ExecutionControl:Alerts:1.0.0",
+        "TangoControl:SDPMaster:1.0.0",
+        "TangoControl:ProcessingInterface:1.0.0"
+    ]
+}

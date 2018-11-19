@@ -1,0 +1,27 @@
+version: '3.6'
+
+services:
+
+    scheduler:
+        image: skasip/dask_scheduler_base
+        ports:
+            - 8787:8787  # Bokeh web ui
+            - 8786:8786  # Dask scheduler port
+        deploy:
+            mode: replicated
+            replicas: 1
+            resources:
+                limits:
+                    cpus: '1.0'
+                    memory: 1024M
+
+    worker:
+        image: skasip/dask_worker_base
+        command: ["scheduler:8786"]
+        deploy:
+            mode: replicated
+            replicas: 1
+            resources:
+                limits:
+                    cpus: '1.0'
+                    memory: 1024M
