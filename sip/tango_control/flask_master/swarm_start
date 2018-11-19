@@ -1,0 +1,25 @@
+#!/bin/sh
+# start containers for the master interface service (Rest Variant)
+
+mcpath=../../master_controller_service
+mipath=.
+dbpath=../../configuration_db/redis
+
+
+# Build and run docker images
+# First the master interface service
+printf "Building %s:\n" "skasip/master_interface_service"
+docker build -t skasip/master_interface_service .
+
+# Next the master controller (watchdog) service:
+printf "Building %s:\n" "skasip/master_controller_service"
+docker build -t skasip/master_controller_service ${mcpath}
+
+# Deploy them (this pulls the REDIS server container from the docker repository)
+docker stack deploy -c docker-compose.stack.yml master_controller_stack
+
+# Finally initialise the database:
+# Give it a chance to get ready
+sleep 2
+printf "Initialising database - you need the REDIS package in your python path\n"
+python3 ${dbpath}/config_db/utils/set_initial_data.py

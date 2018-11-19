@@ -1,10 +1,15 @@
 sudo: required
 
+notifications:
+  slack: ska-sip:zgaO4jJWwB4UjFRulowC5g56
+
 language: python
 
 env:
   global:
     - SIP_PCI_LOG_LEVEL=NOTSET
+    - SIP_PCI_LOG_LEVEL=WARN
+    - SIP_DOCKER_API_LOG_LEVEL=INFO
 
 services:
   - docker
@@ -26,58 +31,43 @@ before_install:
   - sudo apt-get install -y libboost-program-options-dev
   - sudo apt-get install -y libboost-system-dev
   - sudo apt-get install -y docker-ce
-  # Install Python Packages
-  # --> Linting and unit tests
-  - pip install pylint>=1.9.0
-  - pip install pycodestyle>=2.4.0
-  - pip install pydocstyle>=2.1.1
-  - pip install pytest>=3.5.1
-  - pip install pytest-pylint>=0.9.0
-  - pip install pytest-codestyle>=1.2.2
-  - pip install pytest-docstyle>=1.3.2
-  # --> Spead2
+  # Install Python testing and linting dependencies
+  - pip install -r testing_requirements.txt
+  # Install dependencies for SIP packages
+  - pip install -r sip/execution_control/configuration_db/requirements.txt
   - pip install spead2>=1.7.2
-  # --> ??
-  - pip install redis>=2.10.6
-  - pip install jsonschema>=2.6.0
-  - pip install simplejson>=3.15.0
-  # Install PCI flask requirements
   - pip install -r sip/execution_control/processing_controller_interface/flask_api/requirements.txt
-  # Install EF / EE interface requirements
+  - pip install -r sip/execution_control/master_controller/requirements.txt
+  - pip install -r sip/tango_control/flask_master/requirements.txt
+  - pip install -r sip/execution_framework_interface/docker_api/requirements.txt
   - pip install -r sip/execution_framework_interface/docker_compose_generator/requirements.txt
   - pip install -r sip/science_pipeline_workflows/ical_dask/pipelines/requirements.arl.min.txt
   # Start Docker containers needed for unit tests
   - docker run -d -p 6379:6379 --name=config_db redis:4.0.6-alpine
-  - docker ps -a
-
-install:
-  - echo "Install step..."
-
-#before_script:
-#  - echo "Before script"
+  # Start Docker Swarm
+  - docker swarm init
 
 script:
-  - pycodestyle --config=.pycodestyle emulators
-  - pycodestyle --config=.pycodestyle --exclude=zookeeper examples
-  - pycodestyle --config=.pycodestyle --exclude=receive_visibilities sip
-  - pylint --rcfile=.pylintrc --ignore=csp_pss_sender,csp_vis_sender_01,csp_vis_sender_02 emulators
-# - pylint examples/*/*.py
-# - (cd sip && pylint --rcfile=../.pylintrc core_processing)
-# - (cd sip && pylint --rcfile=../.pylintrc execution_control)
-# - (cd sip && pylint --rcfile=../.pylintrc execution_framework_interface)
-# - (cd sip && pylint --rcfile=../.pylintrc execution_frameworks)
-# - (cd sip && pylint --rcfile=../.pylintrc science_pipeline_workflows)
-# - SIP_PCI_LOG_LEVEL="WARN" && py.test --pylint --codestyle -s -v --durations=3 --pylint-rcfile=.pylintrc sip/execution_control/processing_controller_interface/flask_api
-  # - pydocstyle sip/execution_control/processing_controller_interface/flask_api
-  - pytest --pylint --codestyle -s -v --pylint-rcfile=.pylintrc sip/science_pipeline_workflows/ical_dask
-  - pytest --pylint --codestyle --docstyle -s -v --pylint-rcfile=.pylintrc sip/execution_control/configuration_db/redis
-  - pytest --pylint --codestyle -s -v --pylint-rcfile=./.pylintrc sip/execution_framework_interface/docker_compose_generator
+#  - pycodestyle --config=.pycodestyle emulators
+#  - pycodestyle --config=.pycodestyle --exclude=zookeeper examples
+#  - pycodestyle --config=.pycodestyle --exclude=receive_visibilities sip
+#  - pylint --rcfile=.pylintrc --ignore=csp_pss_sender,csp_vis_sender_01,csp_vis_sender_02 emulators
 
-#after_success:
-#  - echo "Build successful! building docker containers ..."
-#
-#after_failure:
-#  - echo "Build failed :("
+#  - python -m pytest -s -v --codestyle --docstyle --pylint --pylint-rcfile=.pylintrc sip/execution_framework_interface/docker_api
+#  - python -m pytest -s -v --codestyle --docstyle --pylint --pylint-rcfile=.pylintrc sip/execution_framework_interface/docker_compose_generator
 
-#https://docs.travis-ci.com/user/docker/
-#deploy:
+  - ./tools/run_tests.sh sip/tango_control/flask_master
+  - ./tools/run_tests.sh sip/execution_control/master_controller
+  - ./tools/run_tests.sh sip/execution_framework_interface/docker_api
+  - ./tools/run_tests.sh sip/execution_framework_interface/docker_compose_generator
+  - ./tools/run_tests.sh sip/science_pipeline_workflows/ical_dask
+  - ./tools/run_tests.sh sip/platform/logging
+  - ./tools/run_tests.sh sip/execution_control/configuration_db
+
+  - |
+    ./tools/run_test_coverage.sh \
+    sip/platform/logging \
+    sip/execution_control/configuration_db
+
+after_success:
+  - codecov

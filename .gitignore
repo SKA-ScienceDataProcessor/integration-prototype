@@ -1,6 +1,7 @@
 # Python temp files
 **/__pycache__/
 **/*.py~
+**/*.pyc
 
 # Python virtualenv folder
 **/venv/
@@ -19,3 +20,19 @@ test_reports.xml
 
 **/.cache
 **/.pytest_cache/
+
+# Compiled python modules.
+**/.pyc
+
+# Setuptools distribution folder.
+/dist/
+
+# Code coverage
+**/.coverage
+
+# Python egg metadata, regenerated from source files by setuptools.
+**/*.egg-info
+**/*.rdb
+
+**/build/
+**/dist/

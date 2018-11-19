@@ -1,0 +1,19 @@
+#!/bin/bash
+# Command line utility to create a new SDP State.
+# Uses all bash builtins.
+myname=${0##*/}
+while getopts ds10?h name
+do
+   case $name in
+   d)    state=disable ;;
+   s)	 state=standby ;;
+   0)    state=off ;;
+   1)    state=on ;;
+   \?|h)   printf "Usage: %s: -0 | -1 | -s | -d \n" $myname
+        printf "   for off, on, standby and disable respectively\n"
+        printf "   (default on)\n"
+         exit 2;;
+   esac
+done
+
+printf "{\n  \"state\": \"%s\"\n}\n" ${state:-on}
