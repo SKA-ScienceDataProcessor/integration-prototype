@@ -13,8 +13,9 @@ import logging
 import argparse
 
 from sip_logging import init_logger
-from config_db import SDPState
-from config_db import ServiceState
+from sip_config_db.states import SDPState, ServiceState
+from sip_config_db.states.services import get_service_state_list
+
 
 from .__init__ import __version__, __subsystem__, __service_name__
 
@@ -26,7 +27,6 @@ MC = 'MasterController'
 PC = 'ProcessingController'
 PDC = "ProcessingBlockController"
 AL = "Alerts"
-
 
 SDP_DB = SDPState()
 MC_DB = ServiceState("ExecutionControl", "MasterController", "test")
@@ -234,11 +234,17 @@ def main():
     SDP_STATE_EVENT_QUEUE = sdp_state.subscribe(subscriber=SERVICE_NAME)
     LOG.debug('Subscribed to SDP state events.')
 
+    services = get_service_state_list()
+
     try:
-        for db in (SDP_DB, MC_DB, PC_DB, PBC_DB, AL_DB):
-            if db.current_state in ('unknown',):
-                LOG.debug("Required to switch current_state to init")
-                db.update_current_state('init')
+        for service in services:
+            if service.current_state == 'unknown':
+                LOG.debug("Required to switch current_state to: init")
+                service.update_current_state('init')
+
+        if sdp_state.current_state == 'unknown':
+            LOG.debug("Setting SDP state to: init")
+            sdp_state.update_current_state('init')
 
         # Schedule function to check for state change events.
         SCH.enter(0, 1, check_event_queue)
