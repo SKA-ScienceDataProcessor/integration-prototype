@@ -75,7 +75,7 @@ script:
   - ./tools/run_tests.sh sip/execution_control/master_controller
 #  - ./tools/run_tests.sh sip/execution_framework_interface/docker_api
 #  - ./tools/run_tests.sh sip/execution_framework_interface/docker_compose_generator
-  - ./tools/run_tests.sh sip/science_pipeline_workflows/ical_dask
+#  - ./tools/run_tests.sh sip/science_pipeline_workflows/ical_dask
   - ./tools/run_tests.sh sip/platform/logging
   - ./tools/run_tests.sh sip/execution_control/configuration_db
 
