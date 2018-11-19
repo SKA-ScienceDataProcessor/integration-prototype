@@ -22,7 +22,7 @@ def initialise_states(data_dir: str):
         services = json.load(file)
         for service in services['services']:
             print('* Initialising service state: {}'.format(service))
-            subsystem, name, version = service.split('.')
+            subsystem, name, version = service.split(':')
             ServiceState(subsystem, name, version)
 
 

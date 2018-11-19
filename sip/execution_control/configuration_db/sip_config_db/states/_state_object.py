@@ -244,7 +244,7 @@ class StateObject:
 
         # Publish an event to notify subscribers of the change in state
         self.publish('{}_state_updated'.format(state_type),
-                     event_data=dict(old_state=old_state, new_state=value))
+                     event_data=dict(state=value, old_state=old_state))
 
         return timestamp
 

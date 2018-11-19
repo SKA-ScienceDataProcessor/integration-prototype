@@ -3,8 +3,11 @@
 """Utility module to add an SBI to the config database."""
 import argparse
 
+from sip_logging import init_logger
+
+from sip_config_db import LOG
 from sip_config_db.scheduling import SchedulingBlockInstance, Subarray
-from sip_config_db.utils import generate_sbi_config
+from sip_config_db.utils.generate_sbi_config import generate_sbi_config
 
 
 def main():
@@ -21,14 +24,15 @@ def main():
 
     if args.subarray is None:
         sbi = SchedulingBlockInstance.from_config(sbi_config)
-        print('Added offline only SBI {}'.format(sbi.id))
+        LOG.info('Added offline only SBI: %s', sbi.id)
     else:
         subarray = Subarray(args.subarray)
         if args.activate:
             subarray.activate()
         sbi = subarray.configure_sbi(sbi_config)
-        print('Added SBI {} to subarray {}'.format(sbi.id, subarray.id))
+        LOG.info('Added SBI: %s (subarray = %s)', sbi.id, subarray.id)
 
 
 if __name__ == '__main__':
+    init_logger()
     main()

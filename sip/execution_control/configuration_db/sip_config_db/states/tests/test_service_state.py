@@ -42,7 +42,7 @@ def test_service_state_set_target():
     assert events[0].object_id == object_id
     assert events[0].type == 'target_state_updated'
     assert events[0].data['old_state'] == 'unknown'
-    assert events[0].data['new_state'] == 'off'
+    assert events[0].data['state'] == 'off'
 
     assert service_state.target_state == target_state
     assert service_state.target_timestamp >= set_time
@@ -90,7 +90,7 @@ def test_service_state_set_current():
     assert events[0].object_id == object_id
     assert events[0].type == 'current_state_updated'
     assert events[0].data['old_state'] == 'unknown'
-    assert events[0].data['new_state'] == 'off'
+    assert events[0].data['state'] == 'off'
 
     assert service_state.current_state == current_state
     assert service_state.current_timestamp >= set_time

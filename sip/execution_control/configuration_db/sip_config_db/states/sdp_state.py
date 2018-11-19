@@ -36,7 +36,7 @@ class SDPState(StateObject):
 
     def __init__(self):
         """Initialise SDP state data object."""
-        StateObject.__init__(self, 'sdp_state',
+        StateObject.__init__(self, 'SDP',
                              self._allowed_states,
                              self._allowed_transitions,
                              self._allowed_target_states)

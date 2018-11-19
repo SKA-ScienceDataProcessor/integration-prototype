@@ -12,6 +12,18 @@ def get_service_state_list() -> List[ServiceState]:
     LOG.debug('Loading list of known services.')
     services = []
     for key in keys:
-        _, subsystem, name, version = key.split(':')
-        services.append(ServiceState(subsystem, name, version))
+        values = key.split(':')
+        if len(values) == 4:
+            services.append(ServiceState(*values[1:4]))
+    return services
+
+
+def get_service_id_list() -> List[tuple]:
+    """Return list of Services."""
+    keys = DB.get_keys('states*')
+    services = []
+    for key in keys:
+        values = key.split(':')
+        if len(values) == 4:
+            services.append(':'.join(values[1:]))
     return services

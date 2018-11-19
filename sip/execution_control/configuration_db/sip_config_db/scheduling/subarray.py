@@ -7,7 +7,7 @@ from typing import List, Union
 
 from ._keys import SUBARRAY_KEY
 from .. import _events
-from .. import DB
+from .. import DB, LOG
 from . import SchedulingBlockInstance
 
 
@@ -209,6 +209,7 @@ class Subarray:
         _stack = inspect.stack()
         _origin = (os.path.basename(_stack[2][1]) + '::' +
                    _stack[2][3]+'::L{}'.format(_stack[2][2]))
+        LOG.debug('Publishing subarray event: %s', event_type)
         _events.publish(event_type=event_type,
                         event_data=event_data,
                         object_type=SUBARRAY_KEY,

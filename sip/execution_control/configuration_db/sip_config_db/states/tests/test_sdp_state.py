@@ -36,11 +36,11 @@ def test_sdp_state_set_target_state():
     events = event_queue.get_published_events()
     assert len(events) == 1
     assert events[0].object_type == 'states'
-    assert events[0].object_id == 'sdp_state'
+    assert events[0].object_id == 'SDP'
     assert events[0].object_type == 'states'
     assert events[0].type == 'current_state_updated'
     assert events[0].data['old_state'] == 'unknown'
-    assert events[0].data['new_state'] == 'init'
+    assert events[0].data['state'] == 'init'
 
     target_state = "standby"
     previous_timestamp = sdp_state.target_timestamp
@@ -53,10 +53,10 @@ def test_sdp_state_set_target_state():
     events = event_queue.get_published_events()
     assert len(events) == 2
     assert events[0].object_type == 'states'
-    assert events[0].object_id == 'sdp_state'
+    assert events[0].object_id == 'SDP'
     assert events[0].type == 'target_state_updated'
     assert events[0].data['old_state'] == 'unknown'
-    assert events[0].data['new_state'] == 'standby'
+    assert events[0].data['state'] == 'standby'
     assert sdp_state.target_state == target_state
     assert sdp_state.target_timestamp >= set_time
 
@@ -69,10 +69,10 @@ def test_sdp_state_set_target_state():
     events = event_queue.get_published_events()
     assert len(events) == 1
     assert events[0].object_type == 'states'
-    assert events[0].object_id == 'sdp_state'
+    assert events[0].object_id == 'SDP'
     assert events[0].type == 'target_state_updated'
     assert events[0].data['old_state'] == 'standby'
-    assert events[0].data['new_state'] == 'off'
+    assert events[0].data['state'] == 'off'
     assert sdp_state.target_state == target_state
     assert sdp_state.target_timestamp >= set_time
 
@@ -91,7 +91,7 @@ def test_sdp_state_set_current_state():
     events = event_queue.get_published_events()
     assert len(events) == 1
     assert events[0].object_type == 'states'
-    assert events[0].object_id == 'sdp_state'
+    assert events[0].object_id == 'SDP'
     assert events[0].type == 'current_state_updated'
 
     assert sdp_state.current_state == current_state
