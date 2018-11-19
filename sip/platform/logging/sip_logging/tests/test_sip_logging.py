@@ -47,17 +47,15 @@ def test_logging(capsys):
     assert 'hello there' in captured.out
 
     # print('')
+    # print('**************')
     # init_logger(p3_mode=False, show_thread=False)
     # log.info('xx')
     #
-    # print('')
     # init_logger(p3_mode=False, show_thread=True)
-    # log.info('xx')
+    # log.debug('xx')
     #
-    # print('')
     # init_logger(p3_mode=True, show_thread=False)
     # log.info('xx')
     #
-    # print('')
     # init_logger(p3_mode=True, show_thread=True)
     # log.info('xx')
