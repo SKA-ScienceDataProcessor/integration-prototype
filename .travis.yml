@@ -56,7 +56,7 @@ script:
 #  - python -m pytest -s -v --codestyle --docstyle --pylint --pylint-rcfile=.pylintrc sip/execution_framework_interface/docker_api
 #  - python -m pytest -s -v --codestyle --docstyle --pylint --pylint-rcfile=.pylintrc sip/execution_framework_interface/docker_compose_generator
 
-  - ./tools/run_tests.sh sip/tango/control/flask_master
+  - ./tools/run_tests.sh sip/tango_control/flask_master
   - ./tools/run_tests.sh sip/execution_control/master_controller
   - ./tools/run_tests.sh sip/execution_framework_interface/docker_api
   - ./tools/run_tests.sh sip/execution_framework_interface/docker_compose_generator
