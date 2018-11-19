@@ -1,0 +1,38 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+"""Utility module to add an SBI to the config database."""
+import argparse
+
+from sip_logging import init_logger
+
+from sip_config_db import LOG
+from sip_config_db.scheduling import SchedulingBlockInstance, Subarray
+from sip_config_db.utils.generate_sbi_config import generate_sbi_config
+
+
+def main():
+    """Main function."""
+    parser = argparse.ArgumentParser(description='Add an SBI to the config db.')
+    parser.add_argument('--subarray', default=None, type=int,
+                        choices=range(1, 17))
+    parser.add_argument('--activate', required=False, action='store_true',
+                        help='Activate the specified subarray')
+
+    args = parser.parse_args()
+
+    sbi_config = generate_sbi_config(register_workflows=True)
+
+    if args.subarray is None:
+        sbi = SchedulingBlockInstance.from_config(sbi_config)
+        LOG.info('Added offline only SBI: %s', sbi.id)
+    else:
+        subarray = Subarray(args.subarray)
+        if args.activate:
+            subarray.activate()
+        sbi = subarray.configure_sbi(sbi_config)
+        LOG.info('Added SBI: %s (subarray = %s)', sbi.id, subarray.id)
+
+
+if __name__ == '__main__':
+    init_logger()
+    main()
