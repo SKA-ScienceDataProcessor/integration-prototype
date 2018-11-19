@@ -195,6 +195,10 @@ class StateObject:
                         object_key=self._key,
                         origin=_origin)
 
+    def get_event_queue(self, subscriber: str):
+        """Get an event queue for the specified subscriber."""
+        return _events.EventQueue(self._type, subscriber)
+
     ###########################################################################
     # Private functions
     ###########################################################################
