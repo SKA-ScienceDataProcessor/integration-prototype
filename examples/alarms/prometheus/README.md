@@ -24,8 +24,11 @@ It consists of the following components (all deployable as docker containers)
   demo_alarm alert is received and sends it to the alarm receiver with
   an http POST.
 
-- An alarm receiver which is a WebHook application that updates a database
-  whenever the status of an alarm changes.
+- An alarm receiver which is a WebHook application that writes the alarm 
+  (as a JSON string) into a Kafka queue. The topic name is SIP-alarms.
+
+The Kafka broker listens to port 9094 on the host that started the
+containers.
 
 ## Quick Start
 
@@ -33,9 +36,9 @@ It consists of the following components (all deployable as docker containers)
 docker-compose -f docker-compose.yml up -d --build
 ```
 
-View alarm entry in the database (may take a couple of minutes to appear)
+View alarms in the Kafka queue (may take a couple of minutes to appear)
 ```bash
-redis-cli hgetall alarm
+kafkacat -b 127.0.0.1:9094 -t SIP-alarms
 ```
 
 Shut down
@@ -43,4 +46,13 @@ Shut down
 docker-compose stop
 ```
 
+## Python client
 
+To listen for alarms from Python
+
+```python
+from kafka import KafkaConsumer
+consumer = KafkaConsumer('SIP-alarms',bootstrap_servers='localhost:9094')
+for msg in consumer:
+    print(msg)
+```

@@ -1,4 +1,4 @@
 flask
 flask_api
 gunicorn
-redis
+kafka>=1.0
