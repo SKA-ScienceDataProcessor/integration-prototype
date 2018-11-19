@@ -5,18 +5,17 @@ http://docs.celeryproject.org/en/latest/userguide/testing.html
 """
 
 import json
-import os
-from os.path import join, dirname
+from os.path import dirname, join
 
 import celery
 from celery.app.control import Inspect
 
-from config_db.sbi import DB, SchedulingBlockInstance
+from sip_config_db import DB
+from sip_config_db.scheduling import SchedulingBlockInstance
 from .test_utils import add_workflow_definitions
-from ..processing_block_controller.tasks import APP, execute_processing_block, \
-    execute_processing_block_2
-from ..processing_block_controller.tasks import version, add
 from ..processing_block_controller import __version__ as pbc_version
+from ..processing_block_controller.tasks import APP, add, \
+    execute_processing_block, execute_processing_block_2, version
 
 
 def test_pbc_inspect_tasks():

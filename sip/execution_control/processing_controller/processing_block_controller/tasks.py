@@ -14,7 +14,7 @@ import time
 
 import jinja2
 from celery import Celery
-from config_db.pb import ProcessingBlock
+from sip_config_db.scheduling import ProcessingBlock
 from sip_docker_swarm import DockerClient, __version__
 from sip_logging import init_logger
 
@@ -28,7 +28,6 @@ APP = Celery(broker=BROKER, backend=BACKEND)
 
 
 init_logger()
-
 
 
 @APP.task(name='processing_controller.processing_block_controller.tasks.'

@@ -5,7 +5,7 @@ import json
 from os import listdir
 from os.path import join
 
-from config_db.workflow_definitions import add_workflow_definition
+from sip_config_db.scheduling import workflow_definitions
 
 
 def add_workflow_definitions(workflows_path: str):
@@ -24,7 +24,7 @@ def add_workflow_definitions(workflows_path: str):
         with open(file_path, 'r') as file:
             workflow_dict = json.load(file)
             try:
-                add_workflow_definition(workflow_dict, join(workflows_path,
-                                                            'templates'))
+                workflow_definitions.add(workflow_dict, join(workflows_path,
+                                                             'templates'))
             except KeyError as error:
                 print('* {}'.format(error))
