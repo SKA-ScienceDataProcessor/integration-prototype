@@ -14,7 +14,7 @@ import time
 
 import jinja2
 from celery import Celery
-from config_db.pb import ProcessingBlock
+from sip_config_db.scheduling import ProcessingBlock
 from sip_docker_swarm import DockerClient, __version__
 from sip_logging import init_logger
 

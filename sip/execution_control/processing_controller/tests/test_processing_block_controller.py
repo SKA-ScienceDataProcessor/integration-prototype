@@ -11,7 +11,8 @@ from os.path import join, dirname
 import celery
 from celery.app.control import Inspect
 
-from config_db.sbi import DB, SchedulingBlockInstance
+from sip_config_db import DB
+from sip_config_db.scheduling import SchedulingBlockInstance
 from .test_utils import add_workflow_definitions
 from ..processing_block_controller.tasks import APP, execute_processing_block, \
     execute_processing_block_2
