@@ -27,7 +27,7 @@ BACKEND = os.getenv('CELERY_BACKEND', 'redis://localhost:6379/2')
 APP = Celery(broker=BROKER, backend=BACKEND)
 
 
-init_logger()
+init_logger(log_level='DEBUG')
 
 
 @APP.task(name='processing_controller.processing_block_controller.tasks.'
