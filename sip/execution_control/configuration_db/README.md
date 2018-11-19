@@ -29,17 +29,17 @@ pip install -U skasip-config-db
 Example usage:
 
 ```python
-import config_db
+import sip_config_db as db
 
-sdp_state = config_db.SDPState()
+sdp_state = db.SDPState()
 print(sdp_state.current_state)
 
-subarray = config_db.Subarray(0)
+subarray = db.Subarray(0)
 subarray.activate()
 print(subarray.active)
 
-sbi_config = config_db.generate_sbi_config(register_workflows=True)
-sbi = config_db.SchedulingBlockInstance.from_config(sbi_config)
+sbi_config = db.generate_sbi_config(register_workflows=True)
+sbi = db.SchedulingBlockInstance.from_config(sbi_config)
 print(sbi.id)
 ```
 

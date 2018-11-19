@@ -1,0 +1,43 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+"""Utility module to set update config db sdp or service states."""
+import argparse
+
+from sip_config_db.states import SDPState, ServiceState
+from sip_config_db.states.services import get_service_id_list
+
+
+def main():
+    """Main function."""
+    parser = argparse.ArgumentParser(description='Add an SBI to the config db.')
+    parser.add_argument('new_state', default=None, type=str)
+    parser.add_argument('--service-name', default=None, type=str,
+                        required=False)
+    parser.add_argument('--service-version', default=None, type=str,
+                        required=False)
+
+    args = parser.parse_args()
+
+    if args.service_name is None:
+        state = SDPState()
+        state.update_current_state(args.new_state)
+        print('Set current state of {} to {}'.format(state.id, args.new_state))
+    else:
+        service_name = args.service_name
+        service_version = args.service_version
+        services = get_service_id_list()
+        service_ids = [s for s in services if service_name in s]
+        if service_version:
+            service_ids = [s for s in service_ids if service_version in s]
+        if len(service_ids) != 1:
+            raise KeyError('Could not find match for service '
+                           '(name={}, version={})! {}'
+                           .format(service_name, service_version, service_ids))
+        subsystem, name, version = service_ids[0].split(':')
+        state = ServiceState(subsystem, name, version)
+        state.update_current_state(args.new_state)
+        print('Set current state of {} to {}'.format(state.id, args.new_state))
+
+
+if __name__ == '__main__':
+    main()

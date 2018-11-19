@@ -1,0 +1,47 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+"""Utility module to register workflow definitions."""
+import argparse
+import json
+from os import listdir
+from os.path import join
+
+from sip_config_db.scheduling import workflow_definitions
+
+
+def add_workflow_definitions(workflows_path: str):
+    """Add workflow definitions.
+
+    Args:
+        workflows_path (str): Path used to store workflow definitions
+    """
+    workflow_files = [join(workflows_path, fn)
+                      for fn in listdir(workflows_path)
+                      if fn.endswith('.json')
+                      and not fn.startswith('test')
+                      and not fn == 'services.json']
+    for file_path in workflow_files:
+        print('* Loading workflow template: {}'.format(file_path))
+        with open(file_path, 'r') as file:
+            workflow_dict = json.load(file)
+            try:
+                workflow_definitions.add(workflow_dict, join(workflows_path,
+                                                             'templates'))
+            except KeyError as error:
+                print('* {}'.format(error))
+
+
+def main():
+    """Register workflow definitions."""
+    parser = argparse.ArgumentParser(description='Initialise the database.')
+    parser.add_argument('workflows_dir', default=None, type=str,
+                        help='Workflow definition directory.')
+    args = parser.parse_args()
+    if args.workflows_dir is None:
+        parser.print_help()
+
+    add_workflow_definitions(args.workflows_dir)
+
+
+if __name__ == '__main__':
+    main()

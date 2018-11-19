@@ -1,0 +1,32 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+"""Utility module to set initial data into the Configuration Database."""
+from sip_config_db.scheduling import workflow_definitions
+
+
+def main():
+    """Initialise the database.
+
+    If specified by the first command line argument, a data path containing
+    service and workflow definitions is used to initialise the database
+    instead of the default data path installed as part of the config_db
+    library.
+
+    A data path should be a directory containing the following:
+
+        - services.json  (a file defining the set of services registered with
+                          the MC)
+        - workflows/     (a directory of SIP workflow definitions)
+
+    """
+    workflows = workflow_definitions.get_workflows()
+    ii = 0
+    for workflow in workflows:
+        for workflow_version in workflows[workflow]:
+            print('{:<3d} {} : {}'
+                  .format(ii, workflow, workflow_version))
+            ii += 1
+
+
+if __name__ == '__main__':
+    main()
