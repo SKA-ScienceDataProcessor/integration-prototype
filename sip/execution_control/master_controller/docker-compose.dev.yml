@@ -2,17 +2,6 @@ version: '3.6'
 
 services:
 
-  master_controller:
-    image: skasip/master_controller:1.0.0
-    environment:
-      - REDIS_HOST=config_db
-      - REDIS_PORT=6379
-    deploy:
-      mode: replicated
-      replicas: 1
-    depends_on:
-      - config_db
-
   config_db:
     image: redis:4.0.6-alpine
     ports:

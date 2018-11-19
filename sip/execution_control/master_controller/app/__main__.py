@@ -6,167 +6,160 @@ This version polls REDIS Events rather than the database directly.
 FIXME(BMo): Make sure this is resilient to the REDIS database connection
             not being present.
 """
+# pylint: disable=global-statement
 from time import time, sleep
 from sched import scheduler
 import random
-import logging
 import argparse
 
 from sip_logging import init_logger
 from sip_config_db.states import SDPState, ServiceState
 from sip_config_db.states.services import get_service_state_list
 
-
-from .__init__ import __version__, __subsystem__, __service_name__
-
-
-SERVICE_NAME = '{}.{}.{}'.format(__subsystem__, __service_name__, __version__)
-
-SDP = 'sdp_state'
-MC = 'MasterController'
-PC = 'ProcessingController'
-PDC = "ProcessingBlockController"
-AL = "Alerts"
-
-SDP_DB = SDPState()
-MC_DB = ServiceState("ExecutionControl", "MasterController", "test")
-PC_DB = ServiceState("ExecutionControl", "ProcessingController", "test")
-PBC_DB = ServiceState("ExecutionControl", "ProcessingBlockController", "test")
-AL_DB = ServiceState("ExecutionControl", "Alerts", "test")
-
-SDP_STATE_EVENT_QUEUE = None   # EventQueue for SDPState events.
-SERVICES = []
-
-SUB_STATES = ((MC_DB, MC), (PC_DB, PC), (PBC_DB, PDC), (AL_DB, AL))
-STATE_READY = {MC: False, PC: False, PDC: False, AL: False}
-DB_HANDLES = {SDP: SDP_DB, MC: MC_DB, PC: PC_DB, PDC: PBC_DB, AL: AL_DB}
-
-LOG = logging.getLogger('sip.ec.master_controller')
-SCH = scheduler(time, sleep)
+from .__init__ import __service_id__, LOG
 
 
-def break_me():
+SDP_STATE = SDPState()
+SERVICES = get_service_state_list()
+SERVICE_READY = dict((service.id, False) for service in SERVICES)
+EVENT_QUEUE = SDPState().subscribe(subscriber=__service_id__)
+SCHEDULER = scheduler(time, sleep)
+
+
+def generate_random_service_failure():
     """Randomly generate a fault or alarm state for one of the substates."""
-    LOG.debug('Randomly generate a fault or alarm')
+    LOG.debug('Randomly generate a fault or alarm on a service.')
     state = (None, None, None, None, None, 'fault', 'alarm')[
         random.randint(0, 6)]
+
     if state is not None:
-        service = (MC_DB, PC_DB, PBC_DB, AL_DB)[random.randint(0, 3)]
-        LOG.debug('Changing random service to %s', state)
+        service = random.choice(SERVICES)
+        LOG.warning('Setting %s to %s', service.id, state)
         service.update_current_state(state)
-    SCH.enter(random.random() * 500, 1, break_me)
-    # ~ sch.enter(random.random()*50,1,break_me)
+
+    SCHEDULER.enter(random.uniform(0, 500), 1, generate_random_service_failure)
 
 
-def waiting_on_states():
-    """FIXME.
+def update_sdp_current_state():
+    """Update the current state of SDP based on the current state of services.
 
     Look for events from updating current state for each component and
     set SDP current state when all are set to the target state
     """
-    global STATE_READY
-    LOG.debug('waiting_on_states')
-    event = SDP_STATE_EVENT_QUEUE.get()
+    global SERVICE_READY
+    LOG.debug('Waiting on service states.')
+
+    event = EVENT_QUEUE.get()
     if event and event.type == 'current_state_updated':
-        LOG.debug('handling event %s', event.id)
-        if event.type == 'current_state_updated':
-            service_name = event.object_id
-            LOG.debug('have event for %s', service_name)
-            for key in STATE_READY:
-                if key in service_name:
-                    STATE_READY[key] = True
-            if all(STATE_READY.values()):
-                LOG.debug("Setting current state from target state for "
-                          "SDP State")
-                SDP_DB.update_current_state(SDP_DB.target_state)
-                STATE_READY = {MC: False, PC: False, PDC: False, AL: False}
-                # go back to check_event_queue
-                SCH.enter(0, 1, check_event_queue)
-            else:
-                SCH.enter(0.5, 1, waiting_on_states)
+
+        service_id = event.object_id
+        LOG.debug('handling event %s (service: %s)', event.id, service_id)
+        SERVICE_READY[service_id] = True
+
+        if all(SERVICE_READY.values()):
+            SDP_STATE.update_current_state(SDP_STATE.target_state)
+            LOG.debug("SDP current state updated to commanded target state %s",
+                      SDP_STATE.target_state)
+
+            SERVICE_READY = dict((service.id, False) for service in SERVICES)
+
+            # Go back to check_event_queue
+            SCHEDULER.enter(0, 1, check_event_queue)
+        else:
+            SCHEDULER.enter(0.5, 1, update_sdp_current_state)
+
     else:
-        SCH.enter(0.5, 1, waiting_on_states)
+        SCHEDULER.enter(0.5, 1, update_sdp_current_state)
 
 
-def update_sub_state(ob, name):
-    """FIXME.
+def update_service_current_state(service: ServiceState):
+    """Update the current state of a service.
 
-    Called by the scheduler this simulates the PC component(s)
-    receiving a change state command and changing the state as required.
+    Updates the current state of services after their target state has changed.
 
     Args:
-        ob (??): ???
-        name (??): ????
+        service (ServiceState): Service state object to update
 
     """
-    LOG.debug("(update_sub_state) Setting current state from target "
-              "state for %s", name)
-    _ = ob.update_current_state(ob.target_state)
+    LOG.debug("Setting current state from target state for %s", service.id)
+    service.update_current_state(service.target_state)
 
 
-def update_components(target_state):
-    """Update component target states.
+def update_services(sdp_target_state):
+    """Update target states of services based on SDP target state.
 
-    When we get a new target state this function is called
-    to ensure components receive the target state(s) and act
-    on them.
+    When we get a new target state this function is called to ensure
+    components receive the target state(s) and act on them.
+
+    Args:
+        sdp_target_state (str): Target state of SDP
+
     """
-    # ### update component target states. Presumably processing
-    # ### controller & processing block controller?
-    global STATE_READY
+    global SERVICE_READY
+
+    # FIXME(BMo) better name for the following function (get_service_states?)
+    services = get_service_state_list()
+
     wait_on_states = False
-    for service_state, name in SUB_STATES:
-        LOG.debug('Setting target state of %s to be %s', name, target_state)
-        _current_state = service_state.current_state
-        if (_current_state != target_state and target_state in
-                service_state.allowed_state_transitions[_current_state]):
-            service_state.update_target_state(target_state)
-            LOG.debug('Schedule %s current state to be updated', name)
-            SCH.enter(random.random() * 5, 1, update_sub_state,
-                      argument=(service_state, name))
-            STATE_READY[name] = False
-            wait_on_states = True
+
+    for service in services:
+        LOG.debug('Setting target state of %s to be %s', service.id,
+                  sdp_target_state)
+
+        _current_state = service.current_state
+
+        if _current_state == sdp_target_state:
+            SERVICE_READY[service.id] = True
+
         else:
-            STATE_READY[name] = True
+            service.update_target_state(sdp_target_state)
+            LOG.debug('Scheduling %s current state to be updated', service.id)
+            SCHEDULER.enter(random.uniform(0, 5), 1,
+                            update_service_current_state, argument=(service,))
+            SERVICE_READY[service.id] = False
+            wait_on_states = True
 
     if wait_on_states:
-        SCH.enter(0.5, 1, waiting_on_states)
+        SCHEDULER.enter(0.5, 1, update_sdp_current_state)
+
     else:
-        LOG.debug('no need to wait on subsystems')
-        SDP_DB.update_current_state(SDP_DB.target_state)
-        SCH.enter(0, 1, check_event_queue)
+        LOG.debug('no need to wait on service states')
+        SDP_STATE.update_current_state(SDP_STATE.target_state)
+        SCHEDULER.enter(0, 1, check_event_queue)
 
 
 def handle_sdp_target_state_updated_event():
-    """Respond to an SDP target state change event."""
-    LOG.debug('Getting target state')
-    target_state = SDP_DB.target_state
-    if target_state is not None:
-        LOG.info('Target state is %s', target_state)
+    """Respond to an SDP target state change event.
 
-        # The target state may only be honored if the current state
-        # is a certain value. The correct values can be obtained from
-        # the database API so that we do not need to keep separate
-        # copies of the legal transitions.
-        sdp_state = SDP_DB.current_state
-        if target_state == sdp_state:
-            return
-        states = SDP_DB.allowed_state_transitions[sdp_state]
-        if not states:
-            LOG.warning('No allowed states; cannot continue')
-            return
-        if target_state not in states:
-            LOG.warning('Target state %s not in valid list (%s)',
-                        target_state, states)
-            return
-            # FIXME(BMo) the line below is unreachable ...?
-            # LOG.debug('Communicating target_state to component systems')
-        if target_state == 'standby':
-            update_components('on')
-        else:
-            update_components(target_state)
+    The target state may only be honored if the current state
+    is a certain value. The correct values can be obtained from
+    the database API so that we do not need to keep separate
+    copies of the legal transitions.
+    """
+    LOG.debug('Getting target state')
+    target_state = SDP_STATE.target_state
+    current_state = SDP_STATE.current_state
+    allowed_transitions = SDP_STATE.allowed_state_transitions[current_state]
+
+    if target_state is None:
+        LOG.critical('Target state does not exist in database.')
+
+    LOG.info('SDP target state is %s', target_state)
+
+    if target_state == current_state:
+        return
+
+    if target_state not in allowed_transitions:
+        LOG.warning('Target state %s not in valid list (%s)',
+                    target_state, allowed_transitions)
+        return
+
+    LOG.debug('Communicating target_state to component systems')
+
+    if target_state == 'standby':
+        update_services('on')
     else:
-        LOG.warning('Target state does not exist in database.')
+        update_services(target_state)
 
 
 def check_event_queue():
@@ -175,40 +168,55 @@ def check_event_queue():
     Call handle_event if there is an event of type updated.
     Reset the scheduler to call this function again in 1 second.
     """
-    event = SDP_STATE_EVENT_QUEUE.get()
-    LOG.debug('Event is %s', event)
+    LOG.debug('Checking for state events ..')
+    event = EVENT_QUEUE.get()
     if event:
 
-        if event.type == 'target_state_updated' \
-                and event.object_id == 'sdp_state':
-            LOG.debug('Event ID is %s', event.id)
+        LOG.debug('Event detected! object_type = %s, object_id = %s',
+                  event.object_type, event.object_id)
+
+        # SDP target state change events
+        if event.object_id == 'SDP' and event.type == 'target_state_updated':
+            LOG.debug('Target state of SDP updated! (event id = %s)',
+                      event.id)
             handle_sdp_target_state_updated_event()
             return
 
-        if event.type == 'current_state_updated' \
-                and event.object_id != 'sdp_state':
-            LOG.debug('Event ID is %s', event.id)
-            new_state = event.data['new_state']
+        # Service current state change events
+        if event.type == 'current_state_updated':
+            LOG.debug('Current state of service %s updated! '
+                      '(event id = %s)', event.object_id, event.id)
+            new_state = event.data['state']
             if new_state in ('fault', 'alarm'):
-                LOG.warning('We have a %s on %s', new_state, event.object_id)
-                if SDP_DB.current_state not in ('disable', 'fault', 'off'):
-                    SDP_DB.update_current_state(new_state)
-        else:
-            pass
+                LOG.warning('We have a %s on %s', new_state,
+                            event.object_id)
+                if SDP_STATE.current_state not in ('disable', 'fault',
+                                                   'off'):
+                    SDP_STATE.update_current_state(new_state)
 
     # Return to this function after one second
-    SCH.enter(1, 1, check_event_queue)
+    SCHEDULER.enter(1, 1, check_event_queue)
 
 
 def _parse_args():
     """Command line parser."""
     parser = argparse.ArgumentParser(description='{} service.'.
-                                     format(SERVICE_NAME))
+                                     format(__service_id__))
     parser.add_argument('--random_errors', action='store_true',
                         help='Enable random errors')
     parser.add_argument('-v', action='store_true',
                         help='Verbose mode (enable debug printing)')
-    return parser.parse_args()
+    parser.add_argument('-vv', action='store_true', help='Extra verbose mode')
+    args = parser.parse_args()
+
+    if args.vv:
+        init_logger(log_level='DEBUG')
+    elif args.v:
+        init_logger()
+    else:
+        init_logger(log_level='INFO')
+
+    return args
 
 
 def main():
@@ -220,42 +228,31 @@ def main():
     registered with a Python Event Scheduler
     (https://docs.python.org/3/library/sched.html)
     """
-    global SDP_STATE_EVENT_QUEUE
-
     # Parse command line arguments.
     args = _parse_args()
 
-    init_logger(log_level='DEBUG' if args.v else 'INFO')
-
-    sdp_state = SDPState()
-
-    LOG.info("Starting service: %s", SERVICE_NAME)
-
-    SDP_STATE_EVENT_QUEUE = sdp_state.subscribe(subscriber=SERVICE_NAME)
-    LOG.debug('Subscribed to SDP state events.')
-
-    services = get_service_state_list()
+    LOG.info("Starting service: %s", __service_id__)
 
     try:
-        for service in services:
+        for service in get_service_state_list():
             if service.current_state == 'unknown':
-                LOG.debug("Required to switch current_state to: init")
+                LOG.debug("Required to switch current state to: init")
                 service.update_current_state('init')
 
-        if sdp_state.current_state == 'unknown':
+        if SDP_STATE.current_state == 'unknown':
             LOG.debug("Setting SDP state to: init")
-            sdp_state.update_current_state('init')
+            SDP_STATE.update_current_state('init')
 
         # Schedule function to check for state change events.
-        SCH.enter(0, 1, check_event_queue)
+        SCHEDULER.enter(0, 1, check_event_queue)
 
         if args.random_errors:
             # Schedule a random error (fault or alarm)
             _delay = random.uniform(5, 10)
             LOG.debug('Scheduling a random error in %.2f s', _delay)
-            SCH.enter(_delay, 1, break_me)
+            SCHEDULER.enter(_delay, 1, generate_random_service_failure)
 
-        SCH.run()
+        SCHEDULER.run()
     except KeyboardInterrupt as err:
         LOG.debug('Keyboard Interrupt %s', err)
         LOG.info('Exiting!')
