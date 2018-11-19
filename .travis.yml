@@ -37,6 +37,8 @@ before_install:
   - pip install -r sip/execution_control/configuration_db/requirements.txt
   - pip install spead2>=1.7.2
   - pip install -r sip/execution_control/processing_controller_interface/flask_api/requirements.txt
+  - pip install -r sip/execution_control/master_controller/requirements.txt
+  - pip install -r sip/tango_control/flask_master/requirements.txt
   - pip install -r sip/execution_framework_interface/docker_api/requirements.txt
   - pip install -r sip/execution_framework_interface/docker_compose_generator/requirements.txt
   - pip install -r sip/science_pipeline_workflows/ical_dask/pipelines/requirements.arl.min.txt
