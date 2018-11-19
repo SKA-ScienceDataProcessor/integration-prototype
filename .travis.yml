@@ -52,21 +52,16 @@ script:
 
   - pylint --rcfile=.pylintrc --ignore=csp_pss_sender,csp_vis_sender_01,csp_vis_sender_02 emulators
 
-  - python -m pytest -s -v --codestyle --docstyle --pylint --pylint-rcfile=.pylintrc sip/execution_framework_interface/docker_api
-  - python -m pytest -s -v --codestyle --docstyle --pylint --pylint-rcfile=.pylintrc sip/execution_framework_interface/docker_compose_generator
-  - python -m pytest -s -v --codestyle --docstyle --pylint --pylint-rcfile=.pylintrc sip/science_pipeline_workflows/ical_dask
-
-  - python -m pytest -s -v --codestyle --docstyle --pylint --pylint-rcfile=.pylintrc --rootdir=. sip/execution_control/configuration_db
-
-
-  - python -m pytest -s -v --codestyle --docstyle --pylint --pylint-rcfile=.pylintrc --rootdir=. sip/platform/logging
+  - ./tools/run_tests.sh sip/execution_framework_interface/docker_api
+  - ./tools/run_tests.sh sip/execution_framework_interface/docker_compose_generator
+  - ./tools/run_tests.sh sip/science_pipeline_workflows/ical_dask
+  - ./tools/run_tests.sh sip/platform/logging
+  - ./tools/run_tests.sh sip/execution_control/configuration_db
 
   - |
-    pytest --cov=sip/platform/logging \
-           --cov=sip/execution_control/configuration_db \
-           --rootdir=. \
-           sip/platform/logging \
-           sip/execution_control/configuration_db \
+    ./tools/run_test_coverage.sh \
+    sip/platform/logging \
+    sip/execution_control/configuration_db
 
 after_success:
   - codecov

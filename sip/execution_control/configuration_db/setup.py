@@ -2,7 +2,7 @@
 """Setup config file to package the configuration database."""
 import os
 from setuptools import setup
-import config_db
+import sip_config_db
 
 
 def package_files(directory):
@@ -14,18 +14,18 @@ def package_files(directory):
     return paths
 
 
-DATA = package_files(os.path.join('config_db', 'data'))
-TEST_DATA = package_files(os.path.join('config_db', 'tests', 'data'))
-SCHEMA = package_files(os.path.join('config_db', 'schema'))
+DATA = package_files(os.path.join('sip_config_db', 'data'))
+TEST_DATA = package_files(os.path.join('sip_config_db', 'tests', 'data'))
+SCHEMA = package_files(os.path.join('sip_config_db', 'schema'))
 
-SCRIPTS_DIR = os.path.join('config_db', 'scripts')
+SCRIPTS_DIR = os.path.join('sip_config_db', 'scripts')
 SCRIPTS = [os.path.join(SCRIPTS_DIR, file)
            for file in os.listdir(SCRIPTS_DIR)]
 
 with open('README.md', 'r') as file:
     LONG_DESCRIPTION = file.read()
 
-VERSION = config_db.__version__
+VERSION = sip_config_db.__version__
 
 
 setup(name='skasip_config_db',
@@ -36,7 +36,13 @@ setup(name='skasip_config_db',
       long_description_content_type='text/markdown',
       url='https://github.com/SKA-ScienceDataProcessor/integration-prototype'
           '/tree/master/sip/execution_control/configuration_db',
-      packages=['config_db', 'config_db/utils', 'config_db/tests'],
+      packages=[
+          'sip_config_db',
+          'sip_config_db/events',
+          'sip_config_db/scheduling',
+          'sip_config_db/states',
+          'sip_config_db/utils'
+      ],
       scripts=SCRIPTS,
       package_data={'': DATA + TEST_DATA + SCHEMA},
       include_package_data=True,
