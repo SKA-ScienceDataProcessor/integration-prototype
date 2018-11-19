@@ -10,7 +10,8 @@ try:
 except ImportError:
     import dummy_threading as threading
 
-from config_db import ProcessingBlockList
+from sip_config_db import DB
+from sip_config_db.scheduling import ProcessingBlockList
 
 
 class ProcessingBlockQueue:
