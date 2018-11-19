@@ -6,6 +6,7 @@ This version polls REDIS Events rather than the database directly.
 FIXME(BMo): Make sure this is resilient to the REDIS database connection
             not being present.
 """
+# FIXME(BMo) Review use of globals
 # pylint: disable=global-statement
 from time import time, sleep
 from sched import scheduler
