@@ -49,7 +49,6 @@ install:
   - pip install skasip-config-db>=1.0.17
   - pip install -r sip/execution_control/processing_controller_interface/flask_api/requirements.txt
   - pip install -r sip/execution_control/docker_api/requirements.txt
-  - pip install -r sip/execution_control/docker_compose_generator/requirements.txt
   - pip install -r sip/execution_control/master_controller/requirements.txt
   - pip install -r sip/tango_control/flask_master/requirements.txt
   - pip install -r sip/science_pipeline_workflows/ical_dask/pipelines/requirements.arl.min.txt
@@ -72,11 +71,10 @@ script:
 
   - ./tools/run_tests.sh sip/tango_control/flask_master
   - ./tools/run_tests.sh sip/execution_control/master_controller
-#  - ./tools/run_tests.sh sip/execution_framework_interface/docker_api
-#  - ./tools/run_tests.sh sip/execution_framework_interface/docker_compose_generator
+#  - ./tools/run_tests.sh sip/execution_control/docker_api
+  - ./tools/run_tests.sh sip/execution_control/configuration_db
   - ./tools/run_tests.sh sip/science_pipeline_workflows/ical_dask
   - ./tools/run_tests.sh sip/platform/logging
-  - ./tools/run_tests.sh sip/execution_control/configuration_db
 
   - |
     ./tools/run_test_coverage.sh \
