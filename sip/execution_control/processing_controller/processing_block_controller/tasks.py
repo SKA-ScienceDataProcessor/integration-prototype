@@ -71,6 +71,9 @@ def execute_processing_block(pb_id: str):
         workflow_stage_dict[stage.id] = deepcopy(stage.config)
         workflow_stage_dict[stage.id]['services'] = dict()
 
+    # For temporary use
+    abort_flag = False
+
     while True:
 
         # Start stages.
@@ -118,7 +121,8 @@ def execute_processing_block(pb_id: str):
                 # log.debug("Rendered args: '%s'", args)
                 # log.debug('Rendered args type: %s', type(args))
                 args = json.dumps(json.loads(args))
-                compose_template = jinja2.Template(workflow_stage.compose_template)
+                compose_template = jinja2.Template(
+                    workflow_stage.compose_template)
                 compose_str = compose_template.render(stage=dict(args=args))
                 log.info('Compose String: {}'.format(compose_str))
 
@@ -155,12 +159,16 @@ def execute_processing_block(pb_id: str):
                     if all(service_status_complete):
                         stage_data['status'] = "complete"
 
-        # TODO (NJT) Need to get this working
-        # Should I abort.
-        # ask the database if the abort flag on this PB is set.
-        # if abort:
-        #   kill everything
-        #   break
+        # Ask the database if the abort flag or the PB is set.
+        if abort_flag:
+            log.info("*** Abort Flag has been triggered ***")
+            for workflow_stage in pb.workflow_stages:
+                for service_id, service_dict in \
+                        workflow_stage_dict[workflow_stage.id][
+                            'services'].items():
+                    docker.delete_service(service_id)
+                    log.info("Deleted Service Id %s", service_id)
+            break
 
         # Check if all stages are complete, if so end the PBC by breaking
         # out of the while loop
@@ -169,7 +177,7 @@ def execute_processing_block(pb_id: str):
         complete_stages = []
         for stage_id, stage_config in workflow_stage_dict.items():
             log.info('Workflow Stage Status %s = %s', stage_id,
-                      stage_config['status'])
+                     stage_config['status'])
             complete_stages.append((stage_config['status'] == 'complete'))
         # log.debug(' complete_stages = %s', complete_stages)
         if all(complete_stages):
