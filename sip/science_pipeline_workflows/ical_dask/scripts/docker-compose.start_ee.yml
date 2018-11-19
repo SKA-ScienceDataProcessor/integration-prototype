@@ -3,7 +3,7 @@ version: '3.6'
 services:
 
   scheduler:
-    image: ical_dask_scheduler
+    image: vlad7235/ical_dask_scheduler:latest
     ports:
       - 8786:8786
       - 8787:8787
@@ -14,16 +14,16 @@ services:
       - ical_sip
 
   worker:
-    image: ical_dask_worker
+    image: vlad7235/ical_dask_worker:latest
     # Memory limit applies to each worker process
-    command: scheduler:8786 --nprocs 2 --nthreads 1 --memory-limit 2GB
+    command: scheduler:8786 --nprocs 8 --nthreads 1 --memory-limit 8GB
     depends_on:
       - scheduler
     deploy:
       mode: replicated
       replicas: 2
     volumes:
-      - ../pipelines/sdp_arl:/worker/sdp_arl
+      - /var/mnt/ceph/vlad/sdp_arl:/worker/sdp_arl
     environment:
       - ARL_DASK_SCHEDULER=scheduler:8786
       - PYTHONPATH=/worker/sdp_arl

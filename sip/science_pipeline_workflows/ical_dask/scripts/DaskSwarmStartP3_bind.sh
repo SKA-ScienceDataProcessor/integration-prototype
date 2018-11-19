@@ -18,9 +18,9 @@ docker service create \
 docker service create \
     --name worker \
     --network ${NETWORK} \
-    --mount type=bind,source="$(pwd)"/pipelines/sdp_arl,destination=/worker/sdp_arl \
+    --mount type=bind,source=/var/mnt/ceph/vlad/sdp_arl,destination=/worker/sdp_arl \
     --env ARL_DASK_SCHEDULER=scheduler:8786 \
     --env PYTHONPATH=/worker/sdp_arl \
     --replicas 2 \
     vlad7235/ical_dask_worker:latest \
-    scheduler:8786 --nprocs 2 --nthreads 1 --memory-limit 2GB
+    scheduler:8786 --nprocs 8 --nthreads 1 --memory-limit 8GB

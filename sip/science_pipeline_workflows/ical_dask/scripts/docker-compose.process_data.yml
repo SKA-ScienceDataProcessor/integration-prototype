@@ -3,7 +3,7 @@ version: '3.6'
 services:
 
   process_data:
-    image: ical_dask_pipeline
+    image: vlad7235/ical_dask_pipeline:latest
     command: python3 imaging_processing.py
     deploy:
       mode: replicated
@@ -11,11 +11,12 @@ services:
       restart_policy:
         condition: none
     environment:
-      - PYTHONPATH=/pipelines/sdp_arl
-      - ARL_DASK_SCHEDULER=scheduler:8786
+      - PYTHONPATH=/pipelines:/pipelines/sdp_arl
+      - ARL_DASK_SCHEDULER=dask-stack_scheduler:8786
     volumes:
-      - ../pipelines/sdp_arl:/pipelines/sdp_arl
-      - ../results:/pipelines/results
+      - /var/mnt/ceph/vlad/pipelines:/pipelines
+      - /var/mnt/ceph/vlad/sdp_arl:/pipelines/sdp_arl
+      - /var/mnt/ceph/vlad/results:/pipelines/results
     networks:
       - ical_sip
 
