@@ -5,3 +5,6 @@
 ./tools/run_tests.sh sip/science_pipeline_workflows/ical_dask  || exit
 ./tools/run_tests.sh sip/platform/logging  || exit
 ./tools/run_tests.sh sip/execution_control/configuration_db  || exit
+./tools/run_tests.sh sip/tango/control/flask_master || exit
+./tools/run_tests.sh sip/execution_control/master_controller || exit
+
