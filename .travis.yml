@@ -1,5 +1,7 @@
 sudo: required
 
+dist: xenial
+
 notifications:
   slack: ska-sip:zgaO4jJWwB4UjFRulowC5g56
 
@@ -19,47 +21,59 @@ python:
 
 cache: pip
 
-# https://github.com/travis-ci/travis-ci/issues/5358
 before_install:
+  # Execute commands needed before installing dependencies.
+  # ---------------------------------------------------------------------------
   # Add Docker repo to apt.
   - curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add -
   - sudo add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable"
-  # Install API packages
   - sudo apt-get -qq update
+
+install:
+  # Install all of the dependencies.
+  # ---------------------------------------------------------------------------
   - sudo apt-get install -y gcc
   - sudo apt-get install -y g++
   - sudo apt-get install -y libboost-program-options-dev
   - sudo apt-get install -y libboost-system-dev
   - sudo apt-get install -y docker-ce
-  # Install Python testing and linting dependencies
+  # ** Unfortunately python3-pytango does not seem to install in 16.04 :( **
+#  - sudo apt-cache search tango
+#  - sudo apt-get install -y python3-pytango
+
+  # Install Python dependencies
   - pip install -r testing_requirements.txt
-  # Install dependencies for SIP packages
   - pip install -r sip/execution_control/configuration_db/requirements.txt
   - pip install spead2>=1.7.2
+  - pip install skasip-logging>=1.0.1
+  - pip install skasip-config-db>=1.0.17
   - pip install -r sip/execution_control/processing_controller_interface/flask_api/requirements.txt
   - pip install -r sip/execution_control/master_controller/requirements.txt
   - pip install -r sip/tango_control/flask_master/requirements.txt
   - pip install -r sip/execution_framework_interface/docker_api/requirements.txt
   - pip install -r sip/execution_framework_interface/docker_compose_generator/requirements.txt
   - pip install -r sip/science_pipeline_workflows/ical_dask/pipelines/requirements.arl.min.txt
-  # Start Docker containers needed for unit tests
+
+before_script:
+  # Execute commands need before running actual tests.
+  # ---------------------------------------------------------------------------
   - docker run -d -p 6379:6379 --name=config_db redis:4.0.6-alpine
-  # Start Docker Swarm
   - docker swarm init
+  - docker node ls
 
 script:
+  # Execute all of the commands which should make the build pass or fail.
+  # ---------------------------------------------------------------------------
+
 #  - pycodestyle --config=.pycodestyle emulators
 #  - pycodestyle --config=.pycodestyle --exclude=zookeeper examples
 #  - pycodestyle --config=.pycodestyle --exclude=receive_visibilities sip
 #  - pylint --rcfile=.pylintrc --ignore=csp_pss_sender,csp_vis_sender_01,csp_vis_sender_02 emulators
 
-#  - python -m pytest -s -v --codestyle --docstyle --pylint --pylint-rcfile=.pylintrc sip/execution_framework_interface/docker_api
-#  - python -m pytest -s -v --codestyle --docstyle --pylint --pylint-rcfile=.pylintrc sip/execution_framework_interface/docker_compose_generator
-
   - ./tools/run_tests.sh sip/tango_control/flask_master
   - ./tools/run_tests.sh sip/execution_control/master_controller
-  - ./tools/run_tests.sh sip/execution_framework_interface/docker_api
-  - ./tools/run_tests.sh sip/execution_framework_interface/docker_compose_generator
+#  - ./tools/run_tests.sh sip/execution_framework_interface/docker_api
+#  - ./tools/run_tests.sh sip/execution_framework_interface/docker_compose_generator
   - ./tools/run_tests.sh sip/science_pipeline_workflows/ical_dask
   - ./tools/run_tests.sh sip/platform/logging
   - ./tools/run_tests.sh sip/execution_control/configuration_db
