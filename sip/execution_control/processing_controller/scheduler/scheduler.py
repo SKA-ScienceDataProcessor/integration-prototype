@@ -5,14 +5,15 @@ Implemented with a set of long running threads.
 """
 import logging
 import time
-from threading import Thread, Lock
 import sys
+import celery
 
-# from .db.scheduling_data import ConfigDb
+from celery.app.control import Inspect
+from threading import Thread, Lock
 from .pb_queue import ProcessingBlockQueue
 from sip_logging import init_logger
 from sip_config_db.scheduling import ProcessingBlockList, ProcessingBlock
-from ..processing_block_controller.tasks import execute_processing_block
+from ..processing_block_controller.tasks import APP, execute_processing_block
 
 init_logger(log_level='DEBUG')
 log = logging.getLogger('sip')
@@ -109,12 +110,6 @@ class ProcessingBlockScheduler:
                 pb = self._queue.get()
                 LOG.info("Processing Block ID: %s", pb[2])
                 execute_processing_block.delay(pb[2])
-
-                # Once done remove from the queue
-                self._queue.remove(pb[2])
-
-            # if num_pbc == 0:
-            #    execute_processing_block.delay(pb_ids[0])
             time.sleep(self._report_interval)
 
     def _monitor_pbc_status(self):
@@ -126,7 +121,14 @@ class ProcessingBlockScheduler:
         # 3. Find out the status of celery tasks.
         # 4. Update the database with findings
         while True:
-            LOG.info('')
+            LOG.info('Monitoring Processing Block Controller Status')
+            task_state = celery.current_app.events.State()
+            _inspect = Inspect(app=APP)
+            LOG.info('Active: %s', _inspect.active())
+            LOG.info('State of the Current Celery Task:  %s',
+                     _inspect.stats().keys)
+            LOG.info('Celery Workers:  %s', _inspect.stats().keys())
+            LOG.info('State of the Current Celery Task:  %s', task_state)
             time.sleep(self._report_interval)
 
     def start(self):

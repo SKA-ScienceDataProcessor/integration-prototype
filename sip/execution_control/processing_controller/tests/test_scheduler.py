@@ -12,23 +12,6 @@ from ..scheduler.scheduler import ProcessingBlockScheduler
 # from ..processing_block_controller.tasks import APP, execute_processing_block
 
 
-def test_scheduler_2():
-    """Test function that adds scheduling block instance to the database
-    to check if it executes processing block controller.
-    """
-    DB.flush_db()
-    data_dir = join(dirname(__file__), 'data')
-    add_workflow_definitions(join(data_dir, 'workflow_definitions'))
-    with open(join(data_dir, 'sbi_config_2.json')) as _file:
-        sbi_config = json.load(_file)
-    sbi = SchedulingBlockInstance.from_config(sbi_config)
-
-    pb_ids = sbi.processing_block_ids
-    assert len(pb_ids) == 1
-    assert pb_ids[0] == 'PB-20181116-sip-001'
-    assert isinstance(pb_ids[0], str)
-
-
 def test_scheduler():
     """Test creating the Scheduler after SBI data is already in the db."""
     # Add a number of SBIs to the database.
