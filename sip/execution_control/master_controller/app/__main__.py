@@ -17,7 +17,8 @@ from sip_logging import init_logger
 from sip_config_db.states import SDPState, ServiceState
 from sip_config_db.states.services import get_service_state_list
 
-from .__init__ import __service_id__, LOG
+from .__init__ import __service_id__, LOG, __subsystem__, __service_name__, \
+    __version__
 
 
 SDP_STATE = SDPState()
@@ -137,7 +138,7 @@ def handle_sdp_target_state_updated_event():
     the database API so that we do not need to keep separate
     copies of the legal transitions.
     """
-    LOG.debug('Getting target state')
+    LOG.info('Handling SDP target state updated event...')
     target_state = SDP_STATE.target_state
     current_state = SDP_STATE.current_state
     allowed_transitions = SDP_STATE.allowed_state_transitions[current_state]
@@ -145,7 +146,7 @@ def handle_sdp_target_state_updated_event():
     if target_state is None:
         LOG.critical('Target state does not exist in database.')
 
-    LOG.info('SDP target state is %s', target_state)
+    LOG.info('SDP target state: %s', target_state)
 
     if target_state == current_state:
         return
@@ -154,8 +155,6 @@ def handle_sdp_target_state_updated_event():
         LOG.warning('Target state %s not in valid list (%s)',
                     target_state, allowed_transitions)
         return
-
-    LOG.debug('Communicating target_state to component systems')
 
     if target_state == 'standby':
         update_services('on')
@@ -178,8 +177,8 @@ def check_event_queue():
 
         # SDP target state change events
         if event.object_id == 'SDP' and event.type == 'target_state_updated':
-            LOG.debug('Target state of SDP updated! (event id = %s)',
-                      event.id)
+            LOG.info('Target state of SDP updated! (event id = %s)',
+                     event.id)
             handle_sdp_target_state_updated_event()
             return
 
@@ -211,9 +210,9 @@ def _parse_args():
     args = parser.parse_args()
 
     if args.vv:
-        init_logger(log_level='DEBUG')
+        init_logger(log_level='DEBUG', show_log_origin=True)
     elif args.v:
-        init_logger()
+        init_logger(log_level='DEBUG')
     else:
         init_logger(log_level='INFO')
 
@@ -233,16 +232,28 @@ def main():
     args = _parse_args()
 
     LOG.info("Starting service: %s", __service_id__)
+    state = ServiceState(__subsystem__, __service_name__, __version__)
+    state.update_current_state('on')
 
     try:
+
+        # Set current state of all SDP Services to init (if unknown)
         for service in get_service_state_list():
             if service.current_state == 'unknown':
-                LOG.debug("Required to switch current state to: init")
+                LOG.debug("Setting current of service %s to: init", service.id)
                 service.update_current_state('init')
 
+        # Set the current state of SDP to init (if unknown)
         if SDP_STATE.current_state == 'unknown':
             LOG.debug("Setting SDP state to: init")
             SDP_STATE.update_current_state('init')
+
+        # Once the state of all SDP services is on, set the SDP state to
+        # standby.
+        for service in get_service_state_list():
+            if service.current_state == 'on':
+                LOG.debug("Setting current of SDP %s to: standby", service.id)
+                SDP_STATE.update_current_state('standby')
 
         # Schedule function to check for state change events.
         SCHEDULER.enter(0, 1, check_event_queue)

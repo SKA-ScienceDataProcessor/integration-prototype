@@ -6,27 +6,29 @@ TODO(BMo): Exception handling if the config database is dead.
 """
 # pylint: disable=no-self-use
 import json
-import logging
 import time
 from random import randrange
-
-from config_db import ProcessingBlockList, SDPState, SchedulingBlockInstance, \
-    ServiceState, generate_sbi_config
-from config_db.config_db_redis import ConfigDb
 
 from tango import Database, DebugIt, DevState, DeviceProxy
 from tango.server import Device, attribute, command
 
-from _version import __version__
+from release import LOG, __subsystem__, __service_name__, __version__
 
-LOG = logging.getLogger('sip.tango_control.SDPMaster')
+from sip_config_db.scheduling import ProcessingBlockList, \
+    SchedulingBlockInstance
+from sip_config_db.states import SDPState, ServiceState
+from sip_config_db import DB
+from sip_config_db.utils.generate_sbi_config import generate_sbi_config
+from sip_config_db.states.services import get_service_state_list, \
+    get_service_id_list
 
 
 class SDPMasterDevice(Device):
     """SIP SDP Master device."""
 
     _start_time = time.time()
-    _service_state = ServiceState('TangoControl', 'SDPMaster', __version__)
+    _service_state = ServiceState(__subsystem__, __service_name__,
+                                  __version__)
     _sdp_state = SDPState()
 
     # -------------------------------------------------------------------------
@@ -73,9 +75,11 @@ class SDPMasterDevice(Device):
         # pb_list = self._pb_list.active
         # pb_list = ['PB-{:02d}'.format(ii) for ii in range(5)]
         #
+
+        # FIXME(BMo) Only accept this command if SDP current state is ON.
         print(value)
 
-        ConfigDb().flush_db()
+        DB.flush_db()
         sbi_config = generate_sbi_config(register_workflows=True)
         sbi = SchedulingBlockInstance.from_config(sbi_config)
         pb_list = sbi.processing_block_ids
@@ -100,6 +104,31 @@ class SDPMasterDevice(Device):
         # print(pb.id)
         return 'added SBI to db!'
 
+    @staticmethod
+    def _get_service_state(service_id: str):
+        """Get the Service state object for the specified id."""
+        LOG.debug('Getting state of service %s', service_id)
+        services = get_service_id_list()
+        service_ids = [s for s in services if service_id in s]
+        if len(service_ids) != 1:
+            return 'Service not found! services = {}'.format(str(services))
+        subsystem, name, version = service_ids[0].split(':')
+        return ServiceState(subsystem, name, version)
+
+    @command(dtype_in=str, dtype_out=str)
+    @DebugIt()
+    def get_current_service_state(self, service_id: str):
+        """Get the state of a SDP service."""
+        state = self._get_service_state(service_id)
+        return state.current_state
+
+    @command(dtype_in=str, dtype_out=str)
+    @DebugIt()
+    def get_target_service_state(self, service_id: str):
+        """Get the state of a SDP service."""
+        state = self._get_service_state(service_id)
+        return state.target_state
+
     # ------------------
     # Attributes methods
     # ------------------
@@ -108,6 +137,12 @@ class SDPMasterDevice(Device):
     def version(self):
         """Return the version of the Master Controller Device."""
         return __version__
+
+    @attribute(dtype=str)
+    def sdp_services(self):
+        """Return list of SDP services."""
+        services = get_service_state_list()
+        return str(services)
 
     @attribute(dtype=str)
     def current_sdp_state(self):

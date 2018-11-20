@@ -1,4 +1,4 @@
-FROM skasip/tango_docker_base:1.0.4
+FROM skasip/tango_docker_base:1.0.6
 LABEL maintainer="Benjamin Mort <ben.mort@gmail.com>"
 
 USER root
@@ -7,5 +7,8 @@ RUN pip3 install itango
 USER sip
 RUN mkdir ~/.ipython
 
-#ENTRYPOINT ["itango3"]
-CMD ["sleep", "36000"]
+COPY *.py ./
+
+ENV TANGO_HOST=localhost:10000
+
+ENTRYPOINT ["itango3"]
