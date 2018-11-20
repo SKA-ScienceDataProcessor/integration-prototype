@@ -14,11 +14,8 @@ def test_sdp_state_create():
 
 
 def test_sdp_state_set_target_state():
-    """Test updating the target state.
-
-        unknown->init->standby->off
-
-    """
+    """Test updating the target state."""
+    # pylint: disable=too-many-statements
     # import sip_logging
     # print()
     # sip_logging.init_logger(log_level='DEBUG')
@@ -42,7 +39,12 @@ def test_sdp_state_set_target_state():
     assert events[0].data['old_state'] == 'unknown'
     assert events[0].data['state'] == 'init'
 
-    target_state = "standby"
+    # Set into standby state. This state is transitioned to by the EC
+    # Master Controller when all SDP services are 'on'
+    sdp_state.update_current_state('standby')
+    event_queue.get_published_events()
+
+    target_state = "on"
     previous_timestamp = sdp_state.target_timestamp
     set_time = sdp_state.update_target_state(target_state)
     assert sdp_state.target_state == target_state
@@ -56,6 +58,38 @@ def test_sdp_state_set_target_state():
     assert events[0].object_id == 'SDP'
     assert events[0].type == 'target_state_updated'
     assert events[0].data['old_state'] == 'unknown'
+    assert events[0].data['state'] == 'on'
+    assert sdp_state.target_state == target_state
+    assert sdp_state.target_timestamp >= set_time
+
+    target_state = "disable"
+    previous_timestamp = sdp_state.target_timestamp
+    set_time = sdp_state.update_target_state(target_state)
+    assert sdp_state.target_state == target_state
+    assert set_time >= previous_timestamp
+
+    events = event_queue.get_published_events()
+    assert len(events) == 1
+    assert events[0].object_type == 'states'
+    assert events[0].object_id == 'SDP'
+    assert events[0].type == 'target_state_updated'
+    assert events[0].data['old_state'] == 'on'
+    assert events[0].data['state'] == 'disable'
+    assert sdp_state.target_state == target_state
+    assert sdp_state.target_timestamp >= set_time
+
+    target_state = "standby"
+    previous_timestamp = sdp_state.target_timestamp
+    set_time = sdp_state.update_target_state(target_state)
+    assert sdp_state.target_state == target_state
+    assert set_time >= previous_timestamp
+
+    events = event_queue.get_published_events()
+    assert len(events) == 1
+    assert events[0].object_type == 'states'
+    assert events[0].object_id == 'SDP'
+    assert events[0].type == 'target_state_updated'
+    assert events[0].data['old_state'] == 'disable'
     assert events[0].data['state'] == 'standby'
     assert sdp_state.target_state == target_state
     assert sdp_state.target_timestamp >= set_time

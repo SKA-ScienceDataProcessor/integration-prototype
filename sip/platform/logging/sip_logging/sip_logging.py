@@ -43,8 +43,9 @@ class SIPFormatter(logging.Formatter):
         return time_string
 
 
-def init_logger(log_level=None, p3_mode: bool = True,
-                show_thread: bool = False, propagate: bool = False):
+def init_logger(logger_name='sip', log_level=None, p3_mode: bool = True,
+                show_thread: bool = False, propagate: bool = False,
+                show_log_origin=False):
     """Initialise the SIP logger.
 
     Attaches a stdout stream handler to the 'sip' logger. This will
@@ -54,25 +55,24 @@ def init_logger(log_level=None, p3_mode: bool = True,
     set the logging level.
 
     Args:
+        logger_name (str, optional): Name of the logger object.
         log_level (str or int, optional): Logging level for the SIP logger.
         p3_mode (bool, optional): Print logging statements in a format that
-                                  P3 can support.
+            P3 can support.
         show_thread (bool, optional): Display the thread in the log message.
         propagate (bool, optional): Propagate settings to parent loggers.
+        show_log_origin (boo, optional): If true show the origin
+            (file, line no.) of log messages.
 
     """
-    log = logging.getLogger('sip')
+    log = logging.getLogger(logger_name)
     log.propagate = propagate
 
     # Remove existing handlers (avoids duplicate messages)
     for handler in log.handlers:
         log.removeHandler(handler)
 
-    # If the log level is set to debug show the filename and line number
-    if log_level in ['DEBUG', logging.DEBUG]:
-        _debug = '%(filename)s:%(lineno)d | '
-    else:
-        _debug = ''
+    _debug = '%(filename)s:%(lineno)d | ' if show_log_origin else ''
 
     # P3 mode is intended to work with the fluentd configuration on P3.
     # This has ms timestamp precision and uses '-' as a delimiter
@@ -106,3 +106,18 @@ def init_logger(log_level=None, p3_mode: bool = True,
         log.setLevel(log_level)
     else:
         log.setLevel(os.getenv('SIP_LOG_LEVEL', 'DEBUG'))
+
+
+def disable_logger(logger_name: str, propagate: bool = False):
+    """Disable output for the logger of the specified name."""
+    log = logging.getLogger(logger_name)
+    log.propagate = propagate
+    for handler in log.handlers:
+        log.removeHandler(handler)
+
+
+def set_log_level(logger_name: str, log_level: str, propagate: bool = False):
+    """Set the log level of the specified logger."""
+    log = logging.getLogger(logger_name)
+    log.propagate = propagate
+    log.setLevel(log_level)

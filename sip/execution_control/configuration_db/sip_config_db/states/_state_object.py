@@ -105,7 +105,7 @@ class StateObject:
             raise RuntimeError("Unable to set target state when current state "
                                "is 'unknown'")
 
-        allowed_target_states = self._allowed_transitions[current_state]
+        allowed_target_states = self._allowed_target_states[current_state]
 
         LOG.debug('Updating target state of %s to %s', self._id, value)
 

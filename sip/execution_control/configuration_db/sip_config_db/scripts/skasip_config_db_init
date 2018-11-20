@@ -8,27 +8,29 @@ import shutil
 from os import listdir
 from os.path import dirname, join
 
+from sip_logging import init_logger
+
 import sip_config_db
-from sip_config_db import DB
+from sip_config_db import DB, LOG
 from sip_config_db.scheduling import SubarrayList, workflow_definitions
 from sip_config_db.states import SDPState, ServiceState
 
 
 def initialise_states(data_dir: str):
     """Initialise fields for the state of SDP."""
-    print('* Initialising SDP state')
+    LOG.info('* Initialising SDP state')
     SDPState()
     with open(join(data_dir, 'services.json'), 'r') as file:
         services = json.load(file)
         for service in services['services']:
-            print('* Initialising service state: {}'.format(service))
+            LOG.info('* Initialising service state: %s', service)
             subsystem, name, version = service.split(':')
             ServiceState(subsystem, name, version)
 
 
 def initialise_subarrays():
     """Initialise subarrays."""
-    print('* Initialising subarrays')
+    LOG.info('* Initialising subarrays')
     SubarrayList()
 
 
@@ -44,7 +46,7 @@ def add_workflow_definitions(workflows_dir: str):
                       and not fn.startswith('test')
                       and not fn == 'services.json']
     for file_path in workflow_files:
-        print('* Loading workflow template: {}'.format(file_path))
+        LOG.info('* Loading workflow template: %s', file_path)
         with open(file_path, 'r') as file:
             workflow_dict = json.load(file)
             workflow_definitions.add(workflow_dict, join(workflows_dir,
@@ -100,17 +102,18 @@ def main():
         default_data_dir = join(dirname(sip_config_db.__file__), 'data')
         if args.data_dir is None:
             data_dir = default_data_dir
-            print('Using default data path: ', data_dir)
+            LOG.info('Using default data path: %s', data_dir)
             init_db(data_dir)
         else:
             data_dir = os.path.abspath(args.data_dir)
-            if os.path.isdir(data_dir):
-                print('Using user specified data path: ', data_dir)
-                init_db(data_dir)
-            else:
-                print('Creating default data path: ', data_dir)
+            if not os.path.isdir(data_dir):
+                LOG.info('Creating default data path: %s', data_dir)
                 shutil.copytree(src=default_data_dir, dst=data_dir)
+            else:
+                LOG.info('Using user specified data path: %s', data_dir)
+                init_db(data_dir)
 
 
 if __name__ == '__main__':
+    init_logger()
     main()

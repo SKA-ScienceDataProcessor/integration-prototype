@@ -46,16 +46,27 @@ def test_logging(capsys):
     assert 'WARNING' in captured.out
     assert 'hello there' in captured.out
 
+    # from ..sip_logging import disable_logger, set_log_level
     # print('')
     # print('**************')
-    # init_logger(p3_mode=False, show_thread=False)
-    # log.info('xx')
+    # log2 = logging.getLogger('foo.test')
+    # init_logger(logger_name='', p3_mode=False)
+    # log.info('xx 1')
+    # log2.info('yy 1')
+    #
+    # disable_logger(logger_name='foo.test')
+    #
+    # init_logger(p3_mode=False, show_thread=False, show_log_origin=True)
+    # set_log_level('sip', logging.CRITICAL)
+    # log.info('xx 2')
+    # set_log_level('', logging.DEBUG)
+    # log2.info('yy 2')
     #
     # init_logger(p3_mode=False, show_thread=True)
-    # log.debug('xx')
+    # log.debug('xx 3')
     #
     # init_logger(p3_mode=True, show_thread=False)
-    # log.info('xx')
+    # log.info('xx 4')
     #
     # init_logger(p3_mode=True, show_thread=True)
-    # log.info('xx')
+    # log.info('xx 5')

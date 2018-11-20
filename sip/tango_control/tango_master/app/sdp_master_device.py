@@ -6,27 +6,29 @@ TODO(BMo): Exception handling if the config database is dead.
 """
 # pylint: disable=no-self-use
 import json
-import logging
 import time
 from random import randrange
-
-from config_db import ProcessingBlockList, SDPState, SchedulingBlockInstance, \
-    ServiceState, generate_sbi_config
-from config_db.config_db_redis import ConfigDb
 
 from tango import Database, DebugIt, DevState, DeviceProxy
 from tango.server import Device, attribute, command
 
-from _version import __version__
+from release import LOG, __subsystem__, __service_name__, __version__
 
-LOG = logging.getLogger('sip.tango_control.SDPMaster')
+from sip_config_db.scheduling import ProcessingBlockList, \
+    SchedulingBlockInstance
+from sip_config_db.states import SDPState, ServiceState
+from sip_config_db import DB
+from sip_config_db.utils.generate_sbi_config import generate_sbi_config
+from sip_config_db.states.services import get_service_state_list, \
+    get_service_id_list
 
 
 class SDPMasterDevice(Device):
     """SIP SDP Master device."""
 
     _start_time = time.time()
-    _service_state = ServiceState('TangoControl', 'SDPMaster', __version__)
+    _service_state = ServiceState(__subsystem__, __service_name__,
+                                  __version__)
     _sdp_state = SDPState()
 
     # -------------------------------------------------------------------------
@@ -58,7 +60,13 @@ class SDPMasterDevice(Device):
     @DebugIt()
     def configure(self, value):
         """Schedule an offline only SBI with SDP."""
-        # FIXME(BMo) something in from_config is not respecting REDIS_HOST!
+        if self._sdp_state.current_state != 'on':
+            raise RuntimeWarning('Unable to configure SBIs unless SDP is '
+                                 '\'on\'.')
+
+        LOG.info('Scheduling offline SBI! Config:\n%s', value)
+        SchedulingBlockInstance.from_config(json.loads(value))
+
         # config_dict = json.loads(sbi_config)
         # sbi = SchedulingBlockInstance.from_config(config_dict)
         # try:
@@ -73,32 +81,59 @@ class SDPMasterDevice(Device):
         # pb_list = self._pb_list.active
         # pb_list = ['PB-{:02d}'.format(ii) for ii in range(5)]
         #
+
+        # FIXME(BMo) Only accept this command if SDP current state is ON.
         print(value)
 
-        ConfigDb().flush_db()
-        sbi_config = generate_sbi_config(register_workflows=True)
-        sbi = SchedulingBlockInstance.from_config(sbi_config)
-        pb_list = sbi.processing_block_ids
-        print('PB_LIST', pb_list)
-        active_pbs = ProcessingBlockList.active
-        print('ACTIVE', active_pbs)
-
-        # Get a PB device which has not been assigned.
-        for pb in pb_list:
-            for index in range(100):
-                pb_dev = 'sip_sdp/pb/{:03d}'.format(index)
-                device = DeviceProxy(pb_dev)
-                if not device.pb_id:
-                    LOG.info('Assigning PB device = %s to PB id = %s',
-                             device.name(), pb)
-                    device.pb_id = pb
-                    break
+        # DB.flush_db()
+        # sbi_config = generate_sbi_config(register_workflows=True)
+        # sbi = SchedulingBlockInstance.from_config(sbi_config)
+        # pb_list = sbi.processing_block_ids
+        # print('PB_LIST', pb_list)
+        # active_pbs = ProcessingBlockList.active
+        # print('ACTIVE', active_pbs)
+        #
+        # # Get a PB device which has not been assigned.
+        # for pb in pb_list:
+        #     for index in range(100):
+        #         pb_dev = 'sip_sdp/pb/{:03d}'.format(index)
+        #         device = DeviceProxy(pb_dev)
+        #         if not device.pb_id:
+        #             LOG.info('Assigning PB device = %s to PB id = %s',
+        #                      device.name(), pb)
+        #             device.pb_id = pb
+        #             break
 
         # print(pb_list)
         # self.debug_stream(pb_list)
         # pb = ProcessingBlock(pb_list[0])
         # print(pb.id)
         return 'added SBI to db!'
+
+    @staticmethod
+    def _get_service_state(service_id: str):
+        """Get the Service state object for the specified id."""
+        LOG.debug('Getting state of service %s', service_id)
+        services = get_service_id_list()
+        service_ids = [s for s in services if service_id in s]
+        if len(service_ids) != 1:
+            return 'Service not found! services = {}'.format(str(services))
+        subsystem, name, version = service_ids[0].split(':')
+        return ServiceState(subsystem, name, version)
+
+    @command(dtype_in=str, dtype_out=str)
+    @DebugIt()
+    def get_current_service_state(self, service_id: str):
+        """Get the state of a SDP service."""
+        state = self._get_service_state(service_id)
+        return state.current_state
+
+    @command(dtype_in=str, dtype_out=str)
+    @DebugIt()
+    def get_target_service_state(self, service_id: str):
+        """Get the state of a SDP service."""
+        state = self._get_service_state(service_id)
+        return state.target_state
 
     # ------------------
     # Attributes methods
@@ -110,6 +145,12 @@ class SDPMasterDevice(Device):
         return __version__
 
     @attribute(dtype=str)
+    def sdp_services(self):
+        """Return list of SDP services."""
+        services = get_service_state_list()
+        return str(services)
+
+    @attribute(dtype=str)
     def current_sdp_state(self):
         """Return the current state of the SDP."""
         return self._sdp_state.current_state
@@ -118,6 +159,15 @@ class SDPMasterDevice(Device):
     def target_sdp_state(self):
         """Return the target state of SDP."""
         return self._sdp_state.target_state
+
+    @attribute(dtype=str)
+    def allowed_target_sdp_states(self):
+        """Return a list of allowed target states for the current state."""
+        _current_state = self._sdp_state.current_state
+        _allowed_target_states = self._sdp_state.allowed_target_states[
+            _current_state]
+        return json.dumps(dict(allowed_target_sd_states=
+                               _allowed_target_states))
 
     @target_sdp_state.write
     def target_sdp_state(self, new_state):
