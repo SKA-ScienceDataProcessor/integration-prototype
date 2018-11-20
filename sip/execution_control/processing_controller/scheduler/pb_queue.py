@@ -14,10 +14,7 @@ import logging
 from sip_logging import init_logger
 
 init_logger(log_level='DEBUG')
-LOG = logging.getLogger('sip.ec.pbqueue')
-
-from sip_config_db import DB
-from sip_config_db.scheduling import ProcessingBlockList
+LOG = logging.getLogger('sip.ec.pb_queue')
 
 
 class ProcessingBlockQueue:
@@ -42,7 +39,7 @@ class ProcessingBlockQueue:
             priority (int):
             pb_type (str):
         """
-        LOG.info("BLOCK ID %s", block_id)
+        LOG.info("Processing Block ID %s", block_id)
         with self._mutex:
             entry = (priority, self._index, block_id, pb_type)
 

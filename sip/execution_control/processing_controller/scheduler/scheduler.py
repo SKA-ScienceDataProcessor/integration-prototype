@@ -74,10 +74,9 @@ class ProcessingBlockScheduler:
         while True:
             event = event_queue.get()
             if event:
+                LOG.debug('Acknowledged event of type %s', event.object_type)
                 LOG.debug("Event ID %s", event.id)
                 LOG.debug("Event Object ID %s", event.object_id)
-                LOG.debug("Event Object Type %s", event.object_type)
-                LOG.debug('Acknowledged event of type %s', event.type)
 
                 # Adding PB to the queue
                 pb = ProcessingBlock(event.object_id)
@@ -98,7 +97,7 @@ class ProcessingBlockScheduler:
     def _schedule_processing_blocks(self):
         """."""
         LOG.info('Starting to Schedule Processing Blocks.')
-        # 1. Check resource availability
+        # 1. Check resource availability - Ignoring for now
         # 2. Determine what next to run on the queue
         # 3. Get PB configuration
         # 4. Launch the PBC for the PB
@@ -107,14 +106,13 @@ class ProcessingBlockScheduler:
         while True:
             LOG.info('Checking for new Processing blocks to execute')
             while self._queue:
-                item = self._queue.get()
-                LOG.info("ITEMS %s", item)
-                LOG.info("Processing Block ID: %s", item[2])
-                execute_processing_block.delay(item[2])
+                pb = self._queue.get()
+                LOG.info("Processing Block ID: %s", pb[2])
+                execute_processing_block.delay(pb[2])
 
                 # Once done remove from the queue
+                self._queue.remove(pb[2])
 
-                # execute_processing_block.delay(pb_ids[0])
             # if num_pbc == 0:
             #    execute_processing_block.delay(pb_ids[0])
             time.sleep(self._report_interval)
