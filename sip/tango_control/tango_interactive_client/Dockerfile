@@ -1,4 +1,4 @@
-FROM skasip/tango_docker_base:1.0.6
+FROM skasip/tango_docker_base:1.1.2
 LABEL maintainer="Benjamin Mort <ben.mort@gmail.com>"
 
 USER root
