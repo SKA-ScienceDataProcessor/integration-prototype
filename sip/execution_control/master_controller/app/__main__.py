@@ -235,6 +235,12 @@ def main():
     state = ServiceState(__subsystem__, __service_name__, __version__)
     state.update_current_state('on')
 
+    # FIXME(BMo) If SDP is 'off' make sure it is set it to init and then
+    # standby when services are started. As services start they should
+    # either be set to 'on' by this service or by themselves.
+
+    # FIXME(BMo) There is a bug when SDP starts in the 'off' state.
+
     try:
 
         # Set current state of all SDP Services to init (if unknown)
