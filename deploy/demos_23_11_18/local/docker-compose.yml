@@ -2,9 +2,23 @@ version: '3.6'
 
 services:
 
+  tango_subarray:
+    image: skasip/tango_subarray:1.1.2
+    environment:
+    - TANGO_HOST=tango_database:10000
+    - REDIS_HOST=config_database
+    deploy:
+      mode: replicated
+      replicas: 1
+    volumes:
+    - ../../../sip/tango_control/tango_subarray/app:/home/sip/app
+    depends_on:
+    - config_database
+    - tango_database
+
   master_controller:
-    image: skasip/master_controller:1.0.2
-    command: []
+    image: skasip/master_controller:1.1.2
+    command: ["-v"]
     environment:
     - REDIS_HOST=config_database
     - REDIS_PORT=6379
@@ -17,7 +31,7 @@ services:
     - config_database
 
   tango_master:
-    image: skasip/tango_master:1.0.9
+    image: skasip/tango_master:1.1.2
     environment:
     - TANGO_HOST=tango_database:10000
     - REDIS_HOST=config_database
@@ -25,7 +39,6 @@ services:
       mode: replicated
       replicas: 1
     volumes:
-    - ../../../sip/tango_control/tango_master/scripts:/home/sip/scripts
     - ../../../sip/tango_control/tango_master/app:/home/sip/app
     depends_on:
     - config_database
