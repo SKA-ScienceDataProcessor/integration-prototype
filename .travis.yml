@@ -65,19 +65,19 @@ before_script:
 script:
   # Execute all of the commands which should make the build pass or fail.
   # ---------------------------------------------------------------------------
-
-#  - pycodestyle --config=.pycodestyle emulators
-#  - pycodestyle --config=.pycodestyle --exclude=zookeeper examples
-#  - pycodestyle --config=.pycodestyle --exclude=receive_visibilities sip
-#  - pylint --rcfile=.pylintrc --ignore=csp_pss_sender,csp_vis_sender_01,csp_vis_sender_02 emulators
-
   - ./tools/run_tests.sh sip/tango_control/flask_master
+#  - ./tools/run_tests.sh sip/tango_control/flask_processing_controller
+#  - ./tools/run_tests.sh sip/tango_control/tango_master
+#  - ./tools/run_tests.sh sip/tango_control/tango_subarray
+#  - ./tools/run_tests.sh sip/tango_control/tango_processing_block
 
   - ./tools/run_tests.sh sip/execution_control/master_controller
   - ./tools/run_tests.sh sip/execution_control/configuration_db
 #  - ./tools/run_tests.sh sip/execution_control/docker_api
 
 #  - ./tools/run_tests.sh sip/science_pipeline_workflows/ical_dask
+#  - ./tools/run_tests.sh sip/science_pipeline_workflows/ingest_visibilities
+#  - ./tools/run_tests.sh sip/science_pipeline_workflows/mock_workflow
 
   - ./tools/run_tests.sh sip/platform/logging
 
