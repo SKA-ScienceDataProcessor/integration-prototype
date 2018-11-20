@@ -10,9 +10,13 @@ import sys
 
 # from .db.scheduling_data import ConfigDb
 from .pb_queue import ProcessingBlockQueue
-# from processing_block_controller.tasks import execute_processing_block
+from sip_logging import init_logger
+from sip_config_db.scheduling import ProcessingBlockList, ProcessingBlock
+from ..processing_block_controller.tasks import execute_processing_block
 
-
+init_logger(log_level='DEBUG')
+log = logging.getLogger('sip')
+log.propagate = False  # FIXME(BMo) Make propagate a option on
 LOG = logging.getLogger('sip.ec.pc_scheduler')
 
 
@@ -33,6 +37,7 @@ class ProcessingBlockScheduler:
         self._report_interval = report_interval
         self._value = ''
         self._value_lock = Lock()
+        self._pb_list = ProcessingBlockList()
 
     @staticmethod
     def _init_queue():
@@ -51,8 +56,8 @@ class ProcessingBlockScheduler:
 
     def queue(self):
         """Return the processing block queue."""
-
-        print(self._queue)
+        LOG.info("Processing Block Queue %s", self._queue)
+        # print(self._queue)
         return self._queue
 
     def _update_value(self, new_value):
@@ -63,11 +68,21 @@ class ProcessingBlockScheduler:
 
     def _monitor_events(self):
         """Watch for Processing Block events."""
+        subscriber = 'test_pb_events_subscriber'
+        event_queue = self._pb_list.subscribe(subscriber)
         LOG.info('Starting Processing Block event monitor.')
         while True:
-            # event = self._db.get_latest_event('')
-            # if event:
-            #     LOG.debug('Acknowledged event of type %s', event['type'])
+            event = event_queue.get()
+            if event:
+                LOG.debug("Event ID %s", event.id)
+                LOG.debug("Event Object ID %s", event.object_id)
+                LOG.debug("Event Object Type %s", event.object_type)
+                LOG.debug('Acknowledged event of type %s', event.type)
+
+                # Adding PB to the queue
+                pb = ProcessingBlock(event.object_id)
+                self._queue.put(event.object_id, pb.priority, pb.type)
+
             LOG.debug('Checking for new events ... %s', self._value)
             self._update_value('a')
             time.sleep(0.2)
@@ -90,9 +105,18 @@ class ProcessingBlockScheduler:
 
         # This is where the PBC started (celery)
         while True:
-            LOG.info('')
+            LOG.info('Checking for new Processing blocks to execute')
+            while self._queue:
+                item = self._queue.get()
+                LOG.info("ITEMS %s", item)
+                LOG.info("Processing Block ID: %s", item[2])
+                execute_processing_block.delay(item[2])
+
+                # Once done remove from the queue
+
+                # execute_processing_block.delay(pb_ids[0])
             # if num_pbc == 0:
-            #     execute_processing_block.delay()
+            #    execute_processing_block.delay(pb_ids[0])
             time.sleep(self._report_interval)
 
     def _monitor_pbc_status(self):

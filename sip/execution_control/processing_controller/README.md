@@ -46,16 +46,14 @@ provided.
 1. Start the Scheduler application:
 
     ```bash
-    python3 -m app
+    python3 -m scheduler
     ```
 
 1.  Use the provided utilities for adding and removing Processing and Scheduling
     blocks from the mock Configuration database.
 
     ```bash
-    python3 -m utils.create_scheduling_block
-    python3 -m utils.delete_scheduling_block
-    python3 -m utils.delete_processing_block
+    python3 -m processing_controller.scripts.skasip_pc_add_sbi
     ```
 
 1.  Clean up:

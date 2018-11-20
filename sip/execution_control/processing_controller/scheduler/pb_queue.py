@@ -10,6 +10,12 @@ try:
 except ImportError:
     import dummy_threading as threading
 
+import logging
+from sip_logging import init_logger
+
+init_logger(log_level='DEBUG')
+LOG = logging.getLogger('sip.ec.pbqueue')
+
 from sip_config_db import DB
 from sip_config_db.scheduling import ProcessingBlockList
 
@@ -26,7 +32,7 @@ class ProcessingBlockQueue:
         self._index = 0
         self._mutex = threading.Lock()
         self._block_map = {}
-        DB.clear()
+        # DB.flush_db()
 
     def put(self, block_id, priority, pb_type='offline'):
         """Add a Processing Block to the queue.
@@ -36,7 +42,7 @@ class ProcessingBlockQueue:
             priority (int):
             pb_type (str):
         """
-        print(block_id)
+        LOG.info("BLOCK ID %s", block_id)
         with self._mutex:
             entry = (priority, self._index, block_id, pb_type)
 
@@ -52,7 +58,7 @@ class ProcessingBlockQueue:
     def get(self):
         """Get the highest priority Processing Block from the queue."""
         with self._mutex:
-            entry = self._queue.pop(0)
+            entry = self._queue.pop()
             del self._block_map[entry[2]]
             return entry
 
