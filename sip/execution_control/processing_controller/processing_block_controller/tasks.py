@@ -17,6 +17,7 @@ from sip_docker_swarm import DockerClient
 from sip_docker_swarm import __version__ as sip_swarm_api_version
 from sip_logging import init_logger
 
+
 BROKER = os.getenv('CELERY_BROKER', 'redis://localhost:6379/1')
 BACKEND = os.getenv('CELERY_BACKEND', 'redis://localhost:6379/2')
 APP = Celery(broker=BROKER, backend=BACKEND)

@@ -106,8 +106,9 @@ class ProcessingBlockScheduler:
         # This is where the PBC started (celery)
         while True:
             LOG.info('Checking for new Processing blocks to execute')
-            while self._queue:
-                pb = self._queue.get()
+            queue = self.queue()
+            while queue:
+                pb = queue.get()
                 LOG.info("Processing Block ID: %s", pb[2])
                 LOG.info(" PB Priority: %s", pb[0])
                 execute_processing_block.delay(pb[2])
@@ -135,10 +136,10 @@ class ProcessingBlockScheduler:
     def start(self):
         """Start the scheduler threads."""
         scheduler_threads = [
-            Thread(target=self._monitor_events, daemon=True)
-            # Thread(target=self._report_queue, daemon=True),
-            # Thread(target=self._schedule_processing_blocks, daemon=True),
-            # Thread(target=self._monitor_pbc_status, daemon=True)
+            Thread(target=self._monitor_events, daemon=True),
+            Thread(target=self._report_queue, daemon=True),
+            Thread(target=self._schedule_processing_blocks, daemon=True),
+            Thread(target=self._monitor_pbc_status, daemon=True)
         ]
 
         for thread in scheduler_threads:
