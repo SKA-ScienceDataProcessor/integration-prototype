@@ -46,6 +46,7 @@ class ProcessingBlockQueue:
             self._block_map[block_id] = entry
             self._queue.append(entry)
             self._queue.sort()  # Sort by priority followed by insertion order.
+            self._queue.reverse()
             LOG.info("Sorted Queue: %s", self._queue)
 
     def get(self):

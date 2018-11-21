@@ -18,7 +18,7 @@ from sip_config_db.scheduling import ProcessingBlock
 from sip_docker_swarm import DockerClient
 from sip_docker_swarm import __version__ as sip_swarm_api_version
 from sip_logging import init_logger
-from sip_logging.sip_logging import disable_logger
+# from sip_logging.sip_logging import disable_logger
 
 BROKER = os.getenv('CELERY_BROKER', 'redis://localhost:6379/1')
 BACKEND = os.getenv('CELERY_BACKEND', 'redis://localhost:6379/2')
