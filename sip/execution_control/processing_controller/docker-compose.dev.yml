@@ -4,6 +4,19 @@ version: '3.6'
 
 services:
 
+  processing_controller:
+    image: skasip/processing_controller:latest
+    environment:
+    - REDIS_HOST=config_database
+    volumes:
+    - /var/run/docker.sock:/var/run/docker.sock
+    - ./scheduler:/home/sip/scheduler
+    deploy:
+      mode: replicated
+      replicas: 1
+    depends_on:
+    - config_database
+
   pbc:
     image: skasip/processing_block_controller:1.1.2
     environment:
@@ -17,7 +30,7 @@ services:
       mode: replicated
       replicas: 1
 
-  config_db:
+  config_database:
     image: redis:4.0.6-alpine
     ports:
       - 6379:6379

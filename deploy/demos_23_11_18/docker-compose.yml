@@ -3,7 +3,7 @@ version: '3.6'
 services:
 
   processing_controller:
-    image: skasip/processing_controller:1.1.2
+    image: skasip/processing_controller:latest
     environment:
     - REDIS_HOST=config_database
     volumes:
