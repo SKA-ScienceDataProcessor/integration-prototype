@@ -1,16 +1,19 @@
 {
     "services": [
-        "TangoControl:SDPMaster:1.1.2",
-        "TangoControl:SDPMaster_flask:1.1.2",
-        "TangoControl:SDPSubarray:1.1.2",
-        "TangoControl:SDPProcessingBlock:1.1.2",
         
         "ExecutionControl:MasterController:1.1.2",
         "ExecutionControl:ProcessingController:1.1.2",
-        "ExecutionControl:CeleryWorker:1.0.0",
-        "ExecutionControl:Alerts:1.0.0",
+        "ExecutionControl:ProcessingBlockController:1.1.2",
+        "ExecutionControl:ConfigurationDatabase:4.0.6",
+        "ExecutionControl:ProcessingBlockControllerBroker:4.0.6",
+        "ExecutionControl:ProcessingBlockControllerBackend:4.0.6",
         
-        "Platform:RedisDB:1.0.0",
-        "Platform:Kafka:1.0.0"
+        "TangoControl:Master:1.1.2",
+        "TangoControl:Subarrays:1.1.2",
+        "TangoControl:ProcessingBlocks:1.1.2",
+        "TangoControl:Database:1.0.4",
+        "TangoControl:MySQL:1.0.3",
+        "TangoControl:FlaskMaster:1.1.2"
+        
     ]
 }

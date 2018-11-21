@@ -1,15 +1,9 @@
 #!/usr/bin/env bash
-
-# TODO(BMo) menu system for killing containers
-
-RED='\033[0;31m'
-BLUE='\033[0;34m'
-NC='\033[0m'
-
+source "$(cd "$(dirname "$0")" ; pwd -P)"/incl.sh
 
 if [[ "$#" -ne 1 ]]; then
     echo "usage: $0 service_name"
-    exit 0
+    exit "0"
 fi
 
 NAME="sip_$1"
@@ -22,12 +16,11 @@ echo -e "${CONTAINERS}"
 echo -e "---------------------------------------"
 CONTAINER_IDS="$(docker ps -q -f name=${NAME}*)"
 
-echo -e "${BLUE}Killing container:"
+echo_blue "Killing container:"
 for CONTAINER_ID in ${CONTAINER_IDS[@]}; do
-    echo -e "${RED}- ${CONTAINER_ID}${NC}"
+    echo_red "- ${CONTAINER_ID}"
     docker kill "${CONTAINER_ID}"
-
-    echo -e "${BLUE}* Waiting for service ${NAME} to restart${NC}"
+    echo_blue " Waiting for service ${NAME} to restart"
     docker service ls -f name=${NAME}
     while true; do
         SERVICE_ID="$(docker service ps -q -f desired-state=running "${NAME}")"

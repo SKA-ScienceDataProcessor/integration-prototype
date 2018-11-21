@@ -11,7 +11,7 @@ red_line
 docker service ls --format "{{.ID}}: {{.Replicas}} - {{.Name}}"
 
 # Wait for the database to become available.
-NAME=sip_config_database
+NAME=sip_ec_config_database
 echo -e "${BLUE}* Waiting for service ${NAME} to be ready${NC}"
 docker service ls -f name=${NAME}
 while true; do
@@ -21,9 +21,4 @@ while true; do
         break
     fi
 done
-
-# TODO(BMo) Initialise the database?
-
-# Register workflow definitions
-skasip_config_db_register_workflows deploy/demos_23_11_18/data/workflow_definitions
 
