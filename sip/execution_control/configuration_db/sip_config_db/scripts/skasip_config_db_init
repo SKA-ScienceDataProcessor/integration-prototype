@@ -11,7 +11,7 @@ from os.path import dirname, join
 from sip_logging import init_logger
 
 import sip_config_db
-from sip_config_db import DB, LOG
+from sip_config_db import DB, LOG, __version__
 from sip_config_db.scheduling import SubarrayList, workflow_definitions
 from sip_config_db.states import SDPState, ServiceState
 
@@ -94,9 +94,14 @@ def main():
                         help='Clear the database. USE WITH CARE!')
     parser.add_argument('--data-dir', default=None, type=str, required=False,
                         help='Data dir to use. If does not exist, create.')
+    parser.add_argument('--version', default=False, action='store_true',
+                        help='Return the config db api version.')
+
     args = parser.parse_args()
 
-    if args.clear:
+    if args.version:
+        print(__version__)
+    elif args.clear:
         DB.flush_db()
     else:
         default_data_dir = join(dirname(sip_config_db.__file__), 'data')

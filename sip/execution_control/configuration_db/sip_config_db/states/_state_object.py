@@ -84,7 +84,7 @@ class StateObject:
         timestamp = DB.get_hash_value(self._key, 'target_timestamp')
         return datetime_from_isoformat(timestamp)
 
-    def update_target_state(self, value: str) -> datetime:
+    def update_target_state(self, value: str, force: bool = True) -> datetime:
         """Set the target state.
 
         Args:
@@ -92,6 +92,7 @@ class StateObject:
 
         Returns:
             datetime, update timestamp
+            force (bool): If true, ignore allowed transitions
 
         Raises:
             RuntimeError, if it is not possible to currently set the target
@@ -100,28 +101,31 @@ class StateObject:
 
         """
         value = value.lower()
-        current_state = self.current_state
-        if current_state == 'unknown':
-            raise RuntimeError("Unable to set target state when current state "
-                               "is 'unknown'")
+        if not force:
+            current_state = self.current_state
+            if current_state == 'unknown':
+                raise RuntimeError("Unable to set target state when current "
+                                   "state is 'unknown'")
 
-        allowed_target_states = self._allowed_target_states[current_state]
+            allowed_target_states = self._allowed_target_states[current_state]
 
-        LOG.debug('Updating target state of %s to %s', self._id, value)
+            LOG.debug('Updating target state of %s to %s', self._id, value)
 
-        if value not in allowed_target_states:
-            raise ValueError("Invalid target state: '{}'. {} can be "
-                             "commanded to states: {}".
-                             format(value, current_state,
-                                    allowed_target_states))
+            if value not in allowed_target_states:
+                raise ValueError("Invalid target state: '{}'. {} can be "
+                                 "commanded to states: {}".
+                                 format(value, current_state,
+                                        allowed_target_states))
 
         return self._update_state('target', value)
 
-    def update_current_state(self, value: str) -> datetime:
+    def update_current_state(self, value: str,
+                             force: bool = False) -> datetime:
         """Update the current state.
 
         Args:
             value (str): New value for sdp state
+            force (bool): If true, ignore allowed transitions
 
         Returns:
             datetime, update timestamp
@@ -131,22 +135,23 @@ class StateObject:
 
         """
         value = value.lower()
-        current_state = self.current_state
-        # IF the current state is unknown, it can be set to any of the allowed
-        # states, otherwise only allow certain transitions.
-        if current_state == 'unknown':
-            allowed_transitions = self._allowed_states
-        else:
-            allowed_transitions = self._allowed_transitions[current_state]
-            allowed_transitions.append(current_state)
+        if not force:
+            current_state = self.current_state
+            # IF the current state is unknown, it can be set to any of the
+            # allowed states, otherwise only allow certain transitions.
+            if current_state == 'unknown':
+                allowed_transitions = self._allowed_states
+            else:
+                allowed_transitions = self._allowed_transitions[current_state]
+                allowed_transitions.append(current_state)
 
-        LOG.debug('Updating current state of %s to %s', self._id, value)
+            LOG.debug('Updating current state of %s to %s', self._id, value)
 
-        if value not in allowed_transitions:
-            raise ValueError("Invalid current state update: '{}'. '{}' can be "
-                             "transitioned to states: {}"
-                             .format(value, current_state,
-                                     allowed_transitions))
+            if value not in allowed_transitions:
+                raise ValueError("Invalid current state update: '{}'. '{}' "
+                                 "can be transitioned to states: {}"
+                                 .format(value, current_state,
+                                         allowed_transitions))
 
         return self._update_state('current', value)
 
