@@ -51,6 +51,7 @@ class ProcessingBlockQueue:
             self._block_map[block_id] = entry
             self._queue.append(entry)
             self._queue.sort()  # Sort by priority followed by insertion order.
+            LOG.info("Sorted Queue: %s", self._queue)
 
     def get(self):
         """Get the highest priority Processing Block from the queue."""

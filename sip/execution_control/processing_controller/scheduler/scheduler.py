@@ -52,7 +52,10 @@ class ProcessingBlockScheduler:
         """
         LOG.info('Initialising Processing Block queue.')
         queue = ProcessingBlockQueue()
-        # TODO(BM) populate queue from the database
+        active_pb_ids = ProcessingBlockList().active
+        for pb_id in active_pb_ids:
+            pb = ProcessingBlock(pb_id)
+            queue.put(pb.id, pb.priority, pb.type)
         return queue
 
     def queue(self):
@@ -109,6 +112,7 @@ class ProcessingBlockScheduler:
             while self._queue:
                 pb = self._queue.get()
                 LOG.info("Processing Block ID: %s", pb[2])
+                LOG.info(" PB Priority: %s", pb[0])
                 execute_processing_block.delay(pb[2])
             time.sleep(self._report_interval)
 
