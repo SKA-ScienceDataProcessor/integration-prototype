@@ -254,8 +254,9 @@ def main():
             LOG.debug("Setting SDP state to: init")
             SDP_STATE.update_current_state('init')
 
-        # Once the state of all SDP services is on, set the SDP state to
+        # HACK: Once the state of all SDP services is on, set the SDP state to
         # standby.
+        # FIXME(BMo) Broken logic
         for service in get_service_state_list():
             if service.current_state == 'on':
                 LOG.debug("Setting current of SDP %s to: standby", service.id)

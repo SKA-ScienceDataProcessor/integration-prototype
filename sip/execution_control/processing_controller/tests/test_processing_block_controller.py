@@ -13,7 +13,9 @@ from celery.app.control import Inspect
 from sip_config_db import DB
 from sip_config_db.scheduling import SchedulingBlockInstance
 from .test_utils import add_workflow_definitions
-from ..processing_block_controller.tasks import APP, execute_processing_block
+from ..processing_block_controller.release import __version__
+from ..processing_block_controller.tasks import APP, execute_processing_block,\
+    version
 
 
 def test_pbc_inspect_tasks():
@@ -34,6 +36,12 @@ def test_pbc_inspect_workers():
     print('stats', json.dumps(celery.current_app.control.inspect().stats(),
                               indent=2))
     # print('workers=', celery.current_app.control.inspect().stats().keys())
+
+
+def test_pbc_version():
+    """."""
+    result = version.delay()
+    assert result.get(timeout=1) == __version__
 
 
 def test_pbc_execute_workflow():

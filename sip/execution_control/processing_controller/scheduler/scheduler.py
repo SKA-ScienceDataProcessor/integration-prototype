@@ -10,10 +10,11 @@ import sys
 
 # from .db.scheduling_data import ConfigDb
 from .pb_queue import ProcessingBlockQueue
-# from processing_block_controller.tasks import execute_processing_block
+from sip_config_db.scheduling import ProcessingBlockList
+from processing_block_controller.tasks import execute_processing_block
+from .log import LOG
+from .release import __service_name__
 
-
-LOG = logging.getLogger('sip.ec.pc_scheduler')
 
 
 class ProcessingBlockScheduler:
@@ -30,6 +31,7 @@ class ProcessingBlockScheduler:
         LOG.info('Starting Processing Block Scheduler.')
         # self._db = ConfigDb()
         self._queue = self._init_queue()
+        self._pb_events = ProcessingBlockList().subscribe(__service_name__)
         self._report_interval = report_interval
         self._value = ''
         self._value_lock = Lock()
@@ -41,8 +43,8 @@ class ProcessingBlockScheduler:
         This method should populate the queue from the current state of the
         Configuration Database.
 
-        This needs to be based on the current set of Processing Blocks in the
-        database and consider events on these processing blocks.
+        This needs to be based on the current set of Processing Blocks in
+        the database and consider events on these processing blocks.
         """
         LOG.info('Initialising Processing Block queue.')
         queue = ProcessingBlockQueue()
@@ -65,12 +67,16 @@ class ProcessingBlockScheduler:
         """Watch for Processing Block events."""
         LOG.info('Starting Processing Block event monitor.')
         while True:
-            # event = self._db.get_latest_event('')
-            # if event:
-            #     LOG.debug('Acknowledged event of type %s', event['type'])
-            LOG.debug('Checking for new events ... %s', self._value)
-            self._update_value('a')
-            time.sleep(0.2)
+            # LOG.debug('Checking for new events ... %s', self._value)
+            LOG.debug('Checking for new events ...')
+            events = self._pb_events.get_published_events()
+            if events:
+                for event in events:
+                    LOG.debug('PB event type=%s, pb=%s', event.type,
+                              event.object_id)
+                    execute_processing_block.delay(event.object_id)
+            # self._update_value('a')
+            time.sleep(0.5)
 
     def _report_queue(self):
         """Report on the status of the Processing Block queue(s)."""
@@ -110,10 +116,10 @@ class ProcessingBlockScheduler:
     def start(self):
         """Start the scheduler threads."""
         scheduler_threads = [
-            Thread(target=self._monitor_events, daemon=True),
-            Thread(target=self._report_queue, daemon=True),
-            Thread(target=self._schedule_processing_blocks, daemon=True),
-            Thread(target=self._monitor_pbc_status, daemon=True)
+            Thread(target=self._monitor_events, daemon=True)
+            # Thread(target=self._report_queue, daemon=True),
+            # Thread(target=self._schedule_processing_blocks, daemon=True),
+            # Thread(target=self._monitor_pbc_status, daemon=True)
         ]
 
         for thread in scheduler_threads:

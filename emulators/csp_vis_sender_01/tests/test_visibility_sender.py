@@ -9,7 +9,7 @@ import unittest
 import numpy as np
 
 try:
-    from app.heap_streamer import HeapStreamer
+    from scheduler.heap_streamer import HeapStreamer
 except ImportError:
     raise unittest.SkipTest('Skipping test as spead module not found.')
 

@@ -9,9 +9,9 @@ from sip_config_db.scheduling import ProcessingBlock, \
     SchedulingBlockInstance, SchedulingBlockInstanceList
 from sip_config_db.states import SDPState
 from sip_logging import init_logger
-from .__init__ import __version__, LOG
+from .release import __version__, LOG
 
-# FIXME(BMo) Enable the logging name 'flask.logging.wsgi_errors_stream' ?
+init_logger('flask.logging.wsgi_errors_stream')
 init_logger()
 
 APP = FlaskAPI(__name__)
@@ -20,7 +20,6 @@ APP = FlaskAPI(__name__)
 @APP.route('/')
 def root():
     """Home page."""
-    # logging
     return {
         "message": "Welcome to the SIP Master Controller (flask variant)",
         "_links": {

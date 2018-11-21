@@ -1,4 +1,0 @@
-#!/bin/sh
-# stop and destroy containers for the master interface service (Rest Variant)
-
-docker-compose rm -s -f

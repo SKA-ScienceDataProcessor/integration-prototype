@@ -1,15 +1,18 @@
-FROM python:3.6-alpine3.6
+FROM python:3.6.4-alpine3.7
 LABEL maintainer="Benjamin Mort <ben.mort@gmail.com>"
 
 WORKDIR /app
 
 COPY requirements.txt .
 RUN apk update && \
-    pip install --upgrade pip && \
-    pip install --no-cache-dir -r requirements.txt && \
     apk add --no-cache curl && \
+    pip install --no-cache-dir -r requirements.txt && \
     find /usr/local/lib/python3.6/ -name 'tests' -exec rm -r '{}' + && \
     rm -r /root/.cache
+
+RUN addgroup -S sip && adduser -S sip -G sip
+USER sip
+WORKDIR /home/sip
 
 COPY app app
 

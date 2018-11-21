@@ -10,8 +10,8 @@ try:
 except ImportError:
     import dummy_threading as threading
 
-from sip_config_db import DB
-from sip_config_db.scheduling import ProcessingBlockList
+# from sip_config_db import DB
+# from sip_config_db.scheduling import ProcessingBlockList
 
 
 class ProcessingBlockQueue:
@@ -26,7 +26,6 @@ class ProcessingBlockQueue:
         self._index = 0
         self._mutex = threading.Lock()
         self._block_map = {}
-        DB.clear()
 
     def put(self, block_id, priority, pb_type='offline'):
         """Add a Processing Block to the queue.
