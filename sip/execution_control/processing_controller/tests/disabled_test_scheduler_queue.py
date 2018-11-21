@@ -1,15 +1,13 @@
 # -*- coding: utf-8 -*-
 """Unit tests of the Processing Block Queue."""
 import random
-
 import pytest
 
-from ..scheduler.queue import ProcessingBlockQueue
+from ..scheduler.pb_queue import ProcessingBlockQueue
 
 
 def test_simple_usage():
-    """Tests simple usage of the Processing Block Queue"""
-
+    """Tests simple usage of the Processing Block Queue."""
     # Obtain a queue object
     queue = ProcessingBlockQueue()
 
@@ -56,5 +54,4 @@ def test_simple_usage():
     # # assert item == item1
     # # item = queue.get()
     # # assert item == item2
-
     # print(queue)

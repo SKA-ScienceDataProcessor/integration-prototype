@@ -10,8 +10,7 @@ try:
 except ImportError:
     import dummy_threading as threading
 
-# from sip_config_db import DB
-# from sip_config_db.scheduling import ProcessingBlockList
+from .log import LOG
 
 
 class ProcessingBlockQueue:
@@ -35,11 +34,11 @@ class ProcessingBlockQueue:
             priority (int):
             pb_type (str):
         """
-        print(block_id)
+        LOG.info("Processing Block ID %s", block_id)
         with self._mutex:
             entry = (priority, self._index, block_id, pb_type)
 
-            print(entry)
+            LOG.debug("ProcessingBlockQueue entry = %s", entry)
             self._index += 1
             if self._block_map.get(block_id) is not None:
                 raise KeyError('ERROR: Block id "{}" already exists!'.
@@ -47,11 +46,12 @@ class ProcessingBlockQueue:
             self._block_map[block_id] = entry
             self._queue.append(entry)
             self._queue.sort()  # Sort by priority followed by insertion order.
+            LOG.info("Sorted Queue: %s", self._queue)
 
     def get(self):
         """Get the highest priority Processing Block from the queue."""
         with self._mutex:
-            entry = self._queue.pop(0)
+            entry = self._queue.pop()
             del self._block_map[entry[2]]
             return entry
 

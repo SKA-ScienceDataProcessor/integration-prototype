@@ -3,18 +3,18 @@
 
 Implemented with a set of long running threads.
 """
-import logging
-import time
-from threading import Thread, Lock
 import sys
+import time
+from threading import Lock, Thread
 
-# from .db.scheduling_data import ConfigDb
-from .pb_queue import ProcessingBlockQueue
-from sip_config_db.scheduling import ProcessingBlockList
-from processing_block_controller.tasks import execute_processing_block
+import celery
+from celery.app.control import Inspect
+
+from sip_config_db.scheduling import ProcessingBlock, ProcessingBlockList
 from .log import LOG
+from .pb_queue import ProcessingBlockQueue
 from .release import __service_name__
-
+from ..processing_block_controller.tasks import APP, execute_processing_block
 
 
 class ProcessingBlockScheduler:
@@ -35,6 +35,7 @@ class ProcessingBlockScheduler:
         self._report_interval = report_interval
         self._value = ''
         self._value_lock = Lock()
+        self._pb_list = ProcessingBlockList()
 
     @staticmethod
     def _init_queue():
@@ -48,13 +49,16 @@ class ProcessingBlockScheduler:
         """
         LOG.info('Initialising Processing Block queue.')
         queue = ProcessingBlockQueue()
-        # TODO(BM) populate queue from the database
+        active_pb_ids = ProcessingBlockList().active
+        for pb_id in active_pb_ids:
+            pb = ProcessingBlock(pb_id)
+            queue.put(pb.id, pb.priority, pb.type)
         return queue
 
     def queue(self):
         """Return the processing block queue."""
-
-        print(self._queue)
+        LOG.info("Processing Block Queue %s", self._queue)
+        # print(self._queue)
         return self._queue
 
     def _update_value(self, new_value):
@@ -65,18 +69,23 @@ class ProcessingBlockScheduler:
 
     def _monitor_events(self):
         """Watch for Processing Block events."""
+        subscriber = 'test_pb_events_subscriber'
+        event_queue = self._pb_list.subscribe(subscriber)
         LOG.info('Starting Processing Block event monitor.')
         while True:
+            event = event_queue.get()
+            if event:
+                LOG.debug('Acknowledged event of type %s', event.object_type)
+                LOG.debug("Event ID %s", event.id)
+                LOG.debug("Event Object ID %s", event.object_id)
+
+                # Adding PB to the queue
+                pb = ProcessingBlock(event.object_id)
+                self._queue.put(event.object_id, pb.priority, pb.type)
+
             # LOG.debug('Checking for new events ... %s', self._value)
-            LOG.debug('Checking for new events ...')
-            events = self._pb_events.get_published_events()
-            if events:
-                for event in events:
-                    LOG.debug('PB event type=%s, pb=%s', event.type,
-                              event.object_id)
-                    execute_processing_block.delay(event.object_id)
             # self._update_value('a')
-            time.sleep(0.5)
+            time.sleep(0.2)
 
     def _report_queue(self):
         """Report on the status of the Processing Block queue(s)."""
@@ -89,16 +98,19 @@ class ProcessingBlockScheduler:
     def _schedule_processing_blocks(self):
         """."""
         LOG.info('Starting to Schedule Processing Blocks.')
-        # 1. Check resource availability
+        # 1. Check resource availability - Ignoring for now
         # 2. Determine what next to run on the queue
         # 3. Get PB configuration
         # 4. Launch the PBC for the PB
 
         # This is where the PBC started (celery)
         while True:
-            LOG.info('')
-            # if num_pbc == 0:
-            #     execute_processing_block.delay()
+            LOG.info('Checking for new Processing blocks to execute')
+            while self._queue:
+                pb = self._queue.get()
+                LOG.info("Processing Block ID: %s", pb[2])
+                LOG.info(" PB Priority: %s", pb[0])
+                execute_processing_block.delay(pb[2])
             time.sleep(self._report_interval)
 
     def _monitor_pbc_status(self):
@@ -110,7 +122,14 @@ class ProcessingBlockScheduler:
         # 3. Find out the status of celery tasks.
         # 4. Update the database with findings
         while True:
-            LOG.info('')
+            LOG.info('Monitoring Processing Block Controller Status')
+            task_state = celery.current_app.events.State()
+            _inspect = Inspect(app=APP)
+            LOG.info('Active: %s', _inspect.active())
+            LOG.info('State of the Current Celery Task:  %s',
+                     _inspect.stats().keys)
+            LOG.info('Celery Workers:  %s', _inspect.stats().keys())
+            LOG.info('State of the Current Celery Task:  %s', task_state)
             time.sleep(self._report_interval)
 
     def start(self):
