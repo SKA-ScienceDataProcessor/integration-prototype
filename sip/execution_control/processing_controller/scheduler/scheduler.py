@@ -123,7 +123,7 @@ class ProcessingBlockScheduler:
                     if time_in_queue.total_seconds() >= 10:
                         item = self._queue.get()
                         LOG.info('Scheduling %s for execution ...', item[2])
-                        result = execute_processing_block.delay(item[2])
+                        execute_processing_block.delay(item[2])
                         self._max_pbcs += 1
             time.sleep(self._report_interval)
 

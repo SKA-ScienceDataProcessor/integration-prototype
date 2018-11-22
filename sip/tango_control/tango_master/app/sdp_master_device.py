@@ -12,15 +12,12 @@ from random import randrange
 from tango import Database, DebugIt, DevState, DeviceProxy
 from tango.server import Device, attribute, command
 
-from release import LOG, __subsystem__, __service_name__, __version__
-
+from release import LOG, __service_name__, __subsystem__, __version__
 from sip_config_db.scheduling import ProcessingBlockList, \
     SchedulingBlockInstance, SchedulingBlockInstanceList
 from sip_config_db.states import SDPState, ServiceState
-from sip_config_db import DB
-from sip_config_db.utils.generate_sbi_config import generate_sbi_config
-from sip_config_db.states.services import get_service_state_list, \
-    get_service_id_list
+from sip_config_db.states.services import get_service_id_list, \
+    get_service_state_list
 
 
 class SDPMasterDevice(Device):

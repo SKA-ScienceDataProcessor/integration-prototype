@@ -45,7 +45,6 @@ if md.current_sdp_state == 'on':
         sbi_config_dict['id'] = new_sbi_id
         sbi_config_dict['processing_blocks'][0]['id'] = new_pb_id
 
-
     md.configure(json.dumps(sbi_config_dict))
 else:
     print('SDP not online!')
