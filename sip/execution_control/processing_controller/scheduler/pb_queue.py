@@ -9,6 +9,7 @@ try:
     import threading
 except ImportError:
     import dummy_threading as threading
+import datetime
 
 from .log import LOG
 
@@ -34,20 +35,20 @@ class ProcessingBlockQueue:
             priority (int):
             pb_type (str):
         """
-        LOG.info("Processing Block ID %s", block_id)
+        # LOG.info("Processing Block ID %s", block_id)
         with self._mutex:
-            entry = (priority, self._index, block_id, pb_type)
-
-            LOG.debug("ProcessingBlockQueue entry = %s", entry)
+            added_time = datetime.datetime.utcnow().isoformat()
+            entry = (priority, self._index, block_id, added_time, pb_type)
             self._index += 1
             if self._block_map.get(block_id) is not None:
                 raise KeyError('ERROR: Block id "{}" already exists!'.
                                format(block_id))
             self._block_map[block_id] = entry
+            LOG.debug("Adding PB queue entry = %s", entry)
             self._queue.append(entry)
             self._queue.sort()  # Sort by priority followed by insertion order.
             self._queue.reverse()
-            LOG.info("Sorted Queue: %s", self._queue)
+            # LOG.info("Sorted Queue: %s", self._queue)
 
     def get(self):
         """Get the highest priority Processing Block from the queue."""

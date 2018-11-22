@@ -15,7 +15,7 @@ from tango.server import Device, attribute, command
 from release import LOG, __subsystem__, __service_name__, __version__
 
 from sip_config_db.scheduling import ProcessingBlockList, \
-    SchedulingBlockInstance
+    SchedulingBlockInstance, SchedulingBlockInstanceList
 from sip_config_db.states import SDPState, ServiceState
 from sip_config_db import DB
 from sip_config_db.utils.generate_sbi_config import generate_sbi_config
@@ -60,55 +60,50 @@ class SDPMasterDevice(Device):
     @DebugIt()
     def configure(self, value):
         """Schedule an offline only SBI with SDP."""
+
+        # Only accept new SBIs if the SDP is on.
         if self._sdp_state.current_state != 'on':
             raise RuntimeWarning('Unable to configure SBIs unless SDP is '
                                  '\'on\'.')
 
+        # Check that the new SBI is not already registered.
+        sbi_config_dict = json.loads(value)
+        sbi_list = SchedulingBlockInstanceList()
+        LOG.info('SBIs before: %s', sbi_list.active)
+        if sbi_config_dict.get('id') in sbi_list.active:
+            raise RuntimeWarning('Unable to add SBI with ID {}, an SBI with '
+                                 'this ID is already registered with SDP!'
+                                 .format(sbi_config_dict.get('id')))
+
+        # Add the SBI to the dictionary.
         LOG.info('Scheduling offline SBI! Config:\n%s', value)
-        SchedulingBlockInstance.from_config(json.loads(value))
+        sbi = SchedulingBlockInstance.from_config(sbi_config_dict)
+        LOG.info('SBIs after: %s', sbi_list.active)
 
-        # config_dict = json.loads(sbi_config)
-        # sbi = SchedulingBlockInstance.from_config(config_dict)
-        # try:
-        #
-        # except jsonschema.exceptions.ValidationError as error:
-        #     raise
-        #     # return 'failed to parse json'
-        # return 'added SBI with ID = {}'.format(sbi.id)
+        sbi_pb_ids = sbi.processing_block_ids
+        LOG.info('SBI "%s" contains PBs: %s', sbi.id, sbi_pb_ids)
+        # pb_list = ProcessingBlockList()
+        # LOG.info('Active PBs: %s', pb_list.active)
 
-        # devices = db.get_server_list("PB*").value_string
+        # Get the list and number of Tango PB devices
+        tango_db = Database()
+        pb_device_class = "ProcessingBlockDevice"
+        pb_device_server_instance = "processing_block_ds/1"
+        pb_devices = tango_db.get_device_name(pb_device_server_instance,
+                                              pb_device_class)
+        LOG.info('Number of PB devices in the pool = %d', len(pb_devices))
 
-        # pb_list = self._pb_list.active
-        # pb_list = ['PB-{:02d}'.format(ii) for ii in range(5)]
-        #
-
-        # FIXME(BMo) Only accept this command if SDP current state is ON.
-        print(value)
-
-        # DB.flush_db()
-        # sbi_config = generate_sbi_config(register_workflows=True)
-        # sbi = SchedulingBlockInstance.from_config(sbi_config)
-        # pb_list = sbi.processing_block_ids
-        # print('PB_LIST', pb_list)
-        # active_pbs = ProcessingBlockList.active
-        # print('ACTIVE', active_pbs)
-        #
-        # # Get a PB device which has not been assigned.
-        # for pb in pb_list:
-        #     for index in range(100):
-        #         pb_dev = 'sip_sdp/pb/{:03d}'.format(index)
-        #         device = DeviceProxy(pb_dev)
-        #         if not device.pb_id:
-        #             LOG.info('Assigning PB device = %s to PB id = %s',
-        #                      device.name(), pb)
-        #             device.pb_id = pb
-        #             break
-
-        # print(pb_list)
-        # self.debug_stream(pb_list)
-        # pb = ProcessingBlock(pb_list[0])
-        # print(pb.id)
-        return 'added SBI to db!'
+        # Get a PB device which has not been assigned.
+        for pb_id in sbi_pb_ids:
+            for pb_device_name in pb_devices:
+                device = DeviceProxy(pb_device_name)
+                if not device.pb_id:
+                    LOG.info('Assigning PB device = %s to PB id = %s',
+                             pb_device_name, pb_id)
+                    # Set the device attribute 'pb_id' to the processing block
+                    # id it is tracking.
+                    device.pb_id = pb_id
+                    break
 
     @staticmethod
     def _get_service_state(service_id: str):
@@ -166,19 +161,31 @@ class SDPMasterDevice(Device):
         _current_state = self._sdp_state.current_state
         _allowed_target_states = self._sdp_state.allowed_target_states[
             _current_state]
-        return json.dumps(dict(allowed_target_sd_states=
+        return json.dumps(dict(allowed_target_sdp_states=
                                _allowed_target_states))
 
     @target_sdp_state.write
-    def target_sdp_state(self, new_state):
+    def target_sdp_state(self, state):
         """Update the target state of SDP."""
-        self._sdp_state.update_target_state(new_state)
+        LOG.info('Setting SDP target state to %s', state)
+        if self._sdp_state.current_state == state:
+            LOG.info('Target state ignored, SDP is already "%s"!', state)
+        if state == 'on':
+            self.set_state(DevState.ON)
+        if state == 'off':
+            self.set_state(DevState.OFF)
+        if state == 'standby':
+            self.set_state(DevState.STANDBY)
+        if state == 'disable':
+            self.set_state(DevState.DISABLE)
+        self._sdp_state.update_target_state(state)
 
-    @attribute(dtype=float)
+    @attribute(dtype=str)
     @DebugIt()
-    def health_check(self):
+    def health(self):
         """Health check method, returns the up-time of the device."""
-        return time.time() - self._start_time
+        return json.dumps(dict(uptime='{:.3f}s'
+                               .format((time.time() - self._start_time))))
 
     @attribute(dtype=str)
     def resource_availability(self):
@@ -194,53 +201,46 @@ class SDPMasterDevice(Device):
     def scheduling_block_instances(self):
         """Return the a JSON dict encoding the SBIs known to SDP."""
         # TODO(BMo) change this to a pipe?
-        active_sbis = self._sbi_list.active
-        return json.dumps(dict(sbi_list=active_sbis))
+        sbi_list = SchedulingBlockInstanceList()
+        return json.dumps(dict(active=sbi_list.active,
+                               completed=sbi_list.completed,
+                               aborted=sbi_list.aborted))
 
     @attribute(dtype=str)
     def processing_blocks(self):
         """Return the a JSON dict encoding the PBs known to SDP."""
-        # TODO(BMo) change this to a pipe?
-        active_pbs = self._pb_list.active
-        return json.dumps(dict(pb_list=active_pbs))
-
-    @attribute(dtype=str)
-    def offline_processing_blocks(self):
-        """Return the a JSON dict encoding the offline PBs known to SDP."""
-        # TODO(BMo) change this to a pipe?
-        # TODO(BMo) add property to ProcessingBlockList to get offline \
-        # processing
-
-    @attribute(dtype=str)
-    def realtime_processing_blocks(self):
-        """Return the a JSON dict encoding the realtime SBIs known to SDP."""
-        # TODO(BMo) change this to a pipe?
-        # TODO(BMo) add property to ProcessingBlockList to get realtime \
-        # processing
+        pb_list = ProcessingBlockList()
+        # TODO(BMo) realtime, offline etc.
+        return json.dumps(dict(active=pb_list.active,
+                               completed=pb_list.completed,
+                               aborted=pb_list.aborted))
 
     @attribute(dtype=str)
     def processing_block_devices(self):
         """Get list of processing block devices."""
-        # https://intranet.cells.es/Members/srubio/howto/HowToPyTango#Getalldevicesofaserveroragivenclass
+        # Get the list and number of Tango PB devices
         tango_db = Database()
-        # server name, class name
-        devices = tango_db.get_device_name('ProcessingController/pcont',
-                                           'ProcessingBlockDevice')
-        print(devices.value_string)
+        pb_device_class = "ProcessingBlockDevice"
+        pb_device_server_instance = "processing_block_ds/1"
+        pb_devices = tango_db.get_device_name(pb_device_server_instance,
+                                              pb_device_class)
+        LOG.info('Number of PB devices in the pool = %d', len(pb_devices))
+
+        pb_device_map = []
+        for pb_device_name in pb_devices:
+            device = DeviceProxy(pb_device_name)
+            if device.pb_id:
+                LOG.info('%s %s', pb_device_name, device.pb_id)
+                pb_device_map.append((pb_device_name, device.pb_id))
+
+        return str(pb_device_map)
 
     def _set_master_state(self, state):
         """Set the state of the SDPMaster."""
         if state == 'init':
+            self._service_state.update_current_state('init', force=True)
             self.set_state(DevState.INIT)
-            if self._service_state.current_state == 'on':
-                LOG.debug('%s is already on! (cant be reinitialised)',
-                          self._service_state.id)
-                return
-            try:
-                self._service_state.update_current_state('init')
-            except ValueError as error:
-                LOG.warning('%s', str(error))
 
         elif state == 'on':
-            self.set_state(DevState.STANDBY)
+            self.set_state(DevState.ON)
             self._service_state.update_current_state('on')

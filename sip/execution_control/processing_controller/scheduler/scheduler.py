@@ -3,14 +3,17 @@
 
 Implemented with a set of long running threads.
 """
+import os
 import sys
 import time
 from threading import Lock, Thread
+import datetime
 
 import celery
 from celery.app.control import Inspect
 
 from sip_config_db.scheduling import ProcessingBlock, ProcessingBlockList
+from sip_config_db.utils.datetime_utils import datetime_from_isoformat
 from .log import LOG
 from .pb_queue import ProcessingBlockQueue
 from .release import __service_name__
@@ -29,10 +32,15 @@ class ProcessingBlockScheduler:
 
         """
         LOG.info('Starting Processing Block Scheduler.')
+        LOG.debug('CELERY_BROKER_URL = %s', os.environ['CELERY_BROKER_URL'])
+        LOG.debug('%s', os.environ)
         # self._db = ConfigDb()
+        # self._queue = ProcessingBlockQueue()
         self._queue = self._init_queue()
         self._pb_events = ProcessingBlockList().subscribe(__service_name__)
         self._report_interval = report_interval
+        self._num_pbcs = 0  # Current number of PBCs
+        self._max_pbcs = 1  # Maximum number of PBCs
         self._value = ''
         self._value_lock = Lock()
         self._pb_list = ProcessingBlockList()
@@ -57,8 +65,6 @@ class ProcessingBlockScheduler:
 
     def queue(self):
         """Return the processing block queue."""
-        LOG.info("Processing Block Queue %s", self._queue)
-        # print(self._queue)
         return self._queue
 
     def _update_value(self, new_value):
@@ -69,30 +75,30 @@ class ProcessingBlockScheduler:
 
     def _monitor_events(self):
         """Watch for Processing Block events."""
-        subscriber = 'test_pb_events_subscriber'
-        event_queue = self._pb_list.subscribe(subscriber)
-        LOG.info('Starting Processing Block event monitor.')
+        LOG.info("Starting to monitor PB events")
+        check_counter = 0
         while True:
-            event = event_queue.get()
-            if event:
-                LOG.debug('Acknowledged event of type %s', event.object_type)
-                LOG.debug("Event ID %s", event.id)
-                LOG.debug("Event Object ID %s", event.object_id)
-
-                # Adding PB to the queue
+            if check_counter == 20:
+                LOG.debug('Still checking for PB events...')
+                check_counter = 0
+            published_events = self._pb_events.get_published_events()
+            for event in published_events:
+                LOG.info('Acknowledged PB event of type: %s, id: %s, '
+                         'object id: %s ', event.object_type,
+                         event.id, event.object_id)
                 pb = ProcessingBlock(event.object_id)
                 self._queue.put(event.object_id, pb.priority, pb.type)
 
-            # LOG.debug('Checking for new events ... %s', self._value)
-            # self._update_value('a')
-            time.sleep(0.2)
+            time.sleep(0.1)
+            check_counter += 1
 
     def _report_queue(self):
         """Report on the status of the Processing Block queue(s)."""
         LOG.info('Starting Processing Block queue reporter.')
         while True:
-            LOG.info('Queue status ... %s', self._value)
-            self._update_value('b')
+            LOG.info('PB queue length = %d', len(self._queue))
+            # LOG.info('Queue status ... %s', self._value)
+            # self._update_value('b')
             time.sleep(self._report_interval)
 
     def _schedule_processing_blocks(self):
@@ -105,13 +111,16 @@ class ProcessingBlockScheduler:
 
         # This is where the PBC started (celery)
         while True:
-            LOG.info('Checking for new Processing blocks to execute')
-            queue = self.queue()
-            while queue:
-                pb = queue.get()
-                LOG.info("Processing Block ID: %s", pb[2])
-                LOG.info(" PB Priority: %s", pb[0])
-                execute_processing_block.delay(pb[2])
+            LOG.info('Checking for new Processing blocks to execute ..')
+            if self._num_pbcs < self._max_pbcs:
+                next_pb = self._queue[-1]
+                utcnow = datetime.datetime.utcnow()
+                time_in_queue = (utcnow - datetime_from_isoformat(next_pb[3]))
+                if time_in_queue.total_seconds() >= 10:
+                    item = self._queue.get()
+                    LOG.info('Scheduling %s for execution ...', item[2])
+                    execute_processing_block.delay(item[2])
+                    self._max_pbcs += 1
             time.sleep(self._report_interval)
 
     def _monitor_pbc_status(self):
@@ -123,14 +132,14 @@ class ProcessingBlockScheduler:
         # 3. Find out the status of celery tasks.
         # 4. Update the database with findings
         while True:
-            LOG.info('Monitoring Processing Block Controller Status')
-            task_state = celery.current_app.events.State()
-            _inspect = Inspect(app=APP)
-            LOG.info('Active: %s', _inspect.active())
-            LOG.info('State of the Current Celery Task:  %s',
-                     _inspect.stats().keys)
-            LOG.info('Celery Workers:  %s', _inspect.stats().keys())
-            LOG.info('State of the Current Celery Task:  %s', task_state)
+            LOG.info('Monitoring Processing Block Controller status')
+            # task_state = celery.current_app.events.State()
+            # _inspect = Inspect(app=APP)
+            # LOG.info('Active: %s', _inspect.active())
+            # LOG.info('State of the Current Celery Task:  %s',
+            #          _inspect.stats().keys)
+            # LOG.info('Celery Workers:  %s', _inspect.stats().keys())
+            # LOG.info('State of the Current Celery Task:  %s', task_state)
             time.sleep(self._report_interval)
 
     def start(self):
@@ -149,7 +158,7 @@ class ProcessingBlockScheduler:
             for thread in scheduler_threads:
                 thread.join()
         except KeyboardInterrupt:
-            LOG.info('INTERRUPT')
+            LOG.info('Keyboard interrupt!')
             sys.exit(0)
         finally:
-            LOG.info('FINALLY!')
+            LOG.info('Finally!')

@@ -341,10 +341,9 @@ def main2():
         while True:
             time.sleep(0.2)
             event = state_events.get()
-            # LOG.debug('Getting events!')
             if event:
-                LOG.debug('**** EVENT DETECTED %s %s', event.type,
-                          event.object_id)
+                LOG.debug('>> event detected: %s %s %s', event.object_id,
+                          event.type, event.data)
                 if event.object_id == 'SDP' and \
                         event.type == 'target_state_updated':
                     LOG.info('SDP target state changed to %s',
@@ -387,6 +386,4 @@ def main2():
 
 
 if __name__ == '__main__':
-    # TODO(BMo) wait for DB to be available (maybe not needed if not using \
-    # globals for the db)
     main2()

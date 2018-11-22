@@ -20,35 +20,38 @@ services:
     depends_on:
     - config_database
 
-#  ec_processing_controller:
-#    image: skasip/processing_controller:1.1.3
-#    environment:
-#    - REDIS_HOST=ec_config_database
-#    volumes:
-#    - ./../../sip/execution_control/processing_controller/processing_block_controller:/home/sip/processing_block_controller
-#    - ./../../sip/execution_control/processing_controller/scheduler:/home/sip/scheduler
-#    deploy:
-#      mode: replicated
-#      replicas: 1
-#    depends_on:
-#    - config_database
-#
-#  ec_processing_block_controller:
-#    image: skasip/processing_block_controller:1.1.3
-#    environment:
-#    - CELERY_BROKER=redis://ec_processing_block_controller_broker/0
-#    - CELERY_BACKEND=redis://ec_processing_block_controller_backend/0
-#    - REDIS_HOST=ec_config_database
-#    volumes:
-#    - /var/run/docker.sock:/var/run/docker.sock
-#    - ./../../sip/execution_control/processing_controller/processing_block_controller:/home/sip/processing_block_controller
-#    deploy:
-#      mode: replicated
-#      replicas: 1
-#    depends_on:
-#    - config_database
-#    - processing_block_controller_broker
-#    - processing_block_controller_backend
+  ec_processing_controller:
+    image: skasip/processing_controller:1.1.3
+    environment:
+    - CELERY_BROKER_URL=redis://ec_processing_block_controller_broker/1
+    - CELERY_RESULT_BACKEND=redis://ec_processing_block_controller_backend/2
+    - REDIS_HOST=ec_config_database
+    volumes:
+    - ./../../sip/execution_control/processing_controller:/home/sip/processing_controller
+    deploy:
+      mode: replicated
+      replicas: 1
+    depends_on:
+    - config_database
+
+  ec_processing_block_controller:
+    image: skasip/processing_block_controller:1.1.3
+    environment:
+    - CELERY_BROKER_URL=redis://ec_processing_block_controller_broker/1
+    - CELERY_RESULT_BACKEND=redis://ec_processing_block_controller_backend/2
+#    - CELERY_BROKER=redis://ec_processing_block_controller_broker/1
+#    - CELERY_BACKEND=redis://ec_processing_block_controller_backend/2
+    - REDIS_HOST=ec_config_database
+    volumes:
+    - /var/run/docker.sock:/var/run/docker.sock
+    - ./../../sip/execution_control/processing_controller/processing_block_controller:/home/sip/processing_block_controller
+    deploy:
+      mode: replicated
+      replicas: 1
+    depends_on:
+    - config_database
+    - processing_block_controller_broker
+    - processing_block_controller_backend
 
   ec_config_database:
     image: redis:4.0.6-alpine
@@ -60,22 +63,21 @@ services:
     volumes:
     - sip_config_database:/data/db
 
-#  ec_processing_block_controller_broker:
-#    image: redis:4.0.6-alpine
-#    deploy:
-#      mode: replicated
-#      replicas: 1
-#    volumes:
-#    - sip_pbc_broker:/data/db
-#
-#  ec_processing_block_controller_backend:
-#    image: redis:4.0.6-alpine
-#    deploy:
-#      mode: replicated
-#      replicas: 1
-#    volumes:
-#    - sip_pbc_backend:/data/db
+  ec_processing_block_controller_broker:
+    image: redis:4.0.6-alpine
+    deploy:
+      mode: replicated
+      replicas: 1
+    volumes:
+    - sip_pbc_broker:/data/db
 
+  ec_processing_block_controller_backend:
+    image: redis:4.0.6-alpine
+    deploy:
+      mode: replicated
+      replicas: 1
+    volumes:
+    - sip_pbc_backend:/data/db
 
   # ==========================================================================
   # Tango Control containers
@@ -95,34 +97,34 @@ services:
     - config_database
     - tango_database
 
-#  tc_tango_subarray:
-#    image: skasip/tango_subarray:1.1.3
-#    environment:
-#    - TANGO_HOST=tc_tango_database:10000
-#    - REDIS_HOST=ec_config_database
-#    deploy:
-#      mode: replicated
-#      replicas: 1
-#    volumes:
-#    - ./../../sip/tango_control/tango_subarray/app:/home/sip/app
-#    depends_on:
-#    - config_database
-#    - tango_database
-#
-#  tc_tango_processing_block:
-#    image: skasip/tango_processing_block:1.1.3
-#    environment:
-#    - TANGO_HOST=tc_tango_database:10000
-#    - REDIS_HOST=ec_config_database
-#    deploy:
-#      mode: replicated
-#      replicas: 1
-#    volumes:
-#    - ./../../sip/tango_control/tango_processing_block/app:/home/sip/app
-#    depends_on:
-#    - config_database
-#    - tango_database
-#
+  tc_tango_subarray:
+    image: skasip/tango_subarray:1.1.3
+    environment:
+    - TANGO_HOST=tc_tango_database:10000
+    - REDIS_HOST=ec_config_database
+    deploy:
+      mode: replicated
+      replicas: 1
+    volumes:
+    - ./../../sip/tango_control/tango_subarray/app:/home/sip/app
+    depends_on:
+    - config_database
+    - tango_database
+
+  tc_tango_processing_block:
+    image: skasip/tango_processing_block:1.1.3
+    environment:
+    - TANGO_HOST=tc_tango_database:10000
+    - REDIS_HOST=ec_config_database
+    deploy:
+      mode: replicated
+      replicas: 1
+    volumes:
+    - ./../../sip/tango_control/tango_processing_block/app:/home/sip/app
+    depends_on:
+    - config_database
+    - tango_database
+
   tc_tango_database:
     image: skasip/tango_database:1.0.4
     ports:
@@ -151,19 +153,19 @@ services:
     volumes:
     - sip_tango_mysql:/var/lib/mysql:consistent
 
-#  tc_flask_master:
-#    image: skasip/flask_master:1.1.3
-#    ports:
-#    - 5000:5000
-#    environment:
-#    - REDIS_HOST=ec_config_database
-#    deploy:
-#      mode: replicated
-#      replicas: 1
-#    volumes:
-#    - ./../../sip/tango_control/flask_master/app:/home/sip/app
-#    depends_on:
-#    - config_database
+  tc_flask_master:
+    image: skasip/flask_master:1.1.3
+    ports:
+    - 5000:5000
+    environment:
+    - REDIS_HOST=ec_config_database
+    deploy:
+      mode: replicated
+      replicas: 1
+    volumes:
+    - ./../../sip/tango_control/flask_master/app:/home/sip/app
+    depends_on:
+    - config_database
 
   # ==========================================================================
   # Platform containers ?

@@ -1,16 +1,16 @@
 {
-  "id": "SBI-20181123-sip-demo1",
+  "id": "SBI-20181123-sip-demo-001",
   "version": "1.0.0",
   "scheduling_block":
   {
-    "id": "SB-20181116-sip-demo1",
+    "id": "SB-20181116-sip-demo-001",
     "project": "sip",
     "programme_block": "sip_demos"
   },
   "processing_blocks":
   [
     {
-      "id": "PB-20181116-sip-demo1",
+      "id": "PB-20181116-sip-demo-001",
       "version": "1.0.0",
       "type": "offline",
       "priority": 1,
