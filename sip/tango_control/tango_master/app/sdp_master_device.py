@@ -97,6 +97,7 @@ class SDPMasterDevice(Device):
         for pb_id in sbi_pb_ids:
             for pb_device_name in pb_devices:
                 device = DeviceProxy(pb_device_name)
+
                 if not device.pb_id:
                     LOG.info('Assigning PB device = %s to PB id = %s',
                              pb_device_name, pb_id)

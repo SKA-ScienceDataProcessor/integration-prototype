@@ -32,9 +32,8 @@ class ProcessingBlockScheduler:
 
         """
         LOG.info('Starting Processing Block Scheduler.')
-        LOG.debug('CELERY_BROKER_URL = %s', os.environ['CELERY_BROKER_URL'])
-        LOG.debug('%s', os.environ)
-        # self._db = ConfigDb()
+        # LOG.debug('CELERY_BROKER_URL = %s', os.environ['CELERY_BROKER_URL'])
+        # LOG.debug('%s', os.environ)
         # self._queue = ProcessingBlockQueue()
         self._queue = self._init_queue()
         self._pb_events = ProcessingBlockList().subscribe(__service_name__)
@@ -112,15 +111,20 @@ class ProcessingBlockScheduler:
         # This is where the PBC started (celery)
         while True:
             LOG.info('Checking for new Processing blocks to execute ..')
-            if self._num_pbcs < self._max_pbcs:
-                next_pb = self._queue[-1]
-                utcnow = datetime.datetime.utcnow()
-                time_in_queue = (utcnow - datetime_from_isoformat(next_pb[3]))
-                if time_in_queue.total_seconds() >= 10:
-                    item = self._queue.get()
-                    LOG.info('Scheduling %s for execution ...', item[2])
-                    execute_processing_block.delay(item[2])
-                    self._max_pbcs += 1
+            if len(self._queue) > 0:
+                if self._num_pbcs < self._max_pbcs:
+                    next_pb = self._queue[-1]
+                    utcnow = datetime.datetime.utcnow()
+                    time_in_queue = (utcnow -
+                                     datetime_from_isoformat(next_pb[3]))
+                    LOG.info('Considering %s for execution. '
+                             'queue duration %.2f s',
+                             next_pb[2], time_in_queue.total_seconds())
+                    if time_in_queue.total_seconds() >= 10:
+                        item = self._queue.get()
+                        LOG.info('Scheduling %s for execution ...', item[2])
+                        result = execute_processing_block.delay(item[2])
+                        self._max_pbcs += 1
             time.sleep(self._report_interval)
 
     def _monitor_pbc_status(self):

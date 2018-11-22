@@ -8,6 +8,7 @@ celery -A mock_processing_block_controller.tasks worker -l info
 import json
 import os
 import jinja2
+import time
 
 from .release import LOG, __service_name__, __version__
 from celery import Celery
@@ -18,8 +19,8 @@ from sip_docker_swarm import __version__ as sip_swarm_api_version
 from sip_logging import init_logger
 
 
-BROKER = os.getenv('CELERY_BROKER', 'redis://localhost:6379/1')
-BACKEND = os.getenv('CELERY_BACKEND', 'redis://localhost:6379/2')
+BROKER = os.getenv('CELERY_BROKER_URL', 'redis://localhost:6379/1')
+BACKEND = os.getenv('CELERY_RESULT_BACKEND', 'redis://localhost:6379/2')
 APP = Celery(broker=BROKER, backend=BACKEND)
 
 
@@ -83,6 +84,7 @@ def execute_processing_block(pb_id: str):
     abort_flag = False
 
     while True:
+        time.sleep(0.1)
 
         # Start stages.
         LOG.info('*** Considering workflow stages for execution.... ***')
