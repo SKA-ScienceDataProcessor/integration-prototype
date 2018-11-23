@@ -1,4 +1,4 @@
-skasip-config-db>=1.1.2
+skasip-config-db>=1.1.5
 skasip-logging>=1.0.14
 
 click==6.7
