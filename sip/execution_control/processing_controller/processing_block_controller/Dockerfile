@@ -4,8 +4,8 @@ LABEL maintainer="Benjamin Mort <ben.mort@gmail.com>"
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt -U
 
-# FIXME(BMo) Can't run in user space as need access to docker socket! :-(
-# RUN addgroup -S sip && adduser -S sip -G sip
+# FIXME(BMo) Can't run in user space as need access to docker socket!?
+# RUN addgroup -S sip && adduser -S sip -G sip docker
 # USER sip
 
 WORKDIR /home/sip

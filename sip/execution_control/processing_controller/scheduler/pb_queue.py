@@ -41,10 +41,11 @@ class ProcessingBlockQueue:
             entry = (priority, self._index, block_id, added_time, pb_type)
             self._index += 1
             if self._block_map.get(block_id) is not None:
-                raise KeyError('ERROR: Block id "{}" already exists!'.
+                raise KeyError('ERROR: Block id "{}" already exists in '
+                               'PC PB queue!'.
                                format(block_id))
             self._block_map[block_id] = entry
-            LOG.debug("Adding PB queue entry = %s", entry)
+            LOG.debug("Adding PB %s to queue", block_id)
             self._queue.append(entry)
             self._queue.sort()  # Sort by priority followed by insertion order.
             self._queue.reverse()

@@ -24,7 +24,7 @@ class ProcessingBlockScheduler:
     # pylint: disable=too-few-public-methods
     """Processing Block Scheduler class."""
 
-    def __init__(self, report_interval=2.0):
+    def __init__(self, report_interval=5.0):
         """Initialise the Scheduler.
 
         Args:
@@ -39,7 +39,7 @@ class ProcessingBlockScheduler:
         self._pb_events = ProcessingBlockList().subscribe(__service_name__)
         self._report_interval = report_interval
         self._num_pbcs = 0  # Current number of PBCs
-        self._max_pbcs = 1  # Maximum number of PBCs
+        self._max_pbcs = 4  # Maximum number of PBCs
         self._value = ''
         self._value_lock = Lock()
         self._pb_list = ProcessingBlockList()
@@ -57,6 +57,7 @@ class ProcessingBlockScheduler:
         LOG.info('Initialising Processing Block queue.')
         queue = ProcessingBlockQueue()
         active_pb_ids = ProcessingBlockList().active
+        LOG.info('Initialising PC PB queue: %s', active_pb_ids)
         for pb_id in active_pb_ids:
             pb = ProcessingBlock(pb_id)
             queue.put(pb.id, pb.priority, pb.type)
@@ -78,15 +79,28 @@ class ProcessingBlockScheduler:
         check_counter = 0
         while True:
             if check_counter == 20:
-                LOG.debug('Still checking for PB events...')
+                LOG.debug('Checking for PB events...')
                 check_counter = 0
             published_events = self._pb_events.get_published_events()
             for event in published_events:
-                LOG.info('Acknowledged PB event of type: %s, id: %s, '
-                         'object id: %s ', event.object_type,
-                         event.id, event.object_id)
-                pb = ProcessingBlock(event.object_id)
-                self._queue.put(event.object_id, pb.priority, pb.type)
+                if event.type == 'status_changed':
+                    LOG.info('PB status changed event: %s',
+                             event.data['status'])
+
+                    if event.data['status'] == 'created':
+                        LOG.info('Acknowledged PB created event (%s) for %s, '
+                                 '[timestamp: %s]', event.id,
+                                 event.object_id, event.timestamp)
+                        pb = ProcessingBlock(event.object_id)
+                        self._queue.put(event.object_id, pb.priority, pb.type)
+
+                    if event.data['status'] == 'completed':
+                        LOG.info('Acknowledged PB completed event (%s) for %s, '
+                                 '[timestamp: %s]', event.id,
+                                 event.object_id, event.timestamp)
+                        self._num_pbcs -= 1
+                        if self._num_pbcs < 0:
+                            self._num_pbcs = 0
 
             time.sleep(0.1)
             check_counter += 1
@@ -110,22 +124,28 @@ class ProcessingBlockScheduler:
 
         # This is where the PBC started (celery)
         while True:
-            LOG.info('Checking for new Processing blocks to execute ..')
-            if len(self._queue) > 0:
-                if self._num_pbcs < self._max_pbcs:
-                    next_pb = self._queue[-1]
-                    utcnow = datetime.datetime.utcnow()
-                    time_in_queue = (utcnow -
-                                     datetime_from_isoformat(next_pb[3]))
-                    LOG.info('Considering %s for execution. '
-                             'queue duration %.2f s',
-                             next_pb[2], time_in_queue.total_seconds())
-                    if time_in_queue.total_seconds() >= 10:
-                        item = self._queue.get()
-                        LOG.info('Scheduling %s for execution ...', item[2])
-                        execute_processing_block.delay(item[2])
-                        self._max_pbcs += 1
-            time.sleep(self._report_interval)
+            time.sleep(0.5)
+            if len(self._queue) == 0:
+                continue
+            if self._num_pbcs >= self._max_pbcs:
+                LOG.warning('Resource limit reached!')
+                continue
+            _inspect = Inspect(app=APP)
+            if len(self._queue) > 0 and _inspect.active() is not None:
+                next_pb = self._queue[-1]
+                LOG.info('Considering %s for execution...', next_pb[2])
+                utc_now = datetime.datetime.utcnow()
+                time_in_queue = (utc_now -
+                                 datetime_from_isoformat(next_pb[3]))
+                if time_in_queue.total_seconds() >= 10:
+                    item = self._queue.get()
+                    LOG.info('------------------------------------')
+                    LOG.info('>>> Executing %s! <<<', item[2])
+                    LOG.info('------------------------------------')
+                    execute_processing_block.delay(item[2])
+                    self._num_pbcs += 1
+                else:
+                    LOG.info('Waiting for resources for %s', next_pb[2])
 
     def _monitor_pbc_status(self):
         """."""
@@ -136,14 +156,17 @@ class ProcessingBlockScheduler:
         # 3. Find out the status of celery tasks.
         # 4. Update the database with findings
         while True:
-            LOG.info('Monitoring Processing Block Controller status')
-            # task_state = celery.current_app.events.State()
-            # _inspect = Inspect(app=APP)
-            # LOG.info('Active: %s', _inspect.active())
-            # LOG.info('State of the Current Celery Task:  %s',
-            #          _inspect.stats().keys)
-            # LOG.info('Celery Workers:  %s', _inspect.stats().keys())
-            # LOG.info('State of the Current Celery Task:  %s', task_state)
+            LOG.info('Checking PBC status (%d/%d)',
+                     self._num_pbcs, self._max_pbcs)
+            task_state = celery.current_app.events.State()
+            _inspect = Inspect(app=APP)
+            if _inspect.active() is not None:
+                # LOG.info('State of the Current Celery Task:  %s',
+                #          _inspect.stats().keys)
+                # LOG.info('Celery Workers:  %s', _inspect.stats().keys())
+                LOG.info('PBC state:  %s', task_state)
+            else:
+                LOG.warning('PBC service not found!')
             time.sleep(self._report_interval)
 
     def start(self):

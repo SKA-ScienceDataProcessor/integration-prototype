@@ -8,7 +8,13 @@ The format is based on
 and this project adheres to
  [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [1.1.2] - 2018-11-20
+## [1.1.5] - 2018-11-22
+
+### Updated
+- Added SchedulingObjectList method to mark a SchedulingObject as complete.
+
+
+## [1.1.4] - 2018-11-20
 
 ### Fixed
 - Fixed allowed SDP state transitions.

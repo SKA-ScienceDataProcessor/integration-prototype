@@ -63,6 +63,13 @@ class SchedulingObjectList:
         """
         return DB.get_list('{}:completed'.format(self.type))
 
+    def set_complete(self, object_id: str):
+        """Mark the specified object as completed."""
+        if object_id in self.active:
+            DB.remove_from_list('{}:active'.format(self.type), object_id)
+            DB.append_to_list('{}:completed'.format(self.type), object_id)
+
+
     ###########################################################################
     # Pub/sub events functions
     ###########################################################################

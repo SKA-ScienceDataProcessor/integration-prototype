@@ -2,7 +2,7 @@
 """SKA SDP Tango Processing Block Device."""
 # pylint: disable=no-self-use,attribute-defined-outside-init
 import time
-
+import json
 from tango import DevState
 from tango.server import Device, attribute
 
@@ -48,6 +48,48 @@ class ProcessingBlockDevice(Device):
         """Set the PB Id for this device."""
         # FIXME(BMo) instead of creating the object to check if the PB exists
         #            use a method on PB List?
-        ProcessingBlock(pb_id)
+        # ProcessingBlock(pb_id)
         self.set_state(DevState.ON)
         self._pb_id = pb_id
+
+    @attribute(dtype=str)
+    def pb_config(self):
+        """Return the PB configuration."""
+        pb = ProcessingBlock(self._pb_id)
+        return json.dumps(pb.config)
+
+    @attribute(dtype=str)
+    def pb_status(self):
+        """Return the PB status."""
+        pb = ProcessingBlock(self._pb_id)
+        return pb.status
+
+    @attribute(dtype=str)
+    def pb_type(self):
+        """Return the PB type."""
+        pb = ProcessingBlock(self._pb_id)
+        return pb.type
+
+    @attribute(dtype=str)
+    def sbi_id(self):
+        """Return the PB SBI ID."""
+        pb = ProcessingBlock(self._pb_id)
+        return pb.sbi_id
+
+    @attribute(dtype=str)
+    def pb_version(self):
+        """Return the PB version."""
+        pb = ProcessingBlock(self._pb_id)
+        return pb.version
+
+    @attribute(dtype=str)
+    def pb_last_updated(self):
+        """Return the PB ."""
+        pb = ProcessingBlock(self._pb_id)
+        return pb.updated.isoformat()
+
+    @attribute(dtype=str)
+    def pb_created(self):
+        """Return the PB ."""
+        pb = ProcessingBlock(self._pb_id)
+        return pb.created.isoformat()

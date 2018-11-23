@@ -10,10 +10,12 @@ import os
 import jinja2
 import time
 
+import yaml
+
 from .release import LOG, __service_name__, __version__
 from celery import Celery
 from copy import deepcopy
-from sip_config_db.scheduling import ProcessingBlock
+from sip_config_db.scheduling import ProcessingBlock, ProcessingBlockList
 from sip_docker_swarm import DockerClient
 from sip_docker_swarm import __version__ as sip_swarm_api_version
 from sip_logging import init_logger
@@ -28,10 +30,7 @@ APP = Celery(broker=BROKER, backend=BACKEND)
                'version')
 def version():
     """Return the PBC version."""
-    # log = logging.getLogger('sip')
-    # log.propagate = False
-    # disable_logger('', propagate=False)
-    init_logger(show_log_origin=True)
+    init_logger(show_log_origin=True, p3_mode=False)
     LOG.info('Getting the PBC version! version = %s', __version__)
     return __version__
 
@@ -41,37 +40,23 @@ def version():
 def execute_processing_block(pb_id: str):
     """Execute a processing block.
 
-    {
-        "status": "none(change to: unknown?)" -> "running" -> "complete" (
-        "aborted", "failed")
-        "services": {
-            'id': {
-                "name": ".."
-                "status": ".."
-                "complete": True|False
-            },
-            {
-                "service_id": "..",
-                "status": ".."
-            },
-
-
-        },
-        ...
-    }
-
     Args:
         pb_id (str): The PB id for the PBC
 
     """
-    init_logger(show_log_origin=True, propagate=False)
-
-    LOG.info('--- %s ---', __service_name__)
+    init_logger(show_log_origin=True, propagate=False, p3_mode=False)
+    LOG.info('+' * 60)
+    LOG.info('+' * 60)
+    LOG.info('+ Executing Processing block: %s!', pb_id)
+    LOG.info('+' * 60)
+    LOG.info('+' * 60)
     LOG.info('Using docker swarm api version: %s', sip_swarm_api_version)
-    LOG.info('**** Executing Processing block: %s! ****', pb_id)
-    LOG.info('Starting workflow ... ')
 
     pb = ProcessingBlock(pb_id)
+
+    LOG.info('Starting workflow %s %s', pb.workflow_id, pb.workflow_version)
+
+    pb.set_status('running')
     docker = DockerClient()
 
     # Coping workflow stages to a dict
@@ -87,18 +72,18 @@ def execute_processing_block(pb_id: str):
         time.sleep(0.1)
 
         # Start stages.
-        LOG.info('*** Considering workflow stages for execution.... ***')
+        # LOG.info('*** Considering workflow stages for execution.... ***')
         for workflow_stage in pb.workflow_stages:
-            LOG.info('Workflow Stage: %s', workflow_stage.id)
-            LOG.info('A. Workflow Stage Keys: %s', workflow_stage_dict.keys())
+            # LOG.info('Workflow Stage: %s', workflow_stage.id)
+            # LOG.info('A. Workflow Stage Keys: %s', workflow_stage_dict.keys())
             stage_data = workflow_stage_dict[workflow_stage.id]
 
             # Check if we can start this stage.
             stage_data['start'] = False
-            LOG.info('Workflow Stage Status %s', stage_data['status'])
+            # LOG.info('Workflow Stage Status %s', stage_data['status'])
 
             if stage_data['status'] == 'none':
-                LOG.info('Dependencies: %s', workflow_stage.dependencies)
+                # LOG.info('Dependencies: %s', workflow_stage.dependencies)
                 if not workflow_stage.dependencies:
                     stage_data['start'] = True
                 else:
@@ -116,12 +101,14 @@ def execute_processing_block(pb_id: str):
                         # ii += 1
                     stage_data['start'] = all(dependency_status)
 
-            LOG.info('Start stage? %s',
-                     ("true" if stage_data['start'] else "false"))
+            # LOG.info('Start stage? %s',
+            #          ("true" if stage_data['start'] else "false"))
 
             if stage_data['start']:
                 # Configure EE (set up templates)
-                LOG.info('*** Configuring EE. ***')
+                LOG.info(' Starting workflow stage: %s', workflow_stage.id)
+                LOG.info('^' * 60)
+                LOG.info('Configuring EE templates.')
                 args_template = jinja2.Template(workflow_stage.args_template)
                 # log.debug('Args template: %s', stage.args_template)
                 stage_params = pb.workflow_parameters[workflow_stage.id]
@@ -130,15 +117,30 @@ def execute_processing_block(pb_id: str):
                 args = args_template.render(stage=template_params)
                 # log.debug("Rendered args: '%s'", args)
                 # log.debug('Rendered args type: %s', type(args))
+                LOG.info('Resolving workflow script arguments.')
+
                 args = json.dumps(json.loads(args))
                 compose_template = jinja2.Template(
                     workflow_stage.compose_template)
                 compose_str = compose_template.render(stage=dict(args=args))
-                LOG.info('Compose String: {}'.format(compose_str))
+
+                # Prefix service names with the PB id
+                compose_dict = yaml.load(compose_str)
+                service_names = compose_dict['services'].keys()
+                new_service_names = [
+                    '{}_{}_{}'.format(pb_id, pb.workflow_id, name)
+                    for name in service_names]
+                for new, old in zip(new_service_names, service_names):
+                    compose_dict['services'][new] = \
+                        compose_dict['services'].pop(old)
+                compose_str = yaml.dump(compose_dict)
 
                 # Run the compose file
                 service_ids = docker.create_services(compose_str)
+                LOG.info('Staring workflow containers:')
                 for service_id in service_ids:
+                    service_name = docker.get_service_name(service_id)
+                    LOG.info("  %s, %s ", service_name, service_id)
                     stage_data['services'][service_id] = {}
                     LOG.info('Created Services: {}'.format(service_ids))
                     stage_data['services'][service_id] = dict(
@@ -149,7 +151,7 @@ def execute_processing_block(pb_id: str):
                 stage_data["status"] = 'running'
 
             # Check and update stage status
-            LOG.info('*** Checking and updating stage status. ***')
+            # LOG.info('*** Checking and updating stage status. ***')
             service_status_complete = []
 
             # FIXME(BMo) is not "complete" -> is "running"
@@ -164,10 +166,12 @@ def execute_processing_block(pb_id: str):
                     service_dict['status'] = service_state
                     service_dict['complete'] = (service_state == 'shutdown')
                     service_status_complete.append(service_dict['complete'])
-                    LOG.info('Status of service %s (id=%s) = %s',
-                             service_dict['name'], service_id,
-                             service_dict['status'])
+                    # LOG.info('Status of service %s (id=%s) = %s',
+                    #          service_dict['name'], service_id,
+                    #          service_dict['status'])
                     if all(service_status_complete):
+                        LOG.info('Workflow stage service %s complete!',
+                                 workflow_stage.id)
                         stage_data['status'] = "complete"
 
         # TODO(BMo) Ask the database if the abort flag on the PB is set.
@@ -183,17 +187,23 @@ def execute_processing_block(pb_id: str):
 
         # Check if all stages are complete, if so end the PBC by breaking
         # out of the while loop
-        LOG.info('*** Check if workflow is complete ...')
-        LOG.info('B. Workflow Stage Keys: %s', workflow_stage_dict.keys())
         complete_stages = []
         for stage_id, stage_config in workflow_stage_dict.items():
-            LOG.info('Workflow Stage Status %s = %s', stage_id,
-                     stage_config['status'])
+            # LOG.info('Workflow Stage Status %s = %s', stage_id,
+            #          stage_config['status'])
             complete_stages.append((stage_config['status'] == 'complete'))
         # log.debug(' complete_stages = %s', complete_stages)
         if all(complete_stages):
-            LOG.info('PB complete!')
+            LOG.info('PB workflow complete!')
             break
-        LOG.info('C. Workflow Stage Keys: %s', workflow_stage_dict.keys())
+        # LOG.info('C. Workflow Stage Keys: %s', workflow_stage_dict.keys())
 
-    LOG.info('Exiting PBC.')
+    pb_list = ProcessingBlockList()
+    pb_list.set_complete(pb_id)
+    pb.set_status('completed')
+    LOG.info('-' * 60)
+    LOG.info('-' * 60)
+    LOG.info('- Destroying PBC for %s', pb_id)
+    LOG.info('-' * 60)
+    LOG.info('-' * 60)
+
