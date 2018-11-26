@@ -17,7 +17,7 @@ services:
   - docker
 
 python:
-  - "3.6"
+  - "3.6.5"
 
 cache: pip
 
