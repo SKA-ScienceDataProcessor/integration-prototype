@@ -97,7 +97,7 @@ def _update_services_target_state(sdp_target_state: str):
     Args:
         sdp_target_state (str): Target state of SDP
 
-    # """
+    """
     sdp_state = SDPState()
     service_states = get_service_state_list()
 
@@ -115,7 +115,6 @@ def _update_services_target_state(sdp_target_state: str):
         delay = random.uniform(0.4, 0.5)
         SCHEDULER.enter(delay, 1, _update_sdp_current_state)
 
-    else:
         LOG.debug('no need to wait on service states')
         sdp_state.update_current_state(sdp_state.target_state)
         SCHEDULER.enter(0, 1, _process_events)
@@ -170,7 +169,8 @@ def _process_events():
             if new_service_state in ['fault', 'alarm']:
                 LOG.warning('Service %s has an %s', event.object_id,
                             new_service_state)
-                # Respond to the service state change by updating the SDP state.
+                # Respond to the service state change by updating the SDP
+                # state.
                 # sdp_state.update_current_state(new_service_state)
                 # TODO(BMo) need to review logic here.
 
@@ -314,23 +314,68 @@ def main():
         LOG.info('Exiting!')
 
 
-def main2():
-    """New Main."""
-    # Parse command line args.
-    args = _parse_args()
-    LOG.info("Starting: %s", __service_id__)
-
+def _process_state_change_events():
+    """Process state change events."""
     sdp_state = SDPState()
+    service_states = get_service_state_list()
+    state_events = sdp_state.get_event_queue(subscriber=__service_name__)
+
+    while True:
+        time.sleep(0.2)
+        event = state_events.get()
+        if event:
+
+            LOG.debug('>> event detected: %s %s %s', event.object_id,
+                      event.type, event.data)
+
+            if event.object_id == 'SDP' and \
+                    event.type == 'target_state_updated':
+                LOG.info('SDP target state changed to %s',
+                         sdp_state.target_state)
+
+                # If the sdp is already in the target state do nothing
+                if sdp_state.target_state == sdp_state.current_state:
+                    LOG.warning('SDP already in %s state',
+                                sdp_state.current_state)
+                    continue
+
+                # If asking SDP to turn off, also turn off services.
+                if sdp_state.target_state == 'off':
+                    LOG.info('Turning off services!')
+                    for service_state in service_states:
+                        service_state.update_target_state('off')
+                        service_state.update_current_state('off')
+
+                LOG.info('Processing target state change request ...')
+                time.sleep(0.05)
+                LOG.info('Done processing target state change request!')
+
+                # Assuming that the SDP has responding to the target
+                # target state command by now, set the current state
+                # to the target state.
+                sdp_state.update_current_state(sdp_state.target_state)
+
+            # TODO(BMo) function to watch for changes in the \
+            # current state of services and update the state of SDP
+            # accordingly.
+
+
+def temp_main():
+    """Temporary main function used for demos on the 23/11/18."""
+    # Parse command line args.
+    _parse_args()
+    LOG.info("Starting: %s", __service_id__)
 
     # Subscribe to state change events.
     # FIXME(BMo) This API is unfortunate as it looks like we are only
     # subscribing to sdp_state events.
     LOG.info('Subscribing to state change events (subscriber = %s)',
              __service_name__)
-    state_events = sdp_state.subscribe(subscriber=__service_name__)
+    sdp_state = SDPState()
+    _ = sdp_state.subscribe(subscriber=__service_name__)
 
     # Initialise the service.
-    service_states = _init(sdp_state)
+    _ = _init(sdp_state)
 
     # Enter a pseudo event-loop (using Sched) to monitor for state change
     # events
@@ -338,52 +383,13 @@ def main2():
     LOG.info('Finished initialising!')
     LOG.info('Responding to state change events ...')
     try:
-        while True:
-            time.sleep(0.2)
-            event = state_events.get()
-            if event:
-                LOG.debug('>> event detected: %s %s %s', event.object_id,
-                          event.type, event.data)
-                if event.object_id == 'SDP' and \
-                        event.type == 'target_state_updated':
-                    LOG.info('SDP target state changed to %s',
-                             sdp_state.target_state)
-
-                    # If the sdp is already in the target state do nothing
-                    if sdp_state.target_state == sdp_state.current_state:
-                        LOG.warning('SDP already in %s state',
-                                    sdp_state.current_state)
-                        continue
-
-                    # If asking SDP to turn off, also turn off services.
-                    if sdp_state.target_state == 'off':
-                        LOG.info('Turning off services!')
-                        for service_state in service_states:
-                            service_state.update_target_state('off')
-                            service_state.update_current_state('off')
-
-                    LOG.info('Processing target state change request ...')
-                    time.sleep(0.05)
-                    LOG.info('Done processing target state change request!')
-
-                    # Assuming that the SDP has responding to the target
-                    # target state command by now, set the current state
-                    # to the target state.
-                    try:
-                        sdp_state.update_current_state(
-                            sdp_state.target_state)
-                    except ValueError as error:
-                        LOG.critical('Unable to update current state: %s',
-                                     str(error))
-
-                # TODO(BMo) function to watch for changes in the \
-                # current state of services and update the state of SDP
-                # accordingly.
-
+        _process_state_change_events()
+    except ValueError as error:
+        LOG.critical('Value error: %s', str(error))
     except KeyboardInterrupt as err:
         LOG.debug('Keyboard Interrupt %s', err)
         LOG.info('Exiting!')
 
 
 if __name__ == '__main__':
-    main2()
+    temp_main()
