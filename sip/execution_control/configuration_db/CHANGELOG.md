@@ -8,9 +8,15 @@ The format is based on
 and this project adheres to
  [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased] - 2018-11-26
+
+### Fixed
+- A number of cyclic dependency issues
+
+
 ## [1.1.5] - 2018-11-22
 
-### Updated
+### Added
 - Added SchedulingObjectList method to mark a SchedulingObject as complete.
 
 
