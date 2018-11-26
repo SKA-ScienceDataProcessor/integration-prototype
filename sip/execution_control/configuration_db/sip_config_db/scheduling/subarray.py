@@ -49,7 +49,7 @@ class Subarray:
 
         """
         value = DB.get_hash_value(self._key, 'active')
-        return True if value == 'True' else False
+        return value == 'True'
 
     @property
     def config(self) -> dict:

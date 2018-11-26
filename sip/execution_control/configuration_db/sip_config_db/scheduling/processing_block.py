@@ -1,5 +1,5 @@
 # coding=utf-8
-"""High Level interface to Processing Block (PB) objects."""
+"""Interface to Processing Block (PB) data objects."""
 import ast
 import datetime
 from random import randint

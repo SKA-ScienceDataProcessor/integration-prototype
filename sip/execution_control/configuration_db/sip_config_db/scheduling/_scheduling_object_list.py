@@ -69,7 +69,6 @@ class SchedulingObjectList:
             DB.remove_from_list('{}:active'.format(self.type), object_id)
             DB.append_to_list('{}:completed'.format(self.type), object_id)
 
-
     ###########################################################################
     # Pub/sub events functions
     ###########################################################################
