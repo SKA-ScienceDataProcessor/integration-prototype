@@ -6,9 +6,10 @@ import os
 from typing import List, Union
 
 from ._keys import SUBARRAY_KEY
-from .. import _events
+from .scheduling_block_instance import SchedulingBlockInstance
 from .. import DB, LOG
-from . import SchedulingBlockInstance
+from .._events.event_queue import EventQueue
+from .._events.events import get_subscribers, publish, subscribe
 
 
 class Subarray:
@@ -176,17 +177,17 @@ class Subarray:
     # -------------------------------------------------------------------------
 
     @staticmethod
-    def subscribe(subscriber: str) -> _events.EventQueue:
+    def subscribe(subscriber: str) -> EventQueue:
         """Subscribe to subarray events.
 
         Args:
             subscriber (str): Subscriber name.
 
         Returns:
-            events.EventQueue, Event queue object for querying events.
+            EventQueue, Event queue object for querying events.
 
         """
-        return _events.subscribe(SUBARRAY_KEY, subscriber)
+        return subscribe(SUBARRAY_KEY, subscriber)
 
     @staticmethod
     def get_subscribers():
@@ -196,7 +197,7 @@ class Subarray:
             List[str], list of subscriber names.
 
         """
-        return _events.get_subscribers(SUBARRAY_KEY)
+        return get_subscribers(SUBARRAY_KEY)
 
     def publish(self, event_type: str, event_data: dict = None):
         """Publish a subarray event.
@@ -210,9 +211,9 @@ class Subarray:
         _origin = (os.path.basename(_stack[2][1]) + '::' +
                    _stack[2][3]+'::L{}'.format(_stack[2][2]))
         LOG.debug('Publishing subarray event: %s', event_type)
-        _events.publish(event_type=event_type,
-                        event_data=event_data,
-                        object_type=SUBARRAY_KEY,
-                        object_id=self._id,
-                        object_key=self._key,
-                        origin=_origin)
+        publish(event_type=event_type,
+                event_data=event_data,
+                object_type=SUBARRAY_KEY,
+                object_id=self._id,
+                object_key=self._key,
+                origin=_origin)

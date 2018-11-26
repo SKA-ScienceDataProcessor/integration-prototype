@@ -5,7 +5,7 @@ Intended for registering a new workflow type with the Configuration database.
 """
 import ast
 import json
-from os.path import join, dirname
+from os.path import dirname, join
 
 import jsonschema
 

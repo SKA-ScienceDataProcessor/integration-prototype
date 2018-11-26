@@ -3,7 +3,8 @@
 import ast
 from typing import Callable, List, Union
 
-from . import Event, _keys
+from . import _keys
+from .event import Event
 from .. import DB, LOG
 
 

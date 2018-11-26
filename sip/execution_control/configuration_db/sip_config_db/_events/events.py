@@ -1,10 +1,12 @@
 # coding=utf-8
 """Execution Control Configuration database events module."""
 from ast import literal_eval
-from typing import Callable, List
 from copy import deepcopy
+from typing import Callable, List
 
-from . import EventQueue, _keys, Event
+from . import _keys
+from .event import Event
+from .event_queue import EventQueue
 from .. import DB
 
 

@@ -1,23 +1,27 @@
 # coding=utf-8
-"""Test of the Configuration Database events interface.
-
-This is the lower-level events API used to add events to objects in the
-database.
-"""
-import time
-from threading import Thread
-
-from .. import subscribe, get_subscribers, publish
-from .. import EventQueue
-from ... import DB
+"""Test of the Configuration Database events interface."""
 
 
-def test_events_test_01():
-    """Misc tests of the events interface."""
+def test_events_subscribe():
+    """Test subscribing to events."""
+    from ... import DB
+    from ..events import subscribe, get_subscribers
     DB.flush_db()
+    object_type = 'test_object'
+    subscriber = 'test_subscriber'
+    subscribe(object_type, subscriber)
+    assert subscriber in get_subscribers(object_type)
+
+
+def test_events_basic_usage():
+    """Misc tests of the events interface."""
+    from ... import DB
+    from ..events import subscribe, get_subscribers, publish
+    DB.flush_db()
+
     event_type = 'test_event_type'
     subscriber = 'test_subscriber'
-    object_type = 'test_object_type'
+    object_type = 'test_object'
     object_id = 'test_object_id'
 
     # Subscribe to 'test' events with the 'test' subscriber
@@ -58,6 +62,12 @@ CALLBACK_EVENT_COUNT = 0
 
 def test_events_with_callback():
     """Test subscribing to events with a callback handler."""
+    import time
+    from threading import Thread
+    from ... import DB
+    from ..events import subscribe, get_subscribers, publish
+    from ..event_queue import EventQueue
+
     def _callback_handler(message):
         """Event callback handler."""
         global CALLBACK_EVENT_COUNT  # pylint: disable=global-statement
@@ -105,6 +115,9 @@ def test_events_with_callback():
 
 def test_events_recovery():
     """Test event recovery, eg. after a subscriber service crash."""
+    from ... import DB
+    from threading import Thread
+    from ..events import subscribe, publish
     DB.flush_db()
     event_type = 'test_event'
     subscriber = 'test_subscriber'

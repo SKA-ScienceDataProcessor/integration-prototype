@@ -5,9 +5,11 @@ import os
 from datetime import datetime
 from typing import List
 
-from .. import DB, _events, LOG
+from .. import DB, LOG
 from ..utils.datetime_utils import datetime_from_isoformat
 from ._keys import STATES_KEY
+from .._events.event_queue import EventQueue
+from .._events.events import subscribe, get_subscribers, publish
 
 
 class StateObject:
@@ -89,10 +91,10 @@ class StateObject:
 
         Args:
             value (str): New value for target state
+            force (bool): If true, ignore allowed transitions
 
         Returns:
             datetime, update timestamp
-            force (bool): If true, ignore allowed transitions
 
         Raises:
             RuntimeError, if it is not possible to currently set the target
@@ -160,7 +162,7 @@ class StateObject:
     ###########################################################################
 
     @staticmethod
-    def subscribe(subscriber: str) -> _events.EventQueue:
+    def subscribe(subscriber: str) -> EventQueue:
         """Subscribe to state events.
 
         Args:
@@ -170,7 +172,7 @@ class StateObject:
             events.EventQueue, Event queue object for querying events.
 
         """
-        return _events.subscribe(STATES_KEY, subscriber)
+        return subscribe(STATES_KEY, subscriber)
 
     @staticmethod
     def get_subscribers() -> List[str]:
@@ -180,7 +182,7 @@ class StateObject:
             List[str], list of subscriber names.
 
         """
-        return _events.get_subscribers(STATES_KEY)
+        return get_subscribers(STATES_KEY)
 
     def publish(self, event_type: str, event_data: dict = None):
         """Publish an state event.
@@ -193,16 +195,16 @@ class StateObject:
         _stack = inspect.stack()
         _origin = (os.path.basename(_stack[3][1]) + '::' +
                    _stack[3][3]+'::L{}'.format(_stack[3][2]))
-        _events.publish(event_type=event_type,
-                        event_data=event_data,
-                        object_type=self._type,
-                        object_id=self._id,
-                        object_key=self._key,
-                        origin=_origin)
+        publish(event_type=event_type,
+                event_data=event_data,
+                object_type=self._type,
+                object_id=self._id,
+                object_key=self._key,
+                origin=_origin)
 
     def get_event_queue(self, subscriber: str):
         """Get an event queue for the specified subscriber."""
-        return _events.EventQueue(self._type, subscriber)
+        return EventQueue(self._type, subscriber)
 
     ###########################################################################
     # Private functions

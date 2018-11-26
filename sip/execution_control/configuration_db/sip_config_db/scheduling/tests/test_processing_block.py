@@ -11,7 +11,8 @@ import jinja2
 import yaml
 
 from .workflow_test_utils import add_test_sbi_workflow_definitions
-from .. import ProcessingBlock, SchedulingBlockInstance
+from ..processing_block import ProcessingBlock
+from ..scheduling_block_instance import SchedulingBlockInstance
 from ... import DB
 from ...utils.generate_sbi_config import generate_sbi_config
 

@@ -2,7 +2,7 @@
 """Test of JSON schema."""
 
 import json
-from os.path import join, dirname
+from os.path import dirname, join
 
 import jsonschema
 

@@ -1,8 +1,10 @@
 # -*- coding: utf-8 -*-
 """Tests of the Scheduling Block Instance List API."""
 from .workflow_test_utils import add_test_sbi_workflow_definitions
-from .. import ProcessingBlock, ProcessingBlockList, \
-    SchedulingBlockInstanceList, Subarray
+from ..processing_block import ProcessingBlock
+from ..processing_block_list import ProcessingBlockList
+from ..scheduling_block_instance_list import SchedulingBlockInstanceList
+from ..subarray import Subarray
 from ... import DB
 from ...utils.generate_sbi_config import generate_sbi_config
 

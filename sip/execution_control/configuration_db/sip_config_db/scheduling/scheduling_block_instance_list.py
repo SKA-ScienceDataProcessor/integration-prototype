@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 """High-level interface for Scheduling Block Instance (SBI) objects."""
-from . import SchedulingBlockInstance
 from ._keys import SBI_KEY
 from ._scheduling_object_list import SchedulingObjectList
+from .scheduling_block_instance import SchedulingBlockInstance
 
 
 class SchedulingBlockInstanceList(SchedulingObjectList):

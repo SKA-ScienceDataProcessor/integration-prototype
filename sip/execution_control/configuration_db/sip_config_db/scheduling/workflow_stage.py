@@ -4,9 +4,10 @@ import ast
 import json
 from typing import List
 
-from . import Dependency, Resource
 from ._keys import PB_KEY
 from ._scheduling_object import SchedulingObject
+from .dependency import Dependency
+from .resource import Resource
 from .. import DB
 
 

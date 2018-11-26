@@ -1,7 +1,8 @@
 # coding=utf-8
 """Tests of the SubarrayList API."""
+from ..subarray import Subarray
+from ..subarray_list import SubarrayList
 from ... import DB
-from .. import Subarray, SubarrayList
 
 
 def test_initialise():

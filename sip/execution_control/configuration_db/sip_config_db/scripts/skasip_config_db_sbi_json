@@ -4,9 +4,8 @@
 import argparse
 import json
 
-from sip_logging import init_logger
-
 from sip_config_db.utils.generate_sbi_config import generate_sbi_config
+from sip_logging import init_logger
 
 
 def main():

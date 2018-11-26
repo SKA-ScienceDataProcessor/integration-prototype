@@ -2,11 +2,10 @@
 """Tests of the Scheduling Block Instance API."""
 import datetime
 
-from ... import DB
-from .. import SchedulingBlockInstance
-from ...utils.generate_sbi_config import generate_sbi_config
-
 from .workflow_test_utils import add_test_sbi_workflow_definitions
+from ..scheduling_block_instance import SchedulingBlockInstance
+from ... import DB
+from ...utils.generate_sbi_config import generate_sbi_config
 
 
 def test_sbi_get_id():

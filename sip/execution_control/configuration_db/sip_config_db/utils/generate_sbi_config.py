@@ -9,8 +9,10 @@ from random import choice, randint
 from typing import List, Union
 
 from .. import DB
-from ..scheduling import ProcessingBlock, SchedulingBlockInstance, \
-    PB_VERSION, SBI_VERSION
+from ..scheduling.processing_block import ProcessingBlock
+from ..scheduling.scheduling_block_instance import SchedulingBlockInstance
+from ..scheduling import PB_VERSION, SBI_VERSION
+
 
 PB_TYPES = [
     'realtime',

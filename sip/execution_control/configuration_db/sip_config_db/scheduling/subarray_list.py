@@ -2,8 +2,8 @@
 """High-level interface for subarray objects."""
 from typing import List
 
+from .subarray import Subarray
 from .. import DB
-from . import Subarray
 
 NUM_SUBARRAYS = 16
 

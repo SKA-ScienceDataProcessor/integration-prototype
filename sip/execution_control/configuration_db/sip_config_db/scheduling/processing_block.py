@@ -5,9 +5,11 @@ import datetime
 from random import randint
 from typing import List, Union
 
-from . import Dependency, Resource, WorkflowStage
 from ._keys import PB_KEY
 from ._scheduling_object import SchedulingObject
+from .dependency import Dependency
+from .resource import Resource
+from .workflow_stage import WorkflowStage
 from .. import DB, LOG
 from ..utils.datetime_utils import datetime_from_isoformat
 
