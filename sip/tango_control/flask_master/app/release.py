@@ -13,5 +13,6 @@ __all__ = [
     '__subsystem__',
     '__service_name__',
     '__version__',
+    '__service_id__',
     'LOG'
 ]

@@ -1,18 +1,18 @@
 # -*- coding: utf-8 -*-
 """SIP SDP Master Interface Service, Restful version."""
 
+import time
+from http import HTTPStatus
+
 import redis
 from flask import request
-from flask_api import FlaskAPI, status
-from http import HTTPStatus
-import time
+from flask_api import FlaskAPI
 
-from sip_config_db.scheduling import ProcessingBlock, \
-    SchedulingBlockInstance, SchedulingBlockInstanceList, \
-    ProcessingBlockList
+from sip_config_db.scheduling import ProcessingBlockList, \
+    SchedulingBlockInstanceList
 from sip_config_db.states import SDPState
 from sip_logging import init_logger
-from .release import __version__, LOG, __service_id__
+from .release import LOG, __service_id__, __version__
 
 init_logger('flask.logging.wsgi_errors_stream')
 init_logger()
@@ -68,7 +68,7 @@ def root():
 
 @APP.route('/health')
 def health():
-    """Check the health of this service"""
+    """Check the health of this service."""
     up_time = time.time() - START_TIME
     response = dict(service=__service_id__,
                     uptime='{:.2f}s'.format(up_time))
@@ -85,7 +85,7 @@ def version():
 
 @APP.route('/allowed_target_sdp_states')
 def allowed_transitions():
-    """Allowed target states."""
+    """Get target states allowed for the current state."""
     sdp_state = SDPState()
     return sdp_state.allowed_target_states[sdp_state.current_state]
 
@@ -126,9 +126,11 @@ def get_target_state():
         LOG.debug('Getting target state')
         target_state = sdp_state.target_state
         LOG.debug('Target state = %s', target_state)
-        return dict(current_target_state=target_state,
-                    allowed_target_states=sdp_state.allowed_target_states[sdp_state.current_state],
-                    last_updated=sdp_state.target_timestamp.isoformat())
+        return dict(
+            current_target_state=target_state,
+            allowed_target_states=sdp_state.allowed_target_states[
+                sdp_state.current_state],
+            last_updated=sdp_state.target_timestamp.isoformat())
         # if target_state is None:
         #     LOG.debug('target state unknown')
         #     return {'target_state': target_state,
@@ -227,7 +229,8 @@ def get_current_state():
     # if request.method == 'PUT':
     #
     #     # Has the user used unknown keys in the query?
-    #     unk_kys = [ky for ky in request.data.keys() if ky not in request_keys]
+    #     unk_kys = [ky for ky in request.data.keys()
+    #                if ky not in request_keys]
     #
     #     # unk_kys should be empty
     #     if unk_kys:
@@ -330,5 +333,3 @@ def scheduling_blocks():
     return dict(active=sbi_list.active,
                 completed=sbi_list.completed,
                 aborted=sbi_list.aborted)
-
-
