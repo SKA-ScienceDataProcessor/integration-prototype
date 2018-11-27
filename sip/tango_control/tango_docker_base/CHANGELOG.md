@@ -8,7 +8,12 @@ The format is based on
 and this project adheres to
  [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased - 1.1.3] - 2018-11-27
+
+### Removed
+- SIP python packages.
+
 ## [1.1.2] - 2018-11-20
 
-### Fixed
-- Updated to SDP EC Configuration Database library v1.1.2.
+### Changed
+- Updated to `skasip-config-db==1.1.2`

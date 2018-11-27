@@ -4,10 +4,12 @@ import ast
 from typing import List
 
 from ._keys import PB_KEY, SBI_KEY
-from .. import DB, LOG
+from .. import ConfigDb, LOG
 from .._events.event import Event
 from .._events.event_queue import EventQueue
-from .._events.events import get_events, get_subscribers, publish, subscribe
+from .._events.pubsub import get_events, get_subscribers, publish, subscribe
+
+DB = ConfigDb()
 
 
 class SchedulingObject:

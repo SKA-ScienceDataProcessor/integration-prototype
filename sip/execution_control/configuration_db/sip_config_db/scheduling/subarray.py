@@ -7,9 +7,12 @@ from typing import List, Union
 
 from ._keys import SUBARRAY_KEY
 from .scheduling_block_instance import SchedulingBlockInstance
-from .. import DB, LOG
+from .. import ConfigDb
 from .._events.event_queue import EventQueue
-from .._events.events import get_subscribers, publish, subscribe
+from .._events.pubsub import get_subscribers, publish, subscribe
+from .._logging import LOG
+
+DB = ConfigDb()
 
 
 class Subarray:

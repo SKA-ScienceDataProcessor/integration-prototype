@@ -10,8 +10,10 @@ from ._scheduling_object import SchedulingObject
 from .dependency import Dependency
 from .resource import Resource
 from .workflow_stage import WorkflowStage
-from .. import DB, LOG
+from .. import ConfigDb, LOG
 from ..utils.datetime_utils import datetime_from_isoformat
+
+DB = ConfigDb()
 
 
 class ProcessingBlock(SchedulingObject):

@@ -4,9 +4,7 @@
 import argparse
 
 from sip_config_db import LOG
-from sip_config_db.scheduling.scheduling_block_instance \
-    import SchedulingBlockInstance
-from sip_config_db.scheduling.subarray import Subarray
+from sip_config_db.scheduling import SchedulingBlockInstance, Subarray
 from sip_config_db.utils.generate_sbi_config import generate_sbi_config
 from sip_logging import init_logger
 

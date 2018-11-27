@@ -1,2 +1,2 @@
 # coding=utf-8
-"""Flask RESTful SDP Master."""
+"""SDP Master (RESTful Flask web services interface)."""

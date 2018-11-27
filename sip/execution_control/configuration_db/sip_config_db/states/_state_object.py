@@ -5,11 +5,13 @@ import os
 from datetime import datetime
 from typing import List
 
-from .. import DB, LOG
-from ..utils.datetime_utils import datetime_from_isoformat
 from ._keys import STATES_KEY
+from .. import ConfigDb, LOG
 from .._events.event_queue import EventQueue
-from .._events.events import subscribe, get_subscribers, publish
+from .._events.pubsub import get_subscribers, publish, subscribe
+from ..utils.datetime_utils import datetime_from_isoformat
+
+DB = ConfigDb()
 
 
 class StateObject:

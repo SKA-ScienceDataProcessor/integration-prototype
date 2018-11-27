@@ -7,6 +7,7 @@ from functools import wraps
 import redis
 import redis.exceptions
 
+
 LOG = logging.getLogger('SIP.EC.CDB')
 REDIS_HOST = os.getenv('REDIS_HOST', 'localhost')
 REDIS_PORT = os.getenv('REDIS_PORT', '6379')
@@ -27,11 +28,6 @@ def check_connection(func):
                                   .format(REDIS_HOST, REDIS_PORT,
                                           REDIS_DB_ID))
     return with_exception_handling
-
-
-def flush_db():
-    """Flush (clear) the database."""
-    ConfigDb().flush_db()
 
 
 class ConfigDb:

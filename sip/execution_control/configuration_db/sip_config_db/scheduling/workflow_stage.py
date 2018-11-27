@@ -8,7 +8,10 @@ from ._keys import PB_KEY
 from ._scheduling_object import SchedulingObject
 from .dependency import Dependency
 from .resource import Resource
-from .. import DB
+from .. import ConfigDb
+
+
+DB = ConfigDb()
 
 
 class WorkflowStage:

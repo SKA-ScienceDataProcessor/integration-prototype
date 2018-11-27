@@ -14,7 +14,9 @@ from ._keys import PB_KEY, SBI_KEY
 from ._scheduling_object import SchedulingObject
 from .processing_block import ProcessingBlock
 from .workflow_definitions import get_workflow, get_workflows
-from .. import DB
+from .. import ConfigDb
+
+DB = ConfigDb()
 
 
 class SchedulingBlockInstance(SchedulingObject):

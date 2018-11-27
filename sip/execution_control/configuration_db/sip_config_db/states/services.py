@@ -2,8 +2,10 @@
 """Module for interacting with services in the Configuration Database."""
 from typing import List
 
-from .. import DB, LOG
 from .service_state import ServiceState
+from .. import ConfigDb, LOG
+
+DB = ConfigDb()
 
 
 def get_service_state_list() -> List[ServiceState]:

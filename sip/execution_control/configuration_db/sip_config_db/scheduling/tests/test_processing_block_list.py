@@ -10,10 +10,11 @@ from random import choice
 import pytest
 
 from .workflow_test_utils import add_test_sbi_workflow_definitions
-from ..processing_block_list import ProcessingBlockList
-from ..scheduling_block_instance import SchedulingBlockInstance
-from ... import DB
+from .. import ProcessingBlockList, SchedulingBlockInstance
+from ... import ConfigDb
 from ...utils.generate_sbi_config import generate_sbi_config
+
+DB = ConfigDb()
 
 
 def test_create_pb_list_object():

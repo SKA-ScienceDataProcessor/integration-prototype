@@ -7,7 +7,9 @@ from typing import Callable, List
 from . import _keys
 from .event import Event
 from .event_queue import EventQueue
-from .. import DB
+from .. import ConfigDb
+
+DB = ConfigDb()
 
 
 def subscribe(object_type: str, subscriber: str,

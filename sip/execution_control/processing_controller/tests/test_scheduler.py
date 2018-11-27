@@ -1,20 +1,18 @@
 # coding=utf-8
-"""."""
-
+"""Unit tests of the Processing Controller Scheduler."""
 import json
 from os.path import dirname, join
 
-
-from sip_config_db import DB
+from sip_config_db import ConfigDb
 from sip_config_db.scheduling import SchedulingBlockInstance
 from .test_utils import add_workflow_definitions
 from ..scheduler.scheduler import ProcessingBlockScheduler
-# from ..processing_block_controller.tasks import APP, execute_processing_block
+
+DB = ConfigDb()
 
 
 def test_scheduler():
     """Test creating the Scheduler after SBI data is already in the db."""
-    # Add a number of SBIs to the database.
     DB.flush_db()
     data_dir = join(dirname(__file__), 'data')
     add_workflow_definitions(join(data_dir, 'workflow_definitions'))

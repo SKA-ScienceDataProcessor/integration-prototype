@@ -9,11 +9,12 @@ from os import listdir
 from os.path import dirname, join
 
 import sip_config_db
-from sip_config_db import DB, LOG, __version__
-from sip_config_db.scheduling import workflow_definitions
-from sip_config_db.scheduling.subarray_list import SubarrayList
+from sip_config_db import ConfigDb, LOG, __version__
+from sip_config_db.scheduling import SubarrayList, workflow_definitions
 from sip_config_db.states import SDPState, ServiceState
 from sip_logging import init_logger
+
+DB = ConfigDb()
 
 
 def initialise_states(data_dir: str):

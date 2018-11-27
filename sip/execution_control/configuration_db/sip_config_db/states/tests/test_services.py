@@ -1,8 +1,10 @@
 # coding=utf-8
 """Unit testing for the states.services module."""
-from ... import DB
 from ..service_state import ServiceState
 from ..services import get_service_state_list
+from ... import ConfigDb
+
+DB = ConfigDb()
 
 
 def test_states_get_service_list():

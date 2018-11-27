@@ -5,7 +5,10 @@ from typing import Callable, List, Union
 
 from . import _keys
 from .event import Event
-from .. import DB, LOG
+from .. import ConfigDb
+from .._logging import LOG
+
+DB = ConfigDb()
 
 
 class EventQueue:

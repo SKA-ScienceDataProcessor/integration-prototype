@@ -4,7 +4,9 @@ import json
 from os.path import dirname, join
 
 from .. import workflow_definitions
-from ... import DB
+from ... import ConfigDb
+
+DB = ConfigDb()
 
 
 def test_add_workflow_definition():

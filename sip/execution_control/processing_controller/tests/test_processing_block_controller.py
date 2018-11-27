@@ -10,12 +10,14 @@ from os.path import dirname, join
 import celery
 from celery.app.control import Inspect
 
-from sip_config_db import DB
+from sip_config_db import ConfigDb
 from sip_config_db.scheduling import SchedulingBlockInstance
 from .test_utils import add_workflow_definitions
 from ..processing_block_controller.release import __version__
-from ..processing_block_controller.tasks import APP, execute_processing_block,\
-    version
+from ..processing_block_controller.tasks import APP, \
+    execute_processing_block, version
+
+DB = ConfigDb()
 
 
 def test_pbc_inspect_tasks():

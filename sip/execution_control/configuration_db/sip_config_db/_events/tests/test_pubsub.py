@@ -1,11 +1,17 @@
 # coding=utf-8
 """Test of the Configuration Database events interface."""
+import time
+from threading import Thread
+
+from ..event_queue import EventQueue
+from ..pubsub import get_subscribers, publish, subscribe
+from ... import ConfigDb
+
+DB = ConfigDb()
 
 
 def test_events_subscribe():
     """Test subscribing to events."""
-    from ... import DB
-    from ..events import subscribe, get_subscribers
     DB.flush_db()
     object_type = 'test_object'
     subscriber = 'test_subscriber'
@@ -15,8 +21,6 @@ def test_events_subscribe():
 
 def test_events_basic_usage():
     """Misc tests of the events interface."""
-    from ... import DB
-    from ..events import subscribe, get_subscribers, publish
     DB.flush_db()
 
     event_type = 'test_event_type'
@@ -62,12 +66,6 @@ CALLBACK_EVENT_COUNT = 0
 
 def test_events_with_callback():
     """Test subscribing to events with a callback handler."""
-    import time
-    from threading import Thread
-    from ... import DB
-    from ..events import subscribe, get_subscribers, publish
-    from ..event_queue import EventQueue
-
     def _callback_handler(message):
         """Event callback handler."""
         global CALLBACK_EVENT_COUNT  # pylint: disable=global-statement
@@ -115,9 +113,6 @@ def test_events_with_callback():
 
 def test_events_recovery():
     """Test event recovery, eg. after a subscriber service crash."""
-    from ... import DB
-    from threading import Thread
-    from ..events import subscribe, publish
     DB.flush_db()
     event_type = 'test_event'
     subscriber = 'test_subscriber'

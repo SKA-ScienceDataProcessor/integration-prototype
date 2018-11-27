@@ -6,18 +6,15 @@ This version polls REDIS Events rather than the database directly.
 FIXME(BMo): Make sure this is resilient to the REDIS database connection
             not being present.
 """
-import time
-import sched
-import random
 import argparse
+import random
+import sched
+import time
 
-from sip_logging import init_logger
 from sip_config_db.states import SDPState, ServiceState
 from sip_config_db.states.services import get_service_state_list
-
-from .__init__ import __service_id__, LOG, __subsystem__, __service_name__, \
-    __version__
-
+from sip_logging import init_logger
+from .__init__ import LOG, __service_id__, __service_name__
 
 SCHEDULER = sched.scheduler(time.time, time.sleep)
 

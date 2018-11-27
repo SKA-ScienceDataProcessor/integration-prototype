@@ -9,7 +9,9 @@ from os.path import dirname, join
 
 import jsonschema
 
-from .. import DB
+from .. import ConfigDb
+
+DB = ConfigDb()
 
 
 def add(workflow_definition: dict, templates_root: str):

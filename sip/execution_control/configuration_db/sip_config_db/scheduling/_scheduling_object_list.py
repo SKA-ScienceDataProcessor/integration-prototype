@@ -3,9 +3,11 @@
 from typing import List
 
 from ._scheduling_object import SchedulingObject
-from .. import DB
+from .. import ConfigDb
 from .._events.event_queue import EventQueue
-from .._events.events import get_subscribers, publish, subscribe
+from .._events.pubsub import get_subscribers, publish, subscribe
+
+DB = ConfigDb()
 
 
 class SchedulingObjectList:

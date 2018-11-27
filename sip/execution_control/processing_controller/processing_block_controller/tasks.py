@@ -7,19 +7,17 @@ celery -A mock_processing_block_controller.tasks worker -l info
 """
 import json
 import os
-import jinja2
 import time
-
-import yaml
-
-from .release import LOG, __service_name__, __version__
-from celery import Celery
 from copy import deepcopy
-from sip_config_db.scheduling import ProcessingBlock, ProcessingBlockList
-from sip_docker_swarm import DockerClient
-from sip_docker_swarm import __version__ as sip_swarm_api_version
-from sip_logging import init_logger
 
+import jinja2
+import yaml
+from celery import Celery
+
+from sip_config_db.scheduling import ProcessingBlock, ProcessingBlockList
+from sip_docker_swarm import DockerClient, __version__ as sip_swarm_api_version
+from sip_logging import init_logger
+from .release import LOG, __version__
 
 BROKER = os.getenv('CELERY_BROKER_URL', 'redis://localhost:6379/1')
 BACKEND = os.getenv('CELERY_RESULT_BACKEND', 'redis://localhost:6379/2')

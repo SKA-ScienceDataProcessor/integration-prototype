@@ -1,10 +1,11 @@
 #!/usr/bin/python3
 """Delete Processing Block devices from the TANGO Database."""
-import logging
 import argparse
+import logging
+
+from tango import Database
 
 from sip_logging import init_logger
-from tango import Database
 
 
 def delete_pb_devices():

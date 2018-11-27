@@ -1,7 +1,9 @@
 # -*- coding: utf-8 -*-
 """Tests of the SDP States API."""
-from ... import DB
 from .. import SDPState
+from ... import ConfigDb
+
+DB = ConfigDb()
 
 
 def test_sdp_state_create():

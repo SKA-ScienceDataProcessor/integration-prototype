@@ -1,6 +1,6 @@
 # Changelog
 
-All notable changes to the SIP Master Controller image 
+All notable changes to the SIP Processing Block Controller 
 will be documented in this file.
 
 The format is based on 
@@ -8,12 +8,8 @@ The format is based on
 and this project adheres to
  [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased - 1.1.3] - 2018-11-26
+## [Unreleased - 1.1.6] - 2018-11-26
 
 ### Changed
 - Updated to skasip-config-db@1.1.6
 
-## [1.1.2] - 2018-11-20
-
-### Changed
-- Updated to skasip-config-db@1.1.2

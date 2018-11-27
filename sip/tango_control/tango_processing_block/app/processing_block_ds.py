@@ -6,9 +6,9 @@ import sys
 from tango.server import run
 
 from processing_block_device import ProcessingBlockDevice
-from register_devices import register_pb_devices
-from release import LOG
 from sip_logging import init_logger
+from .register_devices import register_pb_devices
+from .release import LOG
 
 
 def main(args=None, **kwargs):

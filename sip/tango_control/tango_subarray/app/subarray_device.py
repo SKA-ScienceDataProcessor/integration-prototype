@@ -4,9 +4,10 @@ import json
 import time
 
 import jsonschema
-from sip_config_db.scheduling import SchedulingBlockInstance, Subarray
 from tango import DebugIt, DevState
 from tango.server import Device, attribute, class_property, command, pipe
+
+from sip_config_db.scheduling import SchedulingBlockInstance, Subarray
 
 
 class SubarrayDevice(Device):

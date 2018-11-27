@@ -13,9 +13,9 @@ import sys
 from tango import Database, DbDevInfo
 from tango.server import run
 
-from release import LOG, __service_id__
 from sdp_master_device import SDPMasterDevice
 from sip_logging import init_logger
+from .release import LOG, __service_id__
 
 
 def register_master():

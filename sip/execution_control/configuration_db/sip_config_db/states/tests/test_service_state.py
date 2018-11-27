@@ -2,8 +2,10 @@
 """Tests of the Service States API."""
 import pytest
 
-from ... import DB
 from .. import ServiceState
+from ... import ConfigDb
+
+DB = ConfigDb()
 
 
 def test_service_state_create():

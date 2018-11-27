@@ -3,11 +3,10 @@
 
 Implemented with a set of long running threads.
 """
-import os
+import datetime
 import sys
 import time
 from threading import Lock, Thread
-import datetime
 
 import celery
 from celery.app.control import Inspect
