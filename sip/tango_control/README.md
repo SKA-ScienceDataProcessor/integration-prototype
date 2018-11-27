@@ -23,12 +23,12 @@ docker exec -it <tagno_test_device container id> /bin/bash
 or 
 
 ```bash
-docker exec -it $(docker ps -q -f name=SERVICE_NAME) /bin/bash
+docker exec -it "$(docker ps -q -f name=SERVICE_NAME)" /bin/bash
 ```
 
 eg.
 
 
 ```bash
-docker exec -it $(docker ps -q -f name=tango_master) /bin/bash
+docker exec -it "$(docker ps -q -f name=tango_master)" /bin/bash
 ```
