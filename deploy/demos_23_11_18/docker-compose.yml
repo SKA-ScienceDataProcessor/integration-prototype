@@ -52,7 +52,7 @@ services:
     - processing_block_controller_backend
 
   ec_config_database:
-    image: redis:4.0.6-alpine
+    image: redis:5.0.1-alpine
     deploy:
       mode: replicated
       replicas: 1
@@ -62,7 +62,7 @@ services:
     - sip_config_database:/data/db
 
   ec_celery_broker:
-    image: redis:4.0.6-alpine
+    image: redis:5.0.1-alpine
     deploy:
       mode: replicated
       replicas: 1
@@ -70,7 +70,7 @@ services:
     - sip_pbc_broker:/data/db
 
   ec_celery_backend:
-    image: redis:4.0.6-alpine
+    image: redis:5.0.1-alpine
     deploy:
       mode: replicated
       replicas: 1
