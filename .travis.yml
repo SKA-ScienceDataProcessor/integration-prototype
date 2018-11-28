@@ -44,9 +44,9 @@ install:
   # Install Python dependencies
   - pip install -r testing_requirements.txt
   - pip install spead2>=1.7.2
-  - pip install skasip-logging>=1.0.13
-  - pip install skasip-config-db>=1.1.1
-  - pip install skasip-docker-swarm>=1.0.5
+  - pip install skasip-logging==1.0.13
+  - pip install skasip-config-db==1.1.1
+  - pip install skasip-docker-swarm==1.0.5
   - pip install -r sip/tango_control/flask_processing_controller/requirements.txt
   - pip install -r sip/tango_control/flask_master/requirements.txt
   - pip install -r sip/execution_control/configuration_db/requirements.txt
