@@ -72,7 +72,7 @@ script:
 #  - ./tools/run_tests.sh sip/tango_control/tango_processing_block
 
   - ./tools/run_tests.sh sip/execution_control/master_controller
-  - ./tools/run_tests.sh sip/execution_control/configuration_db
+#  - ./tools/run_tests.sh sip/execution_control/configuration_db
 #  - ./tools/run_tests.sh sip/execution_control/docker_api
 
 #  - ./tools/run_tests.sh sip/science_pipeline_workflows/ical_dask
