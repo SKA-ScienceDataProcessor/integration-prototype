@@ -1,0 +1,16 @@
+# Docker compose test for the mock workflow stage
+version: '3.6'
+
+services:
+  start_stage:
+    image: skasip/mock_workflow_stage:1.0.1
+    command: [ '{"duration": 20}' ]
+    deploy:
+      restart_policy:
+        condition: none
+      mode: replicated
+      replicas: 1
+    logging:
+      driver: fluentd
+      options:
+        tag: "{{.ImageName}}~{{.Name}}~{{.ID}}"

@@ -1,0 +1,16 @@
+{
+    "services": [
+        "TangoControl:SDPMaster:1.1.2",
+        "TangoControl:SDPMaster_flask:1.1.2",
+        "TangoControl:SDPSubarray:1.1.2",
+        "TangoControl:SDPProcessingBlock:1.1.2",
+        
+        "ExecutionControl:MasterController:1.1.2",
+        "ExecutionControl:ProcessingController:1.1.2",
+        "ExecutionControl:CeleryWorker:1.0.0",
+        "ExecutionControl:Alerts:1.0.0",
+        
+        "Platform:RedisDB:1.0.0",
+        "Platform:Kafka:1.0.0"
+    ]
+}

@@ -1,0 +1,79 @@
+{
+    "name": "mock_workflow_01",
+    "version": "1.0",
+    "schema": "https://github.com/dice-cyfronet/hyperflow/blob/develop/schemas/workflow.schema.json",
+    "description": [
+        "",
+        ""
+    ],
+    "processes": [
+        {
+            "name": "ReceiveVisibilities",
+            "type": "",
+            "description": "",
+            "status": "",
+            "enabled": "True",
+            "ins": [ "SPEAD stream" ],
+            "outs": [ "TempVis" ],
+            "config": {
+                "command": {
+                    "type": "Docker",
+                    "docker_config": {
+                        "image": "skasip/mock_task_vis_receive_01",
+                        "mode": "swarm",
+                        "deploy_mode": "replicated",
+                        "replicas": "5",
+                        "restart_policy": "None"
+                    },
+                    "args": [ "", "" ]
+                }
+            }
+        },
+        {
+            "name": "IngestProcessing",
+            "type": "",
+            "description": "",
+            "status": "",
+            "enabled": "True",
+            "ins": [ "TempVis:1" ],
+            "outs": [ "VisData" ],
+            "config": {
+                "command": {
+                    "type": "Container",
+                    "docker_config": {
+                        "mode": "run",
+                        "restart_policy": "None",
+                        "image": "skasip/mock_task_vis_ingest_processing_01"
+                    }
+                }
+            }
+        },
+        {
+            "name": "VisPlot",
+            "type": "",
+            "description": "",
+            "status": "",
+            "enabled": "True",
+            "ins": [ "TempVis:4" ],
+            "outs": [ "VisPlot" ],
+            "config": {}
+        }
+
+    ],
+    "signals": [
+        {
+            "name": "SPEAD stream"
+        },
+        {
+            "name": "TempVis"
+        },
+        {
+            "name": "TempPlot"
+        },
+        {
+            "name": "VisData"
+        }
+    ],
+    "ins": [ "SPEAD stream" ],
+    "outs": [ "VisData", "VisPlot" ]
+}

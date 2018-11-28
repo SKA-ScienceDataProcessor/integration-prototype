@@ -1,4 +1,8 @@
-FROM skasip/tango_docker_base:1.0.4
+FROM skasip/tango_docker_base:1.1.2
 LABEL maintainer="Benjamin Mort <ben.mort@gmail.com>"
 
-CMD ["sleep", "36000"]
+COPY app app
+
+ENTRYPOINT ["./app/subarray_ds.py"]
+CMD ["1", "-v4"]
+

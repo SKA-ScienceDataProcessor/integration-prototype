@@ -1,0 +1,28 @@
+version: '3.6'
+
+services:
+
+    scheduler1:
+        image: skasip/dask_scheduler_base
+        deploy:
+            mode: replicated
+            replicas: 1
+            resources:
+                limits:
+                    cpus: '1.0'
+                    memory: 1024M
+        networks:
+            hostnet: {}
+
+    scheduler2:
+        image: skasip/dask_scheduler_base
+        deploy:
+            mode: replicated
+            replicas: 1
+        networks:
+            hostnet: {}
+
+networks:
+    hostnet:
+        external: true
+        name: host

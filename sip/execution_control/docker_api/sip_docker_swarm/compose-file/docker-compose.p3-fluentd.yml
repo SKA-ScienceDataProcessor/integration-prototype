@@ -1,0 +1,30 @@
+version: '3.6'
+
+services:
+
+  workflow_stage_1_a:
+    image: skasip/mock_workflow_stage:latest
+    command: ['{ "duration": 60 }']
+    deploy:
+      mode: replicated
+      replicas: 1
+      restart_policy:
+        condition: none
+    logging:
+      driver: fluentd
+      options:
+        tag: "{{.ImageName}}/{{.Name}}/{{.ID}}"
+
+  workflow_stage_1_b:
+    image: skasip/log_spammer:latest
+    command: ["0.1"]
+    deploy:
+      mode: replicated
+      replicas: 1
+      restart_policy:
+        condition: none
+    logging:
+      driver: fluentd
+      options:
+        tag: "{{.ImageName}}/{{.Name}}/{{.ID}}"
+

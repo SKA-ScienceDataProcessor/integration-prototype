@@ -1,0 +1,6 @@
+docker==3.3.0
+jinja2==2.10
+PyYaml==3.13
+skasip-config-db==1.1.1
+skasip-docker-swarm==1.0.5
+skasip-logging==1.0.13
