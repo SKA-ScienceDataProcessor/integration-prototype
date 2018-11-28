@@ -5,7 +5,7 @@ import argparse
 from tango import Database, DbDevInfo
 
 from sip_logging import init_logger
-from .release import LOG
+from release import LOG
 
 
 def parse_command_args():

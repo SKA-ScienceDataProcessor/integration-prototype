@@ -3,7 +3,7 @@
 from tango import Database, DbDevInfo
 
 from sip_logging import init_logger
-from .release import LOG
+from release import LOG
 
 
 def register_subarray_devices():

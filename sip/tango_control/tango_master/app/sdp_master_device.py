@@ -17,7 +17,7 @@ from sip_config_db.scheduling import ProcessingBlockList, \
 from sip_config_db.states import SDPState, ServiceState
 from sip_config_db.states.services import get_service_id_list, \
     get_service_state_list
-from .release import LOG, __service_name__, __subsystem__, __version__
+from release import LOG, __service_name__, __subsystem__, __version__
 
 
 class SDPMasterDevice(Device):

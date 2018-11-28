@@ -8,7 +8,7 @@ from tango.server import run
 from register_devices import register_subarray_devices
 from sip_logging import init_logger
 from subarray_device import SubarrayDevice
-from .release import LOG
+from release import LOG
 
 
 def main(args=None, **kwargs):

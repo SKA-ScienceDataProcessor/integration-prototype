@@ -15,7 +15,7 @@ from tango.server import run
 
 from sdp_master_device import SDPMasterDevice
 from sip_logging import init_logger
-from .release import LOG, __service_id__
+from release import LOG, __service_id__
 
 
 def register_master():

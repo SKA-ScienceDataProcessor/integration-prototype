@@ -8,7 +8,7 @@ from tango import DevState
 from tango.server import Device, attribute
 
 from sip_config_db.scheduling import ProcessingBlock
-from .release import LOG, __version__ as tango_pb_device_version
+from release import LOG, __version__ as tango_pb_device_version
 
 
 class ProcessingBlockDevice(Device):
