@@ -57,9 +57,8 @@ install:
 before_script:
   # Execute commands need before running actual tests.
   # ---------------------------------------------------------------------------
-  - docker run -d -p 6379:6379 --name=config_db redis:4.0.6-alpine
+  - docker run -d -p 6379:6379 --name=config_db redis:5.0.1-alpine
   - docker swarm init
-  - docker node ls
 
 script:
   # Execute all of the commands which should make the build pass or fail.
