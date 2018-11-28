@@ -204,7 +204,7 @@ class ConfigDb:
         return my_dict
 
     def load_dict_values(self, db_key: str, dict_keys: List[str],
-                         hierarchical: bool = False):
+                         hierarchical: bool = False) -> List:
         """Load values from a dictionary with the specified dict_keys.
 
         Args:

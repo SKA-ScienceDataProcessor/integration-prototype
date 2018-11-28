@@ -41,4 +41,5 @@ def test_config_db_redis_load_dict_values(hierarchical: bool):
     DB.save_dict(key, test_dict, hierarchical=hierarchical)
     load_fields = ['a', 'b']
     values = DB.load_dict_values(key, load_fields, hierarchical=hierarchical)
-    assert values == [test_dict[v] for v in load_fields]
+    assert len(values) == len([test_dict[v] for v in load_fields])
+    assert sorted(values) == sorted([test_dict[v] for v in load_fields])
