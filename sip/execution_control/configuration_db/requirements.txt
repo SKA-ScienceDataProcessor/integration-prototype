@@ -1,2 +1,2 @@
 # Requirements are specified in the setup.py file.
-.
+./sip/execution_control/configuration_db
