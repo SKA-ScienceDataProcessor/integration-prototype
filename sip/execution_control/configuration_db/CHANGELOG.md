@@ -8,10 +8,17 @@ The format is based on
 and this project adheres to
  [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased] - 2018-11-26
+## [Unreleased - 1.2.0] - 2018-11-26
 
 ### Fixed
 - A number of cyclic dependency issues
+### Changed
+- Updated to `redis==3.0.1`
+### Deprecated
+- Removed `ConfigDB.set_hash_values()` in favour of the new function
+  `ConfigDB.save_dict()` which supports dictionaries being saved 
+  hierarchically or flat. The default is currently flat to maintain
+  backwards compatibility with versions `<=1.1.5`. 
 
 
 ## [1.1.5] - 2018-11-22
