@@ -48,14 +48,17 @@ def add(workflow_definition: dict, templates_root: str):
     if DB.get_keys(name):
         raise KeyError('Workflow definition already exists: {}'.format(name))
 
-    DB.set_hash_values(name, workflow_definition)
+    # DB.set_hash_values(name, workflow_definition)
+    DB.save_dict(name, workflow_definition, hierarchical=False)
 
 
 def register(workflow_id, workflow_version):
     """Register an (empty) workflow definition in the database."""
     name = "workflow_definitions:{}:{}".format(workflow_id, workflow_version)
-    DB.set_hash_values(name, dict(id=workflow_id, version=workflow_version,
-                                  stages=[]))
+    workflow_definition = dict(id=workflow_id, version=workflow_version,
+                               stages=[])
+    # DB.set_hash_values(name, workflow_definition)
+    DB.save_dict(name, workflow_definition, hierarchical=False)
 
 
 def delete(workflow_id: str = None, workflow_version: str = None):

@@ -28,7 +28,8 @@ class Subarray:
                                sbi_ids=[], state='UNKNOWN')
         self._key = '{}:{}'.format(SUBARRAY_KEY, self._id)
         if not DB.key_exists(self._key):
-            DB.set_hash_values(self._key, subarray_config)
+            # DB.set_hash_values(self._key, subarray_config)
+            DB.save_dict(self._key, subarray_config, hierarchical=False)
 
     # -------------------------------------------------------------------------
     # Properties / attributes

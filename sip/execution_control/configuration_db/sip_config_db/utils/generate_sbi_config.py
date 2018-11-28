@@ -55,7 +55,7 @@ def add_workflow_definitions(sbi_config: dict):
         )
         key = "workflow_definitions:{}:{}".format(workflow_config['id'],
                                                   workflow_config['version'])
-        DB.set_hash_values(key, workflow_definition)
+        DB.save_dict(key, workflow_definition, hierarchical=False)
         registered_workflows.append(workflow_name)
 
 

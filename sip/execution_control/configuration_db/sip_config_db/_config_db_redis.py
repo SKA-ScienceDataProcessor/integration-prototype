@@ -1,12 +1,14 @@
 # -*- coding: utf-8 -*-
 """Low-level Configuration Database API using Redis."""
+import ast
+import json
 import logging
 import os
 from functools import wraps
+from typing import List
 
 import redis
 import redis.exceptions
-
 
 LOG = logging.getLogger('SIP.EC.CDB')
 REDIS_HOST = os.getenv('REDIS_HOST', 'localhost')
@@ -39,7 +41,7 @@ class ConfigDb:
                   "port= %s", REDIS_HOST, REDIS_DB_ID, REDIS_PORT)
         pool = redis.ConnectionPool(host=REDIS_HOST, db=REDIS_DB_ID,
                                     port=REDIS_PORT, decode_responses=True)
-        self._db = redis.StrictRedis(connection_pool=pool)
+        self._db = redis.Redis(connection_pool=pool)
         self._pipeline = self._db.pipeline()
 
     @check_connection
@@ -52,21 +54,197 @@ class ConfigDb:
         """
         return self._db.get(key)
 
+    # @check_connection
+    # def set_hash_values(self, key, fields):
+    #     """Set key/value fields in the Redis hash stored at key.
+    #
+    #     A Redis Hash (see https://redis.io/topics/data-types) is a data type
+    #     which represents a mapping between string fields and string values.
+    #
+    #     Keys and values are taken from the fields dictionary.
+    #
+    #     Args:
+    #         key (str): Key (name) of the hash
+    #         fields (dict): Key / value fields in the hash to set.
+    #
+    #     """
+    #     self._db.hmset(key, fields)
+
     @check_connection
-    def set_hash_values(self, key, fields):
-        """Set key/value fields in the Redis hash stored at key.
+    def save_dict(self, key: str, my_dict: dict, hierarchical: bool = False):
+        """Store the specified dictionary at the specified key."""
+        for _key, _value in my_dict.items():
+            if isinstance(_value, dict):
+                if not hierarchical:
+                    self._db.hmset(key, {_key: json.dumps(_value)})
+                else:
+                    self.save_dict(key + ':' + _key, _value, hierarchical)
+            elif isinstance(_value, list):
+                if not hierarchical:
+                    self._db.hmset(key, {_key: str(_value)})
+                else:
+                    print('saving list at ', key + ':' + _key)
+                    self._db.lpush(key + ':' + _key, *_value[::-1])
+            elif isinstance(_value, bool):
+                self._db.hmset(key, {_key: str(_value)})
+            else:
+                self._db.hmset(key, {_key: _value})
 
-        A Redis Hash (see https://redis.io/topics/data-types) is a data type
-        which represents a mapping between string fields and string values.
+    @staticmethod
+    def _build_dict(my_dict, keys, values):
+        """Build a dictionary from a set of redis hashes.
 
-        Keys and values are taken from the fields dictionary.
+            keys = ['a', 'b', 'c']
+            values = {'value': 'foo'}
+            my_dict = {'a': {'b': {'c': {'value': 'foo'}}}}
 
         Args:
-            key (str): Key (name) of the hash
-            fields (dict): Key / value fields in the hash to set.
+            my_dict (dict): Dictionary to add to
+            keys (list[str]): List of keys used to define hierarchy in my_dict
+            values (dict): Values to add at to the dictionary at the key
+               specified by keys
+
+        Returns:
+            dict, new dictionary with values added at keys
 
         """
-        self._db.hmset(key, fields)
+        temp = my_dict
+        for depth, key in enumerate(keys):
+            if depth < len(keys) - 1:
+                if key not in temp:
+                    temp[key] = dict()
+                temp = temp[key]
+            else:
+                if key not in temp:
+                    temp[key] = values
+                else:
+                    temp[key] = {**temp[key], **values}
+        return my_dict
+
+    def _load_values(self, db_key: str) -> dict:
+        """Load values from the db at the specified key, db_key.
+
+        FIXME(BMo): Could also be extended to load scalar types (instead of
+                    just list and hash)
+
+        """
+        if self._db.type(db_key) == 'list':
+            db_values = self._db.lrange(db_key, 0, -1)
+            for i, value in enumerate(db_values):
+                try:
+                    db_values[i] = ast.literal_eval(value)
+                except SyntaxError:
+                    pass
+                except ValueError:
+                    pass
+        else:  # self._db.type == 'hash'
+            db_values = self._db.hgetall(db_key)
+            for _key, _value in db_values.items():
+                try:
+                    db_values[_key] = ast.literal_eval(_value)
+                except SyntaxError:
+                    pass
+                except ValueError:
+                    pass
+        return db_values
+
+    @check_connection
+    def _load_dict_hierarchical(self, db_key: str) -> dict:
+        """Load a dictionary stored hierarchically at db_key."""
+        db_keys = self._db.keys(pattern=db_key + '*')
+        my_dict = {}
+        for _db_key in db_keys:
+            if self._db.type(_db_key) == 'list':
+                db_values = self._db.lrange(_db_key, 0, -1)
+                for i, value in enumerate(db_values):
+                    try:
+                        db_values[i] = ast.literal_eval(value)
+                    except SyntaxError:
+                        pass
+                    except ValueError:
+                        pass
+            else:  # self._db.type == 'hash'
+                db_values = self._db.hgetall(_db_key)
+                for _key, _value in db_values.items():
+                    try:
+                        db_values[_key] = ast.literal_eval(_value)
+                    except SyntaxError:
+                        pass
+                    except ValueError:
+                        pass
+            my_dict = self._build_dict(my_dict, _db_key.split(':'),
+                                       db_values)
+        return my_dict[db_key]
+
+    @check_connection
+    def load_dict(self, db_key: str, hierarchical: bool = False) -> dict:
+        """Load the dictionary at the specified key.
+
+        Hierarchically stored dictionaries use a ':' separator to expand
+        the dictionary into a set of Redis hashes.
+
+        Args:
+            db_key (str): Key at which the dictionary is stored in the db.
+            hierarchical (bool): If True, expect the dictionary to have been
+                stored hierarchically. If False, expect the dictionary to have
+                been stored flat.
+
+        Returns:
+            dict, the dictionary stored at key
+
+        """
+        if not hierarchical:
+            db_values = self._db.hgetall(db_key)
+            for _key, _value in db_values.items():
+                if isinstance(_value, str):
+                    db_values[_key] = ast.literal_eval(_value)
+            my_dict = db_values
+        else:
+            my_dict = self._load_dict_hierarchical(db_key)
+        return my_dict
+
+    def load_dict_values(self, db_key: str, dict_keys: List[str],
+                         hierarchical: bool = False):
+        """Load values from a dictionary with the specified dict_keys.
+
+        Args:
+            db_key (str): Key where the dictionary is stored
+            dict_keys (List[str]): Keys within the dictionary to load.
+            hierarchical (bool): If True, expect the dictionary to have been
+                stored hierarchically. If False, expect the dictionary to have
+                been stored flat.
+
+
+        Returns:
+            object: The value stored at dict_key in the dictionary stored at
+            key
+
+        """
+        result = []
+        if not hierarchical:
+            _values = self._db.hmget(db_key, *dict_keys)
+            result = [ast.literal_eval(_value) for _value in _values]
+        else:
+            # Get all keys in the set of keys for this dict 'db_key'
+            db_keys = self._db.keys(pattern=db_key + '*')
+            for _db_key in db_keys:
+                # Check if one of the dict_keys is an entire sub-dict entry
+                for name in _db_key.split(':')[1:]:
+                    if name in dict_keys:
+                        _values = self._load_values(_db_key)
+                        result.append(_values)
+
+                # Look in the sub-dict for any of the dict_keys
+                _values = self._db.hmget(_db_key, *dict_keys)
+                for i, value in enumerate(_values):
+                    try:
+                        _values[i] = ast.literal_eval(value)
+                    except SyntaxError:
+                        pass
+                    except ValueError:
+                        pass
+                result += [value for value in _values if value is not None]
+        return result
 
     @check_connection
     def get_hash_values(self, key, fields):
@@ -93,10 +271,11 @@ class ConfigDb:
             pipeline (bool): True, start a transaction block. Default false.
 
         """
+        # FIXME(BMo): new name for this function -> save_dict_value ?
         if pipeline:
-            self._pipeline.hset(key, field, value)
+            self._pipeline.hset(key, field, str(value))
         else:
-            self._db.hset(key, field, value)
+            self._db.hset(key, field, str(value))
 
     @check_connection
     def get_hash_value(self, key, field):

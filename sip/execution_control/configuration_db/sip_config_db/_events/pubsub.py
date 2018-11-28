@@ -1,5 +1,6 @@
 # coding=utf-8
 """Execution Control Configuration database events module."""
+import json
 from ast import literal_eval
 from copy import deepcopy
 from typing import Callable, List
@@ -161,7 +162,8 @@ def _update_object(object_key: str, event: Event):
     event_dict = deepcopy(event.config)
     event_dict.pop('id')
     DB.append_to_list(events_list_key, event.id, pipeline=True)
-    DB.set_hash_value(events_data_key, event.id, event_dict, pipeline=True)
+    DB.set_hash_value(events_data_key, event.id, json.dumps(event_dict),
+                      pipeline=True)
 
 
 def _get_event_id(object_type: str) -> str:

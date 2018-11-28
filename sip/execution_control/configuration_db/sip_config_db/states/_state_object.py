@@ -34,7 +34,8 @@ class StateObject:
         self._allowed_transitions = self._dict_lower(allowed_transitions)
         self._allowed_target_states = self._dict_lower(allowed_target_states)
         if not DB.key_exists(self._key):
-            DB.set_hash_values(self._key, self._initialise())
+            # DB.set_hash_values(self._key, self._initialise())
+            DB.save_dict(self._key, self._initialise())
 
     @property
     def id(self) -> str:

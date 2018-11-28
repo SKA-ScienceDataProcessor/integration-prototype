@@ -3,9 +3,9 @@
 import time
 from threading import Thread
 
-from ..event_queue import EventQueue
-from ..pubsub import get_subscribers, publish, subscribe
-from ... import ConfigDb
+from sip_config_db._events.event_queue import EventQueue
+from sip_config_db._events.pubsub import get_subscribers, publish, subscribe
+from sip_config_db import ConfigDb
 
 DB = ConfigDb()
 
