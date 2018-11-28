@@ -1,0 +1,39 @@
+version: '3.6'
+
+services:
+  portainer:
+    image: portainer/portainer:1.19.2
+    ports:
+      - 9000:9000
+    command: -H tcp://tasks.agent:9001 --tlsskipverify
+    volumes:
+      - portainer_data:/data
+    networks:
+      - portainer_agent
+    deploy:
+      mode: replicated
+      replicas: 1
+      placement:
+        constraints:
+          - node.role == manager
+  agent:
+    image: portainer/agent:1.1.2
+    environment:
+      # REQUIRED: Should be equal to the service name prefixed by "tasks." when
+      # deployed inside an overlay network
+      AGENT_CLUSTER_ADDR: tasks.agent
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - /var/lib/docker/volumes:/var/lib/docker/volumes
+    networks:
+      - portainer_agent
+    deploy:
+      mode: global
+
+volumes:
+  portainer_data:
+
+networks:
+  portainer_agent:
+    driver: overlay
+    attachable: true
