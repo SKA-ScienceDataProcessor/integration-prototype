@@ -353,7 +353,6 @@ def _process_event(event: Event, sdp_state: SDPState,
 
 def _process_state_change_events():
     """Process state change events."""
-
     sdp_state = SDPState()
     service_states = get_service_state_list()
     state_events = sdp_state.get_event_queue(subscriber=__service_name__)
@@ -363,15 +362,16 @@ def _process_state_change_events():
         time.sleep(0.1)
         # FIXME(BMo) Hack to avoid problems with historical events not being
         # correctly handled by EventQueue.get() - see issue #54
-        if counter % 1000:
+        if counter % 1000 == 0:
+            LOG.debug('Checking published events ... %d', counter/1000)
             _published_events = state_events.get_published_events(process=True)
             for _state_event in _published_events:
-                _process_events(_state_event, sdp_state, service_states)
+                _process_event(_state_event, sdp_state, service_states)
         else:
-            counter += 1
             _state_event = state_events.get()
             if _state_event:
                 _process_event(_state_event, sdp_state, service_states)
+        counter += 1
 
 
 def temp_main():
