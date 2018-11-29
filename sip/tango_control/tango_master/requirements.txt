@@ -1,2 +1,2 @@
-skasip-config-db==1.1.6
+skasip-config-db==1.2.0
 skasip-logging==1.0.14

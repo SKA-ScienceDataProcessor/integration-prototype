@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 TANGO_HOST_ID="$(docker ps -f name=tc_tango_database.1 -f status=running -q)"
-IMAGE=skasip/tango_interactive_client:1.1.3
+IMAGE=skasip/tango_interactive_client:1.2.0
 docker run -it --rm --network=container:${TANGO_HOST_ID} \
     --network=container:${TANGO_HOST_ID} \
     -e REDIS_HOST=ec_config_database \

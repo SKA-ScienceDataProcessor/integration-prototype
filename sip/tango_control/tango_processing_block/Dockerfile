@@ -4,7 +4,7 @@ LABEL maintainer="Benjamin Mort <ben.mort@gmail.com>"
 USER root
 
 COPY requirements.txt .
-RUN pip3 -r -U requirements.txt
+RUN pip3 install -r requirements.txt
 
 USER sip
 
