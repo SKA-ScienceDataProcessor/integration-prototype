@@ -10,7 +10,9 @@ import argparse
 import random
 import sched
 import time
+from typing import List
 
+from sip_config_db._events.event import Event
 from sip_config_db.states import SDPState, ServiceState
 from sip_config_db.states.services import get_service_state_list
 from sip_logging import init_logger
@@ -311,50 +313,65 @@ def main():
         LOG.info('Exiting!')
 
 
+def _process_event(event: Event, sdp_state: SDPState,
+                   service_states: List[ServiceState]):
+    """Process a state change event."""
+    LOG.debug('>> event detected: %s %s %s', event.object_id,
+              event.type, event.data)
+
+    if event.object_id == 'SDP' and \
+            event.type == 'target_state_updated':
+        LOG.info('SDP target state changed to %s',
+                 sdp_state.target_state)
+
+        # If the sdp is already in the target state do nothing
+        if sdp_state.target_state == sdp_state.current_state:
+            LOG.warning('SDP already in %s state',
+                        sdp_state.current_state)
+            return
+
+        # If asking SDP to turn off, also turn off services.
+        if sdp_state.target_state == 'off':
+            LOG.info('Turning off services!')
+            for service_state in service_states:
+                service_state.update_target_state('off')
+                service_state.update_current_state('off')
+
+        LOG.info('Processing target state change request ...')
+        time.sleep(0.05)
+        LOG.info('Done processing target state change request!')
+
+        # Assuming that the SDP has responding to the target
+        # target state command by now, set the current state
+        # to the target state.
+        sdp_state.update_current_state(sdp_state.target_state)
+
+    # TODO(BMo) function to watch for changes in the \
+    # current state of services and update the state of SDP
+    # accordingly.
+
+
 def _process_state_change_events():
     """Process state change events."""
+
     sdp_state = SDPState()
     service_states = get_service_state_list()
     state_events = sdp_state.get_event_queue(subscriber=__service_name__)
 
+    counter = 0
     while True:
-        time.sleep(0.2)
-        event = state_events.get()
-        if event:
-
-            LOG.debug('>> event detected: %s %s %s', event.object_id,
-                      event.type, event.data)
-
-            if event.object_id == 'SDP' and \
-                    event.type == 'target_state_updated':
-                LOG.info('SDP target state changed to %s',
-                         sdp_state.target_state)
-
-                # If the sdp is already in the target state do nothing
-                if sdp_state.target_state == sdp_state.current_state:
-                    LOG.warning('SDP already in %s state',
-                                sdp_state.current_state)
-                    continue
-
-                # If asking SDP to turn off, also turn off services.
-                if sdp_state.target_state == 'off':
-                    LOG.info('Turning off services!')
-                    for service_state in service_states:
-                        service_state.update_target_state('off')
-                        service_state.update_current_state('off')
-
-                LOG.info('Processing target state change request ...')
-                time.sleep(0.05)
-                LOG.info('Done processing target state change request!')
-
-                # Assuming that the SDP has responding to the target
-                # target state command by now, set the current state
-                # to the target state.
-                sdp_state.update_current_state(sdp_state.target_state)
-
-            # TODO(BMo) function to watch for changes in the \
-            # current state of services and update the state of SDP
-            # accordingly.
+        time.sleep(0.1)
+        # FIXME(BMo) Hack to avoid problems with historical events not being
+        # correctly handled by EventQueue.get() - see issue #54
+        if counter % 1000:
+            _published_events = state_events.get_published_events(process=True)
+            for _state_event in _published_events:
+                _process_events(_state_event, sdp_state, service_states)
+        else:
+            counter += 1
+            _state_event = state_events.get()
+            if _state_event:
+                _process_event(_state_event, sdp_state, service_states)
 
 
 def temp_main():
