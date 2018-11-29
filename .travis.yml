@@ -30,26 +30,23 @@ before_install:
   - sudo apt-get -qq update
 
 install:
-  # Install all of the dependencies.
+  # Install dependencies
   # ---------------------------------------------------------------------------
-  - sudo apt-get install -y gcc
-  - sudo apt-get install -y g++
-  - sudo apt-get install -y libboost-program-options-dev
-  - sudo apt-get install -y libboost-system-dev
+#  - sudo apt-get install -y gcc
+#  - sudo apt-get install -y g++
+#  - sudo apt-get install -y libboost-program-options-dev
+#  - sudo apt-get install -y libboost-system-dev
   - sudo apt-get install -y docker-ce
   # ** Unfortunately python3-pytango does not seem to install in 16.04 :( **
 #  - sudo apt-cache search tango
 #  - sudo apt-get install -y python3-pytango
-
-  # Install Python dependencies
   - pip install -r testing_requirements.txt
-  - pip install -r sip/tango_control/flask_processing_controller/requirements.txt
   - pip install -r sip/tango_control/flask_master/requirements.txt
+#  - pip install -r sip/tango_control/flask_processing_controller/requirements.txt
+  - pip install -r sip/execution_control/master_controller/requirements.txt
   - pip install -r sip/execution_control/configuration_db/requirements.txt
-  - pip install -r sip/execution_control/master_controller/requirements.txt
-  - pip install -r sip/execution_control/docker_api/requirements.txt
-  - pip install -r sip/execution_control/master_controller/requirements.txt
-  - pip install -r sip/science_pipeline_workflows/ical_dask/pipelines/requirements.arl.min.txt
+#  - pip install -r sip/execution_control/docker_api/requirements.txt
+#  - pip install -r sip/science_pipeline_workflows/ical_dask/pipelines/requirements.arl.min.txt
 
 before_script:
   # Execute commands need before running actual tests.
@@ -67,11 +64,9 @@ script:
 #  - ./tools/run_tests.sh sip/tango_control/tango_master
 #  - ./tools/run_tests.sh sip/tango_control/tango_subarray
 #  - ./tools/run_tests.sh sip/tango_control/tango_processing_block
-
   - ./tools/run_tests.sh sip/execution_control/master_controller
   - ./tools/run_tests.sh sip/execution_control/configuration_db
 #  - ./tools/run_tests.sh sip/execution_control/docker_api
-
 #  - ./tools/run_tests.sh sip/science_pipeline_workflows/ical_dask
 #  - ./tools/run_tests.sh sip/science_pipeline_workflows/ingest_visibilities
 #  - ./tools/run_tests.sh sip/science_pipeline_workflows/mock_workflow
