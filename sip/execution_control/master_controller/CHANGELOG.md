@@ -8,10 +8,16 @@ The format is based on
 and this project adheres to
  [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased - 1.1.3] - 2018-11-26
+## [1.2.1] - 2018-11-29
+
+### Fixed
+- Added work around to handle historical state change events not working 
+  working properly with the `EventQueue.get()` method.
+
+## [1.2.0] - 2018-11-26
 
 ### Changed
-- Updated to skasip-config-db@1.1.6
+- Updated to skasip-config-db@1.2.0
 
 ## [1.1.2] - 2018-11-20
 

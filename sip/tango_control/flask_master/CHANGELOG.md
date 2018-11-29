@@ -8,10 +8,10 @@ The format is based on
 and this project adheres to
  [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased - 1.1.4] - 2018-11-26
+## [1.2.0] - 2018-11-29
 
 ### Changed
-- Updated to skasip-config-db@1.1.6
+- Updated to skasip-config-db@1.2.0
 
 ## [1.1.2] - 2018-11-20
 

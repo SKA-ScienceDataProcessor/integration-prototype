@@ -9,12 +9,11 @@ and this project adheres to
  [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 
-## [Unreleased - 1.1.3] - 2018-11-27
+## [1.2.0] - 2018-11-29
 
 ### Changed
 - Added Python `requirements.txt` to specify python dependencies as this
   is no longer part of the SIP Tango docker base image.
-
 
 ## [1.1.2] - 2018-11-20
 

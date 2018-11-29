@@ -8,7 +8,7 @@ The format is based on
 and this project adheres to
  [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased - 1.2.0] - 2018-11-26
+## [1.2.0] - 2018-11-26
 
 ### Fixed
 - A number of cyclic dependency issues
