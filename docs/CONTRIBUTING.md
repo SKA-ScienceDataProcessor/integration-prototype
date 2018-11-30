@@ -3,6 +3,7 @@
 The following is a set of guidelines for contributing to SIP. These are mostly guidelines, not rules! 
 Use your best judgement, and feel free to propose changes to this document in a pull request.
 
+
 ## Branches
 
 * Choose *short* and *descriptive* names
@@ -29,7 +30,12 @@ the above before pushing it.*
 
 ### Commit Messages
 
-* Limit the first line to 72 characters or less
+* Use the editor, not the terminal when writing a commit message.
+  Committing from the terminal encourages a mindset of having to fit 
+  everything into a single line which can result in a non-informative,
+  ambiguous message. 
+    * ie. Use `git commit` not `git commit -m "..."`   
+* Limit the first (summary) line to 72 characters or less
 * After the summary should be a blank line followed by a more thorough 
   description. This should also be wrapped at 72 characters or less.
 * Reference issues, pull requests, and JIRA tickets liberally after the 
@@ -48,6 +54,10 @@ the above before pushing it.*
     * :shirt: when removing linter warnings
 
 
+## Merging
+
+TODO
+
 ## Pull Request Process
 
 1. Follow all instructions in [the template](PULL_REQUEST_TEMPLATE.md)
@@ -55,10 +65,9 @@ the above before pushing it.*
 1. After you submit your pull request, verify that all 
    [status checks](https://help.github.com/articles/about-status-checks/) are 
    passing 
+
  
 ## Style guides
-
-
  
 ### Python Style Guide
 
@@ -96,5 +105,5 @@ This can be checked using the tools:
       
 ### Issue and pull request labels
 
-Coming soon!
+TODO
 
