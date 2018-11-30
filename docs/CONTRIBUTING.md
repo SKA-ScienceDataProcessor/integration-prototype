@@ -56,7 +56,7 @@ the above before pushing it.*
 
 ## Merging
 
-TODO
+* see <https://help.github.com/articles/about-pull-request-merges>
 
 ## Pull Request Process
 
