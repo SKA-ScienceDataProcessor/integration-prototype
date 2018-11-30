@@ -42,16 +42,16 @@ the above before pushing it.*
   first line
 * When only changing documentation include `[ci skip]` in the commit title
 * Consider starting the commit message with an applicable emoji:
-    * :art: when improving the format / structure of the code
-    * :racehorse: when improving performance
-    * :memo: when writing docs
-    * :bug: when fixing a bug
-    * :fire: when removing code or files
-    * :green_heart: when fixing the CI build
-    * :white_check_mark: when adding tests
-    * :arrow_up: when upgrading dependencies
-    * :arrow_down: when downgrading dependencies
-    * :shirt: when removing linter warnings
+    * :art: `:art:` when improving the format / structure of the code
+    * :racehorse: `:racehorse:` when improving performance
+    * :memo: `:memo:` when writing docs
+    * :bug: ``:bug:` when fixing a bug
+    * :fire: `:fire:` when removing code or files
+    * :green_heart: `:green_heart:` when fixing the CI build
+    * :white_check_mark: `:white_check_mark:` when adding tests
+    * :arrow_up: `:arrow_up:` when upgrading dependencies
+    * :arrow_down: `:arrow_down:` when downgrading dependencies
+    * :shirt: `:shirt:` when removing linter warnings
 
 
 ## Merging
