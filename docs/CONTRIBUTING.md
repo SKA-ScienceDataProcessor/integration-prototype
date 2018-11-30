@@ -48,7 +48,7 @@ the above before pushing it.*
     * :bug: when fixing a bug
     * :fire: when removing code or files
     * :green_heart: when fixing the CI build
-    * :which_check_mark: when adding tests
+    * :white_check_mark: when adding tests
     * :arrow_up: when upgrading dependencies
     * :arrow_down: when downgrading dependencies
     * :shirt: when removing linter warnings
