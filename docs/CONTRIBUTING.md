@@ -3,21 +3,35 @@
 The following is a set of guidelines for contributing to SIP. These are mostly guidelines, not rules! 
 Use your best judgement, and feel free to propose changes to this document in a pull request.
 
-## Pull Request Process
+## Branches
 
-1. Follow all instructions in [the template](PULL_REQUEST_TEMPLATE.md)
-1. Follow the [style guides](#Style-guides)
-1. After you submit your pull request, verify that all 
-   [status checks](https://help.github.com/articles/about-status-checks/) are 
-   passing 
- 
-## Style guides
+* Choose *short* and *descriptive* names
+* Identifiers from tickets or issues are also good candidates for branch names.
+* Consider prefixing the branch name with `feature/`, `fix/` or `update/` to 
+  help identify the role of the branch.
+* Delete your branch from the upstream repository after it is merged, unless
+  there is a specific reason not to. 
 
-### Git Commit Messages
 
-* Use the present tense
-* Use the imperative mood
+## Commits
+
+* Each commit should be a single *logical change*. Don't make several 
+  *logical changes* in one commit.
+* Don't split a single *logical change* into several commits.
+* Commit *early* and *often*. Small, self-contained commits are easier
+  to understand and to revert if something goes wrong!
+* Commits should be ordered *logically*. For example, if *commit X* depends on 
+  changes in *commit Y* then *commit Y* should come before *commit X*.
+  
+*Note: While working on your local branch that has not yet been pushed, it's
+fine to use commits as temporary snapshots of your work. However, apply all of
+the above before pushing it.*  
+
+### Commit Messages
+
 * Limit the first line to 72 characters or less
+* After the summary should be a blank line followed by a more thorough 
+  description. This should also be wrapped at 72 characters or less.
 * Reference issues, pull requests, and JIRA tickets liberally after the 
   first line
 * When only changing documentation include `[ci skip]` in the commit title
@@ -32,6 +46,19 @@ Use your best judgement, and feel free to propose changes to this document in a 
     * :arrow_up: when upgrading dependencies
     * :arrow_down: when downgrading dependencies
     * :shirt: when removing linter warnings
+
+
+## Pull Request Process
+
+1. Follow all instructions in [the template](PULL_REQUEST_TEMPLATE.md)
+1. Follow the [style guides](#Style-guides)
+1. After you submit your pull request, verify that all 
+   [status checks](https://help.github.com/articles/about-status-checks/) are 
+   passing 
+ 
+## Style guides
+
+
  
 ### Python Style Guide
 
