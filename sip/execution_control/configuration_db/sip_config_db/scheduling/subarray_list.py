@@ -2,10 +2,11 @@
 """High-level interface for subarray objects."""
 from typing import List
 
-from .. import DB
-from . import Subarray
+from .subarray import Subarray
+from .. import ConfigDb
+from ..release import __num_subarrays__
 
-NUM_SUBARRAYS = 16
+DB = ConfigDb()
 
 
 class SubarrayList:
@@ -13,13 +14,13 @@ class SubarrayList:
 
     def __init__(self):
         """Initialise the subarray list."""
-        for i in range(NUM_SUBARRAYS):
+        for i in range(__num_subarrays__):
             Subarray(i)
 
     @property
     def size(self) -> int:
         """Return the number of subarrays."""
-        return NUM_SUBARRAYS
+        return __num_subarrays__
 
     @property
     def active(self) -> List[str]:
@@ -45,7 +46,7 @@ class SubarrayList:
     def get_active() -> List[str]:
         """Return the list of active subarrays."""
         active = []
-        for i in range(NUM_SUBARRAYS):
+        for i in range(__num_subarrays__):
             key = Subarray.get_key(i)
             if DB.get_hash_value(key, 'active').upper() == 'TRUE':
                 active.append(Subarray.get_id(i))
@@ -55,7 +56,7 @@ class SubarrayList:
     def get_inactive() -> List[str]:
         """Return the list of inactive subarrays."""
         inactive = []
-        for i in range(NUM_SUBARRAYS):
+        for i in range(__num_subarrays__):
             key = Subarray.get_key(i)
             if DB.get_hash_value(key, 'active').upper() == 'FALSE':
                 inactive.append(Subarray.get_id(i))

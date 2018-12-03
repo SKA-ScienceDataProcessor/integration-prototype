@@ -1,7 +1,8 @@
 # coding=utf-8
 """Test client commands for the SDP Master device."""
 import tango
-from _version import __version__
+
+from app.release import __version__
 
 
 def test_sdp_master():

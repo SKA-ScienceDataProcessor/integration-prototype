@@ -3,8 +3,10 @@
 from .workflow_test_utils import add_test_sbi_workflow_definitions
 from .. import ProcessingBlock, ProcessingBlockList, \
     SchedulingBlockInstanceList, Subarray
-from ... import DB
+from ... import ConfigDb
 from ...utils.generate_sbi_config import generate_sbi_config
+
+DB = ConfigDb()
 
 
 def test_sbi_list_create():
@@ -16,7 +18,8 @@ def test_sbi_list_create():
 def test_sbi_list_add_sbi():
     """Test adding SBI data to the EC configuration DB."""
     DB.flush_db()
-    Subarray(1).activate()
+    subarray = Subarray(1)
+    subarray.activate()
 
     sbi_config = generate_sbi_config(num_pbs=1)
     add_test_sbi_workflow_definitions(sbi_config)

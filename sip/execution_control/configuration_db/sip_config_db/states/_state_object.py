@@ -5,9 +5,13 @@ import os
 from datetime import datetime
 from typing import List
 
-from .. import DB, _events, LOG
-from ..utils.datetime_utils import datetime_from_isoformat
 from ._keys import STATES_KEY
+from .. import ConfigDb, LOG
+from .._events.event_queue import EventQueue
+from .._events.pubsub import get_subscribers, publish, subscribe
+from ..utils.datetime_utils import datetime_from_isoformat
+
+DB = ConfigDb()
 
 
 class StateObject:
@@ -30,7 +34,8 @@ class StateObject:
         self._allowed_transitions = self._dict_lower(allowed_transitions)
         self._allowed_target_states = self._dict_lower(allowed_target_states)
         if not DB.key_exists(self._key):
-            DB.set_hash_values(self._key, self._initialise())
+            # DB.set_hash_values(self._key, self._initialise())
+            DB.save_dict(self._key, self._initialise())
 
     @property
     def id(self) -> str:
@@ -84,11 +89,12 @@ class StateObject:
         timestamp = DB.get_hash_value(self._key, 'target_timestamp')
         return datetime_from_isoformat(timestamp)
 
-    def update_target_state(self, value: str) -> datetime:
+    def update_target_state(self, value: str, force: bool = True) -> datetime:
         """Set the target state.
 
         Args:
             value (str): New value for target state
+            force (bool): If true, ignore allowed transitions
 
         Returns:
             datetime, update timestamp
@@ -100,28 +106,31 @@ class StateObject:
 
         """
         value = value.lower()
-        current_state = self.current_state
-        if current_state == 'unknown':
-            raise RuntimeError("Unable to set target state when current state "
-                               "is 'unknown'")
+        if not force:
+            current_state = self.current_state
+            if current_state == 'unknown':
+                raise RuntimeError("Unable to set target state when current "
+                                   "state is 'unknown'")
 
-        allowed_target_states = self._allowed_target_states[current_state]
+            allowed_target_states = self._allowed_target_states[current_state]
 
-        LOG.debug('Updating target state of %s to %s', self._id, value)
+            LOG.debug('Updating target state of %s to %s', self._id, value)
 
-        if value not in allowed_target_states:
-            raise ValueError("Invalid target state: '{}'. {} can be "
-                             "commanded to states: {}".
-                             format(value, current_state,
-                                    allowed_target_states))
+            if value not in allowed_target_states:
+                raise ValueError("Invalid target state: '{}'. {} can be "
+                                 "commanded to states: {}".
+                                 format(value, current_state,
+                                        allowed_target_states))
 
         return self._update_state('target', value)
 
-    def update_current_state(self, value: str) -> datetime:
+    def update_current_state(self, value: str,
+                             force: bool = False) -> datetime:
         """Update the current state.
 
         Args:
             value (str): New value for sdp state
+            force (bool): If true, ignore allowed transitions
 
         Returns:
             datetime, update timestamp
@@ -131,22 +140,23 @@ class StateObject:
 
         """
         value = value.lower()
-        current_state = self.current_state
-        # IF the current state is unknown, it can be set to any of the allowed
-        # states, otherwise only allow certain transitions.
-        if current_state == 'unknown':
-            allowed_transitions = self._allowed_states
-        else:
-            allowed_transitions = self._allowed_transitions[current_state]
-            allowed_transitions.append(current_state)
+        if not force:
+            current_state = self.current_state
+            # IF the current state is unknown, it can be set to any of the
+            # allowed states, otherwise only allow certain transitions.
+            if current_state == 'unknown':
+                allowed_transitions = self._allowed_states
+            else:
+                allowed_transitions = self._allowed_transitions[current_state]
+                allowed_transitions.append(current_state)
 
-        LOG.debug('Updating current state of %s to %s', self._id, value)
+            LOG.debug('Updating current state of %s to %s', self._id, value)
 
-        if value not in allowed_transitions:
-            raise ValueError("Invalid current state update: '{}'. '{}' can be "
-                             "transitioned to states: {}"
-                             .format(value, current_state,
-                                     allowed_transitions))
+            if value not in allowed_transitions:
+                raise ValueError("Invalid current state update: '{}'. '{}' "
+                                 "can be transitioned to states: {}"
+                                 .format(value, current_state,
+                                         allowed_transitions))
 
         return self._update_state('current', value)
 
@@ -155,7 +165,7 @@ class StateObject:
     ###########################################################################
 
     @staticmethod
-    def subscribe(subscriber: str) -> _events.EventQueue:
+    def subscribe(subscriber: str) -> EventQueue:
         """Subscribe to state events.
 
         Args:
@@ -165,7 +175,7 @@ class StateObject:
             events.EventQueue, Event queue object for querying events.
 
         """
-        return _events.subscribe(STATES_KEY, subscriber)
+        return subscribe(STATES_KEY, subscriber)
 
     @staticmethod
     def get_subscribers() -> List[str]:
@@ -175,7 +185,7 @@ class StateObject:
             List[str], list of subscriber names.
 
         """
-        return _events.get_subscribers(STATES_KEY)
+        return get_subscribers(STATES_KEY)
 
     def publish(self, event_type: str, event_data: dict = None):
         """Publish an state event.
@@ -188,16 +198,16 @@ class StateObject:
         _stack = inspect.stack()
         _origin = (os.path.basename(_stack[3][1]) + '::' +
                    _stack[3][3]+'::L{}'.format(_stack[3][2]))
-        _events.publish(event_type=event_type,
-                        event_data=event_data,
-                        object_type=self._type,
-                        object_id=self._id,
-                        object_key=self._key,
-                        origin=_origin)
+        publish(event_type=event_type,
+                event_data=event_data,
+                object_type=self._type,
+                object_id=self._id,
+                object_key=self._key,
+                origin=_origin)
 
     def get_event_queue(self, subscriber: str):
         """Get an event queue for the specified subscriber."""
-        return _events.EventQueue(self._type, subscriber)
+        return EventQueue(self._type, subscriber)
 
     ###########################################################################
     # Private functions

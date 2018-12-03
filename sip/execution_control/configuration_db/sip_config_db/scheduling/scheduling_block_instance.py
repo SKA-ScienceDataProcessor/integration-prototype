@@ -10,11 +10,13 @@ from typing import List
 
 from jsonschema import validate
 
-from . import ProcessingBlock
 from ._keys import PB_KEY, SBI_KEY
 from ._scheduling_object import SchedulingObject
+from .processing_block import ProcessingBlock
 from .workflow_definitions import get_workflow, get_workflows
-from .. import DB
+from .. import ConfigDb
+
+DB = ConfigDb()
 
 
 class SchedulingBlockInstance(SchedulingObject):
@@ -77,7 +79,8 @@ class SchedulingBlockInstance(SchedulingObject):
 
         # Add the SBI data object to the database.
         key = SchedulingObject.get_key(SBI_KEY, config_dict['id'])
-        DB.set_hash_values(key, config_dict)
+        DB.save_dict(key, config_dict, hierarchical=False)
+        # DB.set_hash_values(key, config_dict)
 
         # Add the SBI id to the list of active SBIs
         key = '{}:active'.format(SBI_KEY)
@@ -191,7 +194,8 @@ class SchedulingBlockInstance(SchedulingObject):
 
         # Add PB to the the database
         key = SchedulingObject.get_key(PB_KEY, pb_config['id'])
-        DB.set_hash_values(key, pb_config)
+        # DB.set_hash_values(key, pb_config)
+        DB.save_dict(key, pb_config, hierarchical=False)
 
         # Add to list of PB ids
         key = '{}:active'.format(PB_KEY)

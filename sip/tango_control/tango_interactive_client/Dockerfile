@@ -1,8 +1,9 @@
-FROM skasip/tango_docker_base:1.1.2
+FROM skasip/tango_docker_base:1.1.3
 LABEL maintainer="Benjamin Mort <ben.mort@gmail.com>"
 
 USER root
-RUN pip3 install itango
+COPY requirements.txt .
+RUN pip3 install -r requirements.txt
 
 USER sip
 RUN mkdir ~/.ipython

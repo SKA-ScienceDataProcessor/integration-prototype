@@ -1,3 +1,6 @@
+skasip-config-db==1.2.0
+skasip-logging==1.0.14
+
 click==6.7
 Flask==1.0.2
 Flask-API==1.0
@@ -8,6 +11,3 @@ jsonschema==2.6.0
 MarkupSafe==1.0
 namesgenerator==0.3
 simplejson==3.16.0
-skasip-config-db==1.1.1
-skasip-logging==1.0.13
-

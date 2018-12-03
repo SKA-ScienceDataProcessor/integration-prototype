@@ -7,19 +7,23 @@ services:
     environment:
       REDIS_HOST: "master_db"
     ports:
-      - 5000
-    build: .
+      - 5000:5000
+    expose:
+      - "5000"
 
   master_db:
     image: redis:4.0.6-alpine
     volumes:
       - master_db:/data/db
+    ports:
+      - 6379:6379
+    expose:
+      - "6379"
 
   services_watchdog:
     image: skasip/master_controller_service
     environment:
       REDIS_HOST: "master_db"
-    build: ../../master_controller_service
 
 volumes:
   master_db:

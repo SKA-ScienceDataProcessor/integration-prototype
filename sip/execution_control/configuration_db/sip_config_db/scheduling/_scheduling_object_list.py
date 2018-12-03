@@ -2,8 +2,12 @@
 """Base class for list of scheduling or processing block data objects."""
 from typing import List
 
-from .. import DB, _events
 from ._scheduling_object import SchedulingObject
+from .. import ConfigDb
+from .._events.event_queue import EventQueue
+from .._events.pubsub import get_subscribers, publish, subscribe
+
+DB = ConfigDb()
 
 
 class SchedulingObjectList:
@@ -63,11 +67,17 @@ class SchedulingObjectList:
         """
         return DB.get_list('{}:completed'.format(self.type))
 
+    def set_complete(self, object_id: str):
+        """Mark the specified object as completed."""
+        if object_id in self.active:
+            DB.remove_from_list('{}:active'.format(self.type), object_id)
+            DB.append_to_list('{}:completed'.format(self.type), object_id)
+
     ###########################################################################
     # Pub/sub events functions
     ###########################################################################
 
-    def subscribe(self, subscriber: str) -> _events.EventQueue:
+    def subscribe(self, subscriber: str) -> EventQueue:
         """Subscribe to scheduling object events.
 
         Args:
@@ -77,7 +87,7 @@ class SchedulingObjectList:
             events.EventQueue, Event queue object for querying PB events.
 
         """
-        return _events.subscribe(self.type, subscriber)
+        return subscribe(self.type, subscriber)
 
     def get_subscribers(self) -> List[str]:
         """Get the list of subscribers.
@@ -89,7 +99,7 @@ class SchedulingObjectList:
             List[str], list of subscriber names.
 
         """
-        return _events.get_subscribers(self.type)
+        return get_subscribers(self.type)
 
     def publish(self, object_id: str, event_type: str,
                 event_data: dict = None):
@@ -102,6 +112,9 @@ class SchedulingObjectList:
 
         """
         object_key = SchedulingObject.get_key(self.type, object_id)
-        _events.publish(event_type=event_type, event_data=event_data,
-                        object_type=self.type, object_id=object_id,
-                        object_key=object_key, origin=None)
+        publish(event_type=event_type,
+                event_data=event_data,
+                object_type=self.type,
+                object_id=object_id,
+                object_key=object_key,
+                origin=None)

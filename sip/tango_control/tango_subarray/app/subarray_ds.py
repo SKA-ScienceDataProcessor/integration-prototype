@@ -5,10 +5,10 @@ import sys
 
 from tango.server import run
 
-from release import LOG
+from register_devices import register_subarray_devices
 from sip_logging import init_logger
 from subarray_device import SubarrayDevice
-from register_devices import register_subarray_devices
+from release import LOG
 
 
 def main(args=None, **kwargs):

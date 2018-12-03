@@ -6,8 +6,10 @@ import os
 import jsonschema
 import pytest
 
-from ... import DB
 from ..generate_sbi_config import generate_sbi_config, generate_sbi_json
+from ... import ConfigDb
+
+DB = ConfigDb()
 
 
 @pytest.fixture

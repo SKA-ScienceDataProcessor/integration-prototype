@@ -1,10 +1,12 @@
 # coding=utf-8
 """Unit tests of the workflow definition interface."""
-from os.path import dirname, join
 import json
+from os.path import dirname, join
 
-from ... import DB
 from .. import workflow_definitions
+from ... import ConfigDb
+
+DB = ConfigDb()
 
 
 def test_add_workflow_definition():

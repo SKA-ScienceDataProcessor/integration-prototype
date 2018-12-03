@@ -1,12 +1,11 @@
 # coding=utf-8
 """Utility module for generating workflow definitions during testing."""
 import json
-from os.path import join, dirname
+from os.path import dirname, join
 
 import jinja2
 
 from .. import workflow_definitions
-
 
 DATA_PATH = join(dirname(__file__), 'data', 'workflows')
 

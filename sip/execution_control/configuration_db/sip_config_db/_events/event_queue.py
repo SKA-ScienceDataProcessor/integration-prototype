@@ -3,8 +3,12 @@
 import ast
 from typing import Callable, List, Union
 
-from . import Event, _keys
-from .. import DB, LOG
+from . import _keys
+from .event import Event
+from .. import ConfigDb
+from .._logging import LOG
+
+DB = ConfigDb()
 
 
 class EventQueue:

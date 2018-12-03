@@ -6,10 +6,14 @@ import datetime
 class Event:
     """Event class."""
 
-    def __init__(self, event_id: str, event_type: str, event_data: dict = None,
+    def __init__(self,
+                 event_id: str,
+                 event_type: str,
+                 event_data: dict = None,
                  event_origin: str = None,
                  event_timestamp: datetime.datetime = None,
-                 object_type: str = None, object_id: str = None,
+                 object_type: str = None,
+                 object_id: str = None,
                  object_key: str = None):
         """Create an Event object.
 
@@ -41,19 +45,11 @@ class Event:
     def from_config(cls, config: dict):
         """Create an event object from an event dictionary object.
 
-        {
-            'id': "",
-            'type': "",
-            'data': {},
-            'origin': "",
-            'timestamp': "",
-            'object_id': "",
-            'object_type': ""
-        }
+        Args:
+            config (dict): Event Configuration dictionary.
+
         """
         timestamp = config.get('timestamp', None)
-        # if timestamp:
-        #     timestamp = datetime_from_isoformat(timestamp)
         return cls(config.get('id'),
                    config.get('type'),
                    config.get('data', dict()),

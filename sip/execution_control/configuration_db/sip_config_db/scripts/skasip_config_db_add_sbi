@@ -3,11 +3,10 @@
 """Utility module to add an SBI to the config database."""
 import argparse
 
-from sip_logging import init_logger
-
 from sip_config_db import LOG
 from sip_config_db.scheduling import SchedulingBlockInstance, Subarray
 from sip_config_db.utils.generate_sbi_config import generate_sbi_config
+from sip_logging import init_logger
 
 
 def main():

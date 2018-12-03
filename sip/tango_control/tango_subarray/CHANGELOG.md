@@ -8,6 +8,14 @@ The format is based on
 and this project adheres to
  [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+
+## [1.2.0] - 2018-11-29
+
+### Changed
+- Added Python `requirements.txt` to specify python dependencies as this
+  is no longer part of the SIP Tango docker base image.
+
 ## [1.1.2] - 2018-11-20
 
-- Updated to config db v 1.1.2
+### Changed
+- Updated to `skasip-config-db==1.1.2` (in base image).

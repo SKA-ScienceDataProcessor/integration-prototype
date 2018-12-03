@@ -1,0 +1,19 @@
+#!/usr/bin/env bash
+TANGO_HOST_ID="$(docker ps -f name=tc_tango_database.1 -f status=running -q)"
+IMAGE=skasip/tango_interactive_client:1.2.0
+DATA_SRC_DIR="$(pwd)"/deploy/demos_23_11_18/data
+UTILS_SRC_DIR="$(pwd)"/deploy/demos_23_11_18/itango_utils
+if [[ $(hostname) != 'ilab-gate.ilab.cluster' ]]; then
+    docker run -it --rm --network=container:${TANGO_HOST_ID} \
+        --network=container:${TANGO_HOST_ID} \
+        -e REDIS_HOST=ec_config_database \
+        -v "${DATA_SRC_DIR}":/home/sip/data:ro \
+        -v "${UTILS_SRC_DIR}":/home/sip/itango_utils:ro \
+        "${IMAGE}"
+else
+    docker run -it --rm --network=container:${TANGO_HOST_ID} \
+        --network=container:${TANGO_HOST_ID} \
+        -e REDIS_HOST=ec_config_database \
+        "${IMAGE}"
+fi
+

@@ -4,11 +4,24 @@ version: '3.6'
 
 services:
 
-  pbc:
-    image: skasip/processing_block_controller:1.0.5
+  processing_controller:
+    image: skasip/processing_controller:latest
     environment:
-      - CELERY_BROKER=redis://config_db/1
-      - CELERY_BACKEND=redis://config_db/2
+    - REDIS_HOST=config_database
+    volumes:
+    - /var/run/docker.sock:/var/run/docker.sock
+    - ./scheduler:/home/sip/scheduler
+    deploy:
+      mode: replicated
+      replicas: 1
+    depends_on:
+    - config_database
+
+  pbc:
+    image: skasip/processing_block_controller:1.1.2
+    environment:
+      - CELERY_BROKER=redis://config_database/1
+      - CELERY_BACKEND=redis://config_database/2
       - REDIS_HOST=config_db
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
@@ -17,7 +30,7 @@ services:
       mode: replicated
       replicas: 1
 
-  config_db:
+  config_database:
     image: redis:4.0.6-alpine
     ports:
       - 6379:6379
@@ -28,27 +41,27 @@ services:
   redis_ui_config_db:
     image: rediscommander/redis-commander:latest
     environment:
-      - REDIS_HOSTS=config_db:config_db:6379:0
+      - REDIS_HOSTS=config_db:config_database:6379:0
     ports:
       - 8081:8081
 
   redis_ui_celery_broker:
     image: rediscommander/redis-commander:latest
     environment:
-      - REDIS_HOSTS=config_db:config_db:6379:1
+      - REDIS_HOSTS=config_db:config_database:6379:1
     ports:
       - 8082:8081
 
   redis_ui_celery_backend:
     image: rediscommander/redis-commander:latest
     environment:
-      - REDIS_HOSTS=config_db:config_db:6379:2
+      - REDIS_HOSTS=config_db:config_database:6379:2
     ports:
       - 8083:8081
 
   redis_ui_celery_pb_queue:
       image: rediscommander/redis-commander:latest
       environment:
-        - REDIS_HOSTS=config_db:config_db:6379:10
+        - REDIS_HOSTS=config_db:config_database:6379:10
       ports:
         - 8084:8081

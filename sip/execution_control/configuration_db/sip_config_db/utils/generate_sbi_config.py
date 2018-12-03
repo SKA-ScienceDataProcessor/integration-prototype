@@ -8,9 +8,13 @@ import json
 from random import choice, randint
 from typing import List, Union
 
-from .. import DB
-from ..scheduling import ProcessingBlock, SchedulingBlockInstance, \
-    PB_VERSION, SBI_VERSION
+from .. import ConfigDb
+from ..release import __pb_version__, __sbi_version__
+from ..scheduling.processing_block import ProcessingBlock
+from ..scheduling.scheduling_block_instance import SchedulingBlockInstance
+
+DB = ConfigDb()
+
 
 PB_TYPES = [
     'realtime',
@@ -51,7 +55,7 @@ def add_workflow_definitions(sbi_config: dict):
         )
         key = "workflow_definitions:{}:{}".format(workflow_config['id'],
                                                   workflow_config['version'])
-        DB.set_hash_values(key, workflow_definition)
+        DB.save_dict(key, workflow_definition, hierarchical=False)
         registered_workflows.append(workflow_name)
 
 
@@ -122,7 +126,7 @@ def generate_pb_config(pb_id: str,
     workflow_parameters = workflow_config.get('parameters', dict())
     pb_data = dict(
         id=pb_id,
-        version=PB_VERSION,
+        version=__pb_version__,
         type=pb_type,
         priority=pb_config.get('priority', randint(0, 10)),
         dependencies=pb_config.get('dependencies', []),
@@ -176,7 +180,7 @@ def generate_sbi_config(num_pbs: int = 3, project: str = 'sip',
         pb_list.append(pb_dict)
     sbi_config = dict(
         id=SchedulingBlockInstance.get_id(utc_now, project),
-        version=SBI_VERSION,
+        version=__sbi_version__,
         scheduling_block=generate_sb(utc_now, project, programme_block),
         processing_blocks=pb_list
     )

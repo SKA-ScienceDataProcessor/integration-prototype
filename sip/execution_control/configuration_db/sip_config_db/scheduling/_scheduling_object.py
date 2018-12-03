@@ -4,7 +4,12 @@ import ast
 from typing import List
 
 from ._keys import PB_KEY, SBI_KEY
-from .. import DB, LOG, _events
+from .. import ConfigDb, LOG
+from .._events.event import Event
+from .._events.event_queue import EventQueue
+from .._events.pubsub import get_events, get_subscribers, publish, subscribe
+
+DB = ConfigDb()
 
 
 class SchedulingObject:
@@ -88,7 +93,7 @@ class SchedulingObject:
     # Pub/sub events functions
     ###########################################################################
 
-    def subscribe(self, subscriber: str) -> _events.EventQueue:
+    def subscribe(self, subscriber: str) -> EventQueue:
         """Subscribe to scheduling object (SBI or PB).
 
         Args:
@@ -98,7 +103,7 @@ class SchedulingObject:
             events.EventQueue, Event queue object for querying PB events.
 
         """
-        return _events.subscribe(self._type, subscriber)
+        return subscribe(self._type, subscriber)
 
     def get_subscribers(self) -> List[str]:
         """Get the list of subscribers to the scheduling object.
@@ -107,7 +112,7 @@ class SchedulingObject:
             List[str], list of subscriber names.
 
         """
-        return _events.get_subscribers(self._type)
+        return get_subscribers(self._type)
 
     def publish(self, event_type: str, event_data: dict = None):
         """Publish an event associated with the scheduling object.
@@ -127,14 +132,14 @@ class SchedulingObject:
         _origin = os.path.basename(_stack[3][1]) + '::' + \
             _stack[3][3]+'::L{}'.format(_stack[3][2])
 
-        _events.publish(event_type=event_type,
-                        event_data=event_data,
-                        object_type=self._type,
-                        object_id=self._id,
-                        object_key=self._key,
-                        origin=_origin)
+        publish(event_type=event_type,
+                event_data=event_data,
+                object_type=self._type,
+                object_id=self._id,
+                object_key=self._key,
+                origin=_origin)
 
-    def get_events(self) -> List[_events.Event]:
+    def get_events(self) -> List[Event]:
         """Get events associated with the scheduling object.
 
         Returns:
@@ -142,11 +147,11 @@ class SchedulingObject:
 
         """
         LOG.debug('Getting events for %s', self.key)
-        return _events.get_events(self.key)
+        return get_events(self.key)
 
     def get_event_queue(self, subscriber: str):
         """Get an event queue for the specified subscriber."""
-        return _events.EventQueue(self._type, subscriber)
+        return EventQueue(self._type, subscriber)
 
     ###########################################################################
     # Private functions

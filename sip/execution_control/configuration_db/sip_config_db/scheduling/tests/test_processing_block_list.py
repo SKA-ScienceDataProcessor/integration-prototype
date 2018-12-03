@@ -4,14 +4,17 @@
 The Processing Block List API gives functions for interfacing with the
 list of PBs known to the configuration database.
 """
-from random import choice
 import time
+from random import choice
+
 import pytest
 
 from .workflow_test_utils import add_test_sbi_workflow_definitions
 from .. import ProcessingBlockList, SchedulingBlockInstance
-from ... import DB
+from ... import ConfigDb
 from ...utils.generate_sbi_config import generate_sbi_config
+
+DB = ConfigDb()
 
 
 def test_create_pb_list_object():
