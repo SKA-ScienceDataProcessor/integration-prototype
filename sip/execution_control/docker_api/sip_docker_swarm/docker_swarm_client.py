@@ -32,9 +32,44 @@ class DockerSwarmClient:
     ###########################################################################
 
     @property
-    def volume_names(self)-> List[str]:
-        """Get the list of volumes names."""
+    def services(self) -> List[str]:
+        """Get list of docker services.
+
+        Returns:
+            list, list of service ids
+
+        """
+        return self.get_service_list()
+
+    @property
+    def containers(self)-> List[str]:
+        """Get list of docker containers.
+
+        Returns:
+            list, list of container ids
+
+        """
+        #TODO(NJT)
+
+    @property
+    def volumes(self)-> List[str]:
+        """Get list of docker volumes.
+
+        Returns:
+            list, list of volume names
+
+        """
         return self.get_volume_list()
+
+    @property
+    def nodes(self)-> List[str]:
+        """Get list of docker nodes.
+
+        Returns:
+            list, list of node ids
+
+        """
+        return self.get_node_list()
 
     ###########################################################################
     # Create functions
@@ -247,7 +282,7 @@ class DockerSwarmClient:
         container = self._client.containers.get(container_id_or_name)
         return container.attrs
 
-    def get_volumes_list(self):
+    def get_volume_list(self):
         """Get a list of docker volumes.
 
         Only the manager nodes can retrieve all the volumes
@@ -279,7 +314,7 @@ class DockerSwarmClient:
             dict, details of the volume
 
         """
-        if volume_name not in self.get_volume_list():
+        if volume_name not in self.volume_names:
             raise RuntimeError('No such volume found: ', volume_name)
 
         volume = self._client.volumes.get(volume_name)
