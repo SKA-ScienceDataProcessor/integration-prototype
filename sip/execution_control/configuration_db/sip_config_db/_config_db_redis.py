@@ -479,9 +479,16 @@ class ConfigDb:
 
         """
         if pipeline:
-            self._pipeline.lrem(key, count, value)
+            if redis.__version__ == '2.10.6':
+                self._pipeline.lrem(name=key, value=value, num=count)
+            else:
+                self._pipeline.lrem(key, count, value)
         else:
-            self._db.lrem(key, count, value)
+            if self._db.exists(key):
+                if redis.__version__ == '2.10.6':
+                    self._db.lrem(name=key, value=value, num=count)
+                else:
+                    self._db.lrem(key, count, value)
 
     @check_connection
     def execute(self):
