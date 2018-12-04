@@ -10,13 +10,13 @@ from threading import Lock, Thread
 
 import celery
 from celery.app.control import Inspect
+from sip_pbc.tasks import APP, execute_processing_block
 
 from sip_config_db.scheduling import ProcessingBlock, ProcessingBlockList
 from sip_config_db.utils.datetime_utils import datetime_from_isoformat
 from .log import LOG
 from .pb_queue import ProcessingBlockQueue
 from .release import __service_name__
-from ..processing_block_controller.tasks import APP, execute_processing_block
 
 
 class ProcessingBlockScheduler:

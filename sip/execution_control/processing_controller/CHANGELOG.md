@@ -8,8 +8,14 @@ The format is based on
 and this project adheres to
  [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.2.1] - 2018-12-04
+
+### Changed
+- Updated to skasip-config-db==1.2.1
+- Updated to use the SIP Processing Block Controller library from pypi,
+  skasip-pbc==1.2.1
+
 ## [1.2.0] - 2018-11-29
 
 ### Changed
 - Updated to skasip-config-db@1.2.0
-
