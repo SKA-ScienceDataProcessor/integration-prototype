@@ -5,12 +5,12 @@ COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt -U
 
 # FIXME(BMo) Can't run in user space as need access to docker socket!?
-# RUN addgroup -S sip && adduser -S sip -G sip docker
-# USER sip
+RUN addgroup -S sip && adduser -S sip -G sip && addgroup sip root
+USER sip
 
 WORKDIR /home/sip
 
-COPY *.py processing_block_controller/
+COPY sip_pbc/*.py processing_block_controller/
 
 ENTRYPOINT ["celery"]
 CMD ["-C", "-A", "processing_block_controller.tasks", \

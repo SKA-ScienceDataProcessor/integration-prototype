@@ -1,0 +1,21 @@
+version: '3.6'
+
+services:
+
+  pbc:
+    image: skasip/processing_block_controller:1.2.1
+    environment:
+      - CELERY_BROKER_URL=redis://config_database/1
+      - CELERY_RESULT_BACKEND=redis://config_database/2
+      - REDIS_HOST=config_database
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - ./sip_pbc:/home/sip/processing_block_controller
+
+  config_database:
+    image: redis:5.0.1-alpine
+    ports:
+      - 6379:6379
+    deploy:
+      mode: replicated
+      replicas: 1
