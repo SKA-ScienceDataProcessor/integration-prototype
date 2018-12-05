@@ -28,12 +28,10 @@ APP = Celery(broker=BROKER, backend=BACKEND)
 @APP.task
 def echo(value: str):
     """Echo a string."""
-    print(value)
     return value
 
 
-@APP.task(name='processing_controller.processing_block_controller.tasks.'
-               'version')
+@APP.task
 def version():
     """Return the PBC version."""
     init_logger(show_log_origin=True, p3_mode=False)
@@ -160,8 +158,7 @@ def _workflow_complete(workflow_stage_dict):
     return False
 
 
-@APP.task(name='processing_controller.processing_block_controller.tasks.'
-               'execute_processing_block')
+@APP.task
 def execute_processing_block(pb_id: str):
     """Execute a processing block.
 

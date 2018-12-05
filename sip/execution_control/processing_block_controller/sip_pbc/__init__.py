@@ -1,9 +1,9 @@
 # coding=utf-8
 """Processing Block Controller module."""
-from .tasks import APP, version, execute_processing_block
+from .tasks import version, echo, execute_processing_block
 
 __all__ = [
-    'APP',
+    'echo',
     'version',
     'execute_processing_block'
 ]

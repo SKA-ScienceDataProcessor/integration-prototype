@@ -16,15 +16,9 @@
       "resources_required": [],
       "workflow": {
         "id": "mock_workflow",
-        "version": "1.0.1",
+        "version": "1.0.2",
         "parameters": {
             "stage1": {
-                "duration": 0.1
-            },
-            "stage2": {
-                "duration": 0.1
-            },
-            "stage3": {
                 "duration": 0.1
             }
         }

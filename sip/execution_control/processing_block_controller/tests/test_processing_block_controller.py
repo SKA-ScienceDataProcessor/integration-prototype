@@ -9,61 +9,47 @@ from os.path import dirname, join
 from sip_config_db import ConfigDb
 from sip_config_db.scheduling import SchedulingBlockInstance
 
-from sip_pbc import APP, execute_processing_block, version
+from sip_pbc import execute_processing_block, version, echo
 from sip_pbc.release import __version__
 
-from .test_utils import add_workflow_definitions
+from ._test_utils import add_workflow_definitions
 
 DB = ConfigDb()
 
 
-def test_pbc_inspect_tasks():
-    """."""
-    from celery.app.control import Inspect
-    _inspect = Inspect(app=APP)
-    # print('')
-    # print('inspect =', _inspect)
-    # print('scheduled =', _inspect.scheduled())
-    # print('active =', _inspect.active())
-    # print('reserved =', _inspect.reserved())
-    # print('registered tasks =', _inspect.registered_tasks())
-
-
 def test_pbc_inspect_workers():
-    """."""
-    # import celery
-    # print('')
-    # print('ping workers:', celery.current_app.control.inspect().ping())
-    # print('stats', json.dumps(celery.current_app.control.inspect().stats(),
-    #                           indent=2))
-    # print('workers=', celery.current_app.control.inspect().stats().keys())
+    """Test the Celery API for inspecting the Celery workers."""
+    import celery
+    inspect = celery.current_app.control.inspect()
+    workers = inspect.ping()
+    for worker in workers:
+        assert not inspect.scheduled()[worker]
+        assert not inspect.active()[worker]
+        registered_tasks = inspect.registered_tasks()[worker]
+        assert 'sip_pbc.tasks.execute_processing_block' in registered_tasks
+
+
+def test_pbc_echo():
+    """Test the SIP PBC echo method."""
+    message = "Hello there!"
+    result = echo.delay(message)
+    assert result.get(timeout=3) == message
 
 
 def test_pbc_version():
-    """."""
+    """Test the SIP PBC version method."""
     result = version.delay()
-    assert result.get(timeout=1) == __version__
+    assert result.get(timeout=3) == __version__
 
 
 def test_pbc_execute_workflow():
-    """.
-    http://docs.celeryproject.org/en/latest/userguide/tasks.html
-
-    python3 -m pytest -s -v -x --rootdir=. -k
-    test_pbc_execute sip/execution_control/processing_controller
-
-    """
-    # import celery
-
+    """Test the SIP PBC execute_processing_block method."""
     DB.flush_db()
     data_dir = join(dirname(__file__), 'data')
     add_workflow_definitions(join(data_dir, 'workflow_definitions'))
-    with open(join(data_dir, 'sbi_config_2.json')) as _file:
+    with open(join(data_dir, 'sbi_config_3.json')) as _file:
         sbi_config = json.load(_file)
     sbi = SchedulingBlockInstance.from_config(sbi_config)
-
-    # print('NAME:', execute_processing_block.name)
-    # print("STATE:", celery.current_app.events.State())
 
     pb_ids = sbi.processing_block_ids
     assert len(pb_ids) == 1

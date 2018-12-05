@@ -4,14 +4,12 @@ LABEL maintainer="Benjamin Mort <ben.mort@gmail.com>"
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt -U
 
-# FIXME(BMo) Can't run in user space as need access to docker socket!?
 RUN addgroup -S sip && adduser -S sip -G sip && addgroup sip root
 USER sip
 
 WORKDIR /home/sip
 
-COPY sip_pbc/*.py processing_block_controller/
+COPY sip_pbc sip_pbc
 
 ENTRYPOINT ["celery"]
-CMD ["-C", "-A", "processing_block_controller.tasks", \
-     "worker", "--loglevel=INFO"]
+CMD ["-C", "-A", "sip_pbc.tasks", "worker", "--loglevel=INFO"]
