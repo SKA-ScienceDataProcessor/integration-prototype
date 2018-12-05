@@ -49,7 +49,7 @@ class DockerSwarmClient:
             list, list of container ids
 
         """
-        #TODO(NJT)
+        return self.get_container_list()
 
     @property
     def volumes(self)-> List[str]:
@@ -70,6 +70,16 @@ class DockerSwarmClient:
 
         """
         return self.get_node_list()
+
+    @property
+    def delete_services(self):
+        """ Delete all services."""
+        self.delete_all_services()
+
+    @property
+    def delete_volumes(self):
+        """ Delete all volumes."""
+        self.delete_all_volumes()
 
     ###########################################################################
     # Create functions
@@ -141,71 +151,71 @@ class DockerSwarmClient:
     # Delete functions
     ###########################################################################
 
+    def delete_service(self, service):
+        """Removes/stops a docker service.
+
+        Only the manager nodes can delete a service
+
+        Args:
+            service (string): Service name or ID
+        """
+        # Raise an exception if we are not a manager
+        if not self._manager:
+            raise RuntimeError('Services can only be deleted '
+                               'on swarm manager nodes')
+
+        # Remove service
+        self._api_client.remove_service(service)
+
+    def delete_all_services(self):
+        """Removes/stops a service.
+
+        Only the manager nodes can delete a service
+        """
+        # Raise an exception if we are not a manager
+        if not self._manager:
+            raise RuntimeError('Services can only be deleted '
+                               'on swarm manager nodes')
+
+        service_list = self.get_service_list()
+        for services in service_list:
+            # Remove all the services
+            self._api_client.remove_service(services)
+
+    def delete_volume(self, volume_name):
+        """Removes/stops a docker volume.
+
+        Only the manager nodes can delete a volume
+
+        Args:
+            volume_name (string): Name of the volume
+        """
+        # Raise an exception if we are not a manager
+        if not self._manager:
+            raise RuntimeError('Volumes can only be deleted '
+                               'on swarm manager nodes')
+
+        # Remove volume
+        self._api_client.remove_volume(volume_name)
+
+    def delete_all_volumes(self):
+        """Remove all the volumes.
+
+        Only the manager nodes can delete a volume
+        """
+        # Raise an exception if we are not a manager
+        if not self._manager:
+            raise RuntimeError('Volumes can only be deleted '
+                               'on swarm manager nodes')
+
+        volume_list = self.get_volume_list()
+        for volumes in volume_list:
+            # Remove all the services
+            self._api_client.remove_volume(volumes, force=True)
+
     ###########################################################################
     # Get functions
     ###########################################################################
-
-    def get_service_state(self, service_id: str) -> str:
-        """Get the state of the service.
-
-        Only the manager nodes can retrieve service state
-
-        Args:
-            service_id (str): Service id
-
-        Returns:
-            str, state of the service
-
-        """
-        # Get service
-        service = self._client.services.get(service_id)
-
-        # Get the state of the service
-        for service_task in service.tasks():
-            service_state = service_task['DesiredState']
-        return service_state
-
-    def get_node_list(self):
-        """Get a list of nodes.
-
-        Only the manager nodes can retrieve all the nodes
-
-        Returns:
-            list, all the ids of the nodes in swarm
-
-        """
-        # Initialising empty list
-        nodes = []
-
-        # Raise an exception if we are not a manager
-        if not self._manager:
-            raise RuntimeError('Only the Swarm manager node '
-                               'can retrieve all the nodes.')
-
-        node_list = self._client.nodes.list()
-        for n_list in node_list:
-            nodes.append(n_list.id)
-        return nodes
-
-    def get_node_details(self, node_id):
-        """Get details of a node.
-
-        Only the manager nodes can retrieve details of a node
-
-        Args:
-            node_id (list): List of node ID
-
-        Returns:
-            dict, details of the node
-
-        """
-        # Raise an exception if we are not a manager
-        if not self._manager:
-            raise RuntimeError('Only the Swarm manager node can '
-                               'retrieve node details.')
-
-        node = self._client.nodes.get(node_id)
-        return node.attrs
 
     def get_service_list(self):
         """Get a list of docker services.
@@ -269,6 +279,83 @@ class DockerSwarmClient:
         service = self._client.services.get(service_id)
         return service.attrs
 
+    def get_service_state(self, service_id: str) -> str:
+        """Get the state of the service.
+
+        Only the manager nodes can retrieve service state
+
+        Args:
+            service_id (str): Service id
+
+        Returns:
+            str, state of the service
+
+        """
+        # Get service
+        service = self._client.services.get(service_id)
+
+        # Get the state of the service
+        for service_task in service.tasks():
+            service_state = service_task['DesiredState']
+        return service_state
+
+    def get_node_list(self):
+        """Get a list of nodes.
+
+        Only the manager nodes can retrieve all the nodes
+
+        Returns:
+            list, all the ids of the nodes in swarm
+
+        """
+        # Initialising empty list
+        nodes = []
+
+        # Raise an exception if we are not a manager
+        if not self._manager:
+            raise RuntimeError('Only the Swarm manager node '
+                               'can retrieve all the nodes.')
+
+        node_list = self._client.nodes.list()
+        for n_list in node_list:
+            nodes.append(n_list.id)
+        return nodes
+
+    def get_node_details(self, node_id):
+        """Get details of a node.
+
+        Only the manager nodes can retrieve details of a node
+
+        Args:
+            node_id (list): List of node ID
+
+        Returns:
+            dict, details of the node
+
+        """
+        # Raise an exception if we are not a manager
+        if not self._manager:
+            raise RuntimeError('Only the Swarm manager node can '
+                               'retrieve node details.')
+
+        node = self._client.nodes.get(node_id)
+        return node.attrs
+
+    def get_container_list(self):
+        """Get list of containers.
+
+        Returns:
+            list, all the ids of containers
+
+        """
+        # Initialising empty list
+        containers = []
+
+        containers_list = self._client.containers.list()
+        for c_list in containers_list:
+            containers.append(c_list.short_id)
+        return containers
+
     def get_container_details(self, container_id_or_name):
         """Get details of a container.
 
@@ -314,7 +401,7 @@ class DockerSwarmClient:
             dict, details of the volume
 
         """
-        if volume_name not in self.volume_names:
+        if volume_name not in self.volumes:
             raise RuntimeError('No such volume found: ', volume_name)
 
         volume = self._client.volumes.get(volume_name)
@@ -323,6 +410,26 @@ class DockerSwarmClient:
     ###########################################################################
     # Update functions
     ###########################################################################
+
+    def update_labels(self, node_name, labels):
+        """Update label of a node.
+
+        Args:
+            node_name (string): Name of the node.
+            labels (dict): Label to add to the node
+        """
+        # Raise an exception if we are not a manager
+        if not self._manager:
+            raise RuntimeError('Only the Swarm manager node can update '
+                               'node details.')
+
+        # Node specification
+        node_spec = {'Availability': 'active',
+                     'Name': node_name,
+                     'Role': 'manager',
+                     'Labels': labels}
+        node = self._client.nodes.get(node_name)
+        node.update(node_spec)
 
     ###########################################################################
     # Parsing functions
