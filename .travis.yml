@@ -22,41 +22,40 @@ cache: pip
 #    - SIP_DOCKER_API_LOG_LEVEL=INFO
 
 stages:
-  - common
-  - ec_tests
-  - tc_tests
+  - tests
 
 jobs:
   include:
 
-  - stage: common
+  - stage: tests
     install:
     - pip install -r testing_requirements.txt
+    - pip install -r sip/execution_control/configuration_db/requirements.txt
+    before_script:
+    - docker swarm init
+    - docker service create -p 6379:6379 --name=config_db redis:5.0.1-alpine
+    script: ./tools/run_tests.sh sip/execution_control/configuration_db
+  -
+    install:
+    - pip install -r testing_requirements.txt
+    - pip install -r sip/execution_control/processing_block_controller/requirements.txt
     before_script:
     - docker swarm init
     - docker network create --driver overlay --attachable sip
-    script: true
-
-  - stage: ec_tests
-    install:
-    - pip install -r sip/execution_control/configuration_db/requirements.txt
-    - pip install -r sip/execution_control/processing_block_controller/requirements.txt
-    before_script:
     - docker service create -p 6379:6379 --network=sip --name=config_db redis:5.0.1-alpine
     - |
-      docker service create -d --network=sip \
+      docker service create \
+        --network=sip \
         --env REDIS_HOST=config_db \
         --env CELERY_BROKER_URL=redis://config_db/1 \
         --env CELERY_RESULT_BACKEND=redis://config_db/2 \
         --mount type=bind,source=/var/run/docker.sock,destination=/var/run/docker.sock \
         --name pbc \
         skasip/processing_block_controller:latest
-    script:
-    - ./tools/run_tests.sh sip/execution_control/configuration_db
-    - ./tools/run_tests.sh sip/execution_control/processing_block_controller
-
-  - stage: tc_tests
+    script: ./tools/run_tests.sh sip/execution_control/processing_block_controller
+  -
     install:
+    - pip install -r testing_requirements.txt
     - pip install -r sip/tango_control/flask_master/requirements.txt
     script: ./tools/run_tests.sh sip/tango_control/flask_master
 
