@@ -14,22 +14,38 @@ python:
 - 3.6.5
 
 cache: pip
+
 #env:
 #  global:
 #    - SIP_PCI_LOG_LEVEL=NOTSET
 #    - SIP_PCI_LOG_LEVEL=WARN
 #    - SIP_DOCKER_API_LOG_LEVEL=INFO
 
+stages:
+  - common
+  - ec_tests
+  - tc_tests
+
 jobs:
   include:
-  - stage: Test Execution Control Components
+
+  - stage: common
     install:
     - pip install -r testing_requirements.txt
-    - pip install -r sip/tango_control/flask_master/requirements.txt
-    script: ./tools/run_tests.sh sip/tango_control/flask_master
-  - stage: Test Tango Control Components
+    before_script:
+    - docker swarm init
+    - docker network create --driver overlay --attachable sip
+    script: true
+
+  - stage: ec_tests
     install:
-    - pip install -r testing_requirements.txt
+    - pip install -r sip/execution_control/configuration_db/requirements.txt
+    before_script:
+    - docker service create -p 6379:6379 --network=sip --name=config_db redis:5.0.1-alpine
+    script: ./tools/run_tests.sh sip/execution_control/configuration_db
+
+  - stage: tc_tests
+    install:
     - pip install -r sip/tango_control/flask_master/requirements.txt
     script: ./tools/run_tests.sh sip/tango_control/flask_master
 
