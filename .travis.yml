@@ -11,7 +11,7 @@ services:
 language: python
 
 python:
-- 3.6.5
+- 3.6
 
 cache: pip
 
@@ -43,6 +43,14 @@ jobs:
     - pip install -r sip/execution_control/processing_block_controller/requirements.txt
     before_script:
     - docker service create -p 6379:6379 --network=sip --name=config_db redis:5.0.1-alpine
+    - |
+      docker service create -d --network=sip \
+        --env REDIS_HOST=config_db \
+        --env CELERY_BROKER_URL=redis://config_db/1 \
+        --env CELERY_RESULT_BACKEND=redis://config_db/2 \
+        --mount type=bind,source=/var/run/docker.sock,destination=/var/run/docker.sock \
+        --name pbc \
+        skasip/processing_block_controller:latest
     script:
     - ./tools/run_tests.sh sip/execution_control/configuration_db
     - ./tools/run_tests.sh sip/execution_control/processing_block_controller

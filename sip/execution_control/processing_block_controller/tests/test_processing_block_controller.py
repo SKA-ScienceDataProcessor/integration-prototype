@@ -2,6 +2,11 @@
 """Unit tests of the Processing Block Controller.
 
 http://docs.celeryproject.org/en/latest/userguide/testing.html
+
+FIXME(BMo) At the moment these tests require that the PBC has started.
+           Its possible that this requirement is not needed using some
+           Celery testing magic.
+
 """
 import json
 from os.path import dirname, join
