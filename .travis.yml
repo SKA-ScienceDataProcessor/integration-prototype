@@ -40,18 +40,12 @@ jobs:
   - stage: ec_tests
     install:
     - pip install -r sip/execution_control/configuration_db/requirements.txt
-<<<<<<< HEAD
-    before_script:
-    - docker service create -p 6379:6379 --network=sip --name=config_db redis:5.0.1-alpine
-    script: ./tools/run_tests.sh sip/execution_control/configuration_db
-=======
     - pip install -r sip/execution_control/processing_block_controller/requirements.txt
     before_script:
     - docker service create -p 6379:6379 --network=sip --name=config_db redis:5.0.1-alpine
     script:
     - ./tools/run_tests.sh sip/execution_control/configuration_db
     - ./tools/run_tests.sh sip/execution_control/processing_block_controller
->>>>>>> :green_heart: Another experimental update to the travis build script
 
   - stage: tc_tests
     install:
