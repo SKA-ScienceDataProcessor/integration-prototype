@@ -5,88 +5,72 @@ dist: xenial
 notifications:
   slack: ska-sip:zgaO4jJWwB4UjFRulowC5g56
 
+services:
+- docker
+
 language: python
 
-env:
-  global:
-    - SIP_PCI_LOG_LEVEL=NOTSET
-    - SIP_PCI_LOG_LEVEL=WARN
-    - SIP_DOCKER_API_LOG_LEVEL=INFO
-
-services:
-  - docker
-
 python:
-  - "3.6.5"
+- 3.6.5
 
 cache: pip
+#env:
+#  global:
+#    - SIP_PCI_LOG_LEVEL=NOTSET
+#    - SIP_PCI_LOG_LEVEL=WARN
+#    - SIP_DOCKER_API_LOG_LEVEL=INFO
 
-before_install:
-  # Execute commands needed before installing dependencies.
-  # ---------------------------------------------------------------------------
-  # Add Docker repo to apt.
-  - curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add -
-  - sudo add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable"
-  - sudo apt-get -qq update
+jobs:
+  include:
+  - stage: Test Execution Control Components
+    install:
+    - pip install -r testing_requirements.txt
+    - pip install -r sip/tango_control/flask_master/requirements.txt
+    script: ./tools/run_tests.sh sip/tango_control/flask_master
+  - stage: Test Tango Control Components
+    install:
+    - pip install -r testing_requirements.txt
+    - pip install -r sip/tango_control/flask_master/requirements.txt
+    script: ./tools/run_tests.sh sip/tango_control/flask_master
 
-install:
-  # Install dependencies
-  # ---------------------------------------------------------------------------
-#  - sudo apt-get install -y gcc
-#  - sudo apt-get install -y g++
-#  - sudo apt-get install -y libboost-program-options-dev
-#  - sudo apt-get install -y libboost-system-dev
-  - sudo apt-get install -y docker-ce
-  # ** Unfortunately python3-pytango does not seem to install in 16.04 :( **
-#  - sudo apt-cache search tango
-#  - sudo apt-get install -y python3-pytango
-  - pip install -r testing_requirements.txt
-  - pip install -r sip/tango_control/flask_master/requirements.txt
-#  - pip install -r sip/tango_control/flask_processing_controller/requirements.txt
-  - pip install -r sip/execution_control/master_controller/requirements.txt
-  - pip install -r sip/execution_control/configuration_db/requirements.txt
-  - pip install -r sip/execution_control/processing_block_controller/requirements.txt
-#  - pip install -r sip/execution_control/docker_api/requirements.txt
-#  - pip install -r sip/science_pipeline_workflows/ical_dask/pipelines/requirements.arl.min.txt
-
-before_script:
-  # Execute commands need before running actual tests.
-  # ---------------------------------------------------------------------------
-  - docker pull redis:5.0.1-alpine
-  - docker swarm init
-  - docker network create --driver overlay --attachable sip
-  - docker service create -d -p 6379:6379 --network=sip --name=config_db redis:5.0.1-alpine
-  - |
-    docker service create -d --network=sip \
-      --env REDIS_HOST=config_db \
-      --env CELERY_BROKER_URL=redis://config_db/1 \
-      --env CELERY_RESULT_BACKEND=redis://config_db/2 \
-      --mount type=bind,source=/var/run/docker.sock,destination=/var/run/docker.sock \
-      --name pbc \
-      skasip/processing_block_controller:1.2.1
-
-script:
-  # Execute all of the commands which should make the build pass or fail.
-  # ---------------------------------------------------------------------------
-  - ./tools/run_tests.sh sip/tango_control/flask_master
-#  - ./tools/run_tests.sh sip/tango_control/flask_processing_controller
-#  - ./tools/run_tests.sh sip/tango_control/tango_master
-#  - ./tools/run_tests.sh sip/tango_control/tango_subarray
-#  - ./tools/run_tests.sh sip/tango_control/tango_processing_block
-  - ./tools/run_tests.sh sip/execution_control/master_controller
-  - ./tools/run_tests.sh sip/execution_control/configuration_db
-  - ./tools/run_tests.sh sip/execution_control/processing_block_controller
-#  - ./tools/run_tests.sh sip/execution_control/docker_api
-#  - ./tools/run_tests.sh sip/science_pipeline_workflows/ical_dask
-#  - ./tools/run_tests.sh sip/science_pipeline_workflows/ingest_visibilities
-#  - ./tools/run_tests.sh sip/science_pipeline_workflows/mock_workflow
-
-  - ./tools/run_tests.sh sip/platform/logging
-
-  - |
-    ./tools/run_test_coverage.sh \
-    sip/platform/logging \
-    sip/execution_control/configuration_db
-
-after_success:
-  - codecov
+#install:
+#- pip install -r testing_requirements.txt
+#
+#before_script:
+#- docker swarm init
+#- docker network create --driver overlay --attachable sip
+#
+#- pip install -r sip/tango_control/flask_master/requirements.txt
+#- pip install -r sip/execution_control/master_controller/requirements.txt
+#- pip install -r sip/execution_control/configuration_db/requirements.txt
+#- pip install -r sip/execution_control/processing_block_controller/requirements.txt
+#
+#before_script:
+#- docker swarm init
+#- docker network create --driver overlay --attachable sip
+#- docker service create -d -p 6379:6379 --network=sip --name=config_db redis:5.0.1-alpine
+#- |
+#  docker service create -d --network=sip \
+#    --env REDIS_HOST=config_db \
+#    --env CELERY_BROKER_URL=redis://config_db/1 \
+#    --env CELERY_RESULT_BACKEND=redis://config_db/2 \
+#    --mount type=bind,source=/var/run/docker.sock,destination=/var/run/docker.sock \
+#    --name pbc \
+#    skasip/processing_block_controller:1.2.1
+#
+#script:
+#- ./tools/run_tests.sh sip/tango_control/flask_master
+#- ./tools/run_tests.sh sip/execution_control/master_controller
+#- ./tools/run_tests.sh sip/execution_control/configuration_db
+#- ./tools/run_tests.sh sip/execution_control/processing_block_controller
+#- ./tools/run_tests.sh sip/platform/logging
+#
+#- |
+#  ./tools/run_test_coverage.sh \
+#  sip/platform/logging \
+#  sip/execution_control/configuration_db
+#
+#after_success:
+#- codecov
+#
+#
