@@ -12,8 +12,8 @@ def test_config_db_version():
     """Make sure we are using the version we expect!"""
     from .. import __version__
     import redis
-    assert __version__ == '1.2.0'
-    assert redis.__version__ == '3.0.1'
+    assert __version__ == '1.2.1'
+    assert redis.__version__ == '2.10.6'
 
 
 @pytest.mark.parametrize('hierarchical', [True, False])

@@ -8,6 +8,12 @@ The format is based on
 and this project adheres to
  [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.2.1] - 2018-12-04
+
+### Changed
+- Downgraded to `redis==2.10.6` to address PBC celery issue 
+  https://github.com/celery/celery/issues/5175
+
 ## [1.2.0] - 2018-11-26
 
 ### Fixed
