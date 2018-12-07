@@ -8,6 +8,12 @@ The format is based on
 and this project adheres to
  [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.2.3] - 2018-12-07
+
+## Changed
+- Added optional log_level argument to the `execute_processing_block`
+  task which sets the python logging level.
+
 ## [1.2.1] - 2018-12-04
 
 ### Changed
@@ -18,4 +24,3 @@ and this project adheres to
 
 ### Changed
 - Updated to skasip-config-db@1.2.0
-

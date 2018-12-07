@@ -34,8 +34,6 @@ def echo(value: str):
 @APP.task
 def version():
     """Return the PBC version."""
-    init_logger(show_log_origin=True, p3_mode=False)
-    LOG.info('Getting the PBC version! version = %s', __version__)
     return __version__
 
 
@@ -159,14 +157,16 @@ def _workflow_complete(workflow_stage_dict):
 
 
 @APP.task
-def execute_processing_block(pb_id: str):
+def execute_processing_block(pb_id: str, log_level='DEBUG'):
     """Execute a processing block.
 
     Args:
         pb_id (str): The PB id for the PBC
+        log_level (str): Python logging level.
 
     """
-    init_logger('sip', show_log_origin=True, propagate=False, p3_mode=False)
+    init_logger('sip', show_log_origin=True, propagate=False,
+                log_level=log_level)
     LOG.info('+' * 40)
     LOG.info('+ Executing Processing block: %s!', pb_id)
     LOG.info('+' * 40)
