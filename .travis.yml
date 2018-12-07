@@ -21,10 +21,8 @@ stages:
 jobs:
   include:
 
-  # Run linters and unit tests
-  # -------------------------------------------------------------------------
-  - stage: tests
-  # Execution Control: Configuration database
+  # [Execution Control] Configuration database
+  - stage: test
     install:
     - pip install -r testing_requirements.txt
     - pip install -r sip/execution_control/configuration_db/requirements.txt
@@ -32,8 +30,9 @@ jobs:
     - docker swarm init
     - docker service create -p 6379:6379 --name=config_db redis:5.0.1-alpine
     script: ./tools/run_tests.sh sip/execution_control/configuration_db
-  -
-  # Execution Control: Processing Block Controller
+    after_success: codecov
+  # [Execution Control] Processing Block Controller
+  - stage: test
     install:
     - pip install -r testing_requirements.txt
     - pip install -r sip/execution_control/processing_block_controller/requirements.txt
@@ -42,25 +41,29 @@ jobs:
     - docker service create -p 6379:6379 --name=config_db redis:5.0.1-alpine
     script:
     - ./tools/run_tests.sh sip/execution_control/processing_block_controller
-  -
-  # Execution Control: Master Controller
+    after_success: codecov
+  # [Execution Control] Master Controller
+  - stage: test
     install:
     - pip install -r testing_requirements.txt
     - pip install -r sip/execution_control/master_controller/requirements.txt
     script: ./tools/run_tests.sh sip/execution_control/master_controller
-  -
-  # Tango Control: Flask Master
+    after_success: codecov
+  # [Tango Control] Flask Master
+  - stage: test
     install:
     - pip install -r testing_requirements.txt
     - pip install -r sip/tango_control/flask_master/requirements.txt
     script: ./tools/run_tests.sh sip/tango_control/flask_master
-  -
-  # Platform: logging
+    after_success: codecov
+  # [Platform] logging
+  - stage: test
     install:
     - pip install -r testing_requirements.txt
     script: ./tools/run_tests.sh sip/platform/logging
-
-  # Run test coverage analysis
-  - stage: test_coverage
-    script: true
     after_success: codecov
+
+#  # Test coverage analysis
+#  - stage: test_coverage
+#    script: true
+#    after_success: codecov
