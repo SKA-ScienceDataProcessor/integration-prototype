@@ -4,17 +4,16 @@
 import logging
 import os
 
-from ..docker_client import DockerClient
+from ..docker_swarm_client import DockerSwarmClient
 
 logging.basicConfig(level=os.getenv('SIP_DOCKER_API_LOG_LEVEL', 'DEBUG'))
 
-DC = DockerClient()
+DC = DockerSwarmClient()
 FILE_PATH = os.path.dirname(__file__)
 
 
 def test_log_driver():
-    """Test function to check if log driver is loaded correctly
-    from compose file."""
+    """Test function to check if log driver is loaded correctly."""
     config_path = os.path.join(FILE_PATH, '..', 'compose-file',
                                'docker-compose.p3-fluentd.yml')
     running_service_ids = []
