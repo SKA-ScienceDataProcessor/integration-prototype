@@ -1,14 +1,14 @@
 # -*- coding: utf-8 -*-
 """Docker Swarm Client API."""
 
+from typing import List
+
 import re
 import os
 import logging
+import copy
 import docker
 import yaml
-import copy
-
-from typing import List
 
 LOG = logging.getLogger('sip.ec.docker_swarm_client')
 

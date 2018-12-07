@@ -237,8 +237,9 @@ def test_replication_level():
         for service_id in s_ids:
             level = DC.get_replicas(service_id)
 
-    replicas = DC.get_replicas(service_id)
-    assert replicas == 1
+    for s_id in s_ids:
+        replicas = DC.get_replicas(s_id)
+        assert replicas == 1
 
     # Cleaning
     DC.delete_service("replica_test")

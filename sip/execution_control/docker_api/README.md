@@ -34,6 +34,13 @@ run manually from the docker_api code directory with:
 pytest --pylint --docstyle --codestyle -s -v --pylint-rcfile=../../../.pylintrc .
 ```
 
+or run the following command from the top level directory
+
+```bash
+./tools/run_tests.sh sip/execution_control/docker_api/sip_docker_swarm    
+```
+
+
 ## TODO
 
 * Need to add exception into the functions
