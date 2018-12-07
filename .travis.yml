@@ -62,8 +62,3 @@ jobs:
     - pip install -r testing_requirements.txt
     script: ./tools/run_tests.sh sip/platform/logging
     after_success: codecov
-
-#  # Test coverage analysis
-#  - stage: test_coverage
-#    script: true
-#    after_success: codecov
