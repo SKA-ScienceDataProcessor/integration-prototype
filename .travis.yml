@@ -15,19 +15,16 @@ python:
 
 cache: pip
 
-#env:
-#  global:
-#    - SIP_PCI_LOG_LEVEL=NOTSET
-#    - SIP_PCI_LOG_LEVEL=WARN
-#    - SIP_DOCKER_API_LOG_LEVEL=INFO
-
 stages:
   - tests
 
 jobs:
   include:
 
+  # Run linters and unit tests
+  # -------------------------------------------------------------------------
   - stage: tests
+  # Execution Control: Configuration database
     install:
     - pip install -r testing_requirements.txt
     - pip install -r sip/execution_control/configuration_db/requirements.txt
@@ -36,6 +33,7 @@ jobs:
     - docker service create -p 6379:6379 --name=config_db redis:5.0.1-alpine
     script: ./tools/run_tests.sh sip/execution_control/configuration_db
   -
+  # Execution Control: Processing Block Controller
     install:
     - pip install -r testing_requirements.txt
     - pip install -r sip/execution_control/processing_block_controller/requirements.txt
@@ -45,49 +43,24 @@ jobs:
     script:
     - ./tools/run_tests.sh sip/execution_control/processing_block_controller
   -
+  # Execution Control: Master Controller
+    install:
+    - pip install -r testing_requirements.txt
+    - pip install -r sip/execution_control/master_controller/requirements.txt
+    script: ./tools/run_tests.sh sip/execution_control/master_controller
+  -
+  # Tango Control: Flask Master
     install:
     - pip install -r testing_requirements.txt
     - pip install -r sip/tango_control/flask_master/requirements.txt
     script: ./tools/run_tests.sh sip/tango_control/flask_master
+  -
+  # Platform: logging
+    install:
+    - pip install -r testing_requirements.txt
+    script: ./tools/run_tests.sh sip/platform/logging
 
-#install:
-#- pip install -r testing_requirements.txt
-#
-#before_script:
-#- docker swarm init
-#- docker network create --driver overlay --attachable sip
-#
-#- pip install -r sip/tango_control/flask_master/requirements.txt
-#- pip install -r sip/execution_control/master_controller/requirements.txt
-#- pip install -r sip/execution_control/configuration_db/requirements.txt
-#- pip install -r sip/execution_control/processing_block_controller/requirements.txt
-#
-#before_script:
-#- docker swarm init
-#- docker network create --driver overlay --attachable sip
-#- docker service create -d -p 6379:6379 --network=sip --name=config_db redis:5.0.1-alpine
-#- |
-#  docker service create -d --network=sip \
-#    --env REDIS_HOST=config_db \
-#    --env CELERY_BROKER_URL=redis://config_db/1 \
-#    --env CELERY_RESULT_BACKEND=redis://config_db/2 \
-#    --mount type=bind,source=/var/run/docker.sock,destination=/var/run/docker.sock \
-#    --name pbc \
-#    skasip/processing_block_controller:1.2.1
-#
-#script:
-#- ./tools/run_tests.sh sip/tango_control/flask_master
-#- ./tools/run_tests.sh sip/execution_control/master_controller
-#- ./tools/run_tests.sh sip/execution_control/configuration_db
-#- ./tools/run_tests.sh sip/execution_control/processing_block_controller
-#- ./tools/run_tests.sh sip/platform/logging
-#
-#- |
-#  ./tools/run_test_coverage.sh \
-#  sip/platform/logging \
-#  sip/execution_control/configuration_db
-#
-#after_success:
-#- codecov
-#
-#
+  # Run test coverage analysis
+  - stage: test_coverage
+    script: true
+    after_success: codecov

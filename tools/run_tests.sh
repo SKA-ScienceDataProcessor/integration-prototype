@@ -11,14 +11,16 @@ if [[ ! -z "${OPTIONS}" ]]; then
     echo -e "${RED}------------------------------------------------------${NC}"
     echo -e "${RED}* OPTIONS=${NC}'${OPTIONS}'"
     CMD="python3 -m pytest -s -v --codestyle --docstyle --pylint ${OPTIONS} \
-    --pylint-rcfile=.pylintrc --rootdir=. \"${DIR}\""
+    --pylint-rcfile=.pylintrc --rootdir=. --cov-append --cov-branch \
+    --cov=${DIR} \"${DIR}\""
     echo -e "${RED}------------------------------------------------------${NC}"
     echo -e "${BLUE}Running tests:"
     echo -e "${BLUE}${CMD}"
     echo -e "${RED}------------------------------------------------------${NC}"
 else
     CMD="python3 -m pytest -s -v --codestyle --docstyle --pylint \
-    --pylint-rcfile=.pylintrc --rootdir=. \"${DIR}\""
+    --pylint-rcfile=.pylintrc --rootdir=. --cov-append --cov-branch \
+    --cov=${DIR} \"${DIR}\""
     echo -e "${RED}------------------------------------------------------${NC}"
     echo -e "${BLUE}Running tests:"
     echo -e "${BLUE}${CMD}"
