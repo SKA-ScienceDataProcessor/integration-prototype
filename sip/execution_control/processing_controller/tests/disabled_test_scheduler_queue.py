@@ -3,7 +3,7 @@
 import random
 import pytest
 
-from ..scheduler.pb_queue import ProcessingBlockQueue
+from scheduler.pb_queue import ProcessingBlockQueue
 
 
 def test_simple_usage():

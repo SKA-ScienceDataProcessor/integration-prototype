@@ -6,7 +6,7 @@ Implemented with a set of long running threads.
 import datetime
 import sys
 import time
-from threading import Lock, Thread
+from threading import Thread
 
 import celery
 from celery.app.control import Inspect
@@ -23,24 +23,21 @@ class ProcessingBlockScheduler:
     # pylint: disable=too-few-public-methods
     """Processing Block Scheduler class."""
 
-    def __init__(self, report_interval=5.0):
+    def __init__(self, report_interval: float = 5.0, max_pbcs: int = 4):
         """Initialise the Scheduler.
 
         Args:
             report_interval (float): Minimum interval between reports, in s
+            max_pbcs (int): Maximum number of concurrent PBCs
+                (and therefore PBs) that can be running.
 
         """
         LOG.info('Starting Processing Block Scheduler.')
-        # LOG.debug('CELERY_BROKER_URL = %s', os.environ['CELERY_BROKER_URL'])
-        # LOG.debug('%s', os.environ)
-        # self._queue = ProcessingBlockQueue()
         self._queue = self._init_queue()
         self._pb_events = ProcessingBlockList().subscribe(__service_name__)
         self._report_interval = report_interval
         self._num_pbcs = 0  # Current number of PBCs
-        self._max_pbcs = 4  # Maximum number of PBCs
-        self._value = ''
-        self._value_lock = Lock()
+        self._max_pbcs = max_pbcs
         self._pb_list = ProcessingBlockList()
 
     @staticmethod
@@ -66,12 +63,6 @@ class ProcessingBlockScheduler:
         """Return the processing block queue."""
         return self._queue
 
-    def _update_value(self, new_value):
-        """Update the value."""
-        self._value_lock.acquire()
-        self._value = new_value
-        self._value_lock.release()
-
     def _monitor_events(self):
         """Watch for Processing Block events."""
         LOG.info("Starting to monitor PB events")
@@ -94,8 +85,8 @@ class ProcessingBlockScheduler:
                         self._queue.put(event.object_id, pb.priority, pb.type)
 
                     if event.data['status'] == 'completed':
-                        LOG.info('Acknowledged PB completed event (%s) for %s, '
-                                 '[timestamp: %s]', event.id,
+                        LOG.info('Acknowledged PB completed event (%s) for %s,'
+                                 ' [timestamp: %s]', event.id,
                                  event.object_id, event.timestamp)
                         self._num_pbcs -= 1
                         if self._num_pbcs < 0:
@@ -109,8 +100,6 @@ class ProcessingBlockScheduler:
         LOG.info('Starting Processing Block queue reporter.')
         while True:
             LOG.info('PB queue length = %d', len(self._queue))
-            # LOG.info('Queue status ... %s', self._value)
-            # self._update_value('b')
             time.sleep(self._report_interval)
 
     def _schedule_processing_blocks(self):
@@ -124,13 +113,13 @@ class ProcessingBlockScheduler:
         # This is where the PBC started (celery)
         while True:
             time.sleep(0.5)
-            if len(self._queue) == 0:
+            if not self._queue:
                 continue
             if self._num_pbcs >= self._max_pbcs:
                 LOG.warning('Resource limit reached!')
                 continue
             _inspect = Inspect(app=APP)
-            if len(self._queue) > 0 and _inspect.active() is not None:
+            if self._queue and _inspect.active() is not None:
                 next_pb = self._queue[-1]
                 LOG.info('Considering %s for execution...', next_pb[2])
                 utc_now = datetime.datetime.utcnow()
