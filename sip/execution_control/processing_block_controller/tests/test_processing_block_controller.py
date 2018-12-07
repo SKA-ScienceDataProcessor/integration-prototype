@@ -13,29 +13,24 @@ from os.path import dirname, join
 
 import pytest
 
-from sip_pbc import echo, execute_processing_block, version
-from sip_pbc.release import __version__
-
 from sip_config_db import ConfigDb
 from sip_config_db.scheduling import SchedulingBlockInstance
+
+from sip_pbc import echo, execute_processing_block, version
+from sip_pbc.release import __version__
 
 from ._test_utils import add_workflow_definitions
 
 DB = ConfigDb()
 
 
-@pytest.fixture(scope='session')
-def celery_config():
-    return {
-        'broker_url': 'ampq://',
-        'result_backend': 'rpc',
-    }
-
 def test_pbc_inspect_workers():
     """Test the Celery API for inspecting the Celery workers."""
     import celery
     inspect = celery.current_app.control.inspect()
     workers = inspect.ping()
+    if workers is None:
+        pytest.skip('Unable to find any celery workers!')
     for worker in workers:
         assert not inspect.scheduled()[worker]
         assert not inspect.active()[worker]
@@ -46,20 +41,16 @@ def test_pbc_inspect_workers():
 def test_pbc_echo():
     """Test the SIP PBC echo method."""
     message = "Hello there!"
-    result = echo.delay(message)
+    result = echo.apply(args=(message,))
     assert result.get(timeout=3) == message
 
 
 def test_pbc_version():
     """Test the SIP PBC version method."""
-    result = version.delay()
+    result = version.apply()
     assert result.get(timeout=3) == __version__
 
 
-# This test will not work on travis for some reason....
-# The best guess is that this is a result of the docker socket being
-# protected.
-@pytest.mark.skip("Reason disabled for Travis build.")
 def test_pbc_execute_workflow():
     """Test the SIP PBC execute_processing_block method."""
     DB.flush_db()
@@ -74,5 +65,6 @@ def test_pbc_execute_workflow():
     assert pb_ids[0] == 'PB-20181116-sip-001'
     assert isinstance(pb_ids[0], str)
 
-    result = execute_processing_block.delay(pb_ids[0])
-    assert result.get(timeout=0.1) == 'completed'
+    result = execute_processing_block.apply(args=(pb_ids[0],),
+                                            kwargs=dict(log_level='WARNING'))
+    assert result.get(timeout=10.0) == 'completed'

@@ -1,4 +1,3 @@
-# Requirements are specified in the setup.py file.
 skasip-config-db==1.2.1
 skasip-docker-swarm==1.0.5
 skasip-logging==1.0.14
