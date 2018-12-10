@@ -1,32 +1,40 @@
 # -*- coding: utf-8 -*-
 """Unit tests of the Processing Block Queue."""
 import random
+import datetime
+import sys
 import pytest
 
 from scheduler.pb_queue import ProcessingBlockQueue
 
 
-def test_simple_usage():
+def test_scheduler_pb_queue_simple_usage():
     """Tests simple usage of the Processing Block Queue."""
     # Obtain a queue object
     queue = ProcessingBlockQueue()
 
     # Fill the queue and save the set of test blocks added
     test_blocks = []
+    pb_ids = []
     pb_type = 'offline'
-    for i in range(10):
+    for i in range(13):
         block_id = 'pb-{:03d}'.format(i)
+        pb_ids.append(block_id)
         priority = random.randint(0, 10)
-        test_blocks.append((priority, i, block_id, pb_type))
+        added_time = datetime.datetime.utcnow().isoformat()
+        test_blocks.append((priority, sys.maxsize-i, block_id, pb_type,
+                            added_time))
         queue.put(block_id, priority=priority)
         assert len(queue) == i + 1
         test_blocks.sort()
+        test_blocks.reverse()
         for j, item in enumerate(queue):
             assert len(queue) == len(test_blocks)
-            assert item == test_blocks[j]
-
-    # print('')
-    # print(queue)
+            assert item[0] == test_blocks[j][0]
+            assert item[1] == test_blocks[j][1]
+            assert item[2] == test_blocks[j][2]
+            assert item[3] == test_blocks[j][3]
+            assert isinstance(item[4], str)
 
     # Delete a block somewhere in the middle of the queue
     queue_length = len(queue)
@@ -40,18 +48,8 @@ def test_simple_usage():
         queue.put(block_id, 0)
 
     # Empty the queue
-    priority, _, _, _ = queue.get()
     while queue:
-        item = queue.get()
-        assert item[0] >= priority
-        priority = item[0]
+        pb_id = queue.get()
+        assert pb_id in pb_ids
 
     assert not queue
-
-    # # Check that calling get removes the highest priority item.
-    # # assert queue.get() == item3
-    # # item = queue.get()
-    # # assert item == item1
-    # # item = queue.get()
-    # # assert item == item2
-    # print(queue)
