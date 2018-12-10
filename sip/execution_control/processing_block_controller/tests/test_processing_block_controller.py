@@ -11,6 +11,8 @@ FIXME(BMo) At the moment these tests require that the PBC has started.
 import json
 from os.path import dirname, join
 
+import redis
+import celery
 import pytest
 
 from sip_config_db import ConfigDb
@@ -26,7 +28,12 @@ DB = ConfigDb()
 
 def test_pbc_inspect_workers():
     """Test the Celery API for inspecting the Celery workers."""
-    import celery
+    try:
+        celery.current_app.broker_connection().connect()
+    except redis.exceptions.ConnectionError:
+        pytest.fail('Failed to connect to broker: {}'
+                    .format(celery.current_app.broker_connection().as_uri()),
+                    pytrace=False)
     inspect = celery.current_app.control.inspect()
     workers = inspect.ping()
     if workers is None:
@@ -53,7 +60,11 @@ def test_pbc_version():
 
 def test_pbc_execute_workflow():
     """Test the SIP PBC execute_processing_block method."""
-    DB.flush_db()
+    try:
+        DB.flush_db()
+    except ConnectionError:
+        pytest.fail('Failed to a connect a configuration database (Redis) '
+                    'instance!', pytrace=False)
     data_dir = join(dirname(__file__), 'data')
     add_workflow_definitions(join(data_dir, 'workflow_definitions'))
     with open(join(data_dir, 'sbi_config_3.json')) as _file:
