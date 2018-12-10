@@ -8,6 +8,15 @@ The format is based on
 and this project adheres to
  [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.2.2] - 2018-12-10
+
+### Changed
+- Updated the PB queue item data order.
+- Added additional check of the overall status of the PC health.
+- Updated scheduler code for modified pb_queue item methods. 
+- Released new version of the Docker image 
+  (`skasip/processing_controller:1.2.2`) 
+
 ## [1.2.1] - 2018-12-04
 
 ### Changed

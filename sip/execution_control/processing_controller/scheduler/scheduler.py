@@ -6,7 +6,7 @@ Implemented with a set of long running threads.
 import datetime
 import sys
 import time
-from threading import Thread
+from threading import Thread, active_count
 
 import celery
 from celery.app.control import Inspect
@@ -69,8 +69,9 @@ class ProcessingBlockScheduler:
         check_counter = 0
         while True:
             if check_counter == 20:
-                LOG.debug('Checking for PB events...')
                 check_counter = 0
+                LOG.debug('Checking for PB events...')
+
             published_events = self._pb_events.get_published_events()
             for event in published_events:
                 if event.type == 'status_changed':
@@ -95,15 +96,19 @@ class ProcessingBlockScheduler:
             time.sleep(0.1)
             check_counter += 1
 
-    def _report_queue(self):
+    def _processing_controller_status(self):
         """Report on the status of the Processing Block queue(s)."""
         LOG.info('Starting Processing Block queue reporter.')
         while True:
             LOG.info('PB queue length = %d', len(self._queue))
             time.sleep(self._report_interval)
+            if active_count() != 5:
+                LOG.critical('Processing Controller not running '
+                             'correctly! (%d/%d threads active)',
+                             active_count(), 5)
 
     def _schedule_processing_blocks(self):
-        """."""
+        """Schedule Processing Blocks for execution."""
         LOG.info('Starting to Schedule Processing Blocks.')
         # 1. Check resource availability - Ignoring for now
         # 2. Determine what next to run on the queue
@@ -124,19 +129,19 @@ class ProcessingBlockScheduler:
                 LOG.info('Considering %s for execution...', next_pb[2])
                 utc_now = datetime.datetime.utcnow()
                 time_in_queue = (utc_now -
-                                 datetime_from_isoformat(next_pb[3]))
+                                 datetime_from_isoformat(next_pb[4]))
                 if time_in_queue.total_seconds() >= 10:
                     item = self._queue.get()
                     LOG.info('------------------------------------')
-                    LOG.info('>>> Executing %s! <<<', item[2])
+                    LOG.info('>>> Executing %s! <<<', item)
                     LOG.info('------------------------------------')
-                    execute_processing_block.delay(item[2])
+                    execute_processing_block.delay(item)
                     self._num_pbcs += 1
                 else:
                     LOG.info('Waiting for resources for %s', next_pb[2])
 
     def _monitor_pbc_status(self):
-        """."""
+        """Monitor the PBC status."""
         LOG.info('Starting to Monitor PBC status.')
         # Report on the state of PBC's
         # 1. Get list of celery workers
@@ -161,7 +166,7 @@ class ProcessingBlockScheduler:
         """Start the scheduler threads."""
         scheduler_threads = [
             Thread(target=self._monitor_events, daemon=True),
-            Thread(target=self._report_queue, daemon=True),
+            Thread(target=self._processing_controller_status, daemon=True),
             Thread(target=self._schedule_processing_blocks, daemon=True),
             Thread(target=self._monitor_pbc_status, daemon=True)
         ]
