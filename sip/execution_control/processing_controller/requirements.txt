@@ -1,4 +1,4 @@
-skasip-pbc==1.2.1
+skasip-pbc==1.2.3
 skasip-config-db==1.2.1
 skasip-docker-swarm==1.0.5
 skasip-logging==1.0.14

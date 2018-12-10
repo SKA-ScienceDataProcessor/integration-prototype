@@ -11,6 +11,7 @@ and this project adheres to
 ## [1.2.2] - 2018-12-10
 
 ### Changed
+- Updated to use the SIP PBC library `skasip-pbc==1.2.3`
 - Updated the PB queue item data order.
 - Added additional check of the overall status of the PC health.
 - Updated scheduler code for modified pb_queue item methods. 

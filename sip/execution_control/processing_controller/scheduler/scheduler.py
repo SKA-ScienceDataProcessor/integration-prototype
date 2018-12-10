@@ -10,6 +10,7 @@ from threading import Thread, active_count
 
 import celery
 from celery.app.control import Inspect
+import sip_pbc.release
 from sip_pbc.tasks import APP, execute_processing_block
 
 from sip_config_db.scheduling import ProcessingBlock, ProcessingBlockList
@@ -68,7 +69,7 @@ class ProcessingBlockScheduler:
         LOG.info("Starting to monitor PB events")
         check_counter = 0
         while True:
-            if check_counter == 20:
+            if check_counter == 50:
                 check_counter = 0
                 LOG.debug('Checking for PB events...')
 
@@ -110,12 +111,6 @@ class ProcessingBlockScheduler:
     def _schedule_processing_blocks(self):
         """Schedule Processing Blocks for execution."""
         LOG.info('Starting to Schedule Processing Blocks.')
-        # 1. Check resource availability - Ignoring for now
-        # 2. Determine what next to run on the queue
-        # 3. Get PB configuration
-        # 4. Launch the PBC for the PB
-
-        # This is where the PBC started (celery)
         while True:
             time.sleep(0.5)
             if not self._queue:
@@ -143,27 +138,43 @@ class ProcessingBlockScheduler:
     def _monitor_pbc_status(self):
         """Monitor the PBC status."""
         LOG.info('Starting to Monitor PBC status.')
-        # Report on the state of PBC's
-        # 1. Get list of celery workers
-        # 2. Get list of celery tasks (active, etc)
-        # 3. Find out the status of celery tasks.
-        # 4. Update the database with findings
+        inspect = celery.current_app.control.inspect()
+        workers = inspect.ping()
+        start_time = time.time()
+        while workers is None:
+            time.sleep(0.1)
+            elapsed = time.time() - start_time
+            if elapsed > 20.0:
+                LOG.warning('PBC not found!')
+                break
+        if workers is not None:
+            for worker in workers:
+                _tasks = inspect.registered_tasks()[worker]
+                LOG.info('Worker: %s tasks:', worker)
+                for task_index, task_name in enumerate(_tasks):
+                    LOG.info('  %02d : %s', task_index, task_name)
+
         while True:
-            LOG.info('Checking PBC status (%d/%d)',
-                     self._num_pbcs, self._max_pbcs)
-            task_state = celery.current_app.events.State()
-            _inspect = Inspect(app=APP)
-            if _inspect.active() is not None:
-                # LOG.info('State of the Current Celery Task:  %s',
-                #          _inspect.stats().keys)
-                # LOG.info('Celery Workers:  %s', _inspect.stats().keys())
-                LOG.info('PBC state:  %s', task_state)
-            else:
+            LOG.info('Checking PBC status (%d/%d)', self._num_pbcs,
+                     self._max_pbcs)
+            celery_app = celery.current_app
+            inspect = celery_app.control.inspect()
+            workers = inspect.ping()
+            if workers is None:
                 LOG.warning('PBC service not found!')
+            else:
+                LOG.info('PBC state:  %s', celery_app.events.State())
+                _active = inspect.active()
+                _scheduled = inspect.scheduled()
+                for worker in workers:
+                    LOG.info('  Worker %s: scheduled: %s, active: %s',
+                             worker, _active[worker], _scheduled[worker])
             time.sleep(self._report_interval)
 
     def start(self):
         """Start the scheduler threads."""
+        assert sip_pbc.release.__version__ == '1.2.3'
+
         scheduler_threads = [
             Thread(target=self._monitor_events, daemon=True),
             Thread(target=self._processing_controller_status, daemon=True),
