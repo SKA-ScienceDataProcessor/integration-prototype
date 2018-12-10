@@ -14,9 +14,6 @@ services:
     deploy:
       mode: replicated
       replicas: 1
-    depends_on:
-    - config_database
-    - tango_database
 
   tc_tango_subarray:
     image: skasip/tango_subarray:1.2.0
@@ -26,9 +23,6 @@ services:
     deploy:
       mode: replicated
       replicas: 1
-    depends_on:
-    - config_database
-    - tango_database
 
   tc_tango_processing_block:
     image: skasip/tango_processing_block:1.2.0
@@ -38,9 +32,6 @@ services:
     deploy:
       mode: replicated
       replicas: 1
-    depends_on:
-    - config_database
-    - tango_database
 
   tc_tango_database:
     image: skasip/tango_database:1.0.4
@@ -57,8 +48,6 @@ services:
       placement:
         constraints:
         - node.role == manager
-    depends_on:
-    - tango_mysql
 
   tc_tango_mysql:
     image: skasip/tango_mysql:1.0.3
@@ -79,8 +68,6 @@ services:
     deploy:
       mode: replicated
       replicas: 1
-    depends_on:
-    - config_database
 
   # ==========================================================================
   # Execution Control containers
@@ -95,36 +82,28 @@ services:
     deploy:
       mode: replicated
       replicas: 1
-    depends_on:
-    - config_database
 
   ec_processing_controller:
-    image: skasip/processing_controller:1.2.0
+    image: skasip/processing_controller:1.2.2
     environment:
-    - CELERY_BROKER_URL=redis://ec_celery_broker/1
-    - CELERY_RESULT_BACKEND=redis://ec_celery_backend/2
+    - CELERY_BROKER_URL=redis://ec_config_database/1
+    - CELERY_RESULT_BACKEND=redis://ec_config_database/2
     - REDIS_HOST=ec_config_database
     deploy:
       mode: replicated
       replicas: 1
-    depends_on:
-    - config_database
 
   ec_processing_block_controller:
-    image: skasip/processing_block_controller:1.2.0
+    image: skasip/processing_block_controller:1.2.3
     environment:
-    - CELERY_BROKER_URL=redis://ec_celery_broker/1
-    - CELERY_RESULT_BACKEND=redis://ec_celery_backend/2
+    - CELERY_BROKER_URL=redis://ec_config_database/1
+    - CELERY_RESULT_BACKEND=redis://ec_config_database/2
     - REDIS_HOST=ec_config_database
     volumes:
     - /var/run/docker.sock:/var/run/docker.sock
     deploy:
       mode: replicated
       replicas: 1
-    depends_on:
-    - config_database
-    - processing_block_controller_broker
-    - processing_block_controller_backend
 
   ec_config_database:
     image: redis:5.0.1-alpine
@@ -135,22 +114,6 @@ services:
     - 6379:6379
     volumes:
     - sip_config_database:/data/db
-
-  ec_celery_broker:
-    image: redis:5.0.1-alpine
-    deploy:
-      mode: replicated
-      replicas: 1
-    volumes:
-    - sip_pbc_broker:/data/db
-
-  ec_celery_backend:
-    image: redis:5.0.1-alpine
-    deploy:
-      mode: replicated
-      replicas: 1
-    volumes:
-    - sip_pbc_backend:/data/db
 
   # ==========================================================================
   # Platform containers ?
@@ -165,11 +128,7 @@ services:
     deploy:
       mode: replicated
       replicas: 1
-    depends_on:
-    - config_database
 
 volumes:
   sip_config_database:
-  sip_pbc_broker:
-  sip_pbc_backend:
   sip_tango_mysql:

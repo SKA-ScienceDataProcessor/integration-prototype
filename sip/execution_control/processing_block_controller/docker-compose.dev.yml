@@ -3,7 +3,7 @@ version: '3.6'
 services:
 
   pbc:
-    image: skasip/processing_block_controller:1.2.2
+    image: skasip/processing_block_controller:latest
     environment:
       - CELERY_BROKER_URL=redis://config_database/1
       - CELERY_RESULT_BACKEND=redis://config_database/2
