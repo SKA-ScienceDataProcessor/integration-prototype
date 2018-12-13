@@ -27,20 +27,60 @@ APP = Celery(broker=BROKER, backend=BACKEND)
 
 @APP.task
 def echo(value: str):
-    """Echo a string."""
+    """Test Celery task to echo a string.
+
+    Args:
+        value (str): string to return.
+
+    Returns:
+        str, the input argument string.
+
+    """
     return value
 
 
 @APP.task
 def version():
-    """Return the PBC version."""
+    """Celery task which returns the returns the PBC version.
+
+    Returns:
+        str, the PBC version
+
+    """
     return __version__
 
 
-def _start_workflow_stages(pb: ProcessingBlock, pb_id,
-                           workflow_stage_dict, workflow_stage: WorkflowStage,
+def _start_workflow_stages(pb: ProcessingBlock, pb_id: str,
+                           workflow_stage_dict: dict,
+                           workflow_stage: WorkflowStage,
                            docker: DockerClient):
-    """."""
+    """Start a workflow stage by starting a number of docker services.
+
+    This function first assesses if the specified workflow stage can be
+    started based on its dependencies. If this is found to be the case,
+    the workflow stage is stared by first resolving and template arguments
+    in the workflow stage configuration, and then using the Docker Swarm Client
+    API to start workflow stage services. As part of this, the
+    workflow_stage_dict data structure is updated accordingly.
+
+    TODO(BMo) This function will need refactoring at some point as part \
+    of an update to the way workflow state metadata is stored in the
+    configuration database. Currently the stage_data dictionary
+    is a bit of a hack for a badly specified Configuration Database
+    backed WorkflowStage object.
+
+    This function is used by `execute_processing_block`.
+
+    Args:
+        pb (ProcessingBlock): Configuration database Processing Block data
+            object
+        pb_id (str): Processing Block identifier
+        workflow_stage_dict (dict): Workflow stage metadata structure
+        workflow_stage (WorkflowStage): Workflow state configuration database
+            data object.
+        docker (DockerClient): Docker Swarm Client object.
+
+    """
     # FIXME(BMo) replace pb_id argument, get this from the pb instead!
     stage_data = workflow_stage_dict[workflow_stage.id]
     stage_data['start'] = False
@@ -101,36 +141,68 @@ def _start_workflow_stages(pb: ProcessingBlock, pb_id,
         stage_data["status"] = 'running'
 
 
-def _update_workflow_stages(stage_data, workflow_stage: WorkflowStage,
+def _update_workflow_stages(stage_data: dict, workflow_stage: WorkflowStage,
                             docker: DockerClient):
-    """."""
-    # Check and update stage status
-    # LOG.info('*** Checking and updating stage status. ***')
+    """Check and update the status of a workflow stage.
+
+    This function checks and updates the status of a workflow stage
+    specified by the parameters in the specified stage_data dictionary.
+
+    If the workflow stage is not marked as complete, this function will
+    check with the Docker Swarm API on the status of Docker services
+    defined for the stage. If **all** services are found to be complete
+    (based on their service state being reported as 'shutdown',
+    the workflow stage is marked complete.
+
+    This function is used by `execute_processing_block`.
+
+    TODO(BMo) This function will need refactoring at some point as part \
+        of an update to the way workflow state metadata is stored in the
+        configuration database. Currently the stage_data dictionary
+        is a bit of a hack for a badly specified Configuration Database
+        backed WorkflowStage object.
+
+    Args:
+        stage_data (dict): Dictionary holding workflow stage metadata.
+        workflow_stage (WorkflowStage): Workflow stage data object.
+        docker (DockerClient): Docker Swarm Client object.
+
+    """
     service_status_complete = []
 
     # FIXME(BMo) is not "complete" -> is "running"
     if stage_data["status"] != "complete":
         for service_id, service_dict in stage_data['services'].items():
             service_state = docker.get_service_state(service_id)
-            # log.debug('checking service status %s = %s', service_id,
-            #           service_state)
             if service_state == 'shutdown':
                 docker.delete_service(service_id)
-                # stage_data.pop()
             service_dict['status'] = service_state
             service_dict['complete'] = (service_state == 'shutdown')
             service_status_complete.append(service_dict['complete'])
-            # LOG.info('Status of service %s (id=%s) = %s',
-            #          service_dict['name'], service_id,
-            #          service_dict['status'])
             if all(service_status_complete):
                 LOG.info('Workflow stage service %s complete!',
                          workflow_stage.id)
                 stage_data['status'] = "complete"
 
 
-def _abort_workflow(pb, workflow_stage_dict, docker):
-    """."""
+def _abort_workflow(pb: ProcessingBlock, workflow_stage_dict: dict,
+                    docker: DockerClient):
+    """Abort the workflow.
+
+    TODO(BMo): This function currently does nothing as the abort flag \
+        is hardcoded to False!
+
+    This function is used by `execute_processing_block`.
+
+    Args:
+        pb (ProcessingBlock): Configuration database Processing block object.
+        workflow_stage_dict (dict): Workflow stage metadata dictionary.
+        docker (DockerClient): Docker Swarm Client object.
+
+    Returns:
+        bool, True if the stage is aborted, otherwise False.
+
+    """
     # TODO(BMo) Ask the database if the abort flag on the PB is set.
     _abort_flag = False
     if _abort_flag:
@@ -143,8 +215,20 @@ def _abort_workflow(pb, workflow_stage_dict, docker):
     return False
 
 
-def _workflow_complete(workflow_stage_dict):
-    """."""
+def _workflow_complete(workflow_stage_dict: dict):
+    """Check if the workflow is complete.
+
+    This function checks if the entire workflow is complete.
+
+    This function is used by `execute_processing_block`.
+
+    Args:
+        workflow_stage_dict (dict): Workflow metadata dictionary.
+
+    Returns:
+        bool, True if the workflow is complete, otherwise False.
+
+    """
     # Check if all stages are complete, if so end the PBC by breaking
     # out of the while loop
     complete_stages = []
@@ -159,6 +243,9 @@ def _workflow_complete(workflow_stage_dict):
 @APP.task
 def execute_processing_block(pb_id: str, log_level='DEBUG'):
     """Execute a processing block.
+
+    Celery tasks that executes a workflow defined in a Configuration database
+    Processing Block data object.
 
     Args:
         pb_id (str): The PB id for the PBC
