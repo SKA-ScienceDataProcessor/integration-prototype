@@ -63,7 +63,7 @@ def _start_workflow_stages(pb: ProcessingBlock, pb_id: str,
     API to start workflow stage services. As part of this, the
     workflow_stage_dict data structure is updated accordingly.
 
-    TODO(BMo) This function will need refactoring at some point as part \
+    TODO(BMo) This function will need refactoring at some point as part
     of an update to the way workflow state metadata is stored in the
     configuration database. Currently the stage_data dictionary
     is a bit of a hack for a badly specified Configuration Database
@@ -156,7 +156,7 @@ def _update_workflow_stages(stage_data: dict, workflow_stage: WorkflowStage,
 
     This function is used by `execute_processing_block`.
 
-    TODO(BMo) This function will need refactoring at some point as part \
+    TODO(BMo) This function will need refactoring at some point as part
         of an update to the way workflow state metadata is stored in the
         configuration database. Currently the stage_data dictionary
         is a bit of a hack for a badly specified Configuration Database
@@ -189,7 +189,7 @@ def _abort_workflow(pb: ProcessingBlock, workflow_stage_dict: dict,
                     docker: DockerClient):
     """Abort the workflow.
 
-    TODO(BMo): This function currently does nothing as the abort flag \
+    TODO(BMo): This function currently does nothing as the abort flag
         is hardcoded to False!
 
     This function is used by `execute_processing_block`.
