@@ -19,13 +19,13 @@
         "version": "1.0.1",
         "parameters": {
             "stage1": {
-                "duration": 1
+                "duration": 0.1
             },
             "stage2": {
-                "duration": 1
+                "duration": 0.1
             },
             "stage3": {
-                "duration": 1
+                "duration": 0.1
             }
         }
       }

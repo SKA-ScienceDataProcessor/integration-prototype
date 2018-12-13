@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
 """Utilities used by PBC unit tests."""
-
 import json
 from os import listdir
 from os.path import join
@@ -20,11 +19,7 @@ def add_workflow_definitions(workflows_path: str):
                       and not fn.startswith('test')
                       and not fn == 'services.json']
     for file_path in workflow_files:
-        print('* Loading workflow template: {}'.format(file_path))
         with open(file_path, 'r') as file:
             workflow_dict = json.load(file)
-            try:
-                workflow_definitions.add(workflow_dict, join(workflows_path,
-                                                             'templates'))
-            except KeyError as error:
-                print('* {}'.format(error))
+            workflow_definitions.add(workflow_dict, join(workflows_path,
+                                                         'templates'))
