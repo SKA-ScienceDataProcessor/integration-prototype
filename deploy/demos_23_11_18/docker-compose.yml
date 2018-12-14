@@ -77,6 +77,12 @@ services:
     deploy:
       mode: replicated
       replicas: 1
+    healthcheck:
+      test: ["CMD", "mysql", "--user=tango", "--password=tango",
+             "-e", "SHOW DATABASES LIKE 'tango_db';"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
     volumes:
     - sip_tango_mysql:/var/lib/mysql:consistent
 
