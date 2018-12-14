@@ -4,10 +4,11 @@
     Checks to see that the system is up and running.
     Exit with value zero for healthy or non-zero for unhealthy
     Current version uses DockerSwarmClient to check that all members
-    of the swarm are running and dies if any member services have no replicants.
+    of the swarm are running and dies if any member services have 
+    no replicants.
     
-    TODO: Add number of replicants in each service and compare running replicants
-    with this number
+    TODO: Add number of replicants in each service and compare running 
+    replicants with this number
 """
 
 import argparse
