@@ -1,0 +1,17 @@
+version: '3.6'
+
+services:
+
+  replica_test:
+    image: rediscommander/redis-commander:latest
+    ports:
+      - 9081:9081
+    deploy:
+      placement:
+        constraints: [node.role==manager]
+      mode: replicated
+      replicas: 1
+      restart_policy:
+        condition: none
+        delay: 0
+

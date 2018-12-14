@@ -11,7 +11,6 @@ USER sip
 WORKDIR /home/sip
 
 COPY scheduler processing_controller/scheduler
-COPY processing_block_controller processing_controller/processing_block_controller
 
 # Docker daemon automatically monitors the PID1 process in the container.
 # if a better health check can be defined, add it here
