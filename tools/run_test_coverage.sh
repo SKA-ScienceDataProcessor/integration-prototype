@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 TEST_DIRS="$@"
-CMD="python -m pytest "
+CMD="python -m pytest --cov-append --cov-branch "
 for TEST_DIR in ${TEST_DIRS[@]}; do
     CMD="${CMD}--cov=${TEST_DIR} "
 done

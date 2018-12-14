@@ -1,0 +1,7 @@
+skasip-config-db==1.2.1
+skasip-docker-swarm==1.0.5
+skasip-logging==1.0.14
+redis==2.10.6
+jinja2==2.10
+celery==4.2.1
+PyYaml==3.13

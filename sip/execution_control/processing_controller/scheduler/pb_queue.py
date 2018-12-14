@@ -1,10 +1,14 @@
 # -*- coding: utf-8 -*-
 """Module defining the Processing Block Scheduler Queue data model.
 
-TODO(BM) need to consider linked Processing Blocks.
+TODO(BMo) need to consider linked Processing Blocks.
     See SDP scheduling model document:
     https://docs.google.com/document/d/14nsnMx69dsIl_4T4f1xmrh8HNjYdezdjlUQLxz829yI
+
+TODO(BMo) methods to put and get ProcessingBlock objects?
+
 """
+import sys
 try:
     import threading
 except ImportError:
@@ -30,15 +34,24 @@ class ProcessingBlockQueue:
     def put(self, block_id, priority, pb_type='offline'):
         """Add a Processing Block to the queue.
 
+        When a new entry it added, the queue is (re-)sorted by priority
+        followed by insertion order (older blocks with equal priority are
+        first).
+
         Args:
-            block_id (str):
-            priority (int):
-            pb_type (str):
+            block_id (str): Processing Block Identifier
+            priority (int): Processing Block scheduling priority
+                (higher values = higher priority)
+            pb_type (str): Processing Block type (offline, realtime)
+
         """
-        # LOG.info("Processing Block ID %s", block_id)
+        if pb_type not in ('offline', 'realtime'):
+            raise ValueError('Invalid PB type.')
+
         with self._mutex:
             added_time = datetime.datetime.utcnow().isoformat()
-            entry = (priority, self._index, block_id, added_time, pb_type)
+            entry = (priority, sys.maxsize-self._index, block_id, pb_type,
+                     added_time)
             self._index += 1
             if self._block_map.get(block_id) is not None:
                 raise KeyError('ERROR: Block id "{}" already exists in '
@@ -49,14 +62,13 @@ class ProcessingBlockQueue:
             self._queue.append(entry)
             self._queue.sort()  # Sort by priority followed by insertion order.
             self._queue.reverse()
-            # LOG.info("Sorted Queue: %s", self._queue)
 
     def get(self):
         """Get the highest priority Processing Block from the queue."""
         with self._mutex:
             entry = self._queue.pop()
             del self._block_map[entry[2]]
-            return entry
+            return entry[2]
 
     def remove(self, block_id):
         """Remove a Processing Block from the queue.
@@ -76,11 +88,13 @@ class ProcessingBlockQueue:
     def __getitem__(self, i):
         """Return an item in the queue."""
         with self._mutex:
-            return self._queue[i]
+            _item = self._queue[i]
+            return _item
 
     def __str__(self):
         """Return a string representation of the queue."""
         with self._mutex:
-            return '\n'.join('{:03d} | {:<5d} | {} | {}'.
-                             format(i, entry[0], entry[2], entry[3])
+            return '\n'.join('{:03d} | {:<5d} | {} | {} | {}'.
+                             format(i, entry[0], entry[2], entry[3],
+                                    entry[4])
                              for i, entry in enumerate(self._queue))

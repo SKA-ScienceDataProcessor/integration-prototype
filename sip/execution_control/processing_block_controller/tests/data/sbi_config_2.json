@@ -1,0 +1,34 @@
+{
+  "id": "SBI-20181116-sip-0001",
+  "version": "1.0.0",
+  "scheduling_block": {
+    "id": "SB-20181116-sip-0001",
+    "project": "sip",
+    "programme_block": "sip_demos"
+  },
+  "processing_blocks": [
+    {
+      "id": "PB-20181116-sip-001",
+      "version": "1.0.0",
+      "type": "offline",
+      "priority": 1,
+      "dependencies": [],
+      "resources_required": [],
+      "workflow": {
+        "id": "mock_workflow",
+        "version": "1.0.1",
+        "parameters": {
+            "stage1": {
+                "duration": 0.1
+            },
+            "stage2": {
+                "duration": 0.1
+            },
+            "stage3": {
+                "duration": 0.1
+            }
+        }
+      }
+    }
+  ]
+}
