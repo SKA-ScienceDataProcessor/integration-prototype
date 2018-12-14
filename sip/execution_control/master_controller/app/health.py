@@ -8,9 +8,8 @@
     no replicants.
     
     TODO: Add number of replicants in each service and compare running 
-    replicants with this number
+    replicants with this number.
 """
-
 # import argparse
 # import random
 import sched
@@ -30,8 +29,10 @@ SCHEDULER = sched.scheduler(time.time, time.sleep)
 
 DC = DockerSwarmClient()
 
+
 class MasterHealthException(Exception):
     pass
+
 
 def _get_services():
     """Get list of service IDs."""
@@ -45,7 +46,8 @@ def _check_replicants(services):
     """Check the number of replicants to ensure that all are running."""
     for s_id in services:
         if DC.get_replicas(s_id) == 0:
-            raise MasterHealthException("No running tasks for service {}".format(s_id))
+            raise MasterHealthException(
+                "No running tasks for service {}".format(s_id))
     # if we get here everything is A-OK
 
 
@@ -59,5 +61,7 @@ if __name__ == "__main__":
     try:
         main()
     except MasterHealthException as err:
-    #     return 1
+        print("MasterHealthException")
+        # return 1
+    print("Return 0")
     # return 0
