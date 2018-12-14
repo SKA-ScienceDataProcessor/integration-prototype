@@ -14,6 +14,13 @@ services:
     deploy:
       mode: replicated
       replicas: 1
+    healthcheck:
+      test: ["CMD", "python3", "-c",
+            "import PyTango; d=PyTango.DeviceProxy('sip_sdp/elt/master');
+            d.ping()"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
 
   tc_tango_subarray:
     image: skasip/tango_subarray:1.2.0
@@ -23,6 +30,13 @@ services:
     deploy:
       mode: replicated
       replicas: 1
+    healthcheck:
+      test: ["CMD", "python3", "-c",
+            "import PyTango; d=PyTango.DeviceProxy('sip_sdp/elt/subarray_00');
+            d.ping()"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
 
   tc_tango_processing_block:
     image: skasip/tango_processing_block:1.2.0
@@ -32,6 +46,13 @@ services:
     deploy:
       mode: replicated
       replicas: 1
+    healthcheck:
+      test: ["CMD", "python3", "-c",
+             "import PyTango; d=PyTango.DeviceProxy('sip_sdp/pb/00000');
+             d.ping()"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
 
   tc_tango_database:
     image: skasip/tango_database:1.0.4
