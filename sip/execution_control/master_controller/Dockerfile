@@ -12,7 +12,7 @@ WORKDIR /home/sip
 COPY app app
 
 HEALTHCHECK --interval=15s --timeout=2s --start-period=5s --retries=2 \
-    CMD python3 -m app.health
+    CMD ps -p1 &> /dev/null
 
 ENTRYPOINT ["python3", "-m", "app"]
 CMD []
