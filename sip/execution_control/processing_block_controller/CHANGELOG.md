@@ -8,9 +8,14 @@ The format is based on
 and this project adheres to
  [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.2.4] - 2018-12/14
+
+### Changed
+- Updated to `skasip-docker-swarm==1.0.7`
+
 ## [1.2.3] - 2018-12-07
 
-## Changed
+### Changed
 - Added optional log_level argument to the `execute_processing_block`
   task which sets the python logging level.
 

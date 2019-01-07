@@ -111,7 +111,7 @@ services:
       replicas: 1
 
   ec_processing_controller:
-    image: skasip/processing_controller:1.2.2
+    image: skasip/processing_controller:1.2.3
     environment:
     - CELERY_BROKER_URL=redis://ec_config_database/1
     - CELERY_RESULT_BACKEND=redis://ec_config_database/2
@@ -121,7 +121,7 @@ services:
       replicas: 1
 
   ec_processing_block_controller:
-    image: skasip/processing_block_controller:1.2.3
+    image: skasip/processing_block_controller:1.2.4
     environment:
     - CELERY_BROKER_URL=redis://ec_config_database/1
     - CELERY_RESULT_BACKEND=redis://ec_config_database/2
