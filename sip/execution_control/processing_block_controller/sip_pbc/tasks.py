@@ -16,7 +16,8 @@ from celery import Celery
 
 from sip_config_db.scheduling import ProcessingBlock, ProcessingBlockList
 from sip_config_db.scheduling.workflow_stage import WorkflowStage
-from sip_docker_swarm import DockerClient, __version__ as sip_swarm_api_version
+from sip_docker_swarm import DockerSwarmClient, __version__ \
+    as sip_swarm_api_version
 from sip_logging import init_logger
 from .release import LOG, __version__
 
@@ -53,7 +54,7 @@ def version():
 def _start_workflow_stages(pb: ProcessingBlock, pb_id: str,
                            workflow_stage_dict: dict,
                            workflow_stage: WorkflowStage,
-                           docker: DockerClient):
+                           docker: DockerSwarmClient):
     """Start a workflow stage by starting a number of docker services.
 
     This function first assesses if the specified workflow stage can be
@@ -142,7 +143,7 @@ def _start_workflow_stages(pb: ProcessingBlock, pb_id: str,
 
 
 def _update_workflow_stages(stage_data: dict, workflow_stage: WorkflowStage,
-                            docker: DockerClient):
+                            docker: DockerSwarmClient):
     """Check and update the status of a workflow stage.
 
     This function checks and updates the status of a workflow stage
@@ -186,7 +187,7 @@ def _update_workflow_stages(stage_data: dict, workflow_stage: WorkflowStage,
 
 
 def _abort_workflow(pb: ProcessingBlock, workflow_stage_dict: dict,
-                    docker: DockerClient):
+                    docker: DockerSwarmClient):
     """Abort the workflow.
 
     TODO(BMo): This function currently does nothing as the abort flag
@@ -264,7 +265,7 @@ def execute_processing_block(pb_id: str, log_level='DEBUG'):
     LOG.info('Starting workflow %s %s', pb.workflow_id, pb.workflow_version)
 
     pb.set_status('running')
-    docker = DockerClient()
+    docker = DockerSwarmClient()
 
     # Coping workflow stages to a dict
     workflow_stage_dict = {}
