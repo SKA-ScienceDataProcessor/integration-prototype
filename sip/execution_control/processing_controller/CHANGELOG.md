@@ -8,6 +8,12 @@ The format is based on
 and this project adheres to
  [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.2.3] - 2019-01-07
+
+### Security
+- Updated packages to PyYaml==4.2b4 to fix security vulnerability.
+  - skasip-config-db, skasip-pbc, pyyaml versions updated.
+
 ## [1.2.2] - 2018-12-10
 
 ### Changed
