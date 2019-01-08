@@ -1,14 +1,13 @@
-# Docker Swarm Client API
+# SKA SDP SIP Docker Swarm Client API
 
 ## Introduction
 
-The SIP Execution Framework provides a Docker Client Python API to run
-docker services by various Execution Control Service components.
+This package contains a client library for interfacing with the Docker engine
+for creating, deleting and inspecting Docker Swarm services as well as 
+managing Docker Swarm nodes.
 
-The client library is written as a of Python modules which are structured as a 
-set of higher level modules use by various Execution Control Services. 
-The client lets you run docker commands from within Python - create services, 
-delete services, manage nodes etc
+This library is intended to be used by other SKA SIP Execution Control
+services, in particular the Processing Block Controller.
 
 ## Quick-start
 
@@ -21,8 +20,9 @@ pip3 install -U skasip-docker-swarm
 Example usage:
 
 ```python
-from sip_docker_swarm import DockerClient
-DC = DockerClient()
+from sip_docker_swarm import DockerSwarmClient
+DOCKER_SWARM = DockerSwarmClient()
+DOCKER_SWARM.get_service_list()
 ```
 
 ## Testing
