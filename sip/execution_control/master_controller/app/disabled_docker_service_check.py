@@ -6,10 +6,12 @@
     Current version uses DockerSwarmClient to check that all members
     of the swarm are running and dies if any member services have 
     no replicants.
-    
+
+
     TODO: Add number of replicants in each service and compare running 
     replicants with this number.
 """
+
 # import argparse
 # import random
 import sched
