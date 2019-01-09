@@ -10,7 +10,6 @@ from threading import Thread, active_count
 
 import celery
 from celery.app.control import Inspect
-import sip_pbc.release
 from sip_pbc.tasks import APP, execute_processing_block
 
 from sip_config_db.scheduling import ProcessingBlock, ProcessingBlockList
@@ -173,7 +172,9 @@ class ProcessingBlockScheduler:
 
     def start(self):
         """Start the scheduler threads."""
-        assert sip_pbc.release.__version__ == '1.2.3'
+        # TODO(BMo) having this check is probably a good idea but I've \
+        # disabled it for now while the PBC is in flux.
+        # assert sip_pbc.release.__version__ == '1.2.3'
 
         scheduler_threads = [
             Thread(target=self._monitor_events, daemon=True),
