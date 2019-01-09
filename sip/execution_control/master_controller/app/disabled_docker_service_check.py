@@ -1,17 +1,13 @@
 # -*- coding: utf-8 -*-
 """Master Controller Service health check.
 
-    Checks to see that the system is up and running.
-    Exit with value zero for healthy or non-zero for unhealthy
-    Current version uses DockerSwarmClient to check that all members
-    of the swarm are running and dies if any member services have 
-    no replicants.
+Checks to see that the system is up and running. Exit with value zero for
+healthy or non-zero for unhealthy. Current version uses DockerSwarmClient to
+check that all members of the swarm are running and dies if any member services
+have no replicants.
 
-
-    TODO: Add number of replicants in each service and compare running 
-    replicants with this number.
+TODO(NJT): Add number of replicants in each service and compare.
 """
-
 # import argparse
 # import random
 import sched
@@ -23,7 +19,7 @@ import time
 # from sip_config_db.states.services import get_service_state_list
 # from sip_logging import init_logger
 
-from sip_docker_swarm import DockerSwarmClient
+from sip-docker-swarm import DockerSwarmClient
 
 # from .__init__ import LOG, __service_id__, __service_name__
 
@@ -33,13 +29,14 @@ DC = DockerSwarmClient()
 
 
 class MasterHealthException(Exception):
+    """Class for master health exception."""
     pass
 
 
 def _get_services():
     """Get list of service IDs."""
     services = DC.services
-    if len(services) == 0:
+    if not services:
         raise MasterHealthException('No services running')
     return services
 
@@ -50,7 +47,7 @@ def _check_replicants(services):
         if DC.get_replicas(s_id) == 0:
             raise MasterHealthException(
                 "No running tasks for service {}".format(s_id))
-    # if we get here everything is A-OK
+    # if we get here everything is OK
 
 
 def main():

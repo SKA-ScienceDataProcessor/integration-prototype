@@ -10,3 +10,5 @@ zero (ie a service is not running).
 from sip_docker_swarm import DockerSwarmClient
 
 DC = DockerSwarmClient()
+
+# TODO (NJT): Test functions needed
