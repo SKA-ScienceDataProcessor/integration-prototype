@@ -1,7 +1,7 @@
 # SKA SDP SIP Processing Block Controller
 
-Library and Celery worker image for executing Processing Block workflows 
-within the SDP SIP prototype code. This is implemented as a set 
+This package contains a Celery worker for executing Processing Block 
+workflows within the SDP SIP prototype code. This is implemented as a set 
 of [Celery](http://www.celeryproject.org/) tasks which can be used to 
 asynchronously execute SIP Processing Block workflows on a Processing
 Block Controller (*Celery Worker*) instance.
