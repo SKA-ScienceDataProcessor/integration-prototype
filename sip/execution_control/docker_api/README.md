@@ -6,7 +6,7 @@ This package contains a client library for interfacing with the Docker engine
 for creating, deleting and inspecting Docker Swarm services as well as 
 managing Docker Swarm nodes.
 
-This library is intended to be used by other SKA SIP Execution Control
+This library is intended to be used by other SKA SDP SIP Execution Control
 services, in particular the Processing Block Controller.
 
 ## Quick-start

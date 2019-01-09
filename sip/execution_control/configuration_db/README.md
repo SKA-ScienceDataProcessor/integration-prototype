@@ -3,9 +3,9 @@
 ## Introduction
 
 This package contains a library providing specialised functions for 
-interfacing with data objects in the SKA SIP Execution Control 
+interfacing with data objects in the SKA SDP SIP Execution Control 
 Configuration Database service. The Configuration Database is a backing 
-service for use by SKA SIP Execution Control and Tango Control components. 
+service for use by SKA SDP SIP Execution Control and Tango Control components. 
 
 For a description of the Data Model used by this library see Sections 7.4.4 
 and 7.5.6 of the SIP Report.
