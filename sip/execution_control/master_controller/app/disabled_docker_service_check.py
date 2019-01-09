@@ -19,7 +19,7 @@ import time
 # from sip_config_db.states.services import get_service_state_list
 # from sip_logging import init_logger
 
-from sip-docker-swarm import DockerSwarmClient
+from sip_docker_swarm import DockerSwarmClient
 
 # from .__init__ import LOG, __service_id__, __service_name__
 
