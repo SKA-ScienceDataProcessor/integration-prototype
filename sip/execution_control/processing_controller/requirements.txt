@@ -1,8 +1,8 @@
-skasip-pbc==1.2.4
-skasip-config-db==1.2.1
+skasip-pbc==1.2.6
+skasip-config-db==1.2.2
 skasip-docker-swarm==1.0.7
 skasip-logging==1.0.14
 jinja2==2.10
 celery==4.2.1
 docker==3.5.1
-PyYaml==3.13
+PyYAML==4.2b4
