@@ -10,7 +10,6 @@ from threading import Thread, active_count
 
 import celery
 from celery.app.control import Inspect
-import sip_pbc.release
 from sip_pbc.tasks import APP, execute_processing_block
 
 from sip_config_db.scheduling import ProcessingBlock, ProcessingBlockList
