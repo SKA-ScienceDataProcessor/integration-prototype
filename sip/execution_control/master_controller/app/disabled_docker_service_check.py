@@ -30,7 +30,8 @@ DC = DockerSwarmClient()
 
 class MasterHealthException(Exception):
     """Class for master health exception."""
-    pass
+
+    print("placeholder for master health exception class")
 
 
 def _get_services():
