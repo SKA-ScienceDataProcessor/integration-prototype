@@ -8,6 +8,11 @@ The format is based on
 and this project adheres to
  [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.2.6] - 2019-01-07
+
+### Security
+- Updated to PyYaml==4.2b4 to address security vulnerability. 
+
 ## [1.2.4] - 2018-12/14
 
 ### Changed

@@ -12,17 +12,19 @@ setup(name='skasip-pbc',
       author='SKA SDP SIP team.',
       description='SIP Processing Block Controller library.',
       long_description=LONG_DESCRIPTION,
+      long_description_content_type='text/markdown',
       url='https://github.com/SKA-ScienceDataProcessor/integration-prototype'
           '/tree/master/sip/execution_control/processing_block_controller',
       packages=['sip_pbc'],
       install_requires=[
-          'skasip-config-db==1.2.1',
+          'skasip-config-db==1.2.2',
           'skasip-docker-swarm==1.0.7',
+          'skasip-config-db==1.2.1',
           'skasip-logging==1.0.14',
           'redis==2.10.6',
           'jinja2==2.10',
           'celery==4.2.1',
-          'PyYaml==3.13'
+          'PyYAML==4.2b4'
       ],
       zip_safe=False,
       classifiers=[
