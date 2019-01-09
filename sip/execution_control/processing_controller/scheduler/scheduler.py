@@ -173,7 +173,9 @@ class ProcessingBlockScheduler:
 
     def start(self):
         """Start the scheduler threads."""
-        assert sip_pbc.release.__version__ == '1.2.3'
+        # TODO(BMo) having this check is probably a good idea but I've \
+        # disabled it for now while the PBC is in flux.
+        # assert sip_pbc.release.__version__ == '1.2.3'
 
         scheduler_threads = [
             Thread(target=self._monitor_events, daemon=True),
