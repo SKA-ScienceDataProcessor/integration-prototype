@@ -12,6 +12,8 @@ and this project adheres to
 - Updated dockerfile to run the PBC as a root user. While not generally a good
   idea this should fix an issue where the Celery worker does not have 
   permission to talk to the docker socket on some linux systems.
+- Relaxed requirements on SIP python modules to be >= rather than == the 
+  current versions.
 
 ## [1.2.6] - 2019-01-07
 ### Security
