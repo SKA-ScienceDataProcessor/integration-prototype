@@ -1,2 +1,3 @@
 skasip-config-db==1.2.0
 skasip-logging==1.0.14
+prometheus_client
