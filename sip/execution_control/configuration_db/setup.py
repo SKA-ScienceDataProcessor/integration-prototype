@@ -50,7 +50,7 @@ setup(name='skasip_config_db',
           'redis==2.10.6',
           'jsonschema==2.6.0',
           'jinja2==2.10',
-          'PyYAML==3.13'
+          'PyYAML==4.2b4'
       ],
       zip_safe=False,
       classifiers=[
