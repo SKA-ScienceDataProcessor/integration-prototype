@@ -174,16 +174,24 @@ services:
 
   prometheus:
     image: sip-prometheus
+    deploy:
+      mode: replicated
+      replicas: 1
     ports:
       - 9090:9090
 
   pushgateway:
     image: prom/pushgateway
+    deploy:
+      mode: global
     ports:
       - 9091:9091
 
   alarm_receiver:
     image: sip-alarm-receiver
+    deploy:
+      mode: replicated
+      replicas: 1
     ports:
       - 9095:9095
     depends_on:
@@ -191,16 +199,25 @@ services:
 
   alert_manager:
     image: sip-alert-manager
+    deploy:
+      mode: replicated
+      replicas: 1
     ports:
       - 9093:9093
 
   zookeeper:
     image: wurstmeister/zookeeper
+    deploy:
+      mode: replicated
+      replicas: 1
     ports:
       - "2181:2181"
 
   kafka:
     image: wurstmeister/kafka
+    deploy:
+      mode: replicated
+      replicas: 1
     ports:
       - "9094:9094"
     environment:
