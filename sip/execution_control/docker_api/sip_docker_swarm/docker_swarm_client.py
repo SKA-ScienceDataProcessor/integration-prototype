@@ -500,6 +500,9 @@ class DockerSwarmClient:
             if 'logging' in key:
                 self._parse_logging(value, service_config)
                 service_config.pop('logging')
+            if 'environment' in key:
+                service_config['env'] = value
+                service_config.pop('environment')
 
         return service_config
 
