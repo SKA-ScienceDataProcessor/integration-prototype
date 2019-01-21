@@ -12,6 +12,7 @@ setup(name='skasip-docker_swarm',
       author='SKA SDP SIP team.',
       description='SIP Docker Swarm client library.',
       long_description=LONG_DESCRIPTION,
+      long_description_content_type='text/markdown',
       url='https://github.com/SKA-ScienceDataProcessor/integration-prototype'
           '/tree/master/sip/execution_control/docker_swarm_api',
       packages=['sip_docker_swarm'],
