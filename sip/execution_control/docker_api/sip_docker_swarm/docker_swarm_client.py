@@ -421,10 +421,10 @@ class DockerSwarmClient:
         Args:
             service_id (str): docker swarm service id
 
-        Returns,
+        Returns:
             str, replicated level of the service
-        """
 
+        """
         # Raise an exception if we are not a manager
         if not self._manager:
             raise RuntimeError('Only the Swarm manager node can retrieve '
@@ -441,8 +441,9 @@ class DockerSwarmClient:
         Args:
             service_id (str): docker swarm service id
 
-        Returns,
+        Returns:
             str, replication level of the service
+
         """
         # Initialising empty list
         replicas = []
