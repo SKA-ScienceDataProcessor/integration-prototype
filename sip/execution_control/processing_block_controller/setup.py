@@ -18,7 +18,7 @@ setup(name='skasip-pbc',
       packages=['sip_pbc'],
       install_requires=[
           'skasip-config-db>=1.2.2',
-          'skasip-docker-swarm>=1.0.7',
+          'skasip-docker-swarm>=1.0.10',
           'skasip-logging>=1.0.14',
           'redis==2.10.6',
           'jinja2==2.10',
