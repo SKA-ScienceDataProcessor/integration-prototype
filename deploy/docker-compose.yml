@@ -173,7 +173,7 @@ services:
   # ==========================================================================
 
   prometheus:
-    image: sip-prometheus
+    image: skasip/prometheus
     deploy:
       mode: replicated
       replicas: 1
@@ -188,7 +188,7 @@ services:
       - 9091:9091
 
   alarm_receiver:
-    image: sip-alarm-receiver
+    image: skasip/alarm_receiver
     deploy:
       mode: replicated
       replicas: 1
@@ -198,7 +198,7 @@ services:
       - "kafka"
 
   alert_manager:
-    image: sip-alert-manager
+    image: skasip/alert_manager
     deploy:
       mode: replicated
       replicas: 1
