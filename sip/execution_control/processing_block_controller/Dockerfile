@@ -4,8 +4,8 @@ LABEL maintainer="Benjamin Mort <ben.mort@gmail.com>"
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt -U
 
-RUN addgroup -S sip && adduser -S sip -G sip && addgroup sip root
-USER sip
+#RUN addgroup -S sip && adduser -S sip -G sip && addgroup sip root
+#USER sip
 
 WORKDIR /home/sip
 
