@@ -1,2 +1,4 @@
-# Requirements are specified in the setup.py file.
-./sip/execution_control/configuration_db
+redis==2.10.6
+jsonschema==2.6.0
+jinja2==2.10
+PyYAML==4.2b4

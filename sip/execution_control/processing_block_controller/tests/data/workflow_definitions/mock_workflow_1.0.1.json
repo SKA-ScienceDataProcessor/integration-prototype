@@ -1,0 +1,57 @@
+{
+    "id": "mock_workflow",
+    "version": "1.0.1",
+    "stages": [
+        {
+            "id": "stage1",
+            "version": "1.0.1",
+            "type": "setup",
+            "dependencies": [],
+            "resources_required": [],
+            "ee_config": {
+                "compose_template": "docker-compose.yaml.j2"
+            },
+            "app_config": {
+                "args_template": "args.json.j2"
+            }
+        },
+        {
+            "id": "stage2",
+            "version": "1.0.1",
+            "type": "processing",
+            "dependencies": [
+                {
+                    "type": "stage",
+                    "value": "stage1",
+                    "condition": "complete"
+                }
+            ],
+            "resources_required": [],
+            "ee_config": {
+                "compose_template": "docker-compose.yaml.j2"
+            },
+            "app_config": {
+                "args_template": "args.json.j2"
+            }
+        },
+        {
+            "id": "stage3",
+            "version": "1.0.1",
+            "type": "cleanup",
+            "dependencies": [
+                {
+                    "type": "stage",
+                    "value": "stage2",
+                    "condition": "complete"
+                }
+            ],
+            "resources_required": [],
+            "ee_config": {
+                "compose_template": "docker-compose.yaml.j2"
+            },
+            "app_config": {
+                "args_template": "args.json.j2"
+            }
+        }
+    ]
+}

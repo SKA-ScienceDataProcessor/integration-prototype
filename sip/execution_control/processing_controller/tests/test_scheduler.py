@@ -5,13 +5,15 @@ from os.path import dirname, join
 
 from sip_config_db import ConfigDb
 from sip_config_db.scheduling import SchedulingBlockInstance
-from .test_utils import add_workflow_definitions
-from ..scheduler.scheduler import ProcessingBlockScheduler
+
+from scheduler.scheduler import ProcessingBlockScheduler
+
+from ._test_utils import add_workflow_definitions
 
 DB = ConfigDb()
 
 
-def test_scheduler():
+def test_processing_controller_scheduler_create():
     """Test creating the Scheduler after SBI data is already in the db."""
     DB.flush_db()
     data_dir = join(dirname(__file__), 'data')
@@ -27,21 +29,4 @@ def test_scheduler():
 
     scheduler = ProcessingBlockScheduler()
 
-    print("QUEUE: {}".format(scheduler.queue()))
-
-    # FIXME(BM) At this point the queue should not be empty!
-    assert not scheduler.queue()
-
-
-# def test_late_initialisation():
-#     """Test creating the Scheduler after SBI data is already in the db."""
-#     # Add a number of SBIs to the database.
-#     _db = SchedulingBlockDbClient()
-#     for _ in range(2):
-#         _db.add_sbi(generate_sbi_config())
-#         # add(generate_sbi_config())
-#
-#     scheduler = ProcessingBlockScheduler()
-#
-#     # FIXME(BM) At this point the queue should not be empty!
-#     assert not scheduler.queue()
+    assert scheduler.queue()
