@@ -1,4 +1,5 @@
 # SIP Documentation
 
-Placeholder for any documentation, or technical notes related to SIP code
-which we choose to keep in the code repo rather than on Confluence. 
+This directory holds documentation, or technical notes related to SIP code.
+Note that additional material can also be found in the SIP pages on SDP
+Confluence SIP.
