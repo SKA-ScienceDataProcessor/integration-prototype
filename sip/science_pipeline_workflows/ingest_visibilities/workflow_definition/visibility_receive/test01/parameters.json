@@ -1,0 +1,6 @@
+{
+  "timeout": "60s",
+  "sender_nodes": 1,
+  "receiver_nodes": 1,
+  "ip_addresses": ["10.1.0.27"]
+}

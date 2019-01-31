@@ -1,0 +1,29 @@
+{
+    "schema_version": "2.0",
+    "id": "ingest_visibilities",
+    "version": "1.0.0",
+    "stages":
+    [
+        {
+            "id": "visibility_receive",
+            "version": "test01"
+            "type": "processing",
+            "timeout": "{{ timeout }}",
+            "dependencies": [],
+            "resources": [
+                {
+                    "type": "nodes",
+                    "number": "{{ receiver_nodes }}",
+                    "exclusive": "true",
+                    "label": "receiver"
+                },
+                {
+                    "type": "nodes",
+                    "number": "{{ sender_nodes }}",
+                    "exclusive": "true",
+                    "label": "sender"
+                }
+            ]
+        }
+    ]
+}
