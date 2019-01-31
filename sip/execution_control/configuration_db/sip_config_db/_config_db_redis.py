@@ -83,8 +83,10 @@ class ConfigDb:
                 if not hierarchical:
                     self._db.hmset(key, {_key: str(_value)})
                 else:
-                    print('saving list at ', key + ':' + _key)
-                    self._db.lpush(key + ':' + _key, *_value[::-1])
+                    for entry in _value[::-1]:
+                        if isinstance(entry, dict):
+                            entry = json.dumps(entry)
+                        self._db.lpush(key + ':' + _key, entry)
             elif isinstance(_value, bool):
                 self._db.hmset(key, {_key: str(_value)})
             else:

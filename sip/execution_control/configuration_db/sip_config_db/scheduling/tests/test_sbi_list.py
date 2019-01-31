@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """Tests of the Scheduling Block Instance List API."""
-from .workflow_test_utils import add_test_sbi_workflow_definitions
+from .utils import add_mock_sbi_workflow_definitions
 from .. import ProcessingBlock, ProcessingBlockList, \
     SchedulingBlockInstanceList, Subarray
 from ... import ConfigDb
@@ -22,14 +22,15 @@ def test_sbi_list_add_sbi():
     subarray.activate()
 
     sbi_config = generate_sbi_config(num_pbs=1)
-    add_test_sbi_workflow_definitions(sbi_config)
+    add_mock_sbi_workflow_definitions(sbi_config)
 
     sbi_list = SchedulingBlockInstanceList()
     sbi_events = sbi_list.subscribe('test_sbi_list_subscriber')
+    assert 'test_sbi_list_subscriber' in sbi_list.get_subscribers()
 
     sbi = sbi_list.add(sbi_config)
 
-    assert sbi_list.num_active == 1
+    assert len(sbi_list.active) == 1
     assert sbi_list.active[0] == sbi_config['id']
 
     assert sbi.id == sbi_config['id']
@@ -40,7 +41,6 @@ def test_sbi_list_add_sbi():
     assert published[0].type == 'status_changed'
     assert published[0].data.get('status') == 'created'
     assert published[0].object_id == sbi.id
-    assert published[0].object_type == sbi.type
     assert sbi.status == 'created'
 
 
@@ -51,8 +51,8 @@ def test_sbi_list_abort():
     # print('')
     # init_logger(log_level='DEBUG')
 
-    sbi_config = generate_sbi_config()
-    add_test_sbi_workflow_definitions(sbi_config)
+    sbi_config = generate_sbi_config(num_pbs=3)
+    add_mock_sbi_workflow_definitions(sbi_config)
 
     sbi_list = SchedulingBlockInstanceList()
     pb_list = ProcessingBlockList()
@@ -71,7 +71,7 @@ def test_sbi_list_abort():
     assert sbi_events[-1].type == 'status_changed'
     assert sbi_events[-1].data['status'] == 'aborted'
     assert sbi.status == 'aborted'
-    assert sbi_list.num_aborted == 1
+    assert len(sbi_list.aborted) == 1
     assert sbi_list.aborted[0] == sbi.id
 
     # Check that the PBs associated with the SBI have also been aborted
@@ -80,7 +80,7 @@ def test_sbi_list_abort():
         assert pb_events[-1 - i].type == 'status_changed'
         assert pb_events[-1 - i].data['status'] == 'aborted'
     assert sbi.num_processing_blocks == 3
-    assert pb_list.num_aborted == 3
+    assert len(pb_list.aborted) == 3
 
     for pb_id in sbi.processing_block_ids:
         assert pb_id in pb_list.aborted
@@ -98,7 +98,7 @@ def test_sbi_list_get_active():
     sbi_config = generate_sbi_config()
 
     # Register test workflow definitions needed for this SBI.
-    add_test_sbi_workflow_definitions(sbi_config)
+    add_mock_sbi_workflow_definitions(sbi_config)
 
     sbi = sbi_list.add(sbi_config)
     active_sbi = sbi_list.active

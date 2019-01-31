@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 """Base class for scheduling or processing block data objects."""
 import ast
+import datetime
 from typing import List
 
 from ._keys import PB_KEY, SBI_KEY
@@ -8,6 +9,7 @@ from .. import ConfigDb, LOG
 from .._events.event import Event
 from .._events.event_queue import EventQueue
 from .._events.pubsub import get_events, get_subscribers, publish, subscribe
+from ..utils.datetime_utils import datetime_from_isoformat
 
 DB = ConfigDb()
 
@@ -15,12 +17,16 @@ DB = ConfigDb()
 class SchedulingObject:
     """Base class for SBI and PB data objects API."""
 
-    def __init__(self, object_type: str, object_id: str = None):
-        """Initialise variables.
+    def __init__(self, object_type: str, object_id: str):
+        """Initialise config database scheduling data object.
 
         Args:
             object_type (str): Type of object.
             object_id (str): ID of the object.
+
+        Raises:
+            RuntimeError, if the object type is invalid
+            KeyError, if the Scheduling object does not exist in the database
 
         """
         if object_type not in [PB_KEY, SBI_KEY]:
@@ -36,31 +42,9 @@ class SchedulingObject:
         return self._id
 
     @property
-    def type(self) -> str:
-        """Get the scheduling object type."""
-        return self._type
-
-    @property
     def key(self) -> str:
         """Get the scheduling object key."""
         return self._key
-
-    @property
-    def config(self) -> dict:
-        """Get the scheduling object config."""
-        # Check that the key exists
-        self._check_object_exists()
-        config_dict = DB.get_hash_dict(self.key)
-        for _, value in config_dict.items():
-            for char in ['[', '{']:
-                if char in value:
-                    value = ast.literal_eval(value)
-        return config_dict
-
-    def get_property(self, property_key: str) -> str:
-        """Get a scheduling object property."""
-        self._check_object_exists()
-        return DB.get_hash_value(self.key, property_key)
 
     @property
     def status(self) -> str:
@@ -76,22 +60,41 @@ class SchedulingObject:
     @status.setter
     def status(self, value):
         """Set the status of the scheduling object."""
-        self.set_status(value)
-
-    def set_status(self, value):
-        """Set the status of the scheduling object."""
         self._check_object_exists()
         DB.set_hash_value(self.key, 'status', value)
-        self.publish('status_changed', event_data=dict(status=value))
+        self._publish_event('status_changed', event_data=dict(status=value))
+
+    @property
+    def version(self) -> str:
+        """Return the PB version."""
+        return DB.get_hash_value(self.key, 'version')
+
+    @property
+    def updated(self) -> datetime.datetime:
+        """Return the last time the PB was updated."""
+        return datetime_from_isoformat(DB.get_hash_value(self.key, 'updated'))
+
+    @property
+    def created(self) -> datetime.datetime:
+        """Return the datetime the PB was created."""
+        return datetime_from_isoformat(DB.get_hash_value(self.key, 'created'))
+
+    @property
+    def config(self) -> dict:
+        """Get the scheduling object config."""
+        # Check that the key exists
+        self._check_object_exists()
+        config_dict = DB.get_hash_dict(self.key)
+        for _, value in config_dict.items():
+            for char in ['[', '{']:
+                if char in value:
+                    value = ast.literal_eval(value)
+        return config_dict
 
     @staticmethod
-    def get_key(object_type: str, object_id: str):
+    def get_key(object_type: str, object_id: str) -> str:
         """Return the database key scheduling object of specified type & id."""
         return '{}:{}'.format(object_type, object_id)
-
-    ###########################################################################
-    # Pub/sub events functions
-    ###########################################################################
 
     def subscribe(self, subscriber: str) -> EventQueue:
         """Subscribe to scheduling object (SBI or PB).
@@ -114,7 +117,17 @@ class SchedulingObject:
         """
         return get_subscribers(self._type)
 
-    def publish(self, event_type: str, event_data: dict = None):
+    def get_events(self) -> List[Event]:
+        """Get events associated with the scheduling object.
+
+        Returns:
+            list of Event objects
+
+        """
+        LOG.debug('Getting events for %s', self.key)
+        return get_events(self.key)
+
+    def _publish_event(self, event_type: str, event_data: dict = None):
         """Publish an event associated with the scheduling object.
 
         Note:
@@ -139,24 +152,6 @@ class SchedulingObject:
                 object_key=self._key,
                 origin=_origin)
 
-    def get_events(self) -> List[Event]:
-        """Get events associated with the scheduling object.
-
-        Returns:
-            list of Event objects
-
-        """
-        LOG.debug('Getting events for %s', self.key)
-        return get_events(self.key)
-
-    def get_event_queue(self, subscriber: str):
-        """Get an event queue for the specified subscriber."""
-        return EventQueue(self._type, subscriber)
-
-    ###########################################################################
-    # Private functions
-    ###########################################################################
-
     def _check_object_exists(self):
         """Raise a KeyError if the scheduling object doesnt exist.
 
@@ -166,3 +161,8 @@ class SchedulingObject:
         """
         if not DB.get_keys(self.key):
             raise KeyError("Object with key '{}' not exist".format(self.key))
+
+    def _mark_updated(self):
+        """Update the updated timestamp."""
+        timestamp = datetime.datetime.utcnow().isoformat()
+        DB.set_hash_value(self.key, 'updated', timestamp)

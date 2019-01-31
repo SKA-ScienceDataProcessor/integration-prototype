@@ -1,7 +1,5 @@
 # -*- coding: utf-8 -*-
 """High-level service state API."""
-import re
-
 from ._state_object import StateObject
 
 
@@ -41,8 +39,6 @@ class ServiceState(StateObject):
 
     def __init__(self, subsystem: str, name: str, version: str):
         """Initialise SDP state data object."""
-        if not re.match(r'^\d+.\d+.\d+|test$', version):
-            raise ValueError('Invalid version {}'.format(version))
         if subsystem not in self._allowed_subsystems:
             raise ValueError('Invalid subsystem {} (allowed: {})'
                              .format(subsystem, self._allowed_subsystems))

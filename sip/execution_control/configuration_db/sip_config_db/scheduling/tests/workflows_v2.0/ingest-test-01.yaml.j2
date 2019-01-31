@@ -1,0 +1,20 @@
+schema_version: "2.0"
+id: ingest-test-01
+version: 1.0.0
+stages:
+  - id: ingest_test
+    version: 1.0.0
+    type: processing
+    timeout: "{{ timeout }}"
+    resources_required:
+    - type: nodes
+      number: "{{ send_nodes }}"
+      flavour: compute_a
+      exclusive: true
+      label: sender
+    - type: nodes
+      number: "{{ recv_nodes }}"
+      flavour: compute_a
+      exclusive: true
+      label: receiver
+    dependencies: []

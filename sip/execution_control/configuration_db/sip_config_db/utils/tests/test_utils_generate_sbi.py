@@ -17,7 +17,7 @@ def sbi_schema():
     """Fixture which loads the SBI JSON schema."""
     schema_path = os.path.join(os.path.dirname(__file__), '..', '..',
                                'scheduling', 'schema',
-                               'configure_sbi.json')
+                               'configure_sbi_2.0.json')
     with open(schema_path, 'r') as file:
         schema_data = file.read()
     return json.loads(schema_data)

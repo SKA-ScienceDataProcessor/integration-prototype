@@ -1,0 +1,6 @@
+version: '3.7'
+
+services:
+
+  setup:
+    image: skasip/mock_workflow_stage:1.0.1

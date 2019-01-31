@@ -1,7 +1,7 @@
 # coding=utf-8
 """Unit testing for the states.services module."""
 from ..service_state import ServiceState
-from ..services import get_service_state_list
+from ..services import get_service_state_list, get_service_id_list
 from ... import ConfigDb
 
 DB = ConfigDb()
@@ -24,3 +24,17 @@ def test_states_get_service_list():
 
     services = get_service_state_list()
     assert service.id in [service.id for service in services]
+
+
+def test_states_get_service_id_list():
+    """."""
+    DB.flush_db()
+    ServiceState('ExecutionControl', 'MasterController', '1.0.0')
+    ServiceState('TangoControl', 'SDPMaster', '1.0.0')
+    ServiceState('TangoControl', 'TangoDatabaseDS', '1.0.0')
+    ServiceState('TangoControl', 'TangoMySQL', '1.0.0')
+    ServiceState('Platform', 'Redis', '1.0.0')
+    ServiceState('Platform', 'Kafka', '1.0.0')
+
+    service_ids = get_service_id_list()
+    assert 'TangoControl:SDPMaster:1.0.0' in service_ids

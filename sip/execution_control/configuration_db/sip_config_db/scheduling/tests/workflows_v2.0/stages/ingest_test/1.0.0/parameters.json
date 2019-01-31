@@ -1,0 +1,6 @@
+{
+  "timeout": "60s",
+  "send_nodes": 10,
+  "recv_nodes": 10,
+  "ip_addresses": []
+}

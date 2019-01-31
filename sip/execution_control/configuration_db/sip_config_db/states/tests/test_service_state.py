@@ -11,9 +11,64 @@ DB = ConfigDb()
 def test_service_state_create():
     """Test creating a service state data object."""
     DB.flush_db()
+    _service_state = ServiceState('ExecutionControl', 'MasterController',
+                                  'test')
+
+    # Creating the state object again should be allowed
     service_state = ServiceState('ExecutionControl', 'MasterController',
                                  'test')
+    assert service_state.id == _service_state.id
     assert service_state is not None
+
+    # Expect error message if subsystem is invalid.
+    with pytest.raises(ValueError, match=r'Invalid subsystem'):
+        ServiceState('InvalidSubsystem', 'MasterController', '1.0.0')
+
+    assert 'init' in service_state.allowed_target_states
+    assert 'on' in service_state.allowed_target_states
+    assert 'alarm' in service_state.allowed_target_states
+    assert 'fault' in service_state.allowed_target_states
+    assert 'off' in service_state.allowed_target_states
+
+    assert repr(service_state) == 'ExecutionControl:MasterController:test'
+
+
+def test_service_state_properties():
+    """Test service state object properties."""
+    DB.flush_db()
+    state = ServiceState('ExecutionControl', 'MasterController', 'test')
+
+    # The total set of allowed states for SDP services
+    assert state.allowed_states == ['init', 'on', 'off', 'alarm', 'fault']
+
+    # Dictionary of allowed state transitions for SDP services
+    for allowed_state in state.allowed_states:
+        assert allowed_state in state.allowed_state_transitions
+
+    # Check behaviour of current state setter and getter
+    assert state.current_state == 'unknown'
+
+    # Cant set the target when the current state is undefined
+    with pytest.raises(RuntimeError, match=r"Unable to set target state"):
+        state.target_state = 'on'
+
+    # Set the current state to init
+    state.current_state = 'init'
+    assert state.current_state == 'init'
+
+    # Set the current state to on
+    state.current_state = 'on'
+    assert state.current_state == 'on'
+
+    # Check behaviour of target state setter and getter
+    assert state.target_state == 'unknown'
+
+    # Try to set the target state to an invalid state results in an error.
+    with pytest.raises(ValueError, match=r'Invalid target state'):
+        state.target_state = 'undefined_state'
+
+    state.target_state = 'off'
+    assert state.target_state == 'off'
 
 
 def test_service_state_set_target():
@@ -79,7 +134,10 @@ def test_service_state_set_current():
         service_subsystem, service_name, service_version)
     service_state = ServiceState(service_subsystem, service_name,
                                  service_version)
-    event_queue = service_state.subscribe('test_update_target')
+    service_state.subscribe('test_update_target')
+    event_queue = service_state.get_event_queue('test_update_target')
+
+    assert 'test_update_target' in service_state.get_subscribers()
 
     current_state = "off"
     previous_timestamp = service_state.current_timestamp

@@ -1,0 +1,1 @@
+Parameters files should be plain json or yaml.

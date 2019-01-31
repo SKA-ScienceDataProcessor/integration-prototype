@@ -9,10 +9,16 @@ DB = ConfigDb()
 def test_sdp_state_create():
     """Test creating SDP state data object."""
     DB.flush_db()
+    SDPState()
+
+    # Create SDP state object a 2nd time should be ok
     sdp_state = SDPState()
     assert sdp_state is not None
     assert sdp_state.allowed_states == ['init', 'standby', 'on', 'off',
                                         'disable', 'alarm', 'fault']
+
+    assert isinstance(sdp_state.allowed_state_transitions, dict)
+    assert 'init' in sdp_state.allowed_state_transitions
 
 
 def test_sdp_state_set_target_state():
@@ -28,6 +34,7 @@ def test_sdp_state_set_target_state():
 
     assert sdp_state.current_state == 'unknown'
     assert sdp_state.target_state == 'unknown'
+
     sdp_state.update_current_state('init')
     assert sdp_state.current_state == 'init'
     assert sdp_state.target_state == 'unknown'
@@ -48,6 +55,7 @@ def test_sdp_state_set_target_state():
 
     target_state = "on"
     previous_timestamp = sdp_state.target_timestamp
+    sdp_state.target_state = target_state
     set_time = sdp_state.update_target_state(target_state)
     assert sdp_state.target_state == target_state
     assert set_time >= previous_timestamp
@@ -55,7 +63,7 @@ def test_sdp_state_set_target_state():
     assert sdp_state.current_state == target_state
 
     events = event_queue.get_published_events()
-    assert len(events) == 2
+    assert len(events) == 3
     assert events[0].object_type == 'states'
     assert events[0].object_id == 'SDP'
     assert events[0].type == 'target_state_updated'
