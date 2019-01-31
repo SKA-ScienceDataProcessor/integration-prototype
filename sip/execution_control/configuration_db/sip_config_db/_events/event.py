@@ -6,9 +6,7 @@ import datetime
 class Event:
     """Event class."""
 
-    def __init__(self,
-                 event_id: str,
-                 event_type: str,
+    def __init__(self, event_id: str, event_type: str,
                  event_data: dict = None,
                  event_origin: str = None,
                  event_timestamp: datetime.datetime = None,

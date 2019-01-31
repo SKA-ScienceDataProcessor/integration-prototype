@@ -3,12 +3,14 @@
 import ast
 import json
 from typing import List
+import datetime
 
 from ._keys import PB_KEY
 from ._scheduling_object import SchedulingObject
 from .dependency import Dependency
 from .resource import Resource
 from .. import ConfigDb
+from ..utils.datetime_utils import datetime_from_isoformat
 
 
 DB = ConfigDb()
@@ -74,14 +76,25 @@ class WorkflowStage:
         stages = DB.get_hash_value(pb_key, 'workflow_stages')
         stages = ast.literal_eval(stages)
         stages[self._index]['status'] = value
+        timestamp = datetime.datetime.utcnow().isoformat()
+        stages[self._index]['updated'] = timestamp
         DB.set_hash_value(pb_key, 'workflow_stages', stages)
         # FIXME(BM) This method should also publish a workflow status changed
         # event on the PB?!
+        self._mark_updated()
 
     @property
     def timeout(self) -> int:
         """Return the workflow stage timeout."""
         return self._config.get('timeout', -1)
+
+    @property
+    def updated(self) -> datetime.datetime:
+        """Return the last time the workflow stage was updated."""
+        pb_key = SchedulingObject.get_key(PB_KEY, self._pb_id)
+        stages = DB.get_hash_value(pb_key, 'workflow_stages')
+        stages = ast.literal_eval(stages)
+        return datetime_from_isoformat(stages[self._index]['updated'])
 
     @property
     def dependencies(self) -> List[Dependency]:
@@ -99,28 +112,19 @@ class WorkflowStage:
         return self._config.get('resources_assigned')
 
     @property
-    def ee_config(self) -> dict:
-        """Return the workflow stage Execution Engine configuration."""
-        return self._config.get('ee_config')
-
-    @property
-    def compose_template(self) -> str:
+    def compose_file(self) -> str:
         """Return the workflow stage Docker Compose template, if present."""
-        if 'compose_template' in self.ee_config:
-            return self.ee_config['compose_template']
-        return ''
+        return self._config.get('compose_file')
 
     @property
-    def app_config(self) -> dict:
-        """Return the workflow application configuration."""
-        return self._config.get('app_config')
+    def parameters(self) -> dict:
+        """Return the workflow stage parameters dictionary."""
+        return self._config.get('parameters')
 
     @property
-    def args_template(self) -> str:
+    def args(self) -> str:
         """Return the workflow stage application argument template."""
-        if 'args_template' in self.app_config:
-            return self.app_config['args_template']
-        return ''
+        return self._config.get('args')
 
     @property
     def config(self) -> dict:
@@ -137,3 +141,12 @@ class WorkflowStage:
     def __repr__(self) -> str:
         """Return a unambiguous representation of the stage."""
         return json.dumps(self._config)
+
+    def _mark_updated(self):
+        """Update the workflow stage updated timestamp."""
+        timestamp = datetime.datetime.utcnow().isoformat()
+        pb_key = SchedulingObject.get_key(PB_KEY, self._pb_id)
+        stages = DB.get_hash_value(pb_key, 'workflow_stages')
+        stages = ast.literal_eval(stages)
+        stages[self._index]['updated'] = timestamp
+        DB.set_hash_value(pb_key, 'workflow_stages', stages)

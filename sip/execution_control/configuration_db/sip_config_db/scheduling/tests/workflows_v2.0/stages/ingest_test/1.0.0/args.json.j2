@@ -1,0 +1,34 @@
+{
+  "recv":
+  {
+    "port_start": 41000,
+    "memory_pool:
+    {
+      "lower": 1048576,
+      "upper": 4718592,
+      "max_free": 16,
+      "initial": 16
+    },
+    "num_buffers": 2,
+    "num_buffer_times": 4,
+    "num_streams": 4
+  },
+
+  "send": [
+{% for ip_address in ip_addresses %}
+  {
+    "destination_host": "{{ ip_address }}",
+    "destination_port_start": 41000,
+    "heap":
+    {
+      "num_stations": 512,
+      "num_pols": 4
+    },
+    "max_duration_sec": -1,
+    "num_streams": 100
+  }{% if not loop.last %},{% endif %}
+{% endfor %}
+  ]
+
+}
+

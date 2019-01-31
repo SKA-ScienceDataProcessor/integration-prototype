@@ -10,10 +10,10 @@ from typing import List
 
 from jsonschema import validate
 
-from ._keys import PB_KEY, SBI_KEY
+from ._keys import PB_KEY, SBI_KEY, WORKFLOW_DEFINITION_KEY
 from ._scheduling_object import SchedulingObject
 from .processing_block import ProcessingBlock
-from .workflow_definitions import get_workflow, get_workflows
+from .workflow_definition import get_workflow
 from .. import ConfigDb
 
 DB = ConfigDb()
@@ -36,20 +36,18 @@ class SchedulingBlockInstance(SchedulingObject):
         self._check_object_exists()
 
     @classmethod
-    def from_config(cls, config_dict: dict, schema_path: str = None):
+    def from_config(cls, config_dict: dict):
         """Create an SBI object from the specified configuration dict.
 
-        NOTE(BM) This should really be done as a single atomic db transaction.
+        NOTE(BMo) This should really be done as a single atomic db transaction.
 
         Args:
             config_dict(dict): SBI configuration dictionary
-            schema_path(str, optional): Path to the SBI config schema.
 
         """
-        # Validate the SBI config schema
-        if schema_path is None:
-            schema_path = join(dirname(__file__), 'schema',
-                               'configure_sbi.json')
+        # Validate the SBI config using the SBI schema
+        schema_path = join(dirname(__file__), 'schema',
+                           'configure_sbi_2.0.json')
         with open(schema_path, 'r') as file:
             schema = json.loads(file.read())
             validate(config_dict, schema)
@@ -77,10 +75,23 @@ class SchedulingBlockInstance(SchedulingObject):
         for pb in pb_list:
             config_dict['processing_block_ids'].append(pb['id'])
 
+        # Check that the PBs do not already exist and workflow definitions
+        # are known about before adding anything to the DB!
+        # This prevents adding SBIs data objects with invalid PBs!
+        for pb in pb_list:
+            _pb_key = '{}:{}'.format(PB_KEY, pb['id'])
+            if DB.key_exists(_pb_key):
+                raise KeyError("PB '{}' already exists!".format(pb['id']))
+            _workflow = pb['workflow']
+            _workflow_key = '{}:{}:{}'.format(
+                WORKFLOW_DEFINITION_KEY, _workflow['id'], _workflow['version'])
+            if not DB.key_exists(_workflow_key):
+                raise KeyError("Unknown workflow definition: {}:{}"
+                               .format(_workflow['id'], _workflow['version']))
+
         # Add the SBI data object to the database.
         key = SchedulingObject.get_key(SBI_KEY, config_dict['id'])
         DB.save_dict(key, config_dict, hierarchical=False)
-        # DB.set_hash_values(key, config_dict)
 
         # Add the SBI id to the list of active SBIs
         key = '{}:active'.format(SBI_KEY)
@@ -88,32 +99,44 @@ class SchedulingBlockInstance(SchedulingObject):
 
         # Publish notification to subscribers
         sbi = SchedulingObject(SBI_KEY, config_dict['id'])
-        sbi.set_status('created')
+        sbi.status = 'created'
 
         for pb in pb_list:
             pb['sbi_id'] = config_dict['id']
+            pb['version'] = config_dict['version']
             cls._add_pb(pb)
 
         return cls(config_dict['id'])
 
     @property
     def processing_block_ids(self) -> List[str]:
-        """Get the PB IDs associated with the SBI."""
-        return self.get_pb_ids()
+        """Get the PB IDs associated with the SBI.
+
+        Returns:
+            list, Processing block ids
+
+        """
+        values = DB.get_hash_value(self._key, 'processing_block_ids')
+        return ast.literal_eval(values)
 
     @property
     def num_processing_blocks(self) -> int:
         """Get the number of PBs associated with the SBI."""
-        return len(self.get_pb_ids())
+        return len(self.processing_block_ids)
 
     @property
     def num_pbs(self) -> int:
         """Get the number of PBs associated with the SBI."""
         return self.num_processing_blocks
 
+    @property
+    def subarray(self) -> str:
+        """Get the subarray identifier for this SBI."""
+        return DB.get_hash_value(self._key, 'subarray_id')
+
     def abort(self):
         """Abort the SBI (and associated PBs)."""
-        self.set_status('aborted')
+        self.status = 'aborted'
         DB.remove_from_list('{}:active'.format(self._type), self._id)
         DB.append_to_list('{}:aborted'.format(self._type), self._id)
         sbi_pb_ids = ast.literal_eval(
@@ -130,20 +153,10 @@ class SchedulingBlockInstance(SchedulingObject):
         """
         DB.set_hash_value(self._key, 'subarray_id', 'none')
 
-    def get_pb_ids(self) -> List[str]:
-        """Return the list of PB ids associated with the SBI.
-
-        Returns:
-            list, Processing block ids
-
-        """
-        values = DB.get_hash_value(self._key, 'processing_block_ids')
-        return ast.literal_eval(values)
-
     @staticmethod
-    def get_id(date=None, project: str = 'sip',
-               instance_id: int = None) -> str:
-        """Get a SBI Identifier.
+    def generate_sbi_id(date=None, project: str = 'sip',
+                        instance_id: int = None) -> str:
+        """Generate a SBI Identifier.
 
         Args:
             date (str or datetime.datetime, optional): UTC date of the SBI
@@ -181,16 +194,26 @@ class SchedulingBlockInstance(SchedulingObject):
             pb_config['priority'] = 0
 
         # Retrieve the workflow definition
-        SchedulingBlockInstance._update_workflow_definition(pb_config)
+        SchedulingBlockInstance._associate_workflow(pb_config)
 
         # If needed, add resources and dependencies fields
-        keys = ['resources_required', 'resources_assigned', 'dependencies']
-        for key in keys:
-            if key not in pb_config:
-                pb_config[key] = []
-            for stage in pb_config['workflow_stages']:
-                if key not in stage:
-                    stage[key] = []
+        if 'dependencies' not in pb_config:
+            pb_config['dependencies'] = []
+
+        pb_workflow_params = pb_config['workflow_parameters']
+        for stage in pb_config['workflow_stages']:
+            stage['resources_assigned'] = []
+            stage['status'] = 'created'
+            stage['updated'] = timestamp
+            if 'args' not in stage:
+                stage['args'] = ''
+            if 'compose_file' not in stage:
+                stage['compose_file'] = ''
+            if 'parameters' not in stage:
+                stage['parameters'] = dict()
+            if stage['id'] in pb_workflow_params:
+                stage['parameters'] = {**pb_workflow_params[stage['id']],
+                                       **stage['parameters']}
 
         # Add PB to the the database
         key = SchedulingObject.get_key(PB_KEY, pb_config['id'])
@@ -205,10 +228,10 @@ class SchedulingBlockInstance(SchedulingObject):
 
         # Publish an event to to notify subscribers of the new PB
         pb = SchedulingObject(PB_KEY, pb_config['id'])
-        pb.set_status('created')
+        pb.status = 'created'
 
     @staticmethod
-    def _update_workflow_definition(pb_config: dict):
+    def _associate_workflow(pb_config: dict):
         """Update the PB configuration workflow definition.
 
         Args:
@@ -219,13 +242,8 @@ class SchedulingBlockInstance(SchedulingObject):
             specified in the sbi_config is not known.
 
         """
-        known_workflows = get_workflows()
         workflow_id = pb_config['workflow']['id']
         workflow_version = pb_config['workflow']['version']
-        if workflow_id not in known_workflows or \
-           workflow_version not in known_workflows[workflow_id]:
-            raise RuntimeError("Unknown workflow definition: {}:{}"
-                               .format(workflow_id, workflow_version))
         workflow = get_workflow(workflow_id, workflow_version)
         for stage in workflow['stages']:
             stage['status'] = 'none'

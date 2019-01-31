@@ -1,0 +1,195 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "SIP workflow schema ",
+  "description": "Schema for SIP workflow definition",
+  "version": "2.0.0",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "id",
+    "version",
+    "stages"
+  ],
+  "properties": {
+    "schema_version": {
+      "description": "Workflow schema version",
+      "type": "string",
+      "enum": ["2.0"]
+    },
+    "id": {
+      "type": "string"
+    },
+    "version": {
+      "type": "string"
+    },
+    "stages": {
+      "description": "Dictionary of workflow stages",
+      "$ref": "#/definitions/stages"
+    }
+  },
+
+  "definitions": {
+    "stages": {
+      "type": "array",
+      "minItems": 0,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "version",
+          "type",
+          "timeout",
+          "resources_required"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "version": {
+            "type": "string"
+          },
+          "type": {
+            "$ref": "#/definitions/stage_type"
+          },
+          "timeout": {
+            "$ref": "#/definitions/stage_timeout"
+          },
+          "resources_required": {
+            "$ref": "#/definitions/stage_resources_required"
+          },
+          "dependencies": {
+            "$ref": "#/definitions/stage_dependencies"
+          }
+        }
+      }
+    },
+
+    "stage_type": {
+      "description": "Workflow stage: type",
+      "enum": [
+        "setup",
+        "cleanup",
+        "processing",
+        "emulator",
+        "simulator"
+      ]
+    },
+
+    "stage_timeout": {
+      "description": "Stage timeout.",
+      "type": [
+        "string",
+        "number"
+      ]
+    },
+
+    "stage_resources_required": {
+      "description": "Workflow stage: resources required",
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "oneOf":[
+          { "$ref": "#/definitions/resource_node" },
+          { "$ref": "#/definitions/resource_cpu" },
+          { "$ref": "#/definitions/resource_memory" }
+        ]
+      }
+    },
+
+    "resource_node": {
+      "required": [
+        "type",
+        "flavour",
+        "number",
+        "exclusive"
+      ],
+      "properties": {
+        "type": {
+          "const": "nodes"
+        },
+        "flavour": {
+          "type": "string"
+        },
+        "number": {
+          "description": "Number of nodes of the given type / flavour.",
+          "type": ["string", "integer"]
+        },
+        "exclusive": {
+          "type": "boolean"
+        },
+        "label": {
+          "type": "string"
+        }
+      }
+    },
+
+    "resource_cpu": {
+      "required": [
+        "type",
+        "value"
+      ],
+      "properties": {
+        "type": {
+          "enum": ["cpu"]
+        },
+        "value": {
+          "type": "number"
+        }
+      }
+    },
+
+    "resource_memory": {
+      "required": [
+        "type",
+        "value"
+      ],
+      "properties": {
+        "type": {
+          "enum": ["memory"]
+        },
+        "value": {
+          "type": ["number", "string"]
+        }
+      }
+    },
+
+    "stage_dependencies": {
+      "description": "Array of workflow stage dependencies.",
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "type",
+          "value",
+          "condition"
+        ],
+        "properties": {
+          "type": {
+            "description": "Type of dependency",
+            "enum": [
+              "stage",
+              "buffer_object"
+            ]
+          },
+          "value": {
+            "description": "Value of the dependency",
+            "type": "string"
+          },
+          "condition": {
+            "description": "Dependency condition",
+            "enum": [
+              "complete",
+              "started",
+              "present"
+            ]
+          }
+        }
+      }
+    }
+
+  }
+}

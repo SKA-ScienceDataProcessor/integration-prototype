@@ -1,6 +1,5 @@
 # coding=utf-8
 """Misc functions for interacting with datetime."""
-import sys
 from datetime import datetime
 
 
@@ -11,7 +10,7 @@ def datetime_from_isoformat(value: str):
         value (str): Datetime string in isoformat.
 
     """
-    if sys.version_info >= (3, 7):
-        return datetime.fromisoformat(value)
+    # if sys.version_info >= (3, 7):
+    #     return datetime.fromisoformat(value)
 
     return datetime.strptime(value, '%Y-%m-%dT%H:%M:%S.%f')

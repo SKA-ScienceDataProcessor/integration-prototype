@@ -1,17 +1,14 @@
 # coding=utf-8
-"""Module to generate test data for sbi and pb client.
-
-FIXME(BMo) Move this to a method on the SchedulingBlockInstance object?
-"""
+"""Module to generate test data for sbi and pb client."""
 import datetime
 import json
 from random import choice, randint
 from typing import List, Union
 
 from .. import ConfigDb
-from ..release import __pb_version__, __sbi_version__
 from ..scheduling.processing_block import ProcessingBlock
 from ..scheduling.scheduling_block_instance import SchedulingBlockInstance
+from ..scheduling.workflow_definition import add as add_workflow_definition
 
 DB = ConfigDb()
 
@@ -30,7 +27,7 @@ OFFLINE_WORKFLOWS = [
 ]
 
 
-def add_workflow_definitions(sbi_config: dict):
+def _add_workflow_definitions(sbi_config: dict):
     """Add any missing SBI workflow definitions as placeholders.
 
     This is a utility function used in testing and adds mock / test workflow
@@ -41,26 +38,19 @@ def add_workflow_definitions(sbi_config: dict):
         sbi_config (dict): SBI configuration dictionary.
 
     """
-    registered_workflows = []
     for i in range(len(sbi_config['processing_blocks'])):
         workflow_config = sbi_config['processing_blocks'][i]['workflow']
-        workflow_name = '{}:{}'.format(workflow_config['id'],
-                                       workflow_config['version'])
-        if workflow_name in registered_workflows:
-            continue
         workflow_definition = dict(
             id=workflow_config['id'],
+            schema_version='2.0',
             version=workflow_config['version'],
             stages=[]
         )
-        key = "workflow_definitions:{}:{}".format(workflow_config['id'],
-                                                  workflow_config['version'])
-        DB.save_dict(key, workflow_definition, hierarchical=False)
-        registered_workflows.append(workflow_name)
+        add_workflow_definition(workflow_definition, None)
 
 
-def generate_version(max_major: int = 1, max_minor: int = 7,
-                     max_patch: int = 15) -> str:
+def _generate_version(max_major: int = 1, max_minor: int = 7,
+                      max_patch: int = 15) -> str:
     """Select a random version.
 
     Args:
@@ -78,8 +68,8 @@ def generate_version(max_major: int = 1, max_minor: int = 7,
     return '{:d}.{:d}.{:d}'.format(major, minor, patch)
 
 
-def generate_sb(date: datetime.datetime, project: str,
-                programme_block: str) -> dict:
+def _generate_sb(date: datetime.datetime, project: str,
+                 programme_block: str) -> dict:
     """Generate a Scheduling Block data object.
 
     Args:
@@ -97,9 +87,9 @@ def generate_sb(date: datetime.datetime, project: str,
     return dict(id=sb_id, project=project, programme_block=programme_block)
 
 
-def generate_pb_config(pb_id: str,
-                       pb_config: dict = None,
-                       workflow_config: dict = None) -> dict:
+def _generate_pb_config(pb_id: str,
+                        pb_config: dict = None,
+                        workflow_config: dict = None) -> dict:
     """Generate a PB configuration dictionary.
 
     Args:
@@ -122,25 +112,26 @@ def generate_pb_config(pb_id: str,
             workflow_id = choice(OFFLINE_WORKFLOWS)
         else:
             workflow_id = choice(REALTIME_WORKFLOWS)
-    workflow_version = workflow_config.get('version', generate_version())
+    workflow_version = workflow_config.get('version', _generate_version())
     workflow_parameters = workflow_config.get('parameters', dict())
     pb_data = dict(
         id=pb_id,
-        version=__pb_version__,
         type=pb_type,
         priority=pb_config.get('priority', randint(0, 10)),
         dependencies=pb_config.get('dependencies', []),
-        resources_required=pb_config.get('resources_required', []),
         workflow=dict(
             id=workflow_id,
             version=workflow_version,
             parameters=workflow_parameters
         )
     )
+    if not pb_data['dependencies']:
+        del pb_data['dependencies']
     return pb_data
 
 
-def generate_sbi_config(num_pbs: int = 3, project: str = 'sip',
+def generate_sbi_config(num_pbs: int = 1,
+                        project: str = 'sip',
                         programme_block: str = 'sip_demos',
                         pb_config: Union[dict, List[dict]] = None,
                         workflow_config:
@@ -164,10 +155,13 @@ def generate_sbi_config(num_pbs: int = 3, project: str = 'sip',
         workflow_config = [workflow_config]
     if isinstance(pb_config, dict):
         pb_config = [pb_config]
+
     utc_now = datetime.datetime.utcnow()
+
+    # Create list pf PBs
     pb_list = []
     for i in range(num_pbs):
-        pb_id = ProcessingBlock.get_id(utc_now)
+        pb_id = ProcessingBlock.generate_pb_id(utc_now)
         if workflow_config is not None:
             _workflow_config = workflow_config[i]
         else:
@@ -176,16 +170,21 @@ def generate_sbi_config(num_pbs: int = 3, project: str = 'sip',
             _pb_config = pb_config[i]
         else:
             _pb_config = None
-        pb_dict = generate_pb_config(pb_id, _pb_config, _workflow_config)
+        pb_dict = _generate_pb_config(pb_id, _pb_config, _workflow_config)
         pb_list.append(pb_dict)
+
+    # Create the SBI config dictionary.
     sbi_config = dict(
-        id=SchedulingBlockInstance.get_id(utc_now, project),
-        version=__sbi_version__,
-        scheduling_block=generate_sb(utc_now, project, programme_block),
+        id=SchedulingBlockInstance.generate_sbi_id(utc_now, project),
+        version='2.0',
+        scheduling_block=_generate_sb(utc_now, project, programme_block),
         processing_blocks=pb_list
     )
+
+    # If requested, register mock/placeholder workflows for the SBI.
     if register_workflows:
-        add_workflow_definitions(sbi_config)
+        _add_workflow_definitions(sbi_config)
+
     return sbi_config
 
 

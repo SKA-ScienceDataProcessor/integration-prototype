@@ -1,0 +1,1 @@
+Args files should be plain or Jinja2 templated json or yaml.

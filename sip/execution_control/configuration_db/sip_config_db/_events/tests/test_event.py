@@ -9,3 +9,5 @@ def test_event_create():
                   event_type='event_type')
     assert event.id == '0000'
     assert event.type == 'event_type'
+    assert "'id': '0000'" in str(event)
+    assert "'type': 'event_type'" in str(event)

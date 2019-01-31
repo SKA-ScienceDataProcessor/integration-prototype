@@ -1,0 +1,14 @@
+{
+  "schema_version": "2.0",
+  "id": "invalid-parameters-file",
+  "version": "1.0.0",
+  "stages": [
+    {
+      "id": "invalid-parameters-file",
+      "version": "1.0.0",
+      "type": "setup",
+      "timeout": "60s",
+      "resources_required": [ {"type": "cpu", "value": 1.0}]
+    }
+  ]
+}

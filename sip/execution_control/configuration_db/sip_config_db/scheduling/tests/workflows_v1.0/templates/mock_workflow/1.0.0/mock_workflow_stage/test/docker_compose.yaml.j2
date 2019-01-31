@@ -1,0 +1,15 @@
+version: '3.7'
+
+services:
+
+  mock_workflow_stage:
+    image: skasip/mock_workflow_stage:test
+    command: {{ stage.args }}
+    deploy:
+      mode: replicated
+      replicas: 1
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 1024M
+

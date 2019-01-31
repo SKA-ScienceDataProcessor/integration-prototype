@@ -2,6 +2,7 @@
 """Test of the Configuration Database events interface."""
 import time
 from threading import Thread
+import pytest
 
 from sip_config_db._events.event_queue import EventQueue
 from sip_config_db._events.pubsub import get_subscribers, publish, subscribe
@@ -140,6 +141,7 @@ def test_events_recovery():
     for _ in range(100):
         event = event_queue.get()
         if event:
+            pytest.fail('Not expecting any events!')
             event_count += 1
     assert event_count == 0
 
@@ -152,6 +154,15 @@ def test_events_recovery():
     # (Events returned with process=False will not be marked as processed.
     published_events = event_queue.get_published_events(process=False)
     assert len(published_events) == 2
+
+    # Test what happens if we print a list of events (__repr__) method
+    assert repr(published_events) == \
+        '[test_object_type_event_00000000, test_object_type_event_00000001]'
+
+    # It should not be possible to complete an event that has not been
+    # processed.
+    with pytest.raises(KeyError):
+        event_queue.complete_event(published_events[0].id)
 
     # Get published events again, this time mark as processed..
     published_events = event_queue.get_published_events()

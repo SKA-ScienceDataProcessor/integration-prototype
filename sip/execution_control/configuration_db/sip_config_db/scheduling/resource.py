@@ -20,16 +20,6 @@ class Resource:
         return self._config.get('type')
 
     @property
-    def value(self) -> str:
-        """Return the dependency value."""
-        return self._config.get('value')
-
-    @property
-    def parameters(self) -> dict:
-        """Return the dependency parameters."""
-        return self._config.get('parameters', dict())
-
-    @property
     def config(self) -> dict:
         """Return the resource configuration dict."""
         return self._config

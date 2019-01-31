@@ -24,11 +24,13 @@ class Subarray:
             self._id = self.get_id(subarray_id)
         else:
             self._id = subarray_id
-        subarray_config = dict(id=self._id, active=False, parameters={},
-                               sbi_ids=[], state='UNKNOWN')
+
         self._key = '{}:{}'.format(SUBARRAY_KEY, self._id)
+
+        # if the subarray key doesn't exist, create the DB entry.
         if not DB.key_exists(self._key):
-            # DB.set_hash_values(self._key, subarray_config)
+            subarray_config = dict(id=self._id, active=False, parameters={},
+                                   sbi_ids=[], state='unknown')
             DB.save_dict(self._key, subarray_config, hierarchical=False)
 
     # -------------------------------------------------------------------------
@@ -67,28 +69,14 @@ class Subarray:
         return DB.get_hash_dict(self._key)
 
     @property
-    def parameters(self) -> dict:
-        """Get the subarray parameters dictionary.
-
-        Returns:
-            dict, dictionary of subarray parameters.
-
-        """
-        return ast.literal_eval(DB.get_hash_value(self._key, 'parameters'))
-
-    @property
-    def get_state(self) -> str:
+    def state(self) -> str:
         """Get the state of the subarray."""
         return DB.get_hash_value(self._key, 'state')
 
-    def set_parameters(self, parameters_dict):
-        """Set the subarray parameters.
-
-        Args:
-            parameters_dict (dict): Dictionary of Subarray parameters
-        """
-        DB.set_hash_value(self._key, 'parameters', parameters_dict)
-        self.publish("parameters_updated")
+    @state.setter
+    def state(self, value):
+        """Set the state of the subarray."""
+        DB.set_hash_value(self._key, 'state', value)
 
     @property
     def sbi_ids(self) -> List[str]:
@@ -104,18 +92,17 @@ class Subarray:
     # Methods / commands
     # -------------------------------------------------------------------------
 
-    def configure_sbi(self, sbi_config: dict, schema_path: str = None):
+    def configure_sbi(self, sbi_config: dict) -> SchedulingBlockInstance:
         """Add a new SBI to the database associated with this subarray.
 
         Args:
             sbi_config (dict): SBI configuration.
-            schema_path (str, optional): Path to the SBI config schema.
 
         """
         if not self.active:
             raise RuntimeError("Unable to add SBIs to inactive subarray!")
         sbi_config['subarray_id'] = self._id
-        sbi = SchedulingBlockInstance.from_config(sbi_config, schema_path)
+        sbi = SchedulingBlockInstance.from_config(sbi_config)
         self._add_sbi_id(sbi_config['id'])
         return sbi
 
@@ -124,16 +111,12 @@ class Subarray:
         for sbi_id in self.sbi_ids:
             sbi = SchedulingBlockInstance(sbi_id)
             sbi.abort()
-        self.set_state('ABORTED')
-
-    def set_state(self, value):
-        """Set the state of the subarray."""
-        DB.set_hash_value(self._key, 'state', value)
+        self.state = 'aborted'
 
     def activate(self):
         """Activate the subarray."""
         DB.set_hash_value(self._key, 'active', 'True')
-        self.publish('subarray_activated')
+        self._publish('subarray_activated')
 
     def deactivate(self):
         """Deactivate the subarray."""
@@ -142,13 +125,14 @@ class Subarray:
         for sbi_id in self.sbi_ids:
             SchedulingBlockInstance(sbi_id).clear_subarray()
         DB.set_hash_value(self._key, 'sbi_ids', [])
-        self.publish('subarray_deactivated')
+        self._publish('subarray_deactivated')
 
     def remove_sbi_id(self, sbi_id):
         """Remove an SBI Identifier."""
         sbi_ids = self.sbi_ids
         sbi_ids.remove(sbi_id)
         DB.set_hash_value(self._key, 'sbi_ids', sbi_ids)
+        SchedulingBlockInstance(sbi_id).clear_subarray()
 
     @staticmethod
     def get_id(index: int):
@@ -203,7 +187,7 @@ class Subarray:
         """
         return get_subscribers(SUBARRAY_KEY)
 
-    def publish(self, event_type: str, event_data: dict = None):
+    def _publish(self, event_type: str, event_data: dict = None):
         """Publish a subarray event.
 
         Args:

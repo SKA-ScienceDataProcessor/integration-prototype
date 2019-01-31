@@ -1,0 +1,46 @@
+version: '3.6'
+
+services:
+
+{% for i in range(parameters.send_nodes) %}
+  send-{{ '%02d' % i }}:
+    image: skasip/csp_vis_sender:latest
+    command: {{ args.send[i] }}
+    deploy:
+      restart_policy:
+        condition: none
+      mode: replicated
+      replicas: 1
+      placement:
+        constraints:
+          - node.labels.send == {{ '%02d' % i }}
+      networks:
+        - hostnet
+      stop_signal: INT
+{% endfor %}
+
+{% for i in range(parameters.recv_nodes) %}
+  recv-{{ '%02d' % i }}:
+    image: skasip/ingest_visibilities:latest
+    command: {{ args.recv }}
+    volumes:
+      - type: bind
+        source: /mnt/ceph/output-{{ '%02d' % i }}
+        target: /app/output
+    deploy:
+      restart_policy:
+        condition: none
+      mode: replicated
+      replicas: 1
+      placement:
+        constraints:
+          - node.labels.recv == {{ '%02d' % i }}
+    networks:
+      - hostnet
+    stop_signal: INT
+{% endfor %}
+
+networks:
+  hostnet:
+    external: true
+    name: host

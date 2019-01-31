@@ -34,7 +34,6 @@ class StateObject:
         self._allowed_transitions = self._dict_lower(allowed_transitions)
         self._allowed_target_states = self._dict_lower(allowed_target_states)
         if not DB.key_exists(self._key):
-            # DB.set_hash_values(self._key, self._initialise())
             DB.save_dict(self._key, self._initialise())
 
     @property
@@ -101,12 +100,11 @@ class StateObject:
         timestamp = DB.get_hash_value(self._key, 'target_timestamp')
         return datetime_from_isoformat(timestamp)
 
-    def update_target_state(self, value: str, force: bool = True) -> datetime:
+    def update_target_state(self, value: str) -> datetime:
         """Set the target state.
 
         Args:
             value (str): New value for target state
-            force (bool): If true, ignore allowed transitions
 
         Returns:
             datetime, update timestamp
@@ -118,31 +116,27 @@ class StateObject:
 
         """
         value = value.lower()
-        if not force:
-            current_state = self.current_state
-            if current_state == 'unknown':
-                raise RuntimeError("Unable to set target state when current "
-                                   "state is 'unknown'")
+        if self.current_state == 'unknown':
+            raise RuntimeError("Unable to set target state when current "
+                               "state is 'unknown'")
 
-            allowed_target_states = self._allowed_target_states[current_state]
+        _allowed_targets = self._allowed_target_states[self.current_state]
 
-            LOG.debug('Updating target state of %s to %s', self._id, value)
+        LOG.debug('Updating target state of %s to %s', self._id, value)
 
-            if value not in allowed_target_states:
-                raise ValueError("Invalid target state: '{}'. {} can be "
-                                 "commanded to states: {}".
-                                 format(value, current_state,
-                                        allowed_target_states))
+        if value not in _allowed_targets:
+            raise ValueError("Invalid target state: '{}'. {} can be "
+                             "commanded to states: {}".
+                             format(value, self.current_state,
+                                    _allowed_targets))
 
         return self._update_state('target', value)
 
-    def update_current_state(self, value: str,
-                             force: bool = False) -> datetime:
+    def update_current_state(self, value: str) -> datetime:
         """Update the current state.
 
         Args:
             value (str): New value for sdp state
-            force (bool): If true, ignore allowed transitions
 
         Returns:
             datetime, update timestamp
@@ -152,29 +146,25 @@ class StateObject:
 
         """
         value = value.lower()
-        if not force:
-            current_state = self.current_state
-            # IF the current state is unknown, it can be set to any of the
-            # allowed states, otherwise only allow certain transitions.
-            if current_state == 'unknown':
-                allowed_transitions = self._allowed_states
-            else:
-                allowed_transitions = self._allowed_transitions[current_state]
-                allowed_transitions.append(current_state)
 
-            LOG.debug('Updating current state of %s to %s', self._id, value)
+        current_state = self.current_state
+        # IF the current state is unknown, it can be set to any of the
+        # allowed states, otherwise only allow certain transitions.
+        if current_state == 'unknown':
+            allowed_transitions = self._allowed_states
+        else:
+            allowed_transitions = self._allowed_transitions[current_state]
+            allowed_transitions.append(current_state)
 
-            if value not in allowed_transitions:
-                raise ValueError("Invalid current state update: '{}'. '{}' "
-                                 "can be transitioned to states: {}"
-                                 .format(value, current_state,
-                                         allowed_transitions))
+        LOG.debug('Updating current state of %s to %s', self._id, value)
+
+        if value not in allowed_transitions:
+            raise ValueError("Invalid current state update: '{}'. '{}' "
+                             "can be transitioned to states: {}"
+                             .format(value, current_state,
+                                     allowed_transitions))
 
         return self._update_state('current', value)
-
-    ###########################################################################
-    # Pub/Sub functions
-    ###########################################################################
 
     @staticmethod
     def subscribe(subscriber: str) -> EventQueue:
@@ -221,33 +211,22 @@ class StateObject:
         """Get an event queue for the specified subscriber."""
         return EventQueue(self._type, subscriber)
 
-    ###########################################################################
-    # Private functions
-    ###########################################################################
-
-    def _initialise(self, initial_state: str = 'unknown') -> dict:
+    @staticmethod
+    def _initialise() -> dict:
         """Return a dictionary used to initialise a state object.
 
         This method is used to obtain a dictionary/hash describing the initial
         state of SDP or a service in SDP.
 
-        Args:
-            initial_state (str): Initial state.
-
         Returns:
             dict, Initial state configuration
 
         """
-        initial_state = initial_state.lower()
-        if initial_state != 'unknown' and \
-                initial_state not in self._allowed_states:
-            raise ValueError('Invalid initial state: {}'.format(initial_state))
-        _initial_state = dict(
-            current_state=initial_state,
-            target_state=initial_state,
+        return dict(
+            current_state='unknown',
+            target_state='unknown',
             current_timestamp=datetime.utcnow().isoformat(),
             target_timestamp=datetime.utcnow().isoformat())
-        return _initial_state
 
     def _update_state(self, state_type: str, value: str) -> datetime:
         """Update the state of type specified (current or target).
