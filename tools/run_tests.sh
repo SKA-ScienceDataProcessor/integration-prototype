@@ -2,7 +2,12 @@
 # Run tests and linters for specified directory.
 #
 # Usage:
-#   ./tools/run_tests.sh <directory> [--test-only] [pytest flags]
+#   ./run_tests.sh <directory> [--test-only] [pytest options]
+#
+# The '--test-only' option disables pylint, pycodestyle, and pydocstyle.
+# While all these are required to pass in order to merge code into the
+# master branch, this option can greatly speed up running unit tests so can be
+# useful during development.
 #
 # Example:
 #   ./tools/run_tests.sh sip/execution_control/configuration_db \
@@ -21,6 +26,11 @@ if [[ ! -z "${OPTIONS}" && "${OPTIONS[0]}" == "--test-only" ]]; then
     echo -e "${RED}* OPTIONS=${NC}'${OPTIONS}'"
     CMD="python3 -m pytest -s -v \
     --rootdir=. \
+    --cov-config=./setup.cfg \
+    --cov-append \
+    --cov-branch \
+    --no-cov-on-fail \
+    --cov=${DIR} \
     ${OPTIONS[*]} \
     ${DIR}"
     echo -e "${RED}------------------------------------------------------${NC}"
