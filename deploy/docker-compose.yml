@@ -87,7 +87,7 @@ services:
   # ==========================================================================
 
   ec_master_controller:
-    image: master_controller
+    image: skasip/master_controller
     command: ["-v", "--random_errors"]
     environment:
     - REDIS_HOST=ec_config_database
