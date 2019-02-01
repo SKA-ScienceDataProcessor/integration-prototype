@@ -24,7 +24,13 @@ It consists of the following components (all deployable as docker containers)
   (as a JSON string) into a Kafka queue. The topic name is SIP-alarms.
 
 The Kafka broker listens to port 9094 on the host that started the
-containers.
+containers. Alarms can be viewed with the kafka command line client
+```
+kafkacat -b 127.0.0.1:9094 -C -t SIP-alarms
+```
+Note that it can take up 30 seconds after the SIP state has been set to "alarm" 
+for an alarm to appear and up to 5 minutes for an alarm to be resolved when
+the SIP state is no longer "alarm".
 
 ## Python client
 
