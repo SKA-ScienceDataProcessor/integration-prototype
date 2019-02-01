@@ -243,3 +243,19 @@ def test_replication_level():
 
     # Cleaning
     DC.delete_service("replica_test")
+
+
+def test_actual_replica_level():
+    """Test function for getting the actaul replica level of a service."""
+    config_path = os.path.join(FILE_PATH, '..', 'compose-file',
+                               'docker-compose-replica.yml')
+    with open(config_path, 'r') as compose_str:
+        s_ids = DC.create_services(compose_str)
+        assert len(s_ids) == 1
+
+    for service_id in s_ids:
+        level = DC.get_actual_replica(service_id)
+        assert level == 1
+
+    # Cleaning
+    DC.delete_service("replica_test")
