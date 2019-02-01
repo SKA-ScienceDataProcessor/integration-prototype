@@ -26,9 +26,8 @@ COLLECTOR_REGISTRY = CollectorRegistry()
 
 # Create a gauge for service state alarms. Its normal value is zero and
 # we set it to 1 if there is a service in the alarm state.
-SIP_STATE_ALARM = Gauge('sip_state',
-        'Gauge for generating SIP state alarms',
-        registry=COLLECTOR_REGISTRY)
+SIP_STATE_ALARM = Gauge('sip_state', 'Gauge for generating SIP state alarms',
+                        registry=COLLECTOR_REGISTRY)
 
 
 def _generate_random_service_failure():
@@ -362,7 +361,7 @@ def _process_event(event: Event, sdp_state: SDPState,
         else:
             SIP_STATE_ALARM.set(0)
         push_to_gateway('pushgateway:9091', job='SIP',
-                registry=COLLECTOR_REGISTRY)
+                        registry=COLLECTOR_REGISTRY)
 
     # TODO(BMo) function to watch for changes in the \
     # current state of services and update the state of SDP
@@ -394,8 +393,6 @@ def _process_state_change_events():
 
 def temp_main():
     """Temporary main function used for demos on the 23/11/18."""
-    # Parse command line args.
-    args = _parse_args()
     LOG.info("Starting: %s", __service_id__)
 
     # Subscribe to state change events.
