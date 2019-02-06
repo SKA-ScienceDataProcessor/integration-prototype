@@ -206,9 +206,9 @@ class SpeadSender:
                 for i_stream, (stream, item_group) in enumerate(self._streams):
                     for key, value in self._buffer[i_buffer][i_stream].items():
                         item_group[key].value = value  # Update values in heap.
-                    # Always send the descriptors!
+                    # Always send the descriptors AND the static data!
                     tasks.append(stream.async_send_heap(
-                        item_group.get_heap(descriptors='all')))
+                        item_group.get_heap(descriptors='all', data='all')))
                     heaps_sent += 1
 
             # Fill a buffer by distributing it among worker threads.
@@ -248,6 +248,14 @@ class SpeadSender:
         # Create the thread pool.
         executor = concurrent.futures.ThreadPoolExecutor(
             max_workers=self._config['num_workers'])
+
+        # Wait to ensure multiple senders can be synchronised.
+        now = int(datetime.datetime.utcnow().timestamp())
+        start_time = ((now + 29) // 30) * 30
+        self._log.info('Waiting until {}'.format(
+                       datetime.datetime.fromtimestamp(start_time)))
+        while int(datetime.datetime.utcnow().timestamp()) < start_time:
+            time.sleep(0.1)
 
         # Run the event loop.
         loop = asyncio.get_event_loop()
