@@ -246,7 +246,7 @@ def test_replication_level():
 
 
 def test_actual_replica_level():
-    """Test function for getting the actaul replica level of a service."""
+    """Test function for getting the actual replica level of a service."""
     config_path = os.path.join(FILE_PATH, '..', 'compose-file',
                                'docker-compose-replica.yml')
     with open(config_path, 'r') as compose_str:
@@ -259,3 +259,24 @@ def test_actual_replica_level():
 
     # Cleaning
     DC.delete_service("replica_test")
+
+
+def test_environment():
+    """Test function for setting environment variables."""
+    config_path = os.path.join(FILE_PATH, '..', 'compose-file',
+                               'docker-compose-env.yml')
+    with open(config_path, 'r') as compose_str:
+        s_ids = DC.create_services(compose_str)
+        assert len(s_ids) == 1
+
+    level = 0
+    while level < 1:
+        for service_id in s_ids:
+            level = DC.get_replicas(service_id)
+
+    for s_id in s_ids:
+        replicas = DC.get_replicas(s_id)
+        assert replicas == 1
+
+    # Cleaning
+    DC.delete_service("process_data")
