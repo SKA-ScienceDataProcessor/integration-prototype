@@ -95,6 +95,11 @@ services:
     deploy:
       mode: replicated
       replicas: 1
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5000/"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
 
   # ==========================================================================
   # Execution Control containers
@@ -109,6 +114,12 @@ services:
     deploy:
       mode: replicated
       replicas: 1
+    healthcheck:
+      test: ["CMD", "ps", "-opid=", "|", "grep", "-e", "'[[:space:]]1$$'",
+             ">/dev/null"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
 
   ec_processing_controller:
     image: skasip/processing_controller:1.2.6

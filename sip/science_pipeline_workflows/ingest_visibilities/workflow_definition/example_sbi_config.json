@@ -1,0 +1,32 @@
+{
+    "id": "SBI-20190117-test-001",
+    "version": "2.0",
+    "scheduling_block":
+    {
+        "id": "SB-20190117-test-001",
+        "project": "sip",
+        "programme_block": "sip_examples"
+    },
+    "processing_blocks":
+    [
+        {
+            "id": "PB-20190117-test-001",
+            "type": "offline",
+            "priority": 1,
+            "dependencies": [],
+            "workflow":
+            {
+                "id": "ingest_visibilities",
+                "version": "test01",
+                "parameters":
+                {
+                    "visibility_receive":
+                    {
+                        "sender_nodes": 1,
+                        "receiver_nodes": 1
+                    }
+                }
+            }
+        }
+    ]
+}
