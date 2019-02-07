@@ -8,6 +8,13 @@ The format is based on
 and this project adheres to
  [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.2.7] - 2019-01-23
+### Changed
+- Updated to Docker Swarm API 1.0.10.
+
+## [1.2.6] - 2019-01-10
+### Changed
+- Relaxed requirements on other SIP python modules.
 
 ## [1.2.5] - 2019-01-09
 ### Changed

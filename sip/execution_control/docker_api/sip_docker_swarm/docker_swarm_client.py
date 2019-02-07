@@ -415,14 +415,35 @@ class DockerSwarmClient:
         volume = self._client.volumes.get(volume_name)
         return volume.attrs
 
+    def get_actual_replica(self, service_id: str) -> str:
+        """Get the actual replica level of a service.
+
+        Args:
+            service_id (str): docker swarm service id
+
+        Returns:
+            str, replicated level of the service
+
+        """
+        # Raise an exception if we are not a manager
+        if not self._manager:
+            raise RuntimeError('Only the Swarm manager node can retrieve '
+                               'replication level of the service')
+
+        service_details = self.get_service_details(service_id)
+        actual_replica = service_details["Spec"]["Mode"][
+            "Replicated"]["Replicas"]
+        return actual_replica
+
     def get_replicas(self, service_id: str) -> str:
         """Get the replication level of a service.
 
         Args:
             service_id (str): docker swarm service id
 
-        Returns,
+        Returns:
             str, replication level of the service
+
         """
         # Initialising empty list
         replicas = []
@@ -500,6 +521,9 @@ class DockerSwarmClient:
             if 'logging' in key:
                 self._parse_logging(value, service_config)
                 service_config.pop('logging')
+            if 'environment' in key:
+                service_config['env'] = value
+                service_config.pop('environment')
 
         return service_config
 

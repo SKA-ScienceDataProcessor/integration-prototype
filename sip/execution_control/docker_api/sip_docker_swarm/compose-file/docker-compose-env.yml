@@ -1,0 +1,20 @@
+version: '3.6'
+
+services:
+
+  process_data:
+    image: skasip/dask_scheduler_base
+    deploy:
+      mode: replicated
+      replicas: 1
+      restart_policy:
+        condition: none
+    environment:
+      - PYTHONPATH=/pipelines:/pipelines/sdp_arl
+      - ARL_DASK_SCHEDULER=dask-stack_scheduler:8786
+    networks:
+      - ical_sip
+
+networks:
+  ical_sip:
+    external: true

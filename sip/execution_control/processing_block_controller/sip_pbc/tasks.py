@@ -14,6 +14,7 @@ import jinja2
 import yaml
 from celery import Celery
 
+from sip_config_db.release import __version__ as config_db_version
 from sip_config_db.scheduling import ProcessingBlock, ProcessingBlockList
 from sip_config_db.scheduling.workflow_stage import WorkflowStage
 from sip_docker_swarm import DockerSwarmClient, __version__ \
@@ -258,7 +259,9 @@ def execute_processing_block(pb_id: str, log_level='DEBUG'):
     LOG.info('+' * 40)
     LOG.info('+ Executing Processing block: %s!', pb_id)
     LOG.info('+' * 40)
-    LOG.info('Using docker swarm api version: %s', sip_swarm_api_version)
+    LOG.info('Processing Block Controller version: %s', __version__)
+    LOG.info('Docker Swarm API version: %s', sip_swarm_api_version)
+    LOG.info('Configuration database API version: %s', config_db_version)
 
     pb = ProcessingBlock(pb_id)
 
