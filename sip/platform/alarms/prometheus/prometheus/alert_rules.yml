@@ -1,0 +1,6 @@
+groups:
+- name: sip
+  interval: 5s
+  rules:
+  - alert: SipStateAlarm
+    expr: sip_state == 1
