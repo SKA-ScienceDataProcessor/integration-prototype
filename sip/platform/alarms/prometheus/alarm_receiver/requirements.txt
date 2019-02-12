@@ -1,0 +1,4 @@
+flask
+flask_api
+gunicorn
+kafka>=1.0
