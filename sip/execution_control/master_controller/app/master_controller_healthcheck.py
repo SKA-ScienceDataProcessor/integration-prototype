@@ -6,68 +6,113 @@ healthy or non-zero for unhealthy. Current version uses DockerSwarmClient to
 check that all members of the swarm are running and dies if any member services
 have no replicants.
 
-TODO(NJT): Function that queries the health of each services (expected vs replication level)
-TODO(NJT): Return the value
 TODO(NJT): Unit test
 
 """
-# import argparse
-# import random
 import sched
 import time
-# from typing import List
-
-# from sip_config_db._events.event import Event
-# from sip_config_db.states import SDPState, ServiceState
-# from sip_config_db.states.services import get_service_state_list
-# from sip_logging import init_logger
 
 from sip_docker_swarm import DockerSwarmClient
-
-from .__init__ import LOG, __service_id__, __service_name__
 
 SCHEDULER = sched.scheduler(time.time, time.sleep)
 
 DC = DockerSwarmClient()
 
 
+# class MasterHealthException(Exception):
+#     """Class for master health exception."""
+#
+#     print("placeholder for master health exception class")
+
+
 def _get_services():
-    """Get list of service IDs
+    """Get list of service IDs.
 
     Returns:
+        list, services ids
 
     """
     services_ids = DC.services
-
-    # TODO(NJT): Require Exception
-
     return services_ids
 
 
-def service_health():
-    """This function queries the health of each services.
+def get_services_health():
+    """Get the health of all services.
 
     Returns:
-        str, health status
+        dict, services id and health status
+
     """
+    # Initialise
+    services_health = {}
 
     # Get Service IDs
     services_ids = _get_services()
-    print(type(services_ids))
-    print("Services - ", services_ids)
+    # print(type(services_ids))
+    # print("Services - ", services_ids)
 
     for s_id in services_ids:
         service_name = DC.get_service_name(s_id)
-        print("Service Name - {}", service_name)
+        # print("Service Name - {}", service_name)
 
         # Check if the current and actual replica levels are the same
         if DC.get_replicas(s_id) != DC.get_actual_replica(s_id):
-            print("Service in Unhealthy")
+            # print("Service in Unhealthy")
+            services_health[service_name] = "Unhealthy"
             # TODO(NJT): Exception is required
         else:
-            print("Service {} is healthy", s_id)
+            # print("Service {} is healthy", s_id)
+            services_health[service_name] = "Healthy"
 
-    # TODO(NJT): Need to return either service name or id with the health status
+    print("Services Health - ", services_health)
+    return services_health
+
+
+def get_service_health(service_id: str):
+    """Get the health of a service using service_id.
+
+    Args:
+        service_id
+
+    Returns:
+        str, health status
+
+    """
+    # Check if the current and actual replica levels are the same
+    if DC.get_replicas(service_id) != DC.get_actual_replica(service_id):
+        print("Service in Unhealthy")
+
+        # TODO(NJT): Exception is required
+        health_status = "Unhealthy"
+    else:
+        print("Service {} is healthy", service_id)
+        health_status = "Healthy"
+
+    return health_status
+
+
+def overall_service_health():
+    """Get the overall health of all the services.
+
+    Returns:
+        str, overall health status
+
+    """
+    services_health_status = get_services_health()
+
+    # Evaluate overall health
+    print("services_health_status: ", services_health_status)
+    health_status = all(status == "Healthy" for status in
+                        services_health_status.values())
+
+    # Converting from bool to str
+    if health_status:
+        overall_status = "Healthy"
+    else:
+        overall_status = "Unhealthy"
+
+    print("OVERALL STATUS:", overall_status)
+    return overall_status
 
 
 # class MasterHealthException(Exception):
@@ -104,7 +149,8 @@ def main():
     """Entrypoint for this component."""
     # services = _get_services()
     # _check_replicants(services)
-    service_health()
+    get_services_health()
+    overall_service_health()
 
 
 if __name__ == "__main__":
