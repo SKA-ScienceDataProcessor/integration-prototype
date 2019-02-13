@@ -2,46 +2,85 @@
 """Test for health monitoring."""
 
 import os
-
+import time
 from sip_docker_swarm import DockerSwarmClient
-from ..app.master_controller_healthcheck import service_health
+from ..master_controller_healthcheck import MasterHealthCheck
+
 # from ..app.health_monitoring import MasterHealthException()
 
 DC = DockerSwarmClient()
-# FILE_PATH = os.path.dirname(__file__)
+MHC = MasterHealthCheck()
+FILE_PATH = os.path.dirname(__file__)
+
+# TODO (NJT) - Check if there is an alternative way for sleep()
 
 
-def test_service_health():
+def test_get_services_health():
     """Test the service health function"""
+    # Initialise
+    service_names = []
 
-    service_health()
+    config_path = os.path.join(FILE_PATH, 'compose-file',
+                               'docker-compose-services.yml')
+    with open(config_path, 'r') as compose_str:
+        s_ids = DC.create_services(compose_str)
+        assert len(s_ids) == 2
+
+    for s_id in s_ids:
+        service_names.append(DC.get_service_name(s_id))
+
+    assert 'service_health' in service_names
+    assert 'service_health_error' in service_names
+
+    time.sleep(5)
+    services_heath = MHC.get_services_health()
+    assert services_heath['service_health'] == "Healthy"
+    assert services_heath['service_health_error'] == "Unhealthy"
+
+    # Cleaning
+    DC.delete_service("service_health")
+    DC.delete_service("service_health_error")
 
 
-# def test_check_replica():
-#     """Check if the replica monitoring is working."""
-#     config_path = os.path.join(FILE_PATH, 'compose-file',
-#                                'docker-compose-replica.yml')
-#     with open(config_path, 'r') as compose_str:
-#         s_ids = DC.create_services(compose_str)
-#         assert len(s_ids) == 1
-#
-#
-#     # check if the monitoring works
-#
-#
-#
-#     # check if an exeception is thrown
-#     unittest.TestCase.assertRaises(MasterHealthException,  )
-#
-#     level = 0
-#     while level < 1:
-#         for service_id in s_ids:
-#             level = DC.get_replicas(service_id)
-#
-#     for s_id in s_ids:
-#         replicas = DC.get_replicas(s_id)
-#         assert replicas == 1
-#
-#     # Cleaning
-#     DC.delete_service("replica_test")
-#     DC.delete_service("replica_test_error")
+def test_get_service_health():
+    """Test the service health by service id."""
+    config_path = os.path.join(FILE_PATH, 'compose-file',
+                               'docker-compose-service.yml')
+    with open(config_path, 'r') as compose_str:
+        s_id = DC.create_services(compose_str)
+        assert len(s_id) == 1
+
+    time.sleep(5)
+    assert MHC.get_service_health(s_id[0]) == "Healthy"
+
+    # Cleaning
+    DC.delete_service("service_health")
+
+
+def test_get_overall_services_health():
+    """Test the overall service health function. """
+    config_path = os.path.join(FILE_PATH, 'compose-file',
+                               'docker-compose-overall.yml')
+    with open(config_path, 'r') as compose_str:
+        s_id = DC.create_services(compose_str)
+        assert len(s_id) == 2
+
+    time.sleep(5)
+    assert MHC.overall_services_health() == "Healthy"
+
+    # Cleaning
+    DC.delete_service("service_health_1")
+    DC.delete_service("service_health_2")
+
+    config_path = os.path.join(FILE_PATH, 'compose-file',
+                               'docker-compose-services.yml')
+    with open(config_path, 'r') as compose_str:
+        s_id = DC.create_services(compose_str)
+        assert len(s_id) == 2
+
+    time.sleep(5)
+    assert MHC.overall_services_health() == "Unhealthy"
+
+    # Cleaning
+    DC.delete_service("service_health")
+    DC.delete_service("service_health_error")
