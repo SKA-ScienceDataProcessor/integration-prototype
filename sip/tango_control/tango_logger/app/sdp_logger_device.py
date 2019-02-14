@@ -1,10 +1,7 @@
 # -*- coding: utf-8 -*-
 """Tango Logger device class."""
 
-import json
 import time
-
-import jsonschema
 import datetime
 
 from tango import DebugIt, DevState, DeviceProxy
@@ -25,14 +22,14 @@ class SDPLoggerDevice(Device):
         """Initialise the device."""
         Device.init_device(self)
 
-        SDP_Devices = ["sdp/elt/master", ] # Plus ALL PDB and Subarray devices!!!
+        SDP_Devices = ["sip_sdp/elt/master", ] # Plus ALL PDB and Subarray devices!!!
 
-        for dev in SDP_Devices:
-            d = DeviceProxy(dev)
-            d.add_logging_target("device::sdp/elt/logger")
-            LOG.info("Logging targets %s", d.get_logging_targets())
+      #for dev in SDP_Devices:
+      #      d = DeviceProxy(dev)
+      #      d.add_logging_target("device::sip_sdp/elt/logger")
+      #      LOG.debug("%s device logging targets %s", dev, d.get_logging_targets())
 
-    # version = class_property(dtype=str, default_value='test')
+    #version = class_property(dtype=str, default_value='test')
 
     # ---------------
     # Commands
@@ -56,5 +53,12 @@ class SDPLoggerDevice(Device):
         LOG.info(message)
 
 
+    # ------------------
+    # Attributes methods
+    # ------------------
 
+    @attribute(dtype=str)
+    def version(self):
+        """Return the version of the Master Controller Device."""
+        return __version__
    

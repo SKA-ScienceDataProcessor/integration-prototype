@@ -27,6 +27,7 @@ class SDPMasterDevice(Device):
     _service_state = ServiceState(__subsystem__, __service_name__,
                                   __version__)
     _sdp_state = SDPState()
+    _devProxy = None
 
     # -------------------------------------------------------------------------
     # General methods
@@ -34,16 +35,24 @@ class SDPMasterDevice(Device):
     def init_device(self):
         """Device constructor."""
         Device.init_device(self)
-        self._set_master_state('init')
 
         # Add anything here that has to be done before the device is set to
         # its ON state.
 
         self._set_master_state('on')
+        self._devProxy = DeviceProxy(self.get_name())
+        #
+        # Trying to add logging target in 'init_device' fails (BKMc)
 
     def always_executed_hook(self):
         """Run for each command."""
-        pass
+        _logT = self._devProxy.get_logging_target()
+        if not 'device::sip_sdp_logger' in _logT:
+            try:
+                self._devProxy.add_logging_target('device::sip_sdp_logger')
+
+            except Exception as e:
+                LOG.debug('Failed to setup Tango logging %s', e )
 
     def delete_device(self):
         """Device destructor."""
