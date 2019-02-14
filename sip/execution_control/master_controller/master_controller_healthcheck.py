@@ -25,7 +25,7 @@ class MasterHealthCheck:
         return self.get_services_health()
 
     @property
-    def overall_health(self)-> str:
+    def overall_health(self) -> str:
         """Get overall health status of all the services.
 
         Returns:
