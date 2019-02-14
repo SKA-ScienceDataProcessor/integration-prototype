@@ -29,8 +29,8 @@ def test_get_services_health():
     assert 'service_health' in service_names
     assert 'service_health_error' in service_names
 
-    time.sleep(5)
-    s_heath = MHC.services_health
+    time.sleep(10)
+    s_heath = MHC.services_health()
     assert s_heath['service_health'] == "Healthy"
     assert s_heath['service_health_error'] == "Unhealthy"
 
@@ -47,7 +47,7 @@ def test_get_service_health():
         s_id = DC.create_services(compose_str)
         assert len(s_id) == 1
 
-    time.sleep(5)
+    time.sleep(10)
     assert MHC.get_service_health(s_id[0]) == "Healthy"
 
     # Cleaning
@@ -62,8 +62,8 @@ def test_get_overall_services_health():
         s_id = DC.create_services(compose_str)
         assert len(s_id) == 2
 
-    time.sleep(5)
-    assert MHC.overall_health == "Healthy"
+    time.sleep(10)
+    assert MHC.overall_health() == "Healthy"
 
     # Cleaning
     DC.delete_service("service_health_1")
@@ -76,7 +76,7 @@ def test_get_overall_services_health():
         assert len(s_id) == 2
 
     time.sleep(5)
-    assert MHC.overall_health == "Unhealthy"
+    assert MHC.overall_health() == "Unhealthy"
 
     # Cleaning
     DC.delete_service("service_health")
