@@ -5,7 +5,7 @@ services:
   service_health:
     image: rediscommander/redis-commander:latest
     ports:
-      - 1001:1001
+      - 1002:1002
     deploy:
       placement:
         constraints: [node.role==manager]

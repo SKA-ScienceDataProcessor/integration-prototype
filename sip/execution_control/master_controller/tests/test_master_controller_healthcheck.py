@@ -12,7 +12,6 @@ MHC = MasterHealthCheck()
 FILE_PATH = os.path.dirname(__file__)
 
 
-
 def test_get_services_health():
     """Test the service health function"""
     # Initialise
@@ -31,9 +30,9 @@ def test_get_services_health():
     assert 'service_health_error' in service_names
 
     time.sleep(5)
-    services_heath = MHC.get_services_health()
-    assert services_heath['service_health'] == "Healthy"
-    assert services_heath['service_health_error'] == "Unhealthy"
+    s_heath = MHC.services_health
+    assert s_heath['service_health'] == "Healthy"
+    assert s_heath['service_health_error'] == "Unhealthy"
 
     # Cleaning
     DC.delete_service("service_health")
@@ -64,7 +63,7 @@ def test_get_overall_services_health():
         assert len(s_id) == 2
 
     time.sleep(5)
-    assert MHC.overall_services_health() == "Healthy"
+    assert MHC.overall_health == "Healthy"
 
     # Cleaning
     DC.delete_service("service_health_1")
@@ -77,7 +76,7 @@ def test_get_overall_services_health():
         assert len(s_id) == 2
 
     time.sleep(5)
-    assert MHC.overall_services_health() == "Unhealthy"
+    assert MHC.overall_health == "Unhealthy"
 
     # Cleaning
     DC.delete_service("service_health")

@@ -1,27 +1,42 @@
 # -*- coding: utf-8 -*-
-"""Master Controller Service health check.
-
-Checks to see that the system is up and running. Exit with value zero for
-healthy or non-zero for unhealthy. Current version uses DockerSwarmClient to
-check that all members of the swarm are running and dies if any member services
-have no replicants.
-
-TODO(NJT): Unit test
-
-"""
+"""Master Controller Service Health Monitoring."""
+import logging
 from sip_docker_swarm import DockerSwarmClient
+
+DC = DockerSwarmClient()
+LOG = logging.getLogger('sip.ec.mc.health_check')
 
 
 class MasterHealthCheck:
     """Master Controller Health Monitoring Interface."""
 
-    def __init__(self):
-        """Initialise class."""
-        self._dc = DockerSwarmClient()
+    ###########################################################################
+    # Properties / attributes
+    ###########################################################################
 
-    ###########################################################################
+    @property
+    def services_health(self) -> dict:
+        """Get dict of services id and health status.
+
+        Returns:
+            dict, services ids and health status
+
+        """
+        return self.get_services_health()
+
+    @property
+    def overall_health(self)-> str:
+        """Get overall health status of all the services.
+
+        Returns:
+            str, overall health of all the services
+
+        """
+        return self.get_overall_services_health()
+
+    ##########################################################################
     # Get functions
-    ###########################################################################
+    ##########################################################################
 
     def get_services_health(self) -> dict:
         """Get the health of all services.
@@ -36,39 +51,19 @@ class MasterHealthCheck:
         # Get Service IDs
         services_ids = self._get_services()
 
-        for s_id in services_ids:
-            service_name = self._dc.get_service_name(s_id)
+        for service_id in services_ids:
+            service_name = DC.get_service_name(service_id)
 
             # Check if the current and actual replica levels are the same
-            if self._dc.get_replicas(s_id) != self._dc.get_actual_replica(s_id):
+            if DC.get_replicas(service_id) != \
+                    DC.get_actual_replica(service_id):
                 services_health[service_name] = "Unhealthy"
-                # TODO(NJT): Exception is required
             else:
                 services_health[service_name] = "Healthy"
 
         return services_health
 
-    def get_service_health(self, service_id: str) -> str:
-        """Get the health of a service using service_id.
-
-        Args:
-            service_id
-
-        Returns:
-            str, health status
-
-        """
-        # Check if the current and actual replica levels are the same
-        if self._dc.get_replicas(service_id) != self._dc.get_actual_replica(
-                service_id):
-            # TODO(NJT): Exception is required
-            health_status = "Unhealthy"
-        else:
-            health_status = "Healthy"
-
-        return health_status
-
-    def overall_services_health(self) -> str:
+    def get_overall_services_health(self) -> str:
         """Get the overall health of all the services.
 
         Returns:
@@ -89,9 +84,28 @@ class MasterHealthCheck:
 
         return overall_status
 
-    ###########################################################################
+    ##########################################################################
     # Static methods
-    ###########################################################################
+    ##########################################################################
+
+    @staticmethod
+    def get_service_health(service_id: str) -> str:
+        """Get the health of a service using service_id.
+
+        Args:
+            service_id
+
+        Returns:
+            str, health status
+
+        """
+        # Check if the current and actual replica levels are the same
+        if DC.get_replicas(service_id) != DC.get_actual_replica(service_id):
+            health_status = "Unhealthy"
+        else:
+            health_status = "Healthy"
+
+        return health_status
 
     @staticmethod
     def _get_services():
@@ -101,5 +115,6 @@ class MasterHealthCheck:
             list, services ids
 
         """
-        services_ids = DockerSwarmClient.services
+        services_ids = DC.services
+        LOG.debug("Service IDS %s", services_ids)
         return services_ids
