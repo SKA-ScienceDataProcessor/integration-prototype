@@ -6,13 +6,11 @@ import time
 from sip_docker_swarm import DockerSwarmClient
 from ..master_controller_healthcheck import MasterHealthCheck
 
-# from ..app.health_monitoring import MasterHealthException()
 
 DC = DockerSwarmClient()
 MHC = MasterHealthCheck()
 FILE_PATH = os.path.dirname(__file__)
 
-# TODO (NJT) - Check if there is an alternative way for sleep()
 
 
 def test_get_services_health():
