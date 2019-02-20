@@ -30,59 +30,6 @@ SIP_STATE_ALARM = Gauge('sip_state', 'Gauge for generating SIP state alarms',
                         registry=COLLECTOR_REGISTRY)
 
 
-def _generate_random_service_failure():
-    """Randomly generate a fault or alarm state for one of the substates."""
-    service_states = get_service_state_list()
-    roll = random.uniform(0, 1)
-    if 0.9 > roll >= 0.5:
-        service = random.choice(service_states)
-        LOG.debug('Generating a alarm on service %s', service.id)
-        service.update_current_state('alarm')
-
-    if roll >= 0.9:
-        service = random.choice(service_states)
-        LOG.debug('Generating a fault on service %s', service.id)
-        service.update_current_state('fault')
-
-    # Don't roll the dice again until some time in the future.
-    delay = random.uniform(120, 300)
-    SCHEDULER.enter(delay, 1, _generate_random_service_failure)
-
-
-def _update_sdp_current_state():
-    """Update the current state of SDP based on the current state of services.
-
-    Look for events from updating current state for each component and
-    set SDP current state when all are set to the target state
-    """
-    LOG.debug('Waiting on service states.')
-    sdp_state = SDPState()
-    state_queue = sdp_state.get_event_queue(subscriber=__service_name__)
-    services = get_service_state_list()
-
-    service_ready = dict((service.id, False) for service in services)
-
-    event = state_queue.get()
-    if event and event.type == 'current_state_updated':
-        service_id = event.object_id
-
-        LOG.debug('handling event %s (service: %s)', event.id, service_id)
-        service_ready[service_id] = True
-
-        if all(service_ready.values()):
-            sdp_state.update_current_state(sdp_state.target_state)
-            LOG.debug("SDP current state updated to commanded target state %s",
-                      sdp_state.target_state)
-
-            # Go back to check_event_queue
-            SCHEDULER.enter(0, 1, _process_events)
-        else:
-            SCHEDULER.enter(0.5, 1, _update_sdp_current_state)
-
-    else:
-        SCHEDULER.enter(0.5, 1, _update_sdp_current_state)
-
-
 def _update_service_current_state(service: ServiceState):
     """Update the current state of a service.
 
@@ -94,6 +41,22 @@ def _update_service_current_state(service: ServiceState):
     """
     LOG.debug("Setting current state from target state for %s", service.id)
     service.update_current_state(service.target_state)
+
+
+def _update_services_instant_gratification(sdp_target_state: str):
+    """For demontstration purposes only
+    This instantly updates the services current state with the
+    target state, rather than wait on them or schedule random delays
+    in bringing them back up.
+    """
+    service_states = get_service_state_list()
+
+    # Set the target state of services
+    for service in service_states:
+        LOG.debug('Setting the current state of %s to be %s', service.id,
+                  sdp_target_state)
+        service.update_current_state(sdp_target_state)
+    # should we be picking up the events?
 
 
 def _update_services_target_state(sdp_target_state: str):
@@ -116,16 +79,23 @@ def _update_services_target_state(sdp_target_state: str):
         service.update_target_state(sdp_target_state)
 
         # Schedule a call to update the current state of each service.
-        delay = random.uniform(0.2, 3)
-        SCHEDULER.enter(delay, 1, _update_service_current_state)
+        # commented out for now:
+        # delay = random.uniform(0.2, 3)
+        # SCHEDULER.enter(delay, 1, _update_service_current_state)
 
-        # Schedule a call to update the current state of the SDP.
-        delay = random.uniform(0.4, 0.5)
-        SCHEDULER.enter(delay, 1, _update_sdp_current_state)
+    # We should not need to do this with real subprocesses
+    LOG.debug("simulate services changing state")
+    _update_services_instant_gratification(sdp_target_state)
 
-        LOG.debug('no need to wait on service states')
-        sdp_state.update_current_state(sdp_state.target_state)
-        SCHEDULER.enter(0, 1, _process_events)
+    # Schedule a call to update the current state of the SDP.
+    # commented out for now:
+    # delay = random.uniform(0.4, 0.5)
+    # SCHEDULER.enter(delay, 1, _update_sdp_current_state)
+
+    LOG.debug('no need to wait on service states')
+    sdp_state.update_current_state(sdp_state.target_state)
+    # commented out for now:
+    # SCHEDULER.enter(0, 1, _process_events)
 
 
 def _handle_sdp_target_state_updated(sdp_state: SDPState):
@@ -147,43 +117,6 @@ def _handle_sdp_target_state_updated(sdp_state: SDPState):
 
     # If yes, update the current state.
     sdp_state.update_current_state(sdp_state.target_state)
-
-
-def _process_events():
-    """Poll the Event Queue for state change events.
-
-    Call handle_event if there is an event of type updated.
-    Reset the scheduler to call this function again in 1 second.
-    """
-    LOG.debug('Processing state events ...')
-    sdp_state = SDPState()
-    state_events = sdp_state.get_event_queue(subscriber=__service_name__)
-    event = state_events.get()
-    if event:
-        LOG.into('Event detected object_type = %s, object_id = %s',
-                 event.object_type, event.object_id)
-
-        # The SDP target state changes.
-        if event.object_id == 'SDP' and event.type == 'target_state_updated':
-            LOG.info('Target state of SDP updated! (event id = %s)',
-                     event.id)
-            _handle_sdp_target_state_updated(sdp_state)
-
-        # A service state changes current state
-        if event.object_id != 'SDP' and event.type == 'current_state_updated':
-            LOG.info('Current state of service %s updated! '
-                     '(event id = %s)', event.object_id, event.id)
-            new_service_state = event.data['state']
-            if new_service_state in ['fault', 'alarm']:
-                LOG.warning('Service %s has an %s', event.object_id,
-                            new_service_state)
-                # Respond to the service state change by updating the SDP
-                # state.
-                # sdp_state.update_current_state(new_service_state)
-                # TODO(BMo) need to review logic here.
-
-    # Return to this function after one second
-    SCHEDULER.enter(1, 1, _process_events)
 
 
 def _parse_args():
@@ -278,50 +211,6 @@ def _init(sdp_state: SDPState):
     return service_states
 
 
-def main():
-    """Start the Master Controller service.
-
-    Logging, scheduling, database and database events are all set up here.
-
-    DB event queue polling is done by the check_event_queue() which is
-    registered with a Python Event Scheduler
-    (https://docs.python.org/3/library/sched.html)
-    """
-    # Parse command line args.
-    args = _parse_args()
-    LOG.info("Starting: %s", __service_id__)
-
-    sdp_state = SDPState()
-
-    # Subscribe to state change events.
-    # FIXME(BMo) This API is unfortunate as it looks like we are only
-    # subscribing to sdp_state events.
-    LOG.info('Subscribing to state change events (subscriber = %s)',
-             __service_name__)
-    sdp_state.subscribe(subscriber=__service_name__)
-
-    # Initialise the service.
-    _init(sdp_state)
-
-    # Enter a pseudo event-loop (using Sched) to monitor for state change
-    # events
-    # (Also random set services into a fault or alarm state if enabled)
-    try:
-        # Schedule function to check for state change events.
-        SCHEDULER.enter(0, 1, _process_events)
-
-        if args.random_errors:
-            # Schedule a random error (fault or alarm)
-            _delay = random.uniform(5, 10)
-            LOG.debug('Scheduling a random error in %.2f s', _delay)
-            SCHEDULER.enter(_delay, 1, _generate_random_service_failure)
-
-            SCHEDULER.run()
-    except KeyboardInterrupt as err:
-        LOG.debug('Keyboard Interrupt %s', err)
-        LOG.info('Exiting!')
-
-
 def _process_event(event: Event, sdp_state: SDPState,
                    service_states: List[ServiceState]):
     """Process a state change event."""
@@ -338,6 +227,8 @@ def _process_event(event: Event, sdp_state: SDPState,
             LOG.warning('SDP already in %s state',
                         sdp_state.current_state)
             return
+
+        _update_services_target_state(sdp_state.target_state)
 
         # If asking SDP to turn off, also turn off services.
         if sdp_state.target_state == 'off':
@@ -391,8 +282,10 @@ def _process_state_change_events():
         counter += 1
 
 
-def temp_main():
-    """Temporary main function used for demos on the 23/11/18."""
+def main():
+    """main function merging temp_main() and main()"""
+    # Parse command line args.
+    _parse_args()
     LOG.info("Starting: %s", __service_id__)
 
     # Subscribe to state change events.
@@ -405,11 +298,11 @@ def temp_main():
 
     # Initialise the service.
     _ = _init(sdp_state)
+    LOG.info('Finished initialising!')
 
     # Enter a pseudo event-loop (using Sched) to monitor for state change
     # events
     # (Also random set services into a fault or alarm state if enabled)
-    LOG.info('Finished initialising!')
     LOG.info('Responding to state change events ...')
     try:
         _process_state_change_events()
@@ -417,8 +310,9 @@ def temp_main():
         LOG.critical('Value error: %s', str(error))
     except KeyboardInterrupt as err:
         LOG.debug('Keyboard Interrupt %s', err)
-        LOG.info('Exiting!')
+    LOG.info('Exiting!')
 
 
 if __name__ == '__main__':
-    temp_main()
+    main()
+
