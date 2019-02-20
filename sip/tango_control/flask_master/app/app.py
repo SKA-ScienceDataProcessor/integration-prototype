@@ -232,8 +232,7 @@ def get_target_state():
 
 @APP.route('/state/current', methods=['GET'])
 def get_current_state():
-    """Return the SDP State and the timestamp for when it was updated.
-    """
+    """Return the SDP State and the timestamp for when it was updated."""
     sdp_state = SDPState()
     errval, errdict = _check_status(sdp_state)
     if errval == "error":
@@ -321,8 +320,7 @@ def resource_availability():
 @APP.route('/configure_sbi', methods=['PUT'])
 @APP.route('/configure_sbi', methods=['POST'])
 def configure_sbi():
-    """Configure an SBI using POSTed configuration.
-    """
+    """Configure an SBI using POSTed configuration."""
     # Need an ID for the subarray - guessing I just get
     # the list of inactive subarrays and use the first
     inactive_list = SubarrayList().inactive

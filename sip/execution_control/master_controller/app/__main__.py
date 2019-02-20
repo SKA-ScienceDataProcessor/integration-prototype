@@ -284,7 +284,7 @@ def _process_state_change_events():
 
 
 def main():
-    """Merging temp_main() and main()."""
+    """Merge temp_main and main."""
     # Parse command line args.
     _parse_args()
     LOG.info("Starting: %s", __service_id__)
