@@ -25,7 +25,9 @@ START_TIME = time.time()
 
 
 def _check_status(sdp_state):
-    """Do all the tests to determine, if the SDP state is
+    """SDP Status check.
+    
+    Do all the tests to determine, if the SDP state is
     "broken", what could be the cause, and return a
     suitable status message to be sent back by the calling
     function.
@@ -175,6 +177,7 @@ def allowed_transitions():
 @APP.route('/state', methods=['GET'])
 def get_state():
     """SDP State.
+
     Return current state; target state and allowed
     target states.
     """
@@ -205,6 +208,7 @@ def get_state():
 @APP.route('/target_state', methods=['GET'], strict_slashes=False)
 def get_target_state():
     """SDP target State.
+
     Returns the target state; allowed target states and time updated
     """
     sdp_state = SDPState()
@@ -228,8 +232,7 @@ def get_target_state():
 
 @APP.route('/state/current', methods=['GET'])
 def get_current_state():
-    """Return the SDP State
-    and the timestamp it was updatesd.
+    """Return the SDP State and the timestamp for when it was updated.
     """
     sdp_state = SDPState()
     errval, errdict = _check_status(sdp_state)
@@ -253,6 +256,7 @@ def get_current_state():
 @APP.route('/target_state', methods=['PUT'], strict_slashes=False)
 def put_target_state():
     """SDP target State.
+
     Sets the target state
     """
     sdp_state = SDPState()
@@ -304,7 +308,8 @@ def scheduling_blocks():
 
 @APP.route('/resource_availability')
 def resource_availability():
-    """Return the Resource Availability
+    """Return the Resource Availability.
+
     (next available resource? number of available resouces?).
     Currently unable to calculate this so send back a random number.
     This is identical to the TANGO function.

@@ -44,7 +44,8 @@ def _update_service_current_state(service: ServiceState):
 
 
 def _update_services_instant_gratification(sdp_target_state: str):
-    """For demontstration purposes only
+    """For demontstration purposes only.
+
     This instantly updates the services current state with the
     target state, rather than wait on them or schedule random delays
     in bringing them back up.
@@ -283,7 +284,7 @@ def _process_state_change_events():
 
 
 def main():
-    """main function merging temp_main() and main()"""
+    """Merging temp_main() and main()."""
     # Parse command line args.
     _parse_args()
     LOG.info("Starting: %s", __service_id__)
