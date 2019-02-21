@@ -26,7 +26,7 @@ START_TIME = time.time()
 
 def _check_status(sdp_state):
     """SDP Status check.
-    
+
     Do all the tests to determine, if the SDP state is
     "broken", what could be the cause, and return a
     suitable status message to be sent back by the calling
