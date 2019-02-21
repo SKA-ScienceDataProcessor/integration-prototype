@@ -6,7 +6,7 @@ services:
   # Tango Control containers
   # ==========================================================================
 
-  tc_tango_logger
+  tc_tango_logger:
     image: skasip/tango_logger:1.1.0
     environment:
     - TANGO_HOST=tc_tango_database:10000
@@ -22,7 +22,7 @@ services:
       retries: 5
 
   tc_tango_master:
-    image: skasip/tango_master:1.2.0
+    image: skasip/tango_master:1.2.1
     environment:
     - TANGO_HOST=tc_tango_database:10000
     - REDIS_HOST=ec_config_database
