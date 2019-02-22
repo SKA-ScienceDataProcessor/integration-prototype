@@ -22,6 +22,16 @@ services:
         condition: none
     networks:
       hostnet: {}
+  mock_stage_durations:
+    image: skasip/mock_workflow_stage:test
+    command: ["{'duration': 20}"]
+    deploy:
+      mode: replicated
+      replicas: 1
+      restart_policy:
+        condition: none
+    networks:
+      hostnet: {}
 
 networks:
     hostnet:

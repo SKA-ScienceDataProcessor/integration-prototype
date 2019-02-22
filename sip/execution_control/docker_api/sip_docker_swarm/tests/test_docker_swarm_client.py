@@ -4,7 +4,7 @@
 import os
 
 from ..docker_swarm_client import DockerSwarmClient
-
+from ..utils.generate_sbi_config import generate_sbi
 DC = DockerSwarmClient()
 FILE_PATH = os.path.dirname(__file__)
 
@@ -100,6 +100,14 @@ def test_create_services():
 
 def test_workflow():
     """Test function to start workflow."""
+    # TODO (NJT) Generate SBI compose file with durations
+    # TODO (NJT) Use the mock workflow to check if the correct duration is used
+    # todo (njt) assert check if the correct duration was set
+
+    # # Generate SBI config
+    # sbi_config = generate_sbi(1)
+    # print(sbi_config)
+
     # Passing in a test workflow compose file
     service_names = []
     config_path = os.path.join(FILE_PATH, '..', 'compose-file',
@@ -114,6 +122,7 @@ def test_workflow():
 
     # Cleaning
     DC.delete_service("start_stage")
+    DC.delete_service("mock_stage")
 
 
 def test_create_volume():

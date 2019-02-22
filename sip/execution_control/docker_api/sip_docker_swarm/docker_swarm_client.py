@@ -504,6 +504,16 @@ class DockerSwarmClient:
             service_config[key] = value
             if 'command' in key:
                 key = "args"
+                # print("Current Value: ", value)
+                # for v in value:
+                #     new_value = v.replace('"', "'")
+                # print("Newvalue: ", new_value)
+                # service_config['args'] = new_value
+                # command_args = ''.join(str(l_value) for new_value in value
+                #                         for l_value in new_value)
+                # print('New Type: ', type(command_args))
+                # print('New Value: ', command_args)
+                # service_config['args'] = command_args
             if 'ports' in key:
                 endpoint_spec = self._parse_ports(value)
                 service_config['endpoint_spec'] = endpoint_spec
@@ -525,6 +535,8 @@ class DockerSwarmClient:
                 service_config['env'] = value
                 service_config.pop('environment')
 
+        print("Config - ", service_config)
+        # LOG.info('Service Config: %s', service_config)
         return service_config
 
     def _parse_deploy(self, deploy_values: dict, service_config: dict):
