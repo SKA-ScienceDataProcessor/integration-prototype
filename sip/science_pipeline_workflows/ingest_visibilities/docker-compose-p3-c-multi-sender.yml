@@ -2,10 +2,14 @@ version: '3.6'
 
 services:
     recv:
-        image: skasip/vis_recv_c:1.1.9
+        image: skasip/vis_recv_c:1.2.1
         # command args (all optional):
-        # num_streams, num_threads, num_times_in_buffer, num_buffers, port_start
-        command: ["432", "4", "10", "3", "41000"]
+        # num_streams, num_threads, num_times_in_buffer, num_buffers, port_start, output_dir
+        command: ["432", "4", "8", "3", "41000", "/app/output"]
+        volumes:
+            - type: bind
+              source: /mnt/beegfs
+              target: /app/output
         deploy:
             restart_policy:
                 condition: none
@@ -13,7 +17,7 @@ services:
             replicas: 1
             placement:
                 constraints:
-                    - node.labels.recv == 01
+                    - node.labels.recv == 00
         networks:
             - hostnet
         stop_signal: INT
@@ -21,7 +25,7 @@ services:
         image: skasip/csp_vis_sender:1.1.0
         command:
             ['{
-                "destination_host": "10.1.0.30",
+                "destination_host": "10.1.0.37",
                 "destination_port_start": 41000,
                 "heap":
                 {
@@ -36,7 +40,7 @@ services:
                 "stream_config":
                 {
                     "max_packet_size": 8972,
-                    "rate": 7.1e6,
+                    "rate": 2.1e6,
                     "burst_size": 1472,
                     "max_heaps": 2
                 }
@@ -48,7 +52,7 @@ services:
             replicas: 1
             placement:
                 constraints:
-                    - node.labels.send == 00
+                    - node.labels.recv == 01
         networks:
             - hostnet
         stop_signal: INT
@@ -56,7 +60,7 @@ services:
         image: skasip/csp_vis_sender:1.1.0
         command:
             ['{
-                "destination_host": "10.1.0.30",
+                "destination_host": "10.1.0.37",
                 "destination_port_start": 41072,
                 "heap":
                 {
@@ -71,7 +75,7 @@ services:
                 "stream_config":
                 {
                     "max_packet_size": 8972,
-                    "rate": 7.1e6,
+                    "rate": 2.1e6,
                     "burst_size": 1472,
                     "max_heaps": 2
                 }
@@ -91,7 +95,7 @@ services:
         image: skasip/csp_vis_sender:1.1.0
         command:
             ['{
-                "destination_host": "10.1.0.30",
+                "destination_host": "10.1.0.37",
                 "destination_port_start": 41144,
                 "heap":
                 {
@@ -106,7 +110,7 @@ services:
                 "stream_config":
                 {
                     "max_packet_size": 8972,
-                    "rate": 7.1e6,
+                    "rate": 2.1e6,
                     "burst_size": 1472,
                     "max_heaps": 2
                 }
@@ -126,7 +130,7 @@ services:
         image: skasip/csp_vis_sender:1.1.0
         command:
             ['{
-                "destination_host": "10.1.0.30",
+                "destination_host": "10.1.0.37",
                 "destination_port_start": 41216,
                 "heap":
                 {
@@ -141,7 +145,7 @@ services:
                 "stream_config":
                 {
                     "max_packet_size": 8972,
-                    "rate": 7.1e6,
+                    "rate": 2.1e6,
                     "burst_size": 1472,
                     "max_heaps": 2
                 }
@@ -161,7 +165,7 @@ services:
         image: skasip/csp_vis_sender:1.1.0
         command:
             ['{
-                "destination_host": "10.1.0.30",
+                "destination_host": "10.1.0.37",
                 "destination_port_start": 41288,
                 "heap":
                 {
@@ -176,7 +180,7 @@ services:
                 "stream_config":
                 {
                     "max_packet_size": 8972,
-                    "rate": 7.1e6,
+                    "rate": 2.1e6,
                     "burst_size": 1472,
                     "max_heaps": 2
                 }
@@ -196,7 +200,7 @@ services:
         image: skasip/csp_vis_sender:1.1.0
         command:
             ['{
-                "destination_host": "10.1.0.30",
+                "destination_host": "10.1.0.37",
                 "destination_port_start": 41360,
                 "heap":
                 {
@@ -211,7 +215,7 @@ services:
                 "stream_config":
                 {
                     "max_packet_size": 8972,
-                    "rate": 7.1e6,
+                    "rate": 2.1e6,
                     "burst_size": 1472,
                     "max_heaps": 2
                 }

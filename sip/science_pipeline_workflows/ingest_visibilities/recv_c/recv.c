@@ -1,6 +1,8 @@
-#include <sys/mman.h>
+#ifdef __linux__
+#  define _GNU_SOURCE
+#  include <sched.h>
+#endif
 #include <sys/socket.h>
-#include <sys/select.h>
 #include <sys/time.h>
 #include <sys/types.h>
 #include <fcntl.h>
@@ -27,7 +29,7 @@
  * gcc -O3 -Wall -Wextra -pthread -o recv recv.c
  */
 
-#define RECV_VERSION "1.1.9"
+#define RECV_VERSION "1.2.1"
 
 typedef unsigned char uchar;
 struct Timer;
@@ -69,14 +71,32 @@ struct ThreadBarrier
     unsigned int num_threads, count, iter;
 };
 
+struct ThreadTask
+{
+    void *(*thread_func)(void*);
+    void* arg;
+    struct ThreadTask* next;
+};
+
+struct ThreadPool
+{
+    pthread_mutex_t lock;
+    pthread_cond_t cond;
+    pthread_t* threads;
+    struct ThreadTask *task_list, *last_task;
+    int do_abort, num_threads, num_tasks;
+};
+
 struct Buffer
 {
     /* From slowest to fastest varying, dimension order is
      * (time, channel, baseline) */
     struct DataType* vis_data;
+    struct Receiver* receiver;
+    double last_updated;
     size_t buffer_size, block_size, byte_counter;
+    int buffer_id, heap_id_start, heap_id_end, locked_for_write;
     int num_times, num_channels, num_baselines;
-    int heap_id_start, heap_id_end;
 };
 
 struct Stream
@@ -85,8 +105,7 @@ struct Stream
     struct Receiver* receiver;
     struct Timer *tmr_memcpy;
     size_t dump_byte_counter, recv_byte_counter, vis_data_heap_offset;
-    int buffer_len, socket_handle, stream_id;
-    int heap_count, done;
+    int buffer_len, done, heap_count, socket_handle, stream_id;
     unsigned short int port;
 };
 
@@ -94,70 +113,82 @@ struct Receiver
 {
     pthread_mutex_t lock;
     struct ThreadBarrier* barrier;
+    struct ThreadPool* pool;
     struct Timer* tmr;
     struct Stream** streams;
     struct Buffer** buffers;
+    char* output_root;
     int completed_streams;
     int num_baselines, num_times_in_buffer, max_num_buffers;
-    int num_threads, num_streams, num_buffers;
+    int num_threads_recv, num_streams, num_buffers;
     unsigned short int port_start;
 };
 
-void tmr_clear(struct Timer* h);
-struct Timer* tmr_create(void);
-double tmr_elapsed(struct Timer* h);
-void tmr_free(struct Timer* h);
-double tmr_get_wtime(void);
-void tmr_pause(struct Timer* h);
-void tmr_restart(struct Timer* h);
-void tmr_resume(struct Timer* h);
-void tmr_start(struct Timer* h);
-
 struct Buffer* buffer_create(int num_times, int num_channels,
-        int num_baselines);
-void buffer_free(struct Buffer* h);
+        int num_baselines, int buffer_id, struct Receiver* receiver);
+void buffer_free(struct Buffer* self);
+
+struct Buffer* receiver_buffer(struct Receiver* self, int heap, size_t length,
+        double timestamp);
+struct Receiver* receiver_create(int num_buffers, int num_times_in_buffer,
+        int num_threads_recv, int num_streams, unsigned short int port_start,
+        const char* output_root);
+void receiver_free(struct Receiver* self);
+void receiver_start(struct Receiver* self);
 
 struct Stream* stream_create(unsigned short int port, int stream_id,
         struct Receiver* receiver);
-void stream_decode(struct Stream* h, const unsigned char* buf, int depth);
-void stream_free(struct Stream* h);
-void stream_receive(struct Stream* h);
+void stream_decode(struct Stream* self, const unsigned char* buf, int depth);
+void stream_free(struct Stream* self);
+void stream_receive(struct Stream* self);
 
-struct Buffer* receiver_buffer(struct Receiver* h, int heap, size_t length);
-struct Receiver* receiver_create(int num_buffers, int num_times_in_buffer,
-        int num_threads, int num_streams, unsigned short int port_start);
-void receiver_free(struct Receiver* h);
-void receiver_receive(struct Receiver* h);
+struct ThreadPool* threadpool_create(int num_threads);
+void threadpool_enqueue(struct ThreadPool* self,
+        void *(*thread_func)(void*), void *arg);
+void threadpool_free(struct ThreadPool* self);
+static void* threadpool_thread(void* arg);
 
+void tmr_clear(struct Timer* self);
+struct Timer* tmr_create(void);
+double tmr_elapsed(struct Timer* self);
+void tmr_free(struct Timer* self);
+double tmr_get_timestamp(void);
+void tmr_pause(struct Timer* self);
+void tmr_restart(struct Timer* self);
+void tmr_resume(struct Timer* self);
+void tmr_start(struct Timer* self);
 
-void tmr_clear(struct Timer* h)
+char* construct_output_root(const char* output_location,
+        const char* output_name);
+
+void tmr_clear(struct Timer* self)
 {
-    h->paused = 1;
-    h->start = h->elapsed = 0.0;
+    self->paused = 1;
+    self->start = self->elapsed = 0.0;
 }
 
 struct Timer* tmr_create(void)
 {
-    struct Timer* h = (struct Timer*) calloc(1, sizeof(struct Timer));
-    tmr_clear(h);
-    return h;
+    struct Timer* cls = (struct Timer*) calloc(1, sizeof(struct Timer));
+    tmr_clear(cls);
+    return cls;
 }
 
-double tmr_elapsed(struct Timer* h)
+double tmr_elapsed(struct Timer* self)
 {
-    if (h->paused) return h->elapsed;
-    const double now = tmr_get_wtime();
-    h->elapsed += (now - h->start);
-    h->start = now;
-    return h->elapsed;
+    if (self->paused) return self->elapsed;
+    const double now = tmr_get_timestamp();
+    self->elapsed += (now - self->start);
+    self->start = now;
+    return self->elapsed;
 }
 
-void tmr_free(struct Timer* h)
+void tmr_free(struct Timer* self)
 {
-    free(h);
+    free(self);
 }
 
-double tmr_get_wtime(void)
+double tmr_get_timestamp(void)
 {
 #if _POSIX_MONOTONIC_CLOCK > 0
     /* Use monotonic clock if available. */
@@ -172,156 +203,239 @@ double tmr_get_wtime(void)
 #endif
 }
 
-void tmr_pause(struct Timer* h)
+void tmr_pause(struct Timer* self)
 {
-    if (h->paused) return;
-    (void)tmr_elapsed(h);
-    h->paused = 1;
+    if (self->paused) return;
+    (void)tmr_elapsed(self);
+    self->paused = 1;
 }
 
-void tmr_restart(struct Timer* h)
+void tmr_restart(struct Timer* self)
 {
-    h->paused = 0;
-    h->start = tmr_get_wtime();
+    self->paused = 0;
+    self->start = tmr_get_timestamp();
 }
 
-void tmr_resume(struct Timer* h)
+void tmr_resume(struct Timer* self)
 {
-    if (!h->paused) return;
-    tmr_restart(h);
+    if (!self->paused) return;
+    tmr_restart(self);
 }
 
-void tmr_start(struct Timer* h)
+void tmr_start(struct Timer* self)
 {
-    h->elapsed = 0.0;
-    tmr_restart(h);
+    self->elapsed = 0.0;
+    tmr_restart(self);
 }
 
 struct ThreadBarrier* barrier_create(int num_threads)
 {
-    struct ThreadBarrier* barrier =
+    struct ThreadBarrier* cls =
             (struct ThreadBarrier*) calloc(1, sizeof(struct ThreadBarrier));
-    pthread_mutex_init(&barrier->lock, NULL);
-    pthread_cond_init(&barrier->cond, NULL);
-    barrier->num_threads = num_threads;
-    barrier->count = num_threads;
-    barrier->iter = 0;
-    return barrier;
+    pthread_mutex_init(&cls->lock, NULL);
+    pthread_cond_init(&cls->cond, NULL);
+    cls->num_threads = num_threads;
+    cls->count = num_threads;
+    cls->iter = 0;
+    return cls;
 }
 
-void barrier_free(struct ThreadBarrier* barrier)
+void barrier_free(struct ThreadBarrier* self)
 {
-    if (!barrier) return;
-    pthread_mutex_destroy(&barrier->lock);
-    pthread_cond_destroy(&barrier->cond);
-    free(barrier);
+    if (!self) return;
+    pthread_mutex_destroy(&self->lock);
+    pthread_cond_destroy(&self->cond);
+    free(self);
 }
 
-int barrier_wait(struct ThreadBarrier* barrier)
+int barrier_wait(struct ThreadBarrier* self)
 {
-    pthread_mutex_lock(&barrier->lock);
-    const unsigned int i = barrier->iter;
-    if (--(barrier->count) == 0)
+    pthread_mutex_lock(&self->lock);
+    const unsigned int i = self->iter;
+    if (--(self->count) == 0)
     {
-        (barrier->iter)++;
-        barrier->count = barrier->num_threads;
-        pthread_cond_broadcast(&barrier->cond);
-        pthread_mutex_unlock(&barrier->lock);
+        (self->iter)++;
+        self->count = self->num_threads;
+        pthread_cond_broadcast(&self->cond);
+        pthread_mutex_unlock(&self->lock);
         return 1;
     }
     do {
-        pthread_cond_wait(&barrier->cond, &barrier->lock);
-    } while (i == barrier->iter);
-    pthread_mutex_unlock(&barrier->lock);
+        pthread_cond_wait(&self->cond, &self->lock);
+    } while (i == self->iter);
+    pthread_mutex_unlock(&self->lock);
     return 0;
 }
 
-void buffer_clear(struct Buffer* h)
+struct ThreadPool* threadpool_create(int num_threads)
 {
-    const int num_times = h->num_times;
-    const int num_channels = h->num_channels;
-    const int num_baselines = h->num_baselines;
+    struct ThreadPool* cls =
+            (struct ThreadPool*) calloc(1, sizeof(struct ThreadPool));
+    pthread_mutex_init(&cls->lock, 0);
+    pthread_cond_init(&cls->cond, 0);
+    cls->threads = (pthread_t*) malloc(num_threads * sizeof(pthread_t));
+    cls->num_threads = num_threads;
+    for (int i = 0; i < num_threads; ++i)
+        pthread_create(&cls->threads[i], 0, &threadpool_thread, cls);
+    return cls;
+}
+
+void threadpool_enqueue(struct ThreadPool* self,
+        void *(*thread_func)(void*), void *arg)
+{
+    if (!self) return;
+    struct ThreadTask* task =
+            (struct ThreadTask*) malloc(sizeof(struct ThreadTask));
+    task->thread_func = thread_func;
+    task->arg = arg;
+    task->next = 0;
+    pthread_mutex_lock(&self->lock);
+    if (self->last_task) self->last_task->next = task;
+    if (!self->task_list) self->task_list = task;
+    self->last_task = task;
+    self->num_tasks++;
+    pthread_cond_signal(&self->cond);
+    pthread_mutex_unlock(&self->lock);
+}
+
+void threadpool_free(struct ThreadPool* self)
+{
+    if (!self) return;
+    self->do_abort = 1;
+    pthread_mutex_lock(&self->lock);
+    pthread_cond_broadcast(&self->cond);
+    pthread_mutex_unlock(&self->lock);
+    for (int i = 0; i < self->num_threads; i++)
+        pthread_join(self->threads[i], 0);
+    while (self->task_list)
+    {
+        struct ThreadTask* task = self->task_list;
+        self->task_list = task->next;
+        free(task);
+    }
+    free(self->threads);
+    free(self);
+}
+
+static void* threadpool_thread(void* arg)
+{
+    struct ThreadPool* pool = (struct ThreadPool*)arg;
+    while (!pool->do_abort)
+    {
+        pthread_mutex_lock(&pool->lock);
+        while (!pool->do_abort && !pool->task_list)
+            pthread_cond_wait(&pool->cond, &pool->lock);
+        if (pool->do_abort)
+        {
+            pthread_mutex_unlock(&pool->lock);
+            return 0;
+        }
+        struct ThreadTask* task = pool->task_list;
+        pool->task_list = task->next;
+        pool->num_tasks--;
+        if (task == pool->last_task) pool->last_task = 0;
+        pthread_mutex_unlock(&pool->lock);
+        task->thread_func(task->arg);
+        free(task);
+        pthread_mutex_lock(&pool->lock);
+        pthread_cond_broadcast(&pool->cond);
+        pthread_mutex_unlock(&pool->lock);
+    }
+    return 0;
+}
+
+void buffer_clear(struct Buffer* self)
+{
+    // memset(self->vis_data, 0, self->buffer_size);
+#if 0
+    const int num_times = self->num_times;
+    const int num_channels = self->num_channels;
+    const int num_baselines = self->num_baselines;
     for (int t = 0; t < num_times; ++t)
         for (int c = 0; c < num_channels; ++c)
             for (int b = 0; b < num_baselines; ++b)
-                h->vis_data[num_baselines * (num_channels * t + c) + b].fd = 1;
+                self->vis_data[
+                        num_baselines * (num_channels * t + c) + b].fd = 1;
+#endif
+    self->byte_counter = 0;
 }
 
 struct Buffer* buffer_create(int num_times, int num_channels,
-        int num_baselines)
+        int num_baselines, int buffer_id, struct Receiver* receiver)
 {
-    struct Buffer* h = (struct Buffer*) calloc(1, sizeof(struct Buffer));
-    h->num_baselines = num_baselines;
-    h->num_channels = num_channels;
-    h->num_times = num_times;
-    h->block_size = num_baselines * sizeof(struct DataType);
-    h->buffer_size = h->block_size * num_channels * num_times;
-    printf("Allocating %.3f MB buffer.\n", h->buffer_size * 1e-6);
-    h->vis_data = (struct DataType*) malloc(h->buffer_size);
-    if (!h->vis_data)
+    struct Buffer* cls = (struct Buffer*) calloc(1, sizeof(struct Buffer));
+    cls->buffer_id = buffer_id;
+    cls->num_baselines = num_baselines;
+    cls->num_channels = num_channels;
+    cls->num_times = num_times;
+    cls->block_size = num_baselines * sizeof(struct DataType);
+    cls->buffer_size = cls->block_size * num_channels * num_times;
+    printf("Allocating %.3f MB buffer.\n", cls->buffer_size * 1e-6);
+    cls->vis_data = (struct DataType*) malloc(cls->buffer_size);
+    if (!cls->vis_data)
     {
-        fprintf(stderr, "malloc failed: requested %zu bytes\n", h->buffer_size);
+        fprintf(stderr,
+                "malloc failed: requested %zu bytes\n", cls->buffer_size);
         exit(1);
     }
-    // if (mlock(h->vis_data, h->buffer_size) == -1) perror("mlock failed");
-    // memset(h->vis_data, 0, h->buffer_size);
-    // buffer_clear(h);
-    return h;
+    // buffer_clear(cls);
+    cls->receiver = receiver;
+    return cls;
 }
 
-void buffer_free(struct Buffer* h)
+void buffer_free(struct Buffer* self)
 {
-    if (!h) return;
-    free(h->vis_data);
-    free(h);
+    if (!self) return;
+    free(self->vis_data);
+    free(self);
 }
 
 struct Stream* stream_create(unsigned short int port, int stream_id,
         struct Receiver* receiver)
 {
-    struct Stream* h = (struct Stream*) calloc(1, sizeof(struct Stream));
+    struct Stream* cls = (struct Stream*) calloc(1, sizeof(struct Stream));
     const int requested_buffer_len = 16*1024*1024;
-    h->port = port;
-    h->buffer_len = requested_buffer_len;
-    h->stream_id = stream_id;
-    if ((h->socket_handle = socket(AF_INET, SOCK_DGRAM, 0)) < 0)
+    cls->port = port;
+    cls->buffer_len = requested_buffer_len;
+    cls->stream_id = stream_id;
+    if ((cls->socket_handle = socket(AF_INET, SOCK_DGRAM, 0)) < 0)
     {
         fprintf(stderr, "Cannot create socket.\n");
-        return h;
+        return cls;
     }
-    fcntl(h->socket_handle, F_SETFL, O_NONBLOCK);
-    setsockopt(h->socket_handle, SOL_SOCKET, SO_RCVBUF,
-            &h->buffer_len, sizeof(int));
+    fcntl(cls->socket_handle, F_SETFL, O_NONBLOCK);
+    setsockopt(cls->socket_handle, SOL_SOCKET, SO_RCVBUF,
+            &cls->buffer_len, sizeof(int));
     uint32_t int_size = (uint32_t) sizeof(int);
-    getsockopt(h->socket_handle, SOL_SOCKET, SO_RCVBUF,
-            &h->buffer_len, &int_size);
+    getsockopt(cls->socket_handle, SOL_SOCKET, SO_RCVBUF,
+            &cls->buffer_len, &int_size);
     if (int_size != (uint32_t) sizeof(int))
     {
         fprintf(stderr, "Error at line %d\n", __LINE__);
         exit(1);
     }
-    if ((h->buffer_len / 2) < requested_buffer_len)
+    if ((cls->buffer_len / 2) < requested_buffer_len)
     {
         printf("Requested socket buffer of %d bytes; actual size is %d bytes\n",
-                requested_buffer_len, h->buffer_len / 2);
+                requested_buffer_len, cls->buffer_len / 2);
     }
     struct sockaddr_in myaddr;
     myaddr.sin_family = AF_INET;
     myaddr.sin_addr.s_addr = htonl(INADDR_ANY);
     myaddr.sin_port = htons(port);
-    if (bind(h->socket_handle, (struct sockaddr*)&myaddr, sizeof(myaddr)) < 0)
+    if (bind(cls->socket_handle, (struct sockaddr*)&myaddr, sizeof(myaddr)) < 0)
     {
         fprintf(stderr, "Bind failed.\n");
-        return h;
+        return cls;
     }
-    h->socket_buffer = (uchar*) malloc(h->buffer_len);
-    memset(h->socket_buffer, 0, h->buffer_len);
-    h->receiver = receiver;
-    h->tmr_memcpy = tmr_create();
-    return h;
+    cls->socket_buffer = (uchar*) malloc(cls->buffer_len);
+    memset(cls->socket_buffer, 0, cls->buffer_len);
+    cls->receiver = receiver;
+    cls->tmr_memcpy = tmr_create();
+    return cls;
 }
 
-void stream_decode(struct Stream* h, const uchar* buf, int depth)
+void stream_decode(struct Stream* self, const uchar* buf, int depth)
 {
     /* Extract SPEAD packet headers. */
     const uchar magic = buf[0];
@@ -359,7 +473,7 @@ void stream_decode(struct Stream* h, const uchar* buf, int depth)
             break;
         case 0x1:
             /* Heap counter (immediate addressing, big endian). */
-            if (depth == 0) h->heap_count = (int) item_addr - 2;
+            if (depth == 0) self->heap_count = (int) item_addr - 2;
             break;
         case 0x2:
             /* Heap size (immediate addressing, big endian). */
@@ -375,12 +489,12 @@ void stream_decode(struct Stream* h, const uchar* buf, int depth)
             break;
         case 0x5:
             /* Nested item descriptor (recursive call). */
-            /*stream_decode(h, &payload_start[item_addr], depth + 1);*/
+            /*stream_decode(self, &payload_start[item_addr], depth + 1);*/
             break;
         case 0x6:
             /* Stream control messages (immediate addressing, big endian). */
             packet_has_stream_control = 1;
-            if (item_addr == 2) h->done = 1;
+            if (item_addr == 2) self->done = 1;
             break;
         case 0x10: /* Item descriptor name     (absolute addressing). */
         case 0x11: /* Item descriptor desc.    (absolute addressing). */
@@ -401,7 +515,7 @@ void stream_decode(struct Stream* h, const uchar* buf, int depth)
             break;
         case 0x6005:
             /* Visibility baseline count (immediate addressing). */
-            h->receiver->num_baselines = be32toh((uint32_t) item_addr);
+            self->receiver->num_baselines = be32toh((uint32_t) item_addr);
             packet_has_header_data = 1;
             break;
         case 0x6008:
@@ -411,85 +525,89 @@ void stream_decode(struct Stream* h, const uchar* buf, int depth)
             break;
         case 0x600A:
             /* Visibility data (absolute addressing). */
-            h->vis_data_heap_offset = (size_t) item_addr;
+            self->vis_data_heap_offset = (size_t) item_addr;
             vis_data_start = (size_t) item_addr;
             break;
         default:
-            /*printf("Heap %3d  ID: %#6llx, %s: %llu\n", h->heap_count, item_id,
-                    immediate ? "VAL" : "ptr", item_addr);*/
+            /*printf("Heap %3d  ID: %#6llx, %s: %llu\n", self->heap_count,
+                    item_id, immediate ? "VAL" : "ptr", item_addr);*/
             break;
         }
     }
     if (0 && !packet_has_stream_control)
         printf("==== Packet in heap %3d "
-                "(heap offset %zu/%zu, payload length %zu)\n",
-                h->heap_count, heap_offset, heap_size, packet_payload_length);
+                "(heap offset %zu/%zu, payload length %zu)\n", self->heap_count,
+                heap_offset, heap_size, packet_payload_length);
     if (0 && packet_has_header_data)
     {
-        printf("     heap               : %d\n", h->heap_count);
+        printf("     heap               : %d\n", self->heap_count);
         printf("     timestamp_count    : %" PRIu32 "\n", timestamp_count);
         printf("     timestamp_fraction : %" PRIu32 "\n", timestamp_fraction);
         printf("     scan_id            : %" PRIu64 "\n", scan_id);
-        printf("     num_baselines      : %d\n", h->receiver->num_baselines);
+        printf("     num_baselines      : %d\n", self->receiver->num_baselines);
     }
-    if (!packet_has_stream_control &&
-            h->vis_data_heap_offset > 0 && h->receiver->num_baselines > 0)
+    if (!packet_has_stream_control && self->vis_data_heap_offset > 0 &&
+            self->receiver->num_baselines > 0)
     {
+        const double timestamp = tmr_get_timestamp();
         const size_t vis_data_length = packet_payload_length - vis_data_start;
         /*printf("Visibility data length: %zu bytes\n", vis_data_length);*/
         struct Buffer* buf = receiver_buffer(
-                h->receiver, h->heap_count, vis_data_length);
+                self->receiver, self->heap_count, vis_data_length, timestamp);
         if (buf)
         {
             const uchar* src_addr = payload_start + vis_data_start;
-            const int i_time = h->heap_count - buf->heap_id_start;
-            const int i_chan = h->stream_id;
+            const int i_time = self->heap_count - buf->heap_id_start;
+            const int i_chan = self->stream_id;
             uchar* dst_addr = ((uchar*) buf->vis_data) +
-                    (heap_offset - h->vis_data_heap_offset + vis_data_start) +
+                    heap_offset - self->vis_data_heap_offset + vis_data_start +
                     buf->block_size * (i_time * buf->num_channels + i_chan);
-            tmr_resume(h->tmr_memcpy);
+            tmr_resume(self->tmr_memcpy);
             memcpy(dst_addr, src_addr, vis_data_length);
-            tmr_pause(h->tmr_memcpy);
-            h->recv_byte_counter += vis_data_length;
+            tmr_pause(self->tmr_memcpy);
+            self->recv_byte_counter += vis_data_length;
         }
         else
         {
-            h->dump_byte_counter += vis_data_length;
+            self->dump_byte_counter += vis_data_length;
         }
     }
 }
 
-void stream_free(struct Stream* h)
+void stream_free(struct Stream* self)
 {
-    if (!h) return;
-    tmr_free(h->tmr_memcpy);
-    close(h->socket_handle);
-    free(h->socket_buffer);
-    free(h);
+    if (!self) return;
+    tmr_free(self->tmr_memcpy);
+    close(self->socket_handle);
+    free(self->socket_buffer);
+    free(self);
 }
 
-void stream_receive(struct Stream* h)
+void stream_receive(struct Stream* self)
 {
-    if (!h) return;
-    const int recvlen = recv(h->socket_handle,
-            h->socket_buffer, h->buffer_len, 0);
+    if (!self) return;
+    const int recvlen = recv(
+            self->socket_handle, self->socket_buffer, self->buffer_len, 0);
     if (recvlen >= 8)
-        stream_decode(h, h->socket_buffer, 0);
+        stream_decode(self, self->socket_buffer, 0);
 }
 
-struct Buffer* receiver_buffer(struct Receiver* h, int heap, size_t length)
+struct Buffer* receiver_buffer(struct Receiver* self, int heap, size_t length,
+        double timestamp)
 {
-    if (!h) return 0;
+    if (!self) return 0;
     struct Buffer* buf = 0;
-    int oldest = 0, min_heap_start = 1 << 30;
-    pthread_mutex_lock(&h->lock);
-    for (int i = 0; i < h->num_buffers; ++i)
+    int oldest = -1, min_heap_start = 1 << 30;
+    pthread_mutex_lock(&self->lock);
+    for (int i = 0; i < self->num_buffers; ++i)
     {
-        struct Buffer* buf_test = h->buffers[i];
-        if (heap >= buf_test->heap_id_start && heap <= buf_test->heap_id_end)
+        struct Buffer* buf_test = self->buffers[i];
+        if (heap >= buf_test->heap_id_start && heap <= buf_test->heap_id_end &&
+                !buf_test->locked_for_write)
         {
             buf_test->byte_counter += length;
-            pthread_mutex_unlock(&h->lock);
+            buf_test->last_updated = timestamp;
+            pthread_mutex_unlock(&self->lock);
             return buf_test;
         }
         if (buf_test->heap_id_start < min_heap_start)
@@ -499,74 +617,84 @@ struct Buffer* receiver_buffer(struct Receiver* h, int heap, size_t length)
         }
     }
     /* Heap does not belong in any active buffer. */
-    if (h->num_buffers > 0 && heap < min_heap_start)
+    if (oldest >= 0)
     {
-        /* Dump data if it's too old. */
-        pthread_mutex_unlock(&h->lock);
-        return 0;
+        if (heap < min_heap_start)
+        {
+            /* Dump data if it's too old. */
+            pthread_mutex_unlock(&self->lock);
+            return 0;
+        }
+        struct Buffer* buf_test = self->buffers[oldest];
+        if (buf_test->byte_counter == 0 && !buf_test->locked_for_write)
+        {
+            /* Re-purpose the oldest buffer, if it isn't in use. */
+            buf = buf_test;
+            printf("Re-assigned buffer %d\n", buf->buffer_id);
+        }
     }
-    if (h->num_buffers < h->max_num_buffers)
+    if (!buf && (self->num_buffers < self->max_num_buffers))
     {
         /* Create a new buffer. */
-        buf = buffer_create(h->num_times_in_buffer,
-                h->num_streams, h->num_baselines);
-        printf("Created buffer %d\n", h->num_buffers);
-        h->num_buffers++;
-        h->buffers = (struct Buffer**) realloc(h->buffers,
-                h->num_buffers * sizeof(struct Buffer*));
-        h->buffers[h->num_buffers - 1] = buf;
+        buf = buffer_create(self->num_times_in_buffer, self->num_streams,
+                self->num_baselines, self->num_buffers, self);
+        printf("Created buffer %d\n", self->num_buffers);
+        self->num_buffers++;
+        self->buffers = (struct Buffer**) realloc(self->buffers,
+                self->num_buffers * sizeof(struct Buffer*));
+        self->buffers[self->num_buffers - 1] = buf;
     }
-    else
+    if (buf)
     {
-        /* Re-purpose the oldest buffer. */
-        buf = h->buffers[oldest];
-        printf("Re-assigned buffer %d\n", oldest);
-        if (buf->byte_counter > 0)
-        {
-            if (buf->byte_counter != buf->buffer_size)
-                printf("WARNING: Incomplete buffer (%zu/%zu, %.1f%%)\n",
-                        buf->byte_counter, buf->buffer_size,
-                        100 * buf->byte_counter / (float)buf->buffer_size);
-            buf->byte_counter = 0;
-        }
-        // memset(buf->vis_data, 0, buf->buffer_size);
-        // buffer_clear(buf);
+        buf->byte_counter += length;
+        buf->last_updated = timestamp;
+        buf->heap_id_start =
+                self->num_times_in_buffer * (heap / self->num_times_in_buffer);
+        buf->heap_id_end = buf->heap_id_start + self->num_times_in_buffer - 1;
     }
-    buf->byte_counter += length;
-    buf->heap_id_start =
-            h->num_times_in_buffer * (heap / h->num_times_in_buffer);
-    buf->heap_id_end = buf->heap_id_start + h->num_times_in_buffer - 1;
-    pthread_mutex_unlock(&h->lock);
+    pthread_mutex_unlock(&self->lock);
     return buf;
 }
 
 struct Receiver* receiver_create(int num_buffers, int num_times_in_buffer,
-        int num_threads, int num_streams, unsigned short int port_start)
+        int num_threads_recv, int num_streams, unsigned short int port_start,
+        const char* output_root)
 {
-    struct Receiver* h = (struct Receiver*) calloc(1, sizeof(struct Receiver));
-    pthread_mutex_init(&h->lock, NULL);
-    h->tmr = tmr_create();
-    h->barrier = barrier_create(num_threads);
-    h->max_num_buffers = num_buffers;
-    h->num_times_in_buffer = num_times_in_buffer;
-    h->num_threads = num_threads;
-    h->num_streams = num_streams;
-    h->port_start = port_start;
-    h->streams = (struct Stream**) calloc(num_streams, sizeof(struct Stream*));
+    struct Receiver* cls =
+            (struct Receiver*) calloc(1, sizeof(struct Receiver));
+    pthread_mutex_init(&cls->lock, NULL);
+    cls->tmr = tmr_create();
+    cls->barrier = barrier_create(num_threads_recv);
+    cls->pool = threadpool_create(1);
+    cls->max_num_buffers = num_buffers;
+    cls->num_times_in_buffer = num_times_in_buffer;
+    cls->num_threads_recv = num_threads_recv;
+    cls->num_streams = num_streams;
+    if (output_root)
+    {
+        cls->output_root = malloc(1 + strlen(output_root));
+        strcpy(cls->output_root, output_root);
+    }
+    cls->port_start = port_start;
+    cls->streams =
+            (struct Stream**) calloc(num_streams, sizeof(struct Stream*));
     for (int i = 0; i < num_streams; ++i)
-        h->streams[i] = stream_create(port_start + (unsigned short int)i, i, h);
-    return h;
+        cls->streams[i] = stream_create(
+                port_start + (unsigned short int)i, i, cls);
+    return cls;
 }
 
-void receiver_free(struct Receiver* h)
+void receiver_free(struct Receiver* self)
 {
-    if (!h) return;
-    tmr_free(h->tmr);
-    barrier_free(h->barrier);
-    for (int i = 0; i < h->num_streams; ++i) stream_free(h->streams[i]);
-    for (int i = 0; i < h->num_buffers; ++i) buffer_free(h->buffers[i]);
-    pthread_mutex_destroy(&h->lock);
-    free(h);
+    if (!self) return;
+    tmr_free(self->tmr);
+    barrier_free(self->barrier);
+    threadpool_free(self->pool);
+    for (int i = 0; i < self->num_streams; ++i) stream_free(self->streams[i]);
+    for (int i = 0; i < self->num_buffers; ++i) buffer_free(self->buffers[i]);
+    pthread_mutex_destroy(&self->lock);
+    free(self->output_root);
+    free(self);
 }
 
 struct ThreadArg
@@ -575,12 +703,54 @@ struct ThreadArg
     struct Receiver* receiver;
 };
 
-static void* do_receive(void* arg)
+static void* thread_write_buffer(void* arg)
+{
+    struct Buffer* buf = (struct Buffer*) arg;
+    struct Receiver* receiver = buf->receiver;
+    printf("Writing buffer %d...\n", buf->buffer_id);
+#ifdef __linux__
+    const int cpu_id = sched_getcpu();
+    printf("Writer thread running on CPU %d\n", cpu_id);
+#endif
+    double start = tmr_get_timestamp();
+    if (buf->byte_counter != buf->buffer_size)
+        printf("WARNING: Incomplete buffer (%zu/%zu, %.1f%%)\n",
+                buf->byte_counter, buf->buffer_size,
+                100 * buf->byte_counter / (float)buf->buffer_size);
+    /* Could start another parallel region here to perform the write. */
+    if (receiver->output_root)
+    {
+        size_t len = 2 + strlen(receiver->output_root);
+        len += (10 + 1 + 10 + 4);
+        char* filename = calloc(len, sizeof(char));
+        const int time_start = buf->heap_id_start;
+        const int time_end = buf->heap_id_end;
+        const int chan_start = 0;
+        const int chan_end = buf->num_channels - 1;
+        snprintf(filename, len, "%s_t%.4d-%.4d_c%.4d-%.4d.dat",
+                receiver->output_root,
+                time_start, time_end, chan_start, chan_end);
+        FILE* file_handle = fopen(filename, "w");
+        if (file_handle)
+        {
+            fwrite(buf->vis_data, buf->buffer_size, 1, file_handle);
+            fclose(file_handle);
+        }
+        free(filename);
+    }
+    buffer_clear(buf);
+    printf("Writing buffer %d took %.3f sec.\n",
+            buf->buffer_id, tmr_get_timestamp() - start);
+    buf->locked_for_write = 0;
+    return 0;
+}
+
+static void* thread_receive(void* arg)
 {
     struct ThreadArg* a = (struct ThreadArg*) arg;
     struct Receiver* receiver = a->receiver;
     const int thread_id = a->thread_id;
-    const int num_threads = receiver->num_threads;
+    const int num_threads = receiver->num_threads_recv;
     const int num_streams = receiver->num_streams;
     while (receiver->completed_streams != num_streams)
     {
@@ -590,9 +760,24 @@ static void* do_receive(void* arg)
             if (!stream->done)
                 stream_receive(stream);
         }
-        barrier_wait(receiver->barrier);
+        if (num_threads > 1)
+            barrier_wait(receiver->barrier);
         if (thread_id == 0)
         {
+            const int num_buffers = receiver->num_buffers;
+            double now = tmr_get_timestamp();
+            for (int i = 0; i < num_buffers; ++i)
+            {
+                struct Buffer* buf = receiver->buffers[i];
+                if ((buf->byte_counter > 0) && !buf->locked_for_write &&
+                        (now - buf->last_updated >= 1.0))
+                {
+                    buf->locked_for_write = 1;
+                    printf("Locked buffer %d for writing\n", buf->buffer_id);
+                    threadpool_enqueue(receiver->pool,
+                            &thread_write_buffer, buf);
+                }
+            }
             size_t dump_byte_counter = 0, recv_byte_counter = 0;
             receiver->completed_streams = 0;
             for (int i = 0; i < num_streams; ++i)
@@ -625,15 +810,16 @@ static void* do_receive(void* arg)
                 tmr_start(receiver->tmr);
             }
         }
-        barrier_wait(receiver->barrier);
+        if (num_threads > 1)
+            barrier_wait(receiver->barrier);
     }
     return 0;
 }
 
-void receiver_receive(struct Receiver* h)
+void receiver_start(struct Receiver* self)
 {
-    if (!h) return;
-    const int num_threads = h->num_threads;
+    if (!self) return;
+    const int num_threads = self->num_threads_recv;
     pthread_attr_t attr;
     pthread_attr_init(&attr);
     pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_JOINABLE);
@@ -641,44 +827,79 @@ void receiver_receive(struct Receiver* h)
             (pthread_t*) malloc(num_threads * sizeof(pthread_t));
     struct ThreadArg* args =
             (struct ThreadArg*) malloc(num_threads * sizeof(struct ThreadArg));
-    tmr_start(h->tmr);
+    tmr_start(self->tmr);
     for (int i = 0; i < num_threads; ++i)
     {
         args[i].thread_id = i;
-        args[i].receiver = h;
-        pthread_create(&threads[i], &attr, do_receive, &args[i]);
+        args[i].receiver = self;
+        pthread_create(&threads[i], &attr, thread_receive, &args[i]);
     }
     for (int i = 0; i < num_threads; ++i)
         pthread_join(threads[i], NULL);
     pthread_attr_destroy(&attr);
     free(args);
-    printf("All %d stream(s) completed.\n", h->num_streams);
+    printf("All %d stream(s) completed.\n", self->num_streams);
+}
+
+char* construct_output_root(const char* output_location,
+        const char* output_name)
+{
+    if (!output_location || strlen(output_location) == 0) return 0;
+    size_t len = 3 + strlen(output_location) + strlen(output_name);
+    len += (8 + 1 + 6); /* Date and time. */
+    char* output_root = calloc(len, sizeof(char));
+    const time_t unix_time = time(NULL);
+    struct tm* timeinfo = localtime(&unix_time);
+    snprintf(output_root, len, "%s/%s_%.4d%.2d%.2d-%.2d%.2d%.2d",
+            output_location, output_name,
+            timeinfo->tm_year + 1900, timeinfo->tm_mon + 1, timeinfo->tm_mday,
+            timeinfo->tm_hour, timeinfo->tm_min, timeinfo->tm_sec);
+    return output_root;
 }
 
 int main(int argc, char** argv)
 {
-    int num_streams = 1, num_receiver_threads = 1;
+    int num_streams = 1, num_threads_recv = 1;
     int num_times_in_buffer = 8, num_buffers = 2;
     unsigned short int port_start = 41000;
+    const char* output_location = 0;
+    const char* output_name = "ingest_run";
     if (argc > 1) num_streams = atoi(argv[1]);
-    if (argc > 2) num_receiver_threads = atoi(argv[2]);
+    if (argc > 2) num_threads_recv = atoi(argv[2]);
     if (argc > 3) num_times_in_buffer = atoi(argv[3]);
     if (argc > 4) num_buffers = atoi(argv[4]);
     if (argc > 5) port_start  = (unsigned short int) atoi(argv[5]);
+    if (argc > 6) output_location = argv[6];
     if (num_streams < 1) num_streams = 1;
-    if (num_receiver_threads < 1) num_receiver_threads = 1;
+    if (num_threads_recv < 1) num_threads_recv = 1;
     if (num_times_in_buffer < 1) num_times_in_buffer = 1;
     if (num_buffers < 1) num_buffers = 1;
     printf("Running RECV_VERSION %s\n", RECV_VERSION);
+    char* output_root = construct_output_root(output_location, output_name);
+    const int num_cores = sysconf(_SC_NPROCESSORS_ONLN);
+    if (num_threads_recv > num_cores - 2) num_threads_recv = num_cores - 2;
+#ifdef __linux__
+    cpu_set_t my_set;
+    CPU_ZERO(&my_set);
+    for (int i = 0; i < num_cores / 2; i++)
+    {
+        CPU_SET(i, &my_set);
+    }
+    sched_setaffinity(0, sizeof(cpu_set_t), &my_set);
+#endif
+    printf(" + Number of system CPU cores : %d\n", num_cores);
     printf(" + Number of SPEAD streams    : %d\n", num_streams);
-    printf(" + Number of receiver threads : %d\n", num_receiver_threads);
+    printf(" + Number of receiver threads : %d\n", num_threads_recv);
     printf(" + Number of times in buffer  : %d\n", num_times_in_buffer);
     printf(" + Number of buffers          : %d\n", num_buffers);
     printf(" + UDP port range             : %d-%d\n",
             (int) port_start, (int) port_start + num_streams - 1);
+    printf(" + Output root                : %s\n", output_root);
     struct Receiver* receiver = receiver_create(num_buffers,
-            num_times_in_buffer, num_receiver_threads, num_streams, port_start);
-    receiver_receive(receiver);
+            num_times_in_buffer, num_threads_recv, num_streams, port_start,
+            output_root);
+    receiver_start(receiver);
     receiver_free(receiver);
+    free(output_root);
     return 0;
 }
