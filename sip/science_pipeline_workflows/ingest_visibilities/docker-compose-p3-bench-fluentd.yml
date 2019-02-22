@@ -24,7 +24,7 @@ services:
     send:
         image: skasip/spead_base
         entrypoint: spead2_bench.py
-        command: ["master", "--packet", "8972", "--heap-size", "4456448", "10.1.0.27", "41000"]
+        command: ["master", "--packet", "8972", "--heap-size", "4456448", "10.1.0.30", "41000"]
         deploy:
             mode: replicated
             replicas: 1

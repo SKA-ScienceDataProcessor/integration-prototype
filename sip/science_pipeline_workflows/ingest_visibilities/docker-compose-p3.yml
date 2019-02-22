@@ -39,7 +39,7 @@ services:
         image: skasip/csp_vis_sender
         command:
             ['{
-                "destination_host": "10.1.0.27",
+                "destination_host": "10.1.0.30",
                 "destination_port_start": 41000,
                 "heap":
                 {
