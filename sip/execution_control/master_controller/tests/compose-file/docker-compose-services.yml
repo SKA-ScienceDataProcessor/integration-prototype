@@ -1,0 +1,30 @@
+version: '3.6'
+
+services:
+
+  service_health:
+    image: rediscommander/redis-commander:latest
+    ports:
+      - 1001:1001
+    deploy:
+      placement:
+        constraints: [node.role==manager]
+      mode: replicated
+      replicas: 1
+      restart_policy:
+        condition: none
+        delay: 0
+
+  service_health_error:
+    image: rediscommander/redis-commander:lat
+    ports:
+      - 9081:9081
+    deploy:
+      placement:
+        constraints: [node.role==manager]
+      mode: replicated
+      replicas: 1
+      restart_policy:
+        condition: none
+        delay: 0
+

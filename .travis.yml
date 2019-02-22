@@ -61,6 +61,9 @@ jobs:
     install:
     - pip install -r testing_requirements.txt
     - pip install -r sip/execution_control/master_controller/requirements.txt
+    before_script:
+      - docker swarm init
+      - docker service create -p 6379:6379 --name=config_db redis:5.0.1-alpine
     script: ./tools/run_tests.sh sip/execution_control/master_controller
     after_success: codecov
 
