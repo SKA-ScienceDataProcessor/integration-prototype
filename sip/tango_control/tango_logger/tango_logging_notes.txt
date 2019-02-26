@@ -22,7 +22,7 @@ This explains most of what I know of Tango device "log aggregators"!
       File       ("file::<filename>")
       Log Device ("device::sip_sdp/elt/logger")
 
-3) The "Log device" target is a Device which implements a Tango command named 'log' - see tago_logger code for
+3) The "Log device" target is a Device which implements a Tango command named 'log' - see tango_logger code for
    arguments provided to this command.
 
 4) There is one logging level for each Device Server (which applies to ALL logging targets for that DS). Only messages

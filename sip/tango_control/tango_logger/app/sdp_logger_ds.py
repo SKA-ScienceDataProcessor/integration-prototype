@@ -13,8 +13,9 @@ import sys
 from tango import Database, DbDevInfo
 from tango.server import run
 
-from sdp_logger_device import SDPLoggerDevice
 from sip_logging import init_logger
+from sdp_logger_device import SDPLoggerDevice
+
 from release import LOG, __service_id__
 
 
@@ -39,7 +40,9 @@ def main(args=None, **kwargs):
     return run([SDPLoggerDevice], verbose=True, args=args,
                msg_stream=sys.stdout, **kwargs)
 
+
 if __name__ == '__main__':
+
     init_logger(logger_name='', show_log_origin=True)
     init_logger(show_log_origin=True)
     register_logger()
