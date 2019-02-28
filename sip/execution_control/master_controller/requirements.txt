@@ -1,4 +1,4 @@
 skasip-config-db==1.2.0
 skasip-logging==1.0.14
-skasip-docker-swarm==1.0.7
+skasip-docker-swarm==1.0.10
 prometheus_client
