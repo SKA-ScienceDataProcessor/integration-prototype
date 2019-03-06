@@ -14,10 +14,24 @@ services:
         hostnet: {}
   mock_stage:
     image: skasip/mock_workflow_stage:test
-    command: ['{"duration": 2}']
+    command: ['{"duration": 5}']
     deploy:
       mode: replicated
       replicas: 1
+      restart_policy:
+        condition: none
+    networks:
+      hostnet: {}
+  mock_workflow_stage1:
+    image: skasip/mock_workflow_stage:1.0.1
+    command: ['{"duration": 10, "message": "setting up workflow"}']
+    deploy:
+      mode: replicated
+      replicas: 1
+      resources:
+          limits:
+              cpus: '1.0'
+              memory: 1024M
       restart_policy:
         condition: none
     networks:
