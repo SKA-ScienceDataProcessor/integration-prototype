@@ -14,7 +14,7 @@ services:
       driver: fluentd
       options:
         tag: "{{.ImageName}}/{{.Name}}/{{.ID}}"
-
+resources
   workflow_stage_1_b:
     image: skasip/log_spammer:latest
     command: ["0.1"]

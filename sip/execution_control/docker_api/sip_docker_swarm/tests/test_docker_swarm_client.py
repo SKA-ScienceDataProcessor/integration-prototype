@@ -4,7 +4,6 @@
 import os
 
 from ..docker_swarm_client import DockerSwarmClient
-
 DC = DockerSwarmClient()
 FILE_PATH = os.path.dirname(__file__)
 
@@ -98,24 +97,6 @@ def test_create_services():
     DC.delete_service("send")
 
 
-def test_workflow():
-    """Test function to start workflow."""
-    # Passing in a test workflow compose file
-    service_names = []
-    config_path = os.path.join(FILE_PATH, '..', 'compose-file',
-                               'docker-compose.workflow.yml')
-    with open(config_path, 'r') as compose_str:
-        s_ids = DC.create_services(compose_str)
-
-        for service_id in s_ids:
-            service_details = DC.get_service_details(service_id)
-            service_names.append(service_details['Spec']['Name'])
-        assert "start_stage" in service_names
-
-    # Cleaning
-    DC.delete_service("start_stage")
-
-
 def test_create_volume():
     """Test function for creating volume."""
     # Create a new volume
@@ -128,33 +109,36 @@ def test_create_volume():
     assert "test_volume" not in DC.get_volume_list()
 
 
-def test_service_state():
-    """Test function to check if the service is still running."""
+def test_workflow_and_service_state():
+    """Test function to to start workflow and check if the service is
+    running and shutdown at the right time. """
     config_path = os.path.join(FILE_PATH, '..', 'compose-file',
                                'docker-compose.workflow.yml')
+    service_names = []
     running_service_ids = []
     test_ids = []
     with open(config_path, 'r') as compose_str:
         s_ids = DC.create_services(compose_str)
         for s_id in s_ids:
+            service_details = DC.get_service_details(s_id)
+            service_names.append(service_details['Spec']['Name'])
             running_service_ids.append(s_id)
             test_ids.append(s_id)
+        assert "start_stage" in service_names
+        assert "mock_stage" in service_names
+        assert "mock_workflow_stage1" in service_names
 
     while running_service_ids:
         for service_id in running_service_ids:
             service_state = DC.get_service_state(service_id)
             if service_state == 'shutdown':
                 DC.delete_service(service_id)
-
                 running_service_ids.remove(service_id)
 
     # Get all service ids
     service_list = DC.get_service_list()
     for s_id in test_ids:
         assert s_id not in service_list
-
-    # Cleaning
-    DC.delete_service("mock_stage")
 
 
 def test_get_service_list():
@@ -246,7 +230,7 @@ def test_replication_level():
 
 
 def test_actual_replica_level():
-    """Test function for getting the actaul replica level of a service."""
+    """Test function for getting the actual replica level of a service."""
     config_path = os.path.join(FILE_PATH, '..', 'compose-file',
                                'docker-compose-replica.yml')
     with open(config_path, 'r') as compose_str:
@@ -259,3 +243,24 @@ def test_actual_replica_level():
 
     # Cleaning
     DC.delete_service("replica_test")
+
+
+def test_environment():
+    """Test function for setting environment variables."""
+    config_path = os.path.join(FILE_PATH, '..', 'compose-file',
+                               'docker-compose-env.yml')
+    with open(config_path, 'r') as compose_str:
+        s_ids = DC.create_services(compose_str)
+        assert len(s_ids) == 1
+
+    level = 0
+    while level < 1:
+        for service_id in s_ids:
+            level = DC.get_replicas(service_id)
+
+    for s_id in s_ids:
+        replicas = DC.get_replicas(s_id)
+        assert replicas == 1
+
+    # Cleaning
+    DC.delete_service("process_data")

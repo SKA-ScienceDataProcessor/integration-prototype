@@ -8,9 +8,9 @@
         "initial": 16
     },
     "num_buffers": 2,
-    "num_buffer_times": 4,
+    "num_buffer_times": 8,
     "buffer_duration_sec": 2.4,
-    "num_streams": 10,
+    "num_streams": 60,
     "process_data": true,
     "write_data": false,
     "filename": "test_receive.dat"

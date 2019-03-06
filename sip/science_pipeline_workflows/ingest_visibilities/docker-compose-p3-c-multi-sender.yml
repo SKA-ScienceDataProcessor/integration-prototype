@@ -1,0 +1,234 @@
+version: '3.6'
+
+services:
+    recv:
+        image: skasip/vis_recv_c:1.1.9
+        # command args (all optional):
+        # num_streams, num_threads, num_times_in_buffer, num_buffers, port_start
+        command: ["432", "4", "10", "3", "41000"]
+        deploy:
+            restart_policy:
+                condition: none
+            mode: replicated
+            replicas: 1
+            placement:
+                constraints:
+                    - node.labels.recv == 01
+        networks:
+            - hostnet
+        stop_signal: INT
+    send0:
+        image: skasip/csp_vis_sender:1.1.0
+        command:
+            ['{
+                "destination_host": "10.1.0.30",
+                "destination_port_start": 41000,
+                "heap":
+                {
+                    "num_stations": 512,
+                    "num_pols": 4
+                },
+                "max_duration_sec": -1,
+                "num_streams": 72,
+                "num_workers": 1,
+                "reporting_interval_sec": 1,
+                "start_channel": 0,
+                "stream_config":
+                {
+                    "max_packet_size": 8972,
+                    "rate": 7.1e6,
+                    "burst_size": 1472,
+                    "max_heaps": 2
+                }
+            }']
+        deploy:
+            restart_policy:
+                condition: none
+            mode: replicated
+            replicas: 1
+            placement:
+                constraints:
+                    - node.labels.send == 00
+        networks:
+            - hostnet
+        stop_signal: INT
+    send1:
+        image: skasip/csp_vis_sender:1.1.0
+        command:
+            ['{
+                "destination_host": "10.1.0.30",
+                "destination_port_start": 41072,
+                "heap":
+                {
+                    "num_stations": 512,
+                    "num_pols": 4
+                },
+                "max_duration_sec": -1,
+                "num_streams": 72,
+                "num_workers": 1,
+                "reporting_interval_sec": 1,
+                "start_channel": 72,
+                "stream_config":
+                {
+                    "max_packet_size": 8972,
+                    "rate": 7.1e6,
+                    "burst_size": 1472,
+                    "max_heaps": 2
+                }
+            }']
+        deploy:
+            restart_policy:
+                condition: none
+            mode: replicated
+            replicas: 1
+            placement:
+                constraints:
+                    - node.labels.send == 01
+        networks:
+            - hostnet
+        stop_signal: INT
+    send2:
+        image: skasip/csp_vis_sender:1.1.0
+        command:
+            ['{
+                "destination_host": "10.1.0.30",
+                "destination_port_start": 41144,
+                "heap":
+                {
+                    "num_stations": 512,
+                    "num_pols": 4
+                },
+                "max_duration_sec": -1,
+                "num_streams": 72,
+                "num_workers": 1,
+                "reporting_interval_sec": 1,
+                "start_channel": 144,
+                "stream_config":
+                {
+                    "max_packet_size": 8972,
+                    "rate": 7.1e6,
+                    "burst_size": 1472,
+                    "max_heaps": 2
+                }
+            }']
+        deploy:
+            restart_policy:
+                condition: none
+            mode: replicated
+            replicas: 1
+            placement:
+                constraints:
+                    - node.labels.send == 02
+        networks:
+            - hostnet
+        stop_signal: INT
+    send3:
+        image: skasip/csp_vis_sender:1.1.0
+        command:
+            ['{
+                "destination_host": "10.1.0.30",
+                "destination_port_start": 41216,
+                "heap":
+                {
+                    "num_stations": 512,
+                    "num_pols": 4
+                },
+                "max_duration_sec": -1,
+                "num_streams": 72,
+                "num_workers": 1,
+                "reporting_interval_sec": 1,
+                "start_channel": 216,
+                "stream_config":
+                {
+                    "max_packet_size": 8972,
+                    "rate": 7.1e6,
+                    "burst_size": 1472,
+                    "max_heaps": 2
+                }
+            }']
+        deploy:
+            restart_policy:
+                condition: none
+            mode: replicated
+            replicas: 1
+            placement:
+                constraints:
+                    - node.labels.send == 03
+        networks:
+            - hostnet
+        stop_signal: INT
+    send4:
+        image: skasip/csp_vis_sender:1.1.0
+        command:
+            ['{
+                "destination_host": "10.1.0.30",
+                "destination_port_start": 41288,
+                "heap":
+                {
+                    "num_stations": 512,
+                    "num_pols": 4
+                },
+                "max_duration_sec": -1,
+                "num_streams": 72,
+                "num_workers": 1,
+                "reporting_interval_sec": 1,
+                "start_channel": 288,
+                "stream_config":
+                {
+                    "max_packet_size": 8972,
+                    "rate": 7.1e6,
+                    "burst_size": 1472,
+                    "max_heaps": 2
+                }
+            }']
+        deploy:
+            restart_policy:
+                condition: none
+            mode: replicated
+            replicas: 1
+            placement:
+                constraints:
+                    - node.labels.recv == 02
+        networks:
+            - hostnet
+        stop_signal: INT
+    send5:
+        image: skasip/csp_vis_sender:1.1.0
+        command:
+            ['{
+                "destination_host": "10.1.0.30",
+                "destination_port_start": 41360,
+                "heap":
+                {
+                    "num_stations": 512,
+                    "num_pols": 4
+                },
+                "max_duration_sec": -1,
+                "num_streams": 72,
+                "num_workers": 1,
+                "reporting_interval_sec": 1,
+                "start_channel": 360,
+                "stream_config":
+                {
+                    "max_packet_size": 8972,
+                    "rate": 7.1e6,
+                    "burst_size": 1472,
+                    "max_heaps": 2
+                }
+            }']
+        deploy:
+            restart_policy:
+                condition: none
+            mode: replicated
+            replicas: 1
+            placement:
+                constraints:
+                    - node.labels.recv == 03
+        networks:
+            - hostnet
+        stop_signal: INT
+
+networks:
+    hostnet:
+        external: true
+        name: host

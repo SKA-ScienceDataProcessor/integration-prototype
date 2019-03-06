@@ -421,10 +421,10 @@ class DockerSwarmClient:
         Args:
             service_id (str): docker swarm service id
 
-        Returns,
+        Returns:
             str, replicated level of the service
-        """
 
+        """
         # Raise an exception if we are not a manager
         if not self._manager:
             raise RuntimeError('Only the Swarm manager node can retrieve '
@@ -441,8 +441,9 @@ class DockerSwarmClient:
         Args:
             service_id (str): docker swarm service id
 
-        Returns,
+        Returns:
             str, replication level of the service
+
         """
         # Initialising empty list
         replicas = []
@@ -503,6 +504,8 @@ class DockerSwarmClient:
             service_config[key] = value
             if 'command' in key:
                 key = "args"
+                service_config['args'] = value
+                service_config.pop('command')
             if 'ports' in key:
                 endpoint_spec = self._parse_ports(value)
                 service_config['endpoint_spec'] = endpoint_spec
@@ -520,7 +523,11 @@ class DockerSwarmClient:
             if 'logging' in key:
                 self._parse_logging(value, service_config)
                 service_config.pop('logging')
+            if 'environment' in key:
+                service_config['env'] = value
+                service_config.pop('environment')
 
+        # LOG.info('Service Config: %s', service_config)
         return service_config
 
     def _parse_deploy(self, deploy_values: dict, service_config: dict):

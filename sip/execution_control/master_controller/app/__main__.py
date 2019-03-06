@@ -11,6 +11,7 @@ import random
 import sched
 import time
 from typing import List
+from prometheus_client import CollectorRegistry, Gauge, push_to_gateway
 
 from sip_config_db._events.event import Event
 from sip_config_db.states import SDPState, ServiceState
@@ -19,6 +20,14 @@ from sip_logging import init_logger
 from .__init__ import LOG, __service_id__, __service_name__
 
 SCHEDULER = sched.scheduler(time.time, time.sleep)
+
+# Create a collector registry for alarm gauges
+COLLECTOR_REGISTRY = CollectorRegistry()
+
+# Create a gauge for service state alarms. Its normal value is zero and
+# we set it to 1 if there is a service in the alarm state.
+SIP_STATE_ALARM = Gauge('sip_state', 'Gauge for generating SIP state alarms',
+                        registry=COLLECTOR_REGISTRY)
 
 
 def _generate_random_service_failure():
@@ -346,6 +355,14 @@ def _process_event(event: Event, sdp_state: SDPState,
         # to the target state.
         sdp_state.update_current_state(sdp_state.target_state)
 
+        if sdp_state.current_state == 'alarm':
+            LOG.debug('raising SDP state alarm')
+            SIP_STATE_ALARM.set(1)
+        else:
+            SIP_STATE_ALARM.set(0)
+        push_to_gateway('pushgateway:9091', job='SIP',
+                        registry=COLLECTOR_REGISTRY)
+
     # TODO(BMo) function to watch for changes in the \
     # current state of services and update the state of SDP
     # accordingly.
@@ -376,8 +393,6 @@ def _process_state_change_events():
 
 def temp_main():
     """Temporary main function used for demos on the 23/11/18."""
-    # Parse command line args.
-    _parse_args()
     LOG.info("Starting: %s", __service_id__)
 
     # Subscribe to state change events.

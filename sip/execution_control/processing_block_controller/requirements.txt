@@ -1,7 +1,8 @@
 skasip-config-db>=1.2.2
-skasip-docker-swarm>=1.0.7
+skasip-docker-swarm>=1.0.10
 skasip-logging>=1.0.14
 redis==2.10.6
 jinja2==2.10
 celery==4.2.1
+kombu==4.3.0
 PyYAML==4.2b4
