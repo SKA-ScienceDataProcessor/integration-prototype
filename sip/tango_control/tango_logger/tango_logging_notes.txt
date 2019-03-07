@@ -1,0 +1,59 @@
+Last edit: Brian Mcilwrath 21202/2019
+
+This explains most of what I know of Tango device "log aggregators"!
+
+1) Tango device logging is performed by commands such as
+   self.debug_stream('This is an info message')
+   or
+   print("Another debug level message", file=self.debug_info)
+
+   and similar for info, warn, error and fatal messages.
+
+   There are also optional decorators that place automatic log messages o enetering and leaving a Python
+   method implementing a Device Server command or attribute
+
+    eg.
+    @PyTango_DebugIt
+    def aDSCommand(self):
+
+2) There are three possible "logging targets" (appenders)
+
+      Console    ("console::cout")
+      File       ("file::<filename>")
+      Log Device ("device::sip_sdp/elt/logger")
+
+3) The "Log device" target is a Device which implements a Tango command named 'log' - see tango_logger code for
+   arguments provided to this command.
+
+4) There is one logging level for each Device Server (which applies to ALL logging targets for that DS). Only messages
+equal to or more sever than this log levelk are output.
+
+SNAGs - perhaps discuss on ESRF Tango Bulletin Board - if this work neds to be progressed
+
+Logging targets and level seem to be designed to be used via DeviceProxy() -
+
+eg.
+d=DeviceProxy('sip_sdp/elt/master')
+d.set_logging_target('device::sip_sdp/elt/logger')
+print(d.get_logging_targets())
+print(d.get_logging_level')
+
+BUT they must actually be IMPLEMENTED by code in the Device Server code itself!
+
+For SDP purposes it would be ideal if all of our devices (master, processing block and subarray) could
+connect to the logger device automatically - by calling appropriate Device Server commands.
+
+I invisiged something this like
+
+class MyDeviceServer(Device):
+
+   def init_device(self):
+   # Call server command DIRECTLY to setup logging stream to 'device::sip_sdp/elt/logger'
+
+BUT I have failed to discover how to do this!!!!! See the example Tango master DS code which uses something of a hack
+(a loopback DeviceProxy to the Master Device - to do this)
+
+Note also that the standard Tango method 'init_device()' seems to be used too early in the life-cycle to use the
+DeviceProxy for communication
+
+
