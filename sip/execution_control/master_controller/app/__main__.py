@@ -2,15 +2,12 @@
 """Master Controller Service.
 
 This version polls REDIS Events rather than the database directly.
-
-FIXME(BMo): Make sure this is resilient to the REDIS database connection
-            not being present.
 """
 import argparse
 import random
-import sched
 import time
 from typing import List
+import urllib
 from prometheus_client import CollectorRegistry, Gauge, push_to_gateway
 
 from sip_config_db._events.event import Event
@@ -18,8 +15,6 @@ from sip_config_db.states import SDPState, ServiceState
 from sip_config_db.states.services import get_service_state_list
 from sip_logging import init_logger
 from .__init__ import LOG, __service_id__, __service_name__
-
-SCHEDULER = sched.scheduler(time.time, time.sleep)
 
 # Create a collector registry for alarm gauges
 COLLECTOR_REGISTRY = CollectorRegistry()
@@ -44,7 +39,7 @@ def _update_service_current_state(service: ServiceState):
 
 
 def _update_services_instant_gratification(sdp_target_state: str):
-    """For demontstration purposes only.
+    """For demonstration purposes only.
 
     This instantly updates the services current state with the
     target state, rather than wait on them or schedule random delays
@@ -54,10 +49,12 @@ def _update_services_instant_gratification(sdp_target_state: str):
 
     # Set the target state of services
     for service in service_states:
-        LOG.debug('Setting the current state of %s to be %s', service.id,
-                  sdp_target_state)
-        service.update_current_state(sdp_target_state)
-    # should we be picking up the events?
+        if service.current_state != sdp_target_state:
+            LOG.debug('Setting the current state of %s to be %s', service.id,
+                      sdp_target_state)
+            service.update_current_state(sdp_target_state)
+
+    # Should we be picking up the events?
 
 
 def _update_services_target_state(sdp_target_state: str):
@@ -70,33 +67,19 @@ def _update_services_target_state(sdp_target_state: str):
         sdp_target_state (str): Target state of SDP
 
     """
-    sdp_state = SDPState()
     service_states = get_service_state_list()
 
     # Set the target state of services
     for service in service_states:
-        LOG.debug('Setting the target state of %s to be %s', service.id,
-                  sdp_target_state)
-        service.update_target_state(sdp_target_state)
+        if service.current_state != sdp_target_state:
+            LOG.debug('Setting the target state of %s to be %s', service.id,
+                      sdp_target_state)
+            service.update_target_state(sdp_target_state)
 
-        # Schedule a call to update the current state of each service.
-        # commented out for now:
-        # delay = random.uniform(0.2, 3)
-        # SCHEDULER.enter(delay, 1, _update_service_current_state)
-
-    # We should not need to do this with real subprocesses
-    LOG.debug("simulate services changing state")
-    _update_services_instant_gratification(sdp_target_state)
-
-    # Schedule a call to update the current state of the SDP.
-    # commented out for now:
-    # delay = random.uniform(0.4, 0.5)
-    # SCHEDULER.enter(delay, 1, _update_sdp_current_state)
-
-    LOG.debug('no need to wait on service states')
-    sdp_state.update_current_state(sdp_state.target_state)
-    # commented out for now:
-    # SCHEDULER.enter(0, 1, _process_events)
+    # The function below should not be called here as it is updating the
+    # **CURRENT** state of services!
+    # LOG.debug("Simulate services changing state ...")
+    # _update_services_instant_gratification(sdp_target_state)
 
 
 def _handle_sdp_target_state_updated(sdp_state: SDPState):
@@ -131,19 +114,30 @@ def _parse_args():
     parser.add_argument('-vv', action='store_true', help='Extra verbose mode')
     args = parser.parse_args()
 
-    # if args.vv:
-    #     init_logger(log_level='DEBUG', show_log_origin=True)
-    # elif args.v:
-    #     init_logger(log_level='DEBUG')
-    # else:
-    #     init_logger(log_level='INFO')
-    init_logger(log_level='DEBUG', show_log_origin=True)
+    if args.vv:
+        init_logger(log_level='DEBUG', show_log_origin=True)
+    elif args.v:
+        init_logger(logger_name='sip.ec.master_controller', log_level='DEBUG')
+    else:
+        init_logger(log_level='INFO')
 
     return args
 
 
 def _init(sdp_state: SDPState):
-    """Initialise the Master Controller Service."""
+    """Initialise the Master Controller Service.
+
+    Performs the following actions:
+    1. Registers ServiceState objects into the Config Db.
+    2. If initialising for the first time (unknown state),
+       sets the SDPState to 'init'
+    3. Initialises the state of Services, if running for the first time
+       (their state == unknown)
+    4. Waits some time and sets the Service states to 'on'. This emulates
+       waiting for Services to become available.
+    5. Once all services are 'on', sets the SDP state to 'standby'.
+
+    """
     # Parse command line arguments.
     LOG.info("Initialising: %s", __service_id__)
 
@@ -154,14 +148,8 @@ def _init(sdp_state: SDPState):
     # nothing (this is handled by the ServiceState object).
     _services = [
         "ExecutionControl:MasterController:1.1.3",
-        "ExecutionControl:ProcessingController:1.1.3",
-        "ExecutionControl:ProcessingBlockController:1.1.3",
         "ExecutionControl:ConfigurationDatabase:4.0.6",
-        "ExecutionControl:ProcessingBlockControllerBroker:4.0.6",
-        "ExecutionControl:ProcessingBlockControllerBackend:4.0.6",
         "TangoControl:SDPMaster:1.1.3",
-        "TangoControl:Subarrays:1.1.3",
-        "TangoControl:ProcessingBlocks:1.1.3",
         "TangoControl:Database:1.0.4",
         "TangoControl:MySQL:1.0.3",
         "TangoControl:FlaskMaster:1.1.3"
@@ -170,31 +158,33 @@ def _init(sdp_state: SDPState):
         subsystem, name, version = service_id.split(':')
         ServiceState(subsystem, name, version)
 
-    # Mark the SDP state as init.
+    # If the SDP state is 'unknown', mark the SDP state as init.
     # FIXME(BMo) This is not right as we want to allow for recovery from
     # failure without just reinitialising...!? ie. respect the old sate
     # NOTE: If the state is 'off' we will want to reset the database
     # with 'skasip_config_db_init --clear'
-    if sdp_state.current_state in ['unknown']:
+    if sdp_state.current_state in ['unknown', 'off']:
         try:
+            LOG.info("Setting the SDPState to 'init'")
             sdp_state.update_current_state('init', force=True)
         except ValueError as error:
             LOG.critical('Unable to set the State of SDP to init! %s',
                          str(error))
 
-    service_states = get_service_state_list()
+    LOG.info("Updating Service States")
+    service_state_list = get_service_state_list()
 
     # FIXME(BMo) **Hack** Mark all Services in the 'unknown' state as
     # initialising.
-    for service_state in service_states:
-        if service_state.current_state in ['unknown']:
+    for service_state in service_state_list:
+        if service_state.current_state in ['unknown', 'off']:
             service_state.update_current_state('init', force=True)
 
     # FIXME(BMo) **Hack** After 'checking' that the services are 'on' set
     # their state on 'on' after a short delay.
     # FIXME(BMo) This check should not be serialised!!! (should be part of the
     # event loop)
-    for service_state in service_states:
+    for service_state in service_state_list:
         if service_state.current_state == 'init':
             time.sleep(random.uniform(0, 0.2))
             service_state.update_current_state('on')
@@ -202,25 +192,28 @@ def _init(sdp_state: SDPState):
     # FIXME(BMo): **Hack** Now the all services are on, set the sate of SDP to
     # 'standby'
     # FIXME(BMo) This should also be part of the event loop.
-    services_on = [service.current_state == 'on' for service in service_states]
+    services_on = [service.current_state == 'on'
+                   for service in service_state_list]
     if all(services_on):
         LOG.info('All Services are online!.')
         sdp_state.update_current_state('standby')
     else:
         LOG.critical('Master Controller failed to initialise.')
 
-    return service_states
+    return service_state_list
 
 
 def _process_event(event: Event, sdp_state: SDPState,
                    service_states: List[ServiceState]):
-    """Process a state change event."""
-    LOG.debug('>> event detected: %s %s %s', event.object_id,
-              event.type, event.data)
+    """Process a SDP state change event."""
+    LOG.debug('Event detected! (id : "%s", type: "%s", data: "%s")',
+              event.object_id, event.type, event.data)
 
-    if event.object_id == 'SDP' and \
-            event.type == 'target_state_updated':
-        LOG.info('SDP target state changed to %s',
+    if event.object_id == 'SDP' and event.type == 'current_state_updated':
+        LOG.info('SDP current state updated, no action required!')
+
+    if event.object_id == 'SDP' and event.type == 'target_state_updated':
+        LOG.info("SDP target state changed to '%s'",
                  sdp_state.target_state)
 
         # If the sdp is already in the target state do nothing
@@ -239,7 +232,7 @@ def _process_event(event: Event, sdp_state: SDPState,
                 service_state.update_current_state('off')
 
         LOG.info('Processing target state change request ...')
-        time.sleep(0.05)
+        time.sleep(0.1)
         LOG.info('Done processing target state change request!')
 
         # Assuming that the SDP has responding to the target
@@ -252,8 +245,11 @@ def _process_event(event: Event, sdp_state: SDPState,
             SIP_STATE_ALARM.set(1)
         else:
             SIP_STATE_ALARM.set(0)
-        push_to_gateway('pushgateway:9091', job='SIP',
-                        registry=COLLECTOR_REGISTRY)
+        try:
+            push_to_gateway('pushgateway:9091', job='SIP',
+                            registry=COLLECTOR_REGISTRY)
+        except urllib.error.URLError:
+            LOG.warning("Unable to connect to the Alarms service!")
 
     # TODO(BMo) function to watch for changes in the \
     # current state of services and update the state of SDP
@@ -261,7 +257,11 @@ def _process_event(event: Event, sdp_state: SDPState,
 
 
 def _process_state_change_events():
-    """Process state change events."""
+    """Process events relating to the overall state of SDP.
+
+    This function starts and event loop which continually checks for
+    and responds to SDP state change events.
+    """
     sdp_state = SDPState()
     service_states = get_service_state_list()
     state_events = sdp_state.get_event_queue(subscriber=__service_name__)
@@ -269,10 +269,12 @@ def _process_state_change_events():
     counter = 0
     while True:
         time.sleep(0.1)
-        # FIXME(BMo) Hack to avoid problems with historical events not being
-        # correctly handled by EventQueue.get() - see issue #54
+
+        # *Hack* to avoid problems with historical events not being correctly
+        # handled by EventQueue.get(), replay old events every 10s
+        # - see issue #54
         if counter % 1000 == 0:
-            LOG.debug('Checking published events ... %d', counter/1000)
+            LOG.debug('Checking published events ... %d', counter / 1000)
             _published_events = state_events.get_published_events(process=True)
             for _state_event in _published_events:
                 _process_event(_state_event, sdp_state, service_states)
