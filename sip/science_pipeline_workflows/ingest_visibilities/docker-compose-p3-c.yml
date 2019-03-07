@@ -2,9 +2,9 @@ version: '3.6'
 
 services:
     recv:
-        image: skasip/vis_recv_c:1.1.9
+        image: skasip/vis_recv_c:1.2.1
         # command args (all optional):
-        # num_streams, num_threads, num_times_in_buffer, num_buffers, port_start
+        # num_streams, num_threads, num_times_in_buffer, num_buffers, port_start, output_dir
         command: ["100"]
         #volumes:
         #    - type: bind
