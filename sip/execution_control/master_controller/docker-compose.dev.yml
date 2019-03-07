@@ -1,0 +1,87 @@
+version: '3.6'
+
+services:
+
+  tc_tango_master:
+    image: skasip/tango_master:1.2.0
+    environment:
+    - TANGO_HOST=tc_tango_database:10000
+    - REDIS_HOST=ec_config_database
+    deploy:
+      mode: replicated
+      replicas: 1
+    healthcheck:
+      test: ["CMD", "python3", "-c",
+            "import PyTango; d=PyTango.DeviceProxy('sip_sdp/elt/master');
+            d.ping()"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+  tc_tango_database:
+    image: skasip/tango_database:1.0.4
+    ports:
+    - 10000:10000
+    environment:
+    - MYSQL_HOST=tc_tango_mysql:3306
+    - MYSQL_USER=tango
+    - MYSQL_PASSWORD=tango
+    - MYSQL_DATABASE=tango_db
+    deploy:
+      mode: replicated
+      replicas: 1
+      placement:
+        constraints:
+        - node.role == manager
+
+  tc_tango_mysql:
+    image: skasip/tango_mysql:1.0.3
+    environment:
+    - MYSQL_ROOT_PASSWORD=sip1
+    deploy:
+      mode: replicated
+      replicas: 1
+    healthcheck:
+      test: ["CMD", "mysql", "--user=tango", "--password=tango",
+             "-e", "SHOW DATABASES LIKE 'tango_db';"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+    volumes:
+    - sip_tango_mysql:/var/lib/mysql:consistent
+
+  tc_flask_master:
+    image: skasip/flask_master:1.2.0
+    ports:
+    - 5000:5000
+    environment:
+    - REDIS_HOST=ec_config_database
+    deploy:
+      mode: replicated
+      replicas: 1
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5000/"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+  ec_config_database:
+    image: redis:5.0.1-alpine
+    deploy:
+      mode: replicated
+      replicas: 1
+    ports:
+    - 6379:6379
+
+  platform_redis-commander-db0:
+    image: rediscommander/redis-commander
+    ports:
+    - 8081:8081
+    environment:
+    - REDIS_HOSTS=config_db:ec_config_database:6379:0
+    deploy:
+      mode: replicated
+      replicas: 1
+
+volumes:
+  sip_tango_mysql:
