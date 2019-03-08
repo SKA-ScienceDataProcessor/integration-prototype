@@ -1,4 +1,4 @@
-#!/usr/bin/env bash
+#!/bin/bash
 # Run tests and linters for specified directory.
 #
 # Usage:
@@ -8,61 +8,61 @@
 #   ./tools/run_tests.sh sip/execution_control/configuration_db \
 #        --test-only -x -k test_workflow_definitions
 #
-RED='\033[0;31m'
-BLUE='\033[0;34m'
-NC='\033[0m'
 
-DIR="$1"
-echo -e "${RED}* DIR=${NC}'${DIR}'"
-OPTIONS=("${@:2}")
-if [[ ! -z "${OPTIONS}" && "${OPTIONS[0]}" == "--test-only" ]]; then
-    OPTIONS="${OPTIONS[@]:1}"
-    echo -e "${RED}------------------------------------------------------${NC}"
-    echo -e "${RED}* OPTIONS=${NC}'${OPTIONS}'"
-    CMD="python3 -m pytest -s -v \
-    --rootdir=. \
-    ${OPTIONS[*]} \
-    ${DIR}"
-    echo -e "${RED}------------------------------------------------------${NC}"
-    echo -e "${BLUE}Running tests:"
-    echo -e "${BLUE}${CMD}"
-    echo -e "${RED}------------------------------------------------------${NC}"
-elif [[ ! -z "${OPTIONS}" ]]; then
-    echo -e "${RED}------------------------------------------------------${NC}"
-    echo -e "${RED}* OPTIONS=${NC}'${OPTIONS}'"
-    CMD="python3 -m pytest -s -v \
-    --rootdir=. \
-    --pylint \
-    --pylint-rcfile=.pylintrc \
-    --codestyle \
-    --docstyle \
-    --cov-config=./setup.cfg \
-    --cov-append \
-    --cov-branch \
-    --no-cov-on-fail \
-    --cov=${DIR} \
-    ${OPTIONS[*]} \
-    ${DIR}"
-    echo -e "${RED}------------------------------------------------------${NC}"
-    echo -e "${BLUE}Running tests:"
-    echo -e "${BLUE}${CMD}"
-    echo -e "${RED}------------------------------------------------------${NC}"
+Usage() {
+   printf "Usage: %s <directory> [--test-only] [pytest flags]\n" "$0"
+   exit 1
+}
+
+# Colours used in printing output
+RED=$(tput setaf 1)
+BLUE=$(tput setaf 4)
+NC=$(tput sgr0)
+
+
+[[ -n $1 ]] && [[ -d $1 ]] || { 
+   printf "directory not provided or does not exist\n"
+   Usage 
+}
+
+DIR=$1
+shift
+printf "%s* DIR=%s'%s'\n" "$RED" "$NC" "$DIR"
+
+if [[ -n $1 ]] && [[ $1 = --test-only ]]
+then
+    shift
+    full_test_options=
 else
-    CMD="python3 -m pytest -s -vv \
-    --rootdir=. \
-    --pylint \
-    --pylint-rcfile=.pylintrc \
-    --codestyle \
-    --docstyle \
-    --cov-config=./setup.cfg \
-    --cov-branch \
-    --cov-append \
-    --no-cov-on-fail \
-    --cov=${DIR} \
-    ${DIR}"
-    echo -e "${RED}------------------------------------------------------${NC}"
-    echo -e "${BLUE}Running tests:"
-    echo -e "${BLUE}${CMD}"
-    echo -e "${RED}------------------------------------------------------${NC}"
+    full_test_options="
+    --pylint 
+    --pylint-rcfile=.pylintrc 
+    --codestyle 
+    --docstyle 
+    --cov-config=./setup.cfg 
+    --cov-append 
+    --cov-branch 
+    --no-cov-on-fail 
+    --cov=${DIR}
+    "
 fi
-eval ${CMD}
+
+if [[ $# -ge 1 ]]
+then
+    prefix_options=$'-m pytest -s -v \
+    --rootdir=.'
+    printf "%s------------------------------------------------------\n" \
+            "$RED"
+    printf "* OPTIONS=%s%s\n" "$NC" "$*"
+else
+     prefix_options=$'-m pytest -s -vv 
+    --rootdir=.'
+fi
+printf "%s------------------------------------------------------\n" \
+            "$RED" 
+printf "%sRunning tests:\n   python3 %s %s %s %s\n" \
+             "$BLUE" "$prefix_options" "$full_test_options" "$*" "$DIR"
+printf "%s------------------------------------------------------%s\n" \
+            "$RED" "$NC"
+
+python3 $prefix_options $full_test_options $* $DIR
