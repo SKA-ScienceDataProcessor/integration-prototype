@@ -1,16 +1,18 @@
 # -*- coding: utf-8 -*-
 """SIP SDP Master Interface Service, Restful version."""
 
+from random import randrange
 import time
 from http import HTTPStatus
+import jsonschema
 
-import redis
 from flask import request
 from flask_api import FlaskAPI
 
 from sip_config_db.scheduling import ProcessingBlockList, \
     SchedulingBlockInstanceList
 from sip_config_db.states import SDPState
+from sip_config_db.scheduling import Subarray, SubarrayList
 from sip_logging import init_logger
 from .release import LOG, __service_id__, __version__
 
@@ -20,6 +22,72 @@ init_logger()
 APP = FlaskAPI(__name__)
 
 START_TIME = time.time()
+
+
+def _check_status(sdp_state):
+    """SDP Status check.
+
+    Do all the tests to determine, if the SDP state is
+    "broken", what could be the cause, and return a
+    suitable status message to be sent back by the calling
+    function.
+    """
+    try:
+        errval = "error"
+        errdict = dict(state="unknown", reason="unknown")
+        if sdp_state.current_state == "unknown":
+            errdict['reason'] = 'database not initialised.'
+            LOG.debug('Current state is unknown;')
+            LOG.debug('Target state is %s;', sdp_state.target_state)
+            LOG.debug('Current state timestamp is %s;',
+                      sdp_state.current_timestamp)
+        elif sdp_state.current_state is None:
+            errdict['reason'] = 'Master Controller Services may have died.'
+            LOG.debug('Current state is NONE;')
+            LOG.debug('Target state is %s;', sdp_state.target_state)
+            LOG.debug('Current state timestamp is %s;',
+                      sdp_state.current_timestamp)
+        elif sdp_state.target_state is None:
+            errdict['reason'] = 'Master Controller Services may have died.'
+            LOG.debug('Current state is  %s;',
+                      sdp_state.current_state)
+            LOG.debug('Target state is NONE;')
+            LOG.debug('Current state timestamp is %s;',
+                      sdp_state.current_timestamp)
+            LOG.debug('Target state timestamp is %s;',
+                      sdp_state.target_timestamp)
+        elif sdp_state.current_timestamp is None:
+            errdict['reason'] = 'Master Controller Services may have died.'
+            LOG.debug('Current state is  %s;',
+                      sdp_state.current_state)
+            LOG.debug('Target state is %s;', sdp_state.target_state)
+            LOG.debug('Current state timestamp is NONE')
+            LOG.debug('Target state timestamp is %s;',
+                      sdp_state.target_timestamp)
+        elif sdp_state.target_timestamp is None:
+            errdict['reason'] = 'Master Controller Services may have died.'
+            LOG.debug('Current state is  %s;',
+                      sdp_state.current_state)
+            LOG.debug('Target state is %s;', sdp_state.target_state)
+            LOG.debug('Current state timestamp is %s;',
+                      sdp_state.current_timestamp)
+            LOG.debug('Target state timestamp is NONE')
+        elif sdp_state.current_timestamp < sdp_state.target_timestamp:
+            errdict['reason'] = \
+                'Timestamp for Master Controller Services is stale.'
+            LOG.debug('Current state is  %s;',
+                      sdp_state.current_state)
+            LOG.debug('Target state is %s;', sdp_state.target_state)
+            LOG.debug('Current state timestamp is %s;',
+                      sdp_state.current_timestamp)
+            LOG.debug('Target state timestamp is %s;',
+                      sdp_state.target_timestamp)
+        else:
+            errval = "okay"
+    except ConnectionError as err:
+        errdict['reason'] = err
+        LOG.debug('Connection Error %s', err)
+    return errval, errdict
 
 
 @APP.route('/')
@@ -50,6 +118,10 @@ def root():
                     "href": "{}state/target".format(request.url)
                 },
                 {
+                    "Link": "SDP target state",
+                    "href": "{}target_state".format(request.url)
+                },
+                {
                     "Link": "SDP current state",
                     "href": "{}state/current".format(request.url)
                 },
@@ -60,6 +132,14 @@ def root():
                 {
                     "Link": "Processing Blocks",
                     "href": "{}processing_blocks".format(request.url)
+                },
+                {
+                    "Link": "Resource Availability",
+                    "href": "{}resource_availability".format(request.url)
+                },
+                {
+                    "Link": "Configure SBI",
+                    "href": "{}configure_sbi".format(request.url)
                 }
             ]
         }
@@ -86,14 +166,31 @@ def version():
 @APP.route('/allowed_target_sdp_states')
 def allowed_transitions():
     """Get target states allowed for the current state."""
-    sdp_state = SDPState()
-    return sdp_state.allowed_target_states[sdp_state.current_state]
+    try:
+        sdp_state = SDPState()
+        return sdp_state.allowed_target_states[sdp_state.current_state]
+    except KeyError:
+        LOG.error("Key Error")
+        return dict(state="KeyError", reason="KeyError")
 
 
 @APP.route('/state', methods=['GET'])
 def get_state():
-    """SDP State."""
+    """SDP State.
+
+    Return current state; target state and allowed
+    target states.
+    """
     sdp_state = SDPState()
+    errval, errdict = _check_status(sdp_state)
+    if errval == "error":
+        LOG.debug(errdict['reason'])
+        return dict(
+            current_state="unknown",
+            target_state="unknown",
+            last_updated="unknown",
+            reason=errdict['reason']
+        )
     _last_updated = sdp_state.current_timestamp
     if sdp_state.target_timestamp > _last_updated:
         _last_updated = sdp_state.target_timestamp
@@ -107,214 +204,87 @@ def get_state():
     ), HTTPStatus.OK
 
 
-@APP.route('/state', methods=['PUT'])
-def put_state():
-    """SDP State."""
-    sdp_state = SDPState()
-    request_data = request.data
-    target_state = request_data['value']
-    sdp_state.update_target_state(target_state)
-    return dict(message='Target state successfully updated to {}'
-                .format(target_state)), HTTPStatus.ACCEPTED
-
-
-@APP.route('/state/target', methods=['GET'])
+@APP.route('/state/target', methods=['GET'], strict_slashes=False)
+@APP.route('/target_state', methods=['GET'], strict_slashes=False)
 def get_target_state():
-    """SDP target State."""
+    """SDP target State.
+
+    Returns the target state; allowed target states and time updated
+    """
     sdp_state = SDPState()
-    try:
-        LOG.debug('Getting target state')
-        target_state = sdp_state.target_state
-        LOG.debug('Target state = %s', target_state)
+    errval, errdict = _check_status(sdp_state)
+    if errval == "error":
+        LOG.debug(errdict['reason'])
         return dict(
-            current_target_state=target_state,
-            allowed_target_states=sdp_state.allowed_target_states[
-                sdp_state.current_state],
-            last_updated=sdp_state.target_timestamp.isoformat())
-        # if target_state is None:
-        #     LOG.debug('target state unknown')
-        #     return {'target_state': target_state,
-        #             'reason': 'database not initialised.'}
-        #
-        # # Check the timestamp to be sure that the watchdog is alive
-        # LOG.debug('getting timestamp')
-        # state_tmstmp = sdp_state.current_timestamp
-        # target_tmstmp = sdp_state.target_timestamp
-        # if state_tmstmp is None or target_tmstmp is None:
-        #     LOG.warning('Timestamp not available')
-        #     return {'state': 'UNKNOWN',
-        #             'reason': 'Master Controller Services may have died.'}
-        #
-        # LOG.debug("State timestamp: %s", state_tmstmp.isoformat())
-        # LOG.debug("Target timestamp: %s", target_tmstmp.isoformat())
-        # if target_tmstmp < state_tmstmp:
-        #     LOG.debug('timestamp okay')
-        #     return {'target_state': target_state}
-        #
-        # LOG.warning('Timestamp for Master Controller Services is stale')
-        # return {'target_state': 'UNKNOWN',
-        #         'reason': 'Master Controller Services may have died.'}
-
-    except redis.exceptions.ConnectionError:
-        LOG.debug('error connecting to DB')
-        return {'target_state': 'unknown',
-                'reason': 'Unable to connect to database.'}
-
-
-@APP.route('/state/target', methods=['PUT'])
-def put_target_state():
-    """SDP target State."""
-    sdp_state = SDPState()
-
-    try:
-        request_data = request.data
-        target_state = request_data['value']
-        sdp_state.update_target_state(target_state)
-        return dict(message='Target state successfully updated to {}'
-                    .format(target_state))
-
-        # LOG.debug('getting target state')
-        # target_state = sdp_state.target_state
-        # LOG.debug('got(?) target state')
-        # if target_state is None:
-        #     LOG.debug('target state set to none')
-        #     return {'target_state': 'UNKNOWN',
-        #             'reason': 'database not initialised.'}
-        # LOG.debug(target_state)
-        #
-        # # Check the timestamp to be sure that the watchdog is alive
-        # LOG.debug('getting timestamp')
-        # state_tmstmp = sdp_state.current_timestamp
-        # target_tmstmp = sdp_state.target_timestamp
-        # if state_tmstmp is None or target_tmstmp is None:
-        #     LOG.warning('Timestamp not available')
-        #     return {'state': 'UNKNOWN',
-        #             'reason': 'Master Controller Services may have died.'}
-        #
-        # LOG.debug("State timestamp: %s", state_tmstmp.isoformat())
-        # LOG.debug("Target timestamp: %s", target_tmstmp.isoformat())
-        # if target_tmstmp < state_tmstmp:
-        #     LOG.debug('timestamp okay')
-        #     return {'target_state': target_state}
-        #
-        # LOG.warning('Timestamp for Master Controller Services is stale')
-        # return {'target_state': 'UNKNOWN',
-        #         'reason': 'Master Controller Services may have died.'}
-    except ValueError as error:
-        return dict(error='Failed to set target state',
-                    reason=str(error))
-    except RuntimeError as error:
-        return dict(error='RunTime error',
-                    reason=str(error))
+            current_target_state="unknown",
+            last_updated="unknown",
+            reason=errdict['reason']
+        )
+    LOG.debug('Getting target state')
+    target_state = sdp_state.target_state
+    LOG.debug('Target state = %s', target_state)
+    return dict(
+        current_target_state=target_state,
+        allowed_target_states=sdp_state.allowed_target_states[
+            sdp_state.current_state],
+        last_updated=sdp_state.target_timestamp.isoformat())
 
 
 @APP.route('/state/current', methods=['GET'])
 def get_current_state():
-    """Return the SDP State."""
+    """Return the SDP State and the timestamp for when it was updated."""
     sdp_state = SDPState()
-    return dict(current_state=sdp_state.current_state,
-                last_updated=sdp_state.current_timestamp.isoformat())
-    # pylint: disable=too-many-return-statements
+    errval, errdict = _check_status(sdp_state)
+    if errval == "error":
+        LOG.debug(errdict['reason'])
+        return dict(
+            current_state="unknown",
+            last_updated="unknown",
+            reason=errdict['reason']
+        )
+    LOG.debug('Current State: %s', sdp_state.current_state)
+    LOG.debug('Current State last updated: %s',
+              sdp_state.current_timestamp.isoformat())
+    return dict(
+        current_state=sdp_state.current_state,
+        last_updated=sdp_state.current_timestamp.isoformat()
+    ), HTTPStatus.OK
 
-    # These are the states we allowed to request
-    # states = ('OFF', 'STANDBY', 'ON', 'DISABLE')
-    # LOG.debug(states)
 
-    # it could be that this is not necessary as a query for another
-    # item may simply go through another route
-    # request_keys = ('state',)
-    #
-    # # db = masterClient()
-    # sdp_state = SDPState()
-    # if request.method == 'PUT':
-    #
-    #     # Has the user used unknown keys in the query?
-    #     unk_kys = [ky for ky in request.data.keys()
-    #                if ky not in request_keys]
-    #
-    #     # unk_kys should be empty
-    #     if unk_kys:
-    #         LOG.debug('Unrecognised keys in data')
-    #         return (dict(error='Invalid request key(s) ({})'
-    #                      .format(','.join(unk_kys)),
-    #                      allowed_request_keys=request_keys),
-    #                 status.HTTP_400_BAD_REQUEST)
-    #     requested_state = request.data.get('state', '').lower()
-    #     sdp_state = sdp_state.current_state
-    #     states = sdp_state.allowed_state_transitions[sdp_state]
-    #     if not states:
-    #         LOG.warning('No allowed states - cannot continue')
-    #         return (dict(error='No Allowed States',
-    #                      message='No allowed state transition for {}'
-    #                      .format(sdp_state)
-    #                      ), status.HTTP_400_BAD_REQUEST)
-    #     if requested_state not in states:
-    #         LOG.debug('Invalid state: %s', requested_state)
-    #         return ({'error': 'Invalid Input',
-    #                  'message': 'Invalid state: {}'.format(requested_state),
-    #                  'allowed_states': states},
-    #                 status.HTTP_400_BAD_REQUEST)
-    #     response = {'message': 'Accepted state: {}'.format(requested_state)}
-    #     try:
-    #         LOG.debug('Updating state, SDP state is: %s', sdp_state)
-    #
-    #         # If different then update target state
-    #         if sdp_state != requested_state:
-    #             # db.target_state(requested_state)
-    #             sdp_state.update_target_state(requested_state)
-    #
-    #     except redis.exceptions.ConnectionError:
-    #         LOG.debug('failed to connect to DB')
-    #         response['error'] = 'Unable to connect to database.'
-    #     except ValueError as err:
-    #         LOG.debug('Error updating target state: %s', str(err))
-    #
-    #     # if requested_state == 'OFF' the master controller
-    #     # will deal with it, not this program.
-    #     return response
-    #
-    # # GET - if the state in the database is OFF we want to replace it with
-    # # INIT
-    # try:
-    #     LOG.debug('getting current state')
-    #     current_state = sdp_state.current_state
-    #     LOG.debug('got(?) current state')
-    #     if current_state is None:
-    #         LOG.debug('current state set to none')
-    #         return {'state': 'UNKNOWN',
-    #                 'reason': 'database not initialised.'}
-    #     LOG.debug(current_state)
-    #     # if current_state == 'OFF':
-    #     # LOG.debug('current state off - set to init')
-    #     # current_state = 'INIT'
-    #
-    #     # Check the timestamp to be sure that the watchdog is alive
-    #     LOG.debug('getting timestamp')
-    #     state_tmstmp = sdp_state.current_timestamp
-    #     target_tmstmp = sdp_state.target_timestamp
-    #     if state_tmstmp is None or target_tmstmp is None:
-    #         LOG.warning('Timestamp not available')
-    #         return {'state': 'UNKNOWN',
-    #                 'reason': 'Master Controller Services may have died.'}
-    #
-    #     LOG.debug("State timestamp: %s", state_tmstmp.isoformat())
-    #     LOG.debug("Target timestamp: %s", target_tmstmp.isoformat())
-    #     # state_tmstmp = datetime.strptime(state_tmstmp,
-    #     # '%Y/%m/%d %H:%M:%S.%f')
-    #     # target_tmstmp = datetime.strptime(target_tmstmp,
-    #     # '%Y/%m/%d %H:%M:%S.%f')
-    #     if target_tmstmp < state_tmstmp:
-    #         LOG.debug('timestamp okay')
-    #         return {'state': current_state}
-    #
-    #     LOG.warning(
-    #         'Timestamp for Master Controller Services is stale')
-    #     return {'state': 'UNKNOWN',
-    #             'reason': 'Master Controller Services may have died.'}
-    # except redis.exceptions.ConnectionError:
-    #     LOG.debug('error connecting to DB')
-    #     return {'state': 'UNKNOWN',
-    #             'reason': 'Unable to connect to database.'}
+@APP.route('/state/target', methods=['PUT'], strict_slashes=False)
+@APP.route('/target_state', methods=['PUT'], strict_slashes=False)
+def put_target_state():
+    """SDP target State.
+
+    Sets the target state
+    """
+    sdp_state = SDPState()
+    errval, errdict = _check_status(sdp_state)
+    if errval == "error":
+        LOG.debug(errdict['reason'])
+        rdict = dict(
+            current_state="unknown",
+            last_updated="unknown",
+            reason=errdict['reason']
+        )
+    else:
+        try:
+            LOG.debug('request is of type %s', type(request))
+            request_data = request.data
+            LOG.debug('request data is of type %s', type(request_data))
+            LOG.debug('request is %s', request_data)
+            request_data = request.data
+            target_state = request_data['value'].lower()
+            sdp_state.update_target_state(target_state)
+            rdict = dict(message='Target state successfully updated to {}'
+                         .format(target_state))
+        except ValueError as error:
+            rdict = dict(error='Failed to set target state',
+                         reason=str(error))
+        except RuntimeError as error:
+            rdict = dict(error='RunTime error',
+                         reason=str(error))
+    return rdict
 
 
 @APP.route('/processing_blocks')
@@ -333,3 +303,36 @@ def scheduling_blocks():
     return dict(active=sbi_list.active,
                 completed=sbi_list.completed,
                 aborted=sbi_list.aborted)
+
+
+@APP.route('/resource_availability')
+def resource_availability():
+    """Return the Resource Availability.
+
+    (next available resource? number of available resouces?).
+    Currently unable to calculate this so send back a random number.
+    This is identical to the TANGO function.
+    """
+    return dict(nodes_free=randrange(1, 500))
+
+
+@APP.route('/configure_sbi', methods=['GET'])
+@APP.route('/configure_sbi', methods=['PUT'])
+@APP.route('/configure_sbi', methods=['POST'])
+def configure_sbi():
+    """Configure an SBI using POSTed configuration."""
+    # Need an ID for the subarray - guessing I just get
+    # the list of inactive subarrays and use the first
+    inactive_list = SubarrayList().inactive
+    request_data = request.data
+    LOG.debug('request is of type %s', type(request_data))
+    try:
+        sbi = Subarray(inactive_list[0])
+        sbi.activate()
+        sbi.configure_sbi(request_data)
+    except jsonschema.exceptions.ValidationError as error:
+        LOG.error('Error configuring SBI: %s', error)
+        return dict(path=error.absolute_path.__str__(),
+                    schema_path=error.schema_path.__str__(),
+                    message=error.message)
+    return dict(status="Accepted SBI: {}".format(sbi.id))
