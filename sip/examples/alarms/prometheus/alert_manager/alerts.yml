@@ -1,9 +1,0 @@
-global:
-
-route:
-  receiver: 'sip'
-
-receivers:
-  - name: 'sip'
-    webhook_configs:
-       - url: 'http://alarm_receiver:9095/'
