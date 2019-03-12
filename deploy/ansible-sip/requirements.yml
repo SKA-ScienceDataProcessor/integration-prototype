@@ -1,9 +1,0 @@
-# Ansible requirements file.
-# Install with:
-#   ansible-galaxy install -r requirements.yml -p roles
-
-- src: angstwad.docker_ubuntu
-  version: v2.5.2
-
-- src: GROG.reboot
-  version: v1.3.0
