@@ -2,14 +2,17 @@ version: '3.6'
 
 services:
     recv:
-        image: skasip/vis_recv_c:1.2.1
+        image: skasip/vis_recv_c:1.3.2
         # command args (all optional):
-        # num_streams, num_threads, num_times_in_buffer, num_buffers, port_start, output_dir
-        command: ["60", "2", "4", "4", "41000", "."]
-        #volumes:
-        #    - type: bind
-        #      source: /mnt/ceph
-        #      target: /app/output
+        #     1. num_streams
+        #     2. num_threads_recv
+        #     3. num_threads_write
+        #     4. num_times_in_buffer
+        #     5. max_num_buffers
+        #     6. port_start
+        #     7. num_channels_per_file
+        #     8. output_dir
+        command: ["60", "2", "2", "4", "3", "41000", "4", "."]
         deploy:
             restart_policy:
                 condition: none
@@ -22,7 +25,7 @@ services:
             - hostnet
         stop_signal: INT
     send:
-        image: skasip/csp_vis_sender
+        image: skasip/csp_vis_sender:1.1.0
         command:
             ['{
                 "destination_host": "127.0.0.1",
