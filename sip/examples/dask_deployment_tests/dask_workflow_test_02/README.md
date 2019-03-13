@@ -4,6 +4,10 @@ This is a slightly more complicated workflow than `dask_workflow_test_01`
 in that the workflow is deployed using a modified worker container
 which includes additional workflow scripts and dependencies.
 
+As part of this example, Docker Compose files are provided which deploy the
+Dask containers using both overlay and host (native) networking.
+
+
 ## Quick-start
 
 Build the workflow worker container:
@@ -18,7 +22,7 @@ Notes:
 
 - **IMPORTANT** When using host networking, Docker swarm does not support
   service discovery from the overlay network. As such the HOST (and PORT)
-  of the scheduler must be configured via the environment varaible
+  of the scheduler must be configured via the environment variable
   `DASK_SCHEDULER_HOST`.
 
 To deploy the Dask cluster (1 scheduler + 1 worker):
@@ -34,7 +38,7 @@ docker stack deploy -c docker-compose.hostnet.workflow.yml workflow
 ```
 
 This could also be run on a control node natively using, as long as this
-script invocation can connect to the Dask scheduler deamon.
+script invocation can connect to the Dask scheduler daemon.
 
 ```bash
 python3 -m workflow

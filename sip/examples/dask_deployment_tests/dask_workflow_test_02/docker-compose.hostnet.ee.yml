@@ -28,8 +28,6 @@ services:
         environment:
             - DASK_SCHEDULER_HOST=localhost
             - DASK_SCHEDULER_PORT=8786
-        depends_on:
-            - scheduler
         deploy:
             mode: replicated
             replicas: 1
