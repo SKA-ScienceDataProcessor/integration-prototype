@@ -24,7 +24,7 @@ scrape_configs:
 
     dns_sd_configs:
       - names:
-        - 'tasks.pushgateway'
+        - 'tasks.platform_pushgateway'
         type: 'A'
         port: 9091
 
@@ -32,6 +32,5 @@ alerting:
   alertmanagers:
     - scheme: http
       static_configs:
-      - targets: 
-        - "alert_manager:9093"
-
+      - targets:
+        - "ec_alert_manager:9093"
