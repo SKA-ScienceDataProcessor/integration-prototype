@@ -26,10 +26,8 @@
 
 /*
  * Compile with:
- * gcc -O3 -Wall -Wextra -pthread -o recv recv.c
+ * gcc -O3 -Wall -Wextra -pthread -o recv -DRECV_VERSION=\"x.y.z\" recv.c
  */
-
-#define RECV_VERSION "1.2.1"
 
 typedef unsigned char uchar;
 struct Timer;
@@ -120,7 +118,8 @@ struct Receiver
     char* output_root;
     int completed_streams;
     int num_baselines, num_times_in_buffer, max_num_buffers;
-    int num_threads_recv, num_streams, num_buffers;
+    int num_threads_recv, num_threads_write, num_streams, num_buffers;
+    int num_channels_per_file;
     unsigned short int port_start;
 };
 
@@ -131,7 +130,8 @@ void buffer_free(struct Buffer* self);
 struct Buffer* receiver_buffer(struct Receiver* self, int heap, size_t length,
         double timestamp);
 struct Receiver* receiver_create(int num_buffers, int num_times_in_buffer,
-        int num_threads_recv, int num_streams, unsigned short int port_start,
+        int num_threads_recv, int num_threads_write, int num_streams,
+        unsigned short int port_start, int num_channels_per_file,
         const char* output_root);
 void receiver_free(struct Receiver* self);
 void receiver_start(struct Receiver* self);
@@ -657,7 +657,8 @@ struct Buffer* receiver_buffer(struct Receiver* self, int heap, size_t length,
 }
 
 struct Receiver* receiver_create(int num_buffers, int num_times_in_buffer,
-        int num_threads_recv, int num_streams, unsigned short int port_start,
+        int num_threads_recv, int num_threads_write, int num_streams,
+        unsigned short int port_start, int num_channels_per_file,
         const char* output_root)
 {
     struct Receiver* cls =
@@ -669,10 +670,12 @@ struct Receiver* receiver_create(int num_buffers, int num_times_in_buffer,
     cls->max_num_buffers = num_buffers;
     cls->num_times_in_buffer = num_times_in_buffer;
     cls->num_threads_recv = num_threads_recv;
+    cls->num_threads_write = num_threads_write;
     cls->num_streams = num_streams;
-    if (output_root)
+    cls->num_channels_per_file = num_channels_per_file;
+    if (output_root && strlen(output_root) > 0)
     {
-        cls->output_root = malloc(1 + strlen(output_root));
+        cls->output_root = (char*) malloc(1 + strlen(output_root));
         strcpy(cls->output_root, output_root);
     }
     cls->port_start = port_start;
@@ -701,46 +704,98 @@ struct ThreadArg
 {
     int thread_id;
     struct Receiver* receiver;
+    struct Buffer* buffer;
 };
+
+static void* thread_write_parallel(void* arg)
+{
+    struct ThreadArg* a = (struct ThreadArg*) arg;
+    struct Receiver* receiver = a->receiver;
+    struct Buffer* buf = a->buffer;
+    const int thread_id = a->thread_id;
+    const int num_threads = receiver->num_threads_write;
+    const int num_baselines = buf->num_baselines;
+    const int num_channels = buf->num_channels;
+    const int num_channels_per_file = receiver->num_channels_per_file;
+    size_t len = 2 + strlen(receiver->output_root);
+    len += (10 + 1 + 10 + 4);
+    char* filename = (char*) calloc(len, sizeof(char));
+    for (int c = thread_id * num_channels_per_file; c < num_channels;
+            c += (num_threads * num_channels_per_file))
+    {
+        int c_end = c + num_channels_per_file - 1;
+        if (c_end >= num_channels) c_end = num_channels - 1;
+        int num_channels_block = c_end - c + 1;
+        snprintf(filename, len, "%s_t%.4d-%.4d_c%.4d-%.4d.dat",
+                receiver->output_root,
+                buf->heap_id_start, buf->heap_id_end, c, c_end);
+        /* Use POSIX creat(), write(), close()
+         * instead of fopen(), fwrite(), fclose(),
+         * as fwrite() doesn't seem to work with Alpine and BeeGFS. */
+        int file_handle = creat(filename,
+                S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH);
+        if (file_handle < 0)
+        {
+            printf("Unable to open file %s\n", filename);
+            break;
+        }
+        for (int t = 0; t < buf->num_times; ++t)
+        {
+            const struct DataType* block_start = buf->vis_data +
+                    num_baselines * (num_channels * t + c);
+            write(file_handle, (const void*)block_start,
+                    num_channels_block * buf->block_size);
+        }
+        close(file_handle);
+    }
+    free(filename);
+    return 0;
+}
 
 static void* thread_write_buffer(void* arg)
 {
     struct Buffer* buf = (struct Buffer*) arg;
     struct Receiver* receiver = buf->receiver;
-    printf("Writing buffer %d...\n", buf->buffer_id);
-#ifdef __linux__
-    const int cpu_id = sched_getcpu();
-    printf("Writer thread running on CPU %d\n", cpu_id);
-#endif
-    double start = tmr_get_timestamp();
     if (buf->byte_counter != buf->buffer_size)
-        printf("WARNING: Incomplete buffer (%zu/%zu, %.1f%%)\n",
-                buf->byte_counter, buf->buffer_size,
+        printf("WARNING: Buffer %d incomplete (%zu/%zu, %.1f%%)\n",
+                buf->buffer_id, buf->byte_counter, buf->buffer_size,
                 100 * buf->byte_counter / (float)buf->buffer_size);
-    /* Could start another parallel region here to perform the write. */
     if (receiver->output_root)
     {
-        size_t len = 2 + strlen(receiver->output_root);
-        len += (10 + 1 + 10 + 4);
-        char* filename = calloc(len, sizeof(char));
-        const int time_start = buf->heap_id_start;
-        const int time_end = buf->heap_id_end;
-        const int chan_start = 0;
-        const int chan_end = buf->num_channels - 1;
-        snprintf(filename, len, "%s_t%.4d-%.4d_c%.4d-%.4d.dat",
-                receiver->output_root,
-                time_start, time_end, chan_start, chan_end);
-        FILE* file_handle = fopen(filename, "w");
-        if (file_handle)
+#ifdef __linux__
+        const int cpu_id = sched_getcpu();
+        printf("Writing buffer %d from CPU %d...\n", buf->buffer_id, cpu_id);
+#else
+        printf("Writing buffer %d...\n", buf->buffer_id);
+#endif
+        const double start = tmr_get_timestamp();
+        const int num_threads = receiver->num_threads_write;
+        pthread_attr_t attr;
+        pthread_attr_init(&attr);
+        pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_JOINABLE);
+        pthread_t* threads =
+                (pthread_t*) malloc(num_threads * sizeof(pthread_t));
+        struct ThreadArg* args = (struct ThreadArg*)
+                malloc(num_threads * sizeof(struct ThreadArg));
+        for (int i = 0; i < num_threads; ++i)
         {
-            fwrite(buf->vis_data, buf->buffer_size, 1, file_handle);
-            fclose(file_handle);
+            args[i].thread_id = i;
+            args[i].receiver = receiver;
+            args[i].buffer = buf;
+            pthread_create(&threads[i], &attr,
+                    &thread_write_parallel, &args[i]);
         }
-        free(filename);
+        for (int i = 0; i < num_threads; ++i)
+            pthread_join(threads[i], NULL);
+        pthread_attr_destroy(&attr);
+        free(args);
+        free(threads);
+        const double time_taken = tmr_get_timestamp() - start;
+        printf("Writing buffer %d with %d threads took %.2f sec (%.2f MB/s)\n",
+                buf->buffer_id, num_threads, time_taken,
+                buf->buffer_size * 1e-6 / time_taken);
     }
     buffer_clear(buf);
-    printf("Writing buffer %d took %.3f sec.\n",
-            buf->buffer_id, tmr_get_timestamp() - start);
     buf->locked_for_write = 0;
     return 0;
 }
@@ -832,12 +887,13 @@ void receiver_start(struct Receiver* self)
     {
         args[i].thread_id = i;
         args[i].receiver = self;
-        pthread_create(&threads[i], &attr, thread_receive, &args[i]);
+        pthread_create(&threads[i], &attr, &thread_receive, &args[i]);
     }
     for (int i = 0; i < num_threads; ++i)
         pthread_join(threads[i], NULL);
     pthread_attr_destroy(&attr);
     free(args);
+    free(threads);
     printf("All %d stream(s) completed.\n", self->num_streams);
 }
 
@@ -845,35 +901,37 @@ char* construct_output_root(const char* output_location,
         const char* output_name)
 {
     if (!output_location || strlen(output_location) == 0) return 0;
-    size_t len = 3 + strlen(output_location) + strlen(output_name);
-    len += (8 + 1 + 6); /* Date and time. */
-    char* output_root = calloc(len, sizeof(char));
+    const size_t len = 10 + strlen(output_location) + strlen(output_name);
+    char* output_root = (char*) calloc(len, sizeof(char));
     const time_t unix_time = time(NULL);
     struct tm* timeinfo = localtime(&unix_time);
-    snprintf(output_root, len, "%s/%s_%.4d%.2d%.2d-%.2d%.2d%.2d",
+    snprintf(output_root, len, "%s/%s_%.2d%.2d%.2d",
             output_location, output_name,
-            timeinfo->tm_year + 1900, timeinfo->tm_mon + 1, timeinfo->tm_mday,
             timeinfo->tm_hour, timeinfo->tm_min, timeinfo->tm_sec);
     return output_root;
 }
 
 int main(int argc, char** argv)
 {
-    int num_streams = 1, num_threads_recv = 1;
-    int num_times_in_buffer = 8, num_buffers = 2;
+    int num_streams = 1, num_threads_recv = 1, num_threads_write = 8;
+    int num_times_in_buffer = 8, num_buffers = 2, num_channels_per_file = 1;
     unsigned short int port_start = 41000;
     const char* output_location = 0;
-    const char* output_name = "ingest_run";
+    const char* output_name = "ingest";
     if (argc > 1) num_streams = atoi(argv[1]);
     if (argc > 2) num_threads_recv = atoi(argv[2]);
-    if (argc > 3) num_times_in_buffer = atoi(argv[3]);
-    if (argc > 4) num_buffers = atoi(argv[4]);
-    if (argc > 5) port_start  = (unsigned short int) atoi(argv[5]);
-    if (argc > 6) output_location = argv[6];
+    if (argc > 3) num_threads_write = atoi(argv[3]);
+    if (argc > 4) num_times_in_buffer = atoi(argv[4]);
+    if (argc > 5) num_buffers = atoi(argv[5]);
+    if (argc > 6) port_start  = (unsigned short int) atoi(argv[6]);
+    if (argc > 7) num_channels_per_file = atoi(argv[7]);
+    if (argc > 8) output_location = argv[8];
     if (num_streams < 1) num_streams = 1;
     if (num_threads_recv < 1) num_threads_recv = 1;
+    if (num_threads_write < 1) num_threads_write = 1;
     if (num_times_in_buffer < 1) num_times_in_buffer = 1;
     if (num_buffers < 1) num_buffers = 1;
+    if (num_channels_per_file < 1) num_channels_per_file = 1;
     printf("Running RECV_VERSION %s\n", RECV_VERSION);
     char* output_root = construct_output_root(output_location, output_name);
     const int num_cores = sysconf(_SC_NPROCESSORS_ONLN);
@@ -887,17 +945,19 @@ int main(int argc, char** argv)
     }
     sched_setaffinity(0, sizeof(cpu_set_t), &my_set);
 #endif
-    printf(" + Number of system CPU cores : %d\n", num_cores);
-    printf(" + Number of SPEAD streams    : %d\n", num_streams);
-    printf(" + Number of receiver threads : %d\n", num_threads_recv);
-    printf(" + Number of times in buffer  : %d\n", num_times_in_buffer);
-    printf(" + Number of buffers          : %d\n", num_buffers);
-    printf(" + UDP port range             : %d-%d\n",
+    printf(" + Number of system CPU cores  : %d\n", num_cores);
+    printf(" + Number of SPEAD streams     : %d\n", num_streams);
+    printf(" + Number of receiver threads  : %d\n", num_threads_recv);
+    printf(" + Number of writer threads    : %d\n", num_threads_write);
+    printf(" + Number of times in buffer   : %d\n", num_times_in_buffer);
+    printf(" + Maximum number of buffers   : %d\n", num_buffers);
+    printf(" + UDP port range              : %d-%d\n",
             (int) port_start, (int) port_start + num_streams - 1);
-    printf(" + Output root                : %s\n", output_root);
+    printf(" + Number of channels per file : %d\n", num_channels_per_file);
+    printf(" + Output root                 : %s\n", output_root);
     struct Receiver* receiver = receiver_create(num_buffers,
-            num_times_in_buffer, num_threads_recv, num_streams, port_start,
-            output_root);
+            num_times_in_buffer, num_threads_recv, num_threads_write,
+            num_streams, port_start, num_channels_per_file, output_root);
     receiver_start(receiver);
     receiver_free(receiver);
     free(output_root);
