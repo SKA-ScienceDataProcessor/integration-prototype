@@ -2,10 +2,21 @@ version: '3.6'
 
 services:
     recv:
-        image: skasip/vis_recv_c:1.1.9
+        image: skasip/vis_recv_c:1.3.2
         # command args (all optional):
-        # num_streams, num_threads, num_times_in_buffer, num_buffers, port_start
-        command: ["432", "4", "10", "3", "41000"]
+        #     1. num_streams
+        #     2. num_threads_recv
+        #     3. num_threads_write
+        #     4. num_times_in_buffer
+        #     5. max_num_buffers
+        #     6. port_start
+        #     7. num_channels_per_file
+        #     8. output_dir
+        command: ["432", "4", "8", "8", "3", "41000", "4", "/app/output"]
+        volumes:
+            - type: bind
+              source: /mnt/storage-ssd/ingest
+              target: /app/output
         deploy:
             restart_policy:
                 condition: none
@@ -13,15 +24,15 @@ services:
             replicas: 1
             placement:
                 constraints:
-                    - node.labels.recv == 01
+                    - node.labels.recv == 00
         networks:
             - hostnet
         stop_signal: INT
-    send0:
+    send1:
         image: skasip/csp_vis_sender:1.1.0
         command:
             ['{
-                "destination_host": "10.1.0.30",
+                "destination_host": "10.1.0.37",
                 "destination_port_start": 41000,
                 "heap":
                 {
@@ -48,15 +59,15 @@ services:
             replicas: 1
             placement:
                 constraints:
-                    - node.labels.send == 00
+                    - node.labels.send == 01
         networks:
             - hostnet
         stop_signal: INT
-    send1:
+    send2:
         image: skasip/csp_vis_sender:1.1.0
         command:
             ['{
-                "destination_host": "10.1.0.30",
+                "destination_host": "10.1.0.37",
                 "destination_port_start": 41072,
                 "heap":
                 {
@@ -83,15 +94,15 @@ services:
             replicas: 1
             placement:
                 constraints:
-                    - node.labels.send == 01
+                    - node.labels.send == 02
         networks:
             - hostnet
         stop_signal: INT
-    send2:
+    send3:
         image: skasip/csp_vis_sender:1.1.0
         command:
             ['{
-                "destination_host": "10.1.0.30",
+                "destination_host": "10.1.0.37",
                 "destination_port_start": 41144,
                 "heap":
                 {
@@ -118,15 +129,15 @@ services:
             replicas: 1
             placement:
                 constraints:
-                    - node.labels.send == 02
+                    - node.labels.send == 03
         networks:
             - hostnet
         stop_signal: INT
-    send3:
+    send4:
         image: skasip/csp_vis_sender:1.1.0
         command:
             ['{
-                "destination_host": "10.1.0.30",
+                "destination_host": "10.1.0.37",
                 "destination_port_start": 41216,
                 "heap":
                 {
@@ -153,15 +164,15 @@ services:
             replicas: 1
             placement:
                 constraints:
-                    - node.labels.send == 03
+                    - node.labels.recv == 01
         networks:
             - hostnet
         stop_signal: INT
-    send4:
+    send5:
         image: skasip/csp_vis_sender:1.1.0
         command:
             ['{
-                "destination_host": "10.1.0.30",
+                "destination_host": "10.1.0.37",
                 "destination_port_start": 41288,
                 "heap":
                 {
@@ -192,11 +203,11 @@ services:
         networks:
             - hostnet
         stop_signal: INT
-    send5:
+    send6:
         image: skasip/csp_vis_sender:1.1.0
         command:
             ['{
-                "destination_host": "10.1.0.30",
+                "destination_host": "10.1.0.37",
                 "destination_port_start": 41360,
                 "heap":
                 {
