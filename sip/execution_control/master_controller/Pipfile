@@ -1,0 +1,15 @@
+[[source]]
+name = "pypi"
+url = "https://pypi.org/simple"
+verify_ssl = true
+
+[dev-packages]
+
+[packages]
+skasip-config-db = "==1.2.0"
+skasip-logging = "==1.0.14"
+skasip-docker-swarm = "==1.0.10"
+prometheus_client = "*"
+
+[requires]
+python_version = "3.6"

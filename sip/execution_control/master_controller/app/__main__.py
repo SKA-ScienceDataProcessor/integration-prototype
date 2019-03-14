@@ -256,6 +256,7 @@ def _process_event(event: Event, sdp_state: SDPState,
         else:
             SIP_STATE_ALARM.set(0)
         try:
+            # FIXME(BMo) the pushgateway host should not be hardcoded!
             push_to_gateway('platform_pushgateway:9091', job='SIP',
                             registry=COLLECTOR_REGISTRY)
         except urllib.error.URLError:
