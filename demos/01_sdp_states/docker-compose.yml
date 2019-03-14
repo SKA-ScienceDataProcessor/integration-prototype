@@ -107,7 +107,7 @@ services:
 
   ec_master_controller:
     image: skasip/master_controller:1.3.0
-    command: ["-v"]
+    command: []
     environment:
       - REDIS_HOST=ec_config_database
       - REDIS_PORT=6379
