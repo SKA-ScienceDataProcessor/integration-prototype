@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""Demo alarm hander."""
+"""Proof of concept alarm handler."""
 
 import logging
 import time
@@ -15,6 +15,7 @@ logging.basicConfig(level=logging.INFO)
 # This sleep is needed to give kafka time to start up.
 time.sleep(2)
 producer = KafkaProducer(bootstrap_servers='platform_kafka:9092')
+
 
 @APP.route('/')
 def root():
