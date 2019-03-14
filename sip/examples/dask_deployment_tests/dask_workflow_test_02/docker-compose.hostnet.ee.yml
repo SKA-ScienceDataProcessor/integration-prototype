@@ -1,0 +1,44 @@
+version: '3.6'
+
+services:
+
+    scheduler:
+        image: skasip/dask_scheduler_base
+        # Dont need to do port mapping for host networks!
+        # ports:
+        #     - 8787:8787  # Bokeh Dask UI?
+        #     - 8786:8786  # Dask scheduler port
+        deploy:
+            mode: replicated
+            replicas: 1
+            resources:
+                limits:
+                    cpus: '1.0'
+                    memory: 1024M
+        # healthcheck based curl of boken interface
+        networks:
+            - hostnet
+
+    worker:
+        image: skasip/dask_workflow_test_02
+        # Cant use service discovery for the scheduled if using
+        # host networking so will have to look this up in the config db
+        # or have a DNS service
+        command: ["sh", "-c", "dask-worker --nprocs 1 --nthreads 2 --memory-limit 2GB $${DASK_SCHEDULER_HOST}:$${DASK_SCHEDULER_PORT}"]
+        environment:
+            - DASK_SCHEDULER_HOST=localhost
+            - DASK_SCHEDULER_PORT=8786
+        deploy:
+            mode: replicated
+            replicas: 1
+            resources:
+                limits:
+                    cpus: '1.0'
+                    memory: 1024M
+        networks:
+            - hostnet
+
+networks:
+    hostnet:
+        external: true
+        name: host
