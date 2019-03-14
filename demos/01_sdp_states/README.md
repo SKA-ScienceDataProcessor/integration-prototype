@@ -43,7 +43,7 @@ In SIP, the interface for control and monitoring of SDP follows a two stage mode
 
 The data model for SDP States..
 
-![States Logical Data Model](https://docs.google.com/uc?id=1-YVRmZSBU8M7rjepMBPq98ExbBjqZ_sn "")
+![States Logical Data Model](figures/states_data_model.png "")
 
 
 In SIP, as in SDP architecture, the state of SDP is reported and set by the SDP Tango Master device. We note that this is not implemented as a true state machine but reports an eventually consistent version of the system state as evaluated and managed by the Execution Control Master Controller service. This approach decouples the commanded (target) state of the system from the current state and allows the system to be much more reliant to failure / failover of individual services. In this model, unless
@@ -58,7 +58,7 @@ Individual Services in the SIP prototype can between the following states, descr
 - `ALARM` when the service has encountered a recoverable error
 - `FAULT` when the service has encountered an unrecoverable error
 
-![Service States](https://docs.google.com/uc?id=1P_OtXaHmJ8NnkdDFbkmNHqsRn80oE7In "")
+![Service States](figures/service_states.png "")
 
 The overall state of SDP is a function of the state of individual
 services and can be in one of the following states with transitions
@@ -76,7 +76,7 @@ errors occur, these are:
 - `ALARM` when SDP encounters a recoverable error
 - `FAULT` when SDP encounters a unrecoverable error
 
-![SDP State](https://docs.google.com/uc?id=1IQFkaqXvfa8wEFZU0kMFWm-J9EcyX7Xv "")
+![SDP State](figures/sdp_states.png "")
 
 ## 2.  Getting started
 
@@ -212,35 +212,50 @@ md.sdp_services
 md.status()
 ```
 
+Before interacting with the SDP state, obtain a second terminal which follows
+the Execution Master Controller logs so that we can monitor what the EC master
+is doing in response to Tango Master Device actions.
 
-Before manipulating the state of SDP, obtain a second terminal which follows the Execution Master Controller logs so that we can inspect the result of changes to the target state of the system. This can be achieved by starting a new terminal and using the following provided script.
+Start a new terminal and use the following command to start watching logs
+from the Execution Control Master Controller.
 
 ```bash
-./follow_logs_ec_master_controller
+./follow_master_controller_logs.sh
 ```
 
-Using the `iTango` SDP Tango Master client terminal we can print the allowed
-target states with:
+Using the `iTango` SDP Tango Master client terminal start interacting with the
+state of SDP.
 
-```python
-md.allowed_target_sdp_states
-```
-
-Get the current state of SDP using:
+When the SDP starts it starts in the 'standby' state. We can verify this
+by querying the current state of SDP as follows:
 
 ```python
 md.current_sdp_state
 ```
 
-Set the target state of SDP to `ON` using:
+From standby we can either transition to 'on' or 'off'. The set of allowed
+target or commanded states provided by the Master Device can be queried
+with the following `allowed_target_sdp_states` attribute as follows:
+
+```python
+md.allowed_target_sdp_states
+```
+
+We can now set the state of the SDP to `ON` by setting the value of the
+`target_sdp_state` attribute:
 
 ```python
 md.target_sdp_state = 'on'
 ```
 
-Setting the SDP state to `ON` will .... This can be seen in the EC MC logs...
+Upon setting the target sdp state to `ON`, the Execution Control Master
+Controller, which is watching for target state change events via the
+Execution Control Configuration database will respond to the state change
+request and perform any actions needed to bring the state of SDP to the `ON`
+state. This should be reflected in the Master Controller logs.
 
-After a short time, if we now check the current state of SDP with:
+After a short time, if we now check the current state of SDP with the Tango
+Master device using the following command:
 
 ```python
 md.current_sdp_state
@@ -248,20 +263,25 @@ md.current_sdp_state
 
 It should now correctly report the SDP is `ON`.
 
-We can query the allowed state transitions from the `ON` state with
+As reported by:
 
 ```python
 md.allowed_target_sdp_states
 ```
 
-... DISABLE ...
+from the `ON` state we can transition to either `OFF`, `STANDBY`, or `DISABLE`.
 
-We can also get the state of an individual service using the command `get_current_service_state()`, eg. to obtain the the state of the Execution Control Master Controller Service we can use the following command:
+Transitioning to any of these states can be done setting the `target_sdp_state`
+attribute in the same way as we did with `ON`.
+
+In addition to getting the current state of SDP, the
+`get_current_service_state()` command on the Tango Master allows us to query
+for the state of individual SDP services. For example, to obtain the state of
+Execution Control Master Controller we issue the following command:
 
 ```python
 md.get_current_service_state('MasterController')
 ```
-
 
 ### 3.3.  Cleaning up
 
