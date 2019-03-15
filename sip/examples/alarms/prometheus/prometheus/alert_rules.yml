@@ -1,5 +1,0 @@
-groups:
-- name: demo
-  rules:
-  - alert: DemoAlert
-    expr: demo_alarm == 1

@@ -1,2 +1,0 @@
-# SIP CSP Pulsar Sender
-
