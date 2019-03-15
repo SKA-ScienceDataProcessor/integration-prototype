@@ -1,7 +1,0 @@
-version: '3.4'
-
-services:
-
-  csp_vis_sender:
-    image: skasip/csp_vis_sender_01
-    build: .

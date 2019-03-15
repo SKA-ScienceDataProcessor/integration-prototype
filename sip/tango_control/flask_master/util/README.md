@@ -1,4 +1,8 @@
-# Utilities for the Master Interface Service
+# Utilities for the Flask Master Interface Service (Flask API)
+** These utilities are out of date with respect to the Flask API
+and may no longer work as advertised. **
+
+
 ## On a developer's computer
 One can access the Master Interface Service by pointing a web server 
 at http://localhost:5000/state and typing in a JSON string.
