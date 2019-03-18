@@ -191,7 +191,6 @@ the SDP architecture.
 
 ![Services & Components](figures/services-components.png)
 
-
 ### 3.2  Monitoring and Control of SDP
 
 With a set of SDP Services started, (see Section 3.1), we can now use the
@@ -328,6 +327,12 @@ the value service states individually.
 
 ### 3.3  Cleaning up
 
+Exit the `iTango` prompt by typing `exit` in the prompt. This will exit
+and remove the container that was started to provide this prompt.
+
+To stop following the Master Controller logs, issue a `ctrl-c` (`SIGINT`)
+in the terminal which the logs are being displayed.
+
 To clean up from running the demo, to remove all services started use the
 following command:
 
@@ -357,4 +362,3 @@ If this returns any containers, these can be removed with:
 ```bash
 docker rm -v -f $(docker ps -a -q -f status=exited -f name=sip_)
 ```
-
