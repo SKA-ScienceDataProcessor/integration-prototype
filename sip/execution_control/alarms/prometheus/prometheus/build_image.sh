@@ -7,7 +7,7 @@ function build_and_publish_image() {
     NC='\033[0m'
     VERSION="1.0.0"
     #VERSION="$(python -c "import app; print(app.__version__)")"
-    IMAGE=skasip/prometheus
+    IMAGE=skasip/ec_prometheus
     echo -e "${RED}--------------------------------------------------------------${NC}"
     echo -e "${BLUE}Building and uploading ${IMAGE} image, version = latest, ${VERSION}"
     echo -e "${RED}--------------------------------------------------------------${NC}"

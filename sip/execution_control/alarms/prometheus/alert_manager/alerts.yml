@@ -7,4 +7,4 @@ route:
 receivers:
   - name: 'sip'
     webhook_configs:
-       - url: 'http://alarm_receiver:9095/'
+       - url: 'http://ec_alarm_receiver:9095/'

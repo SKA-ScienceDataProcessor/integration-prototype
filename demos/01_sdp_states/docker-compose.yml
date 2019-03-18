@@ -1,0 +1,219 @@
+version: '3.6'
+
+services:
+
+  # ==========================================================================
+  # Tango Control containers
+  # ==========================================================================
+
+  tc_tango_master:
+    image: skasip/tango_master:1.2.1
+    environment:
+      - TANGO_HOST=tc_tango_database:10000
+      - REDIS_HOST=ec_config_database
+    deploy:
+      mode: replicated
+      replicas: 1
+    healthcheck:
+      test: ["CMD", "python3", "-c",
+            "import PyTango; d=PyTango.DeviceProxy('sip_sdp/elt/master');
+            d.ping()"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+  tc_tango_subarray:
+    image: skasip/tango_subarray:1.2.0
+    environment:
+      - TANGO_HOST=tc_tango_database:10000
+      - REDIS_HOST=ec_config_database
+    deploy:
+      mode: replicated
+      replicas: 1
+    healthcheck:
+      test: ["CMD", "python3", "-c",
+            "import PyTango; d=PyTango.DeviceProxy('sip_sdp/elt/subarray_00');
+            d.ping()"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+  tc_tango_processing_block:
+    image: skasip/tango_processing_block:1.2.0
+    environment:
+      - TANGO_HOST=tc_tango_database:10000
+      - REDIS_HOST=ec_config_database
+    deploy:
+      mode: replicated
+      replicas: 1
+    healthcheck:
+      test: ["CMD", "python3", "-c",
+             "import PyTango; d=PyTango.DeviceProxy('sip_sdp/pb/00000');
+             d.ping()"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+  tc_tango_logger:
+    image: skasip/tango_logger:1.1.0
+    environment:
+      - TANGO_HOST=tc_tango_database:10000
+    deploy:
+      mode: replicated
+      replicas: 1
+    healthcheck:
+      test: ["CMD", "python3", "-c",
+             "import PyTango; d=PyTango.DeviceProxy('sip_sdp/elt/logger');
+             d.ping()"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+  tc_tango_database:
+    image: skasip/tango_database:1.0.4
+    ports:
+      - 10000:10000
+    environment:
+      - MYSQL_HOST=tc_tango_mysql:3306
+      - MYSQL_USER=tango
+      - MYSQL_PASSWORD=tango
+      - MYSQL_DATABASE=tango_db
+    deploy:
+      mode: replicated
+      replicas: 1
+      placement:
+        constraints:
+        - node.role == manager
+
+  tc_tango_mysql:
+    image: skasip/tango_mysql:1.0.3
+    environment:
+      - MYSQL_ROOT_PASSWORD=sip1
+    deploy:
+      mode: replicated
+      replicas: 1
+    healthcheck:
+      test: ["CMD", "mysql", "--user=tango", "--password=tango",
+             "-e", "SHOW DATABASES LIKE 'tango_db';"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+    volumes:
+      - tango_mysql:/var/lib/mysql:consistent
+
+  # ==========================================================================
+  # Execution Control containers
+  # ==========================================================================
+
+  ec_master_controller:
+    image: skasip/master_controller:1.3.0
+    command: []
+    environment:
+      - REDIS_HOST=ec_config_database
+      - REDIS_PORT=6379
+    deploy:
+      mode: replicated
+      replicas: 1
+
+  ec_processing_controller:
+    image: skasip/processing_controller:1.2.6
+    environment:
+      - CELERY_BROKER_URL=redis://ec_config_database/1
+      - CELERY_RESULT_BACKEND=redis://ec_config_database/2
+      - REDIS_HOST=ec_config_database
+    deploy:
+      mode: replicated
+      replicas: 1
+
+  ec_processing_block_controller:
+    image: skasip/processing_block_controller:1.3.0
+    environment:
+      - CELERY_BROKER_URL=redis://ec_config_database/1
+      - CELERY_RESULT_BACKEND=redis://ec_config_database/2
+      - REDIS_HOST=ec_config_database
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    deploy:
+      mode: replicated
+      replicas: 1
+
+  ec_config_database:
+    image: redis:5.0.1-alpine
+    deploy:
+      mode: replicated
+      replicas: 1
+    ports:
+      - 6379:6379
+
+  ec_alarm_receiver:
+    image: skasip/ec_alarm_receiver:1.0.0
+    deploy:
+      mode: replicated
+      replicas: 1
+    ports:
+      - 9095:9095
+
+  ec_alert_manager:
+    image: skasip/ec_alert_manager:1.0.0
+    deploy:
+      mode: replicated
+      replicas: 1
+    ports:
+      - 9093:9093
+
+  # ==========================================================================
+  # Platform containers
+  # ==========================================================================
+
+  platform_redis-commander-db0:
+    image: rediscommander/redis-commander:redis-commander-210
+    ports:
+      - 8081:8081
+    environment:
+      - REDIS_HOSTS=config_db:ec_config_database:6379:0
+    deploy:
+      mode: replicated
+      replicas: 1
+
+  platform_pushgateway:
+    image: prom/pushgateway:v0.7.0
+    deploy:
+      mode: global
+    ports:
+      - 9091:9091
+
+  platform_zookeeper:
+    image: wurstmeister/zookeeper:latest
+    deploy:
+      mode: replicated
+      replicas: 1
+    ports:
+      - 2181:2181
+
+  platform_kafka:
+    image: wurstmeister/kafka:2.12-2.1.1
+    deploy:
+      mode: replicated
+      replicas: 1
+    ports:
+      - 9094:9094
+    environment:
+      HOSTNAME_COMMAND: "route -n | awk '/UG[ \t]/{print $$2}'"
+      KAFKA_ADVERTISED_LISTENERS: INSIDE://:9092,OUTSIDE://_{HOSTNAME_COMMAND}:9094
+      KAFKA_LISTENERS: INSIDE://:9092,OUTSIDE://:9094
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: INSIDE:PLAINTEXT,OUTSIDE:PLAINTEXT
+      KAFKA_INTER_BROKER_LISTENER_NAME: INSIDE
+      KAFKA_ZOOKEEPER_CONNECT: platform_zookeeper:2181
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+
+  platform_prometheus:
+    image: skasip/prometheus:1.0.0
+    deploy:
+      mode: replicated
+      replicas: 1
+    ports:
+      - 9090:9090
+
+volumes:
+  tango_mysql:

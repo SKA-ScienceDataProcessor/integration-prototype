@@ -147,12 +147,22 @@ def _init(sdp_state: SDPState):
     # FIXME(BMo) **Hack** Register all services or if already registered do
     # nothing (this is handled by the ServiceState object).
     _services = [
-        "ExecutionControl:MasterController:1.1.3",
-        "ExecutionControl:ConfigurationDatabase:4.0.6",
-        "TangoControl:SDPMaster:1.1.3",
+        "ExecutionControl:AlarmReceiver:1.0.0",
+        "ExecutionControl:AlertManager:1.0.0",
+        "ExecutionControl:ConfigurationDatabase:5.0.1",
+        "ExecutionControl:MasterController:1.3.0",
+        "ExecutionControl:ProcessingController:1.2.6",
+        "ExecutionControl:ProcessingBlockController:1.3.0",
         "TangoControl:Database:1.0.4",
         "TangoControl:MySQL:1.0.3",
-        "TangoControl:FlaskMaster:1.1.3"
+        "TangoControl:SDPMaster:1.2.1",
+        "TangoControl:Subarrays:1.2.0",
+        "TangoControl:ProcessingBlocks:1.2.0",
+        "Platform:Kafka:2.1.1",
+        "Platform:Prometheus:1.0.0",
+        "Platform:PrometheusPushGateway:0.7.0",
+        "Platform:RedisCommander:210.0.0",
+        "Platform:Zookeeper:3.4.13"
     ]
     for service_id in _services:
         subsystem, name, version = service_id.split(':')
@@ -246,7 +256,8 @@ def _process_event(event: Event, sdp_state: SDPState,
         else:
             SIP_STATE_ALARM.set(0)
         try:
-            push_to_gateway('pushgateway:9091', job='SIP',
+            # FIXME(BMo) the pushgateway host should not be hardcoded!
+            push_to_gateway('platform_pushgateway:9091', job='SIP',
                             registry=COLLECTOR_REGISTRY)
         except urllib.error.URLError:
             LOG.warning("Unable to connect to the Alarms service!")

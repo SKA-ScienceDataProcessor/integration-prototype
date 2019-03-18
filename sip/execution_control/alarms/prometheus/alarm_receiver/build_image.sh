@@ -5,9 +5,8 @@ function build_and_publish_image() {
     RED='\033[0;31m'
     BLUE='\033[0;34m'
     NC='\033[0m'
-    VERSION="1.0.0"
-    #VERSION="$(python -c "import app; print(app.__version__)")"
-    IMAGE=skasip/alert_manager
+    VERSION="$(python -c "import app; print(app.__version__)")"
+    IMAGE=skasip/ec_alarm_receiver
     echo -e "${RED}--------------------------------------------------------------${NC}"
     echo -e "${BLUE}Building and uploading ${IMAGE} image, version = latest, ${VERSION}"
     echo -e "${RED}--------------------------------------------------------------${NC}"
