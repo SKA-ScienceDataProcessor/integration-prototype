@@ -18,7 +18,7 @@ URL, and the result is not necessarily pretty:
 
 ```
 $ curl -s http://localhost:5000/state 
-{"state": "ON"}$ 
+{"value": "on"}$ 
 ```
 As you can see the state is returned in a minimised JSON format; 
 and the command prompt is unceremoniously dumped on top, as there 
@@ -39,29 +39,27 @@ the following bash shell-scripts have been made available here:
 * sdp_root: for reading the root of the flask interface;
 * sdp_send: for sending a state change request to the flask interface;
 * mkstate: for creating the JSON for pasting into the web browser;
-* mkstate1: functionally identical to mkstate;
 * flask: interactive menu-driven interface to the flask interface 
 for reading and changing the state.
 
-`sdp_state` needs no parameters; `mkstate` (and also `mkstate1`) 
+`sdp_state` needs no parameters; `mkstate` 
 takes an option -0 for off; -1 for on; -d for disable and -s for standby.
 With no options it assumes on.
 `sdp_send` uses the same options as `mkstate`.
 `flask` needs no arguments and should be intuitive.
 
-`mkstate` and `mkstate1` both produce a formatted JSON string to be used
+`mkstate` produces a formatted JSON string to be used
 (using cut and paste) in the web interface. `mkstate` uses the `jq`
-utility to format the JSON string; `mkstate1` uses the bash builtin printf
-instead.
+utility to format the JSON string.
 
-All but two of these require the utility `curl` which I believe is part 
+All but `mkstate` require the utility `curl` which I believe is part 
 of the OSX toolkit. 
 For Linux systems it may be necessary to install with (for 
 example on Debian-based systems such as Ubuntu):
 ```
 sudo apt install curl
 ```
-All of them (apart from `mkstate1`) require `jq`, a tool described 
+All of them require `jq`, a tool described 
 by its creators as "a sed for json files".
 This may be installed on Debian systems with
 ```

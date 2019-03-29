@@ -18,4 +18,4 @@ do
    esac
 done
 
-jq ${jqOpt} -n --arg state ${state:-on} '{"state":$state}'
+jq ${jqOpt} -n --arg state ${state:-on} '{"value":$state}'
