@@ -284,12 +284,13 @@ def _process_state_change_events():
         if not state_is_off:
 
             # *Hack* to avoid problems with historical events not being
-            # correctly handled by EventQueue.get(), replay old events every 10s
+            # correctly handled by EventQueue.get(), replay old events every
+            # 10s
             # - see issue #54
             if counter % 1000 == 0:
                 LOG.debug('Checking published events ... %d', counter / 1000)
                 _published_events = state_events.get_published_events(
-                        process=True)
+                    process=True)
                 for _state_event in _published_events:
                     _process_event(_state_event, sdp_state, service_states)
             else:
