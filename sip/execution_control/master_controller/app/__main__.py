@@ -232,6 +232,14 @@ def _process_event(event: Event, sdp_state: SDPState,
                         sdp_state.current_state)
             return
 
+        # Check that a transition to the target state is allowed in the
+        # current state.
+        if not sdp_state.is_target_state_allowed(sdp_state.target_state):
+            LOG.error('Transition to %s is not allowed when in state %s',
+                      sdp_state.target_state, sdp_state.current_state)
+            sdp_state.target_state = sdp_state.current_state
+            return
+
         _update_services_target_state(sdp_state.target_state)
 
         # If asking SDP to turn off, also turn off services.

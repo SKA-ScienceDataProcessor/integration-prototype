@@ -132,3 +132,14 @@ def test_sdp_state_set_current_state():
 
     assert sdp_state.current_state == current_state
     assert sdp_state.current_timestamp >= set_time
+
+
+def test_allowed_target_states():
+    """Test checking whether a transition is allowed."""
+    DB.flush_db()
+    sdp_state = SDPState()
+
+    sdp_state.update_current_state('standby')
+
+    assert sdp_state.is_target_state_allowed('on')
+    assert not sdp_state.is_target_state_allowed('disable')

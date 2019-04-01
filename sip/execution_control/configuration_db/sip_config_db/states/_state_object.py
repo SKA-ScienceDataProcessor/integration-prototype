@@ -67,6 +67,18 @@ class StateObject:
         """Set the current state."""
         self.update_current_state(value)
 
+    def is_target_state_allowed(self, value):
+        """Test if a transition is allowed.
+
+        Args:
+            value (str): New value for target state
+
+        Returns:
+            bool, transition is allowed
+
+        """
+        return value in self._allowed_target_states[self.current_state]
+
     @property
     def target_state(self) -> str:
         """Get the target state."""
