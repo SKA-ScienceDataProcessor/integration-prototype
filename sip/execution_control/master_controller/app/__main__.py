@@ -236,7 +236,7 @@ def _process_event(event: Event, sdp_state: SDPState,
         # current state.
         if not sdp_state.is_target_state_allowed(sdp_state.target_state):
             LOG.error('Transition to %s is not allowed when in state %s',
-                   sdp_state.target_state, sdp_state.current_state)
+                      sdp_state.target_state, sdp_state.current_state)
             sdp_state.target_state = sdp_state.current_state
             return
 
