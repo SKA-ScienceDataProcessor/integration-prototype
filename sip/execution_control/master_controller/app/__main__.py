@@ -232,6 +232,14 @@ def _process_event(event: Event, sdp_state: SDPState,
                         sdp_state.current_state)
             return
 
+        # Check that a transition to the target state is allowed in the
+        # current state.
+        if not sdp_state.is_target_state_allowed(sdp_state.target_state):
+            LOG.error('Transition to %s is not allowed when in state %s',
+                      sdp_state.target_state, sdp_state.current_state)
+            sdp_state.target_state = sdp_state.current_state
+            return
+
         _update_services_target_state(sdp_state.target_state)
 
         # If asking SDP to turn off, also turn off services.
@@ -276,24 +284,29 @@ def _process_state_change_events():
     sdp_state = SDPState()
     service_states = get_service_state_list()
     state_events = sdp_state.get_event_queue(subscriber=__service_name__)
+    state_is_off = sdp_state.current_state == 'off'
 
     counter = 0
     while True:
         time.sleep(0.1)
+        if not state_is_off:
 
-        # *Hack* to avoid problems with historical events not being correctly
-        # handled by EventQueue.get(), replay old events every 10s
-        # - see issue #54
-        if counter % 1000 == 0:
-            LOG.debug('Checking published events ... %d', counter / 1000)
-            _published_events = state_events.get_published_events(process=True)
-            for _state_event in _published_events:
-                _process_event(_state_event, sdp_state, service_states)
-        else:
-            _state_event = state_events.get()
-            if _state_event:
-                _process_event(_state_event, sdp_state, service_states)
-        counter += 1
+            # *Hack* to avoid problems with historical events not being
+            # correctly handled by EventQueue.get(), replay old events every
+            # 10s
+            # - see issue #54
+            if counter % 1000 == 0:
+                LOG.debug('Checking published events ... %d', counter / 1000)
+                _published_events = state_events.get_published_events(
+                    process=True)
+                for _state_event in _published_events:
+                    _process_event(_state_event, sdp_state, service_states)
+            else:
+                _state_event = state_events.get()
+                if _state_event:
+                    _process_event(_state_event, sdp_state, service_states)
+                    state_is_off = sdp_state.current_state == 'off'
+            counter += 1
 
 
 def main():
