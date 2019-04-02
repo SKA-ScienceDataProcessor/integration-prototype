@@ -22,13 +22,13 @@ done
 
 
 : ${DOCKER_HOST:=localhost}
-url2=${DOCKER_HOST%:*}:5000/state
+url2=${DOCKER_HOST%:*}:5000/state/target
 URL=http://${url2#*//}
 unset url2
 
 
 result=$(curl -s -X PUT -H "Content-Type: application/json" \
-                -d $(jq -cn --arg state ${state:-on} '{"state":$state}') $URL)
+                -d $(jq -cn --arg state ${state:-on} '{"value":$state}') $URL)
 
 res=$(jq .message <<< "$result")
 printf "%s\n" "${res//\"/}"

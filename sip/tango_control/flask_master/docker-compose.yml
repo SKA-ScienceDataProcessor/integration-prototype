@@ -1,29 +1,36 @@
-version: '3.4'
+version: '3.6'
 
 services:
 
-  master:
-    image: skasip/master_interface_service
-    environment:
-      REDIS_HOST: "master_db"
+  tc_flask_master:
+    image: skasip/flask_master:latest
     ports:
-      - 5000:5000
-    expose:
-      - "5000"
+    - 5000:5000
+    environment:
+    - REDIS_HOST=ec_config_database
+    deploy:
+      mode: replicated
+      replicas: 1
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5000/"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
 
-  master_db:
-    image: redis:4.0.6-alpine
-    volumes:
-      - master_db:/data/db
+  ec_config_database:
+    image: redis:5.0.1-alpine
+    deploy:
+      mode: replicated
+      replicas: 1
     ports:
       - 6379:6379
-    expose:
-      - "6379"
 
-  services_watchdog:
-    image: skasip/master_controller_service
+  ec_master_controller:
+    image: skasip/master_controller:latest
+    command: []
     environment:
-      REDIS_HOST: "master_db"
-
-volumes:
-  master_db:
+      - REDIS_HOST=ec_config_database
+      - REDIS_PORT=6379
+    deploy:
+      mode: replicated
+      replicas: 1

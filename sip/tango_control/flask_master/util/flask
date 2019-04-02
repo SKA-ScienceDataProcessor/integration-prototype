@@ -3,31 +3,65 @@
 # Uses a menu interface to select GET or PUT; and if PUT
 # which state to select.
 
-# This utility uses the external commands curl and jq.
-# Please ensure that you hve them installed before you use
-# this utility. They may be installed on an Ubuntu/Debian
-# system thus:
-# sudo apt install jq curl
-# or jq OSX thus:
-# brew install jq
-# (curl is a standard OSX utility?)
-
 : ${DOCKER_HOST:=uri://localhost:0}
 url2=http://${DOCKER_HOST#*//}
 vanilla_url=${url2%:*}:5000/
 URL=${vanilla_url}state
 unset url2
-allstates=$(curl -s "${vanilla_url}allowed_state_transitions")
+
+get_json() {
+    local json url
+    url="$(jq ".[\"$1\"]" <<< $urlset)"
+    json=$(curl -s ${url//\"/})
+    printf "%s\n" "$json"
+}
+
+
+get_url() {
+    local url
+    url="$(jq ".[\"$1\"]" <<< $urlset)"
+    printf "%s" ${url//\"/}
+}
+
+
+do_all() {
+    local PS3="Enter required information: "
+    select choice in "${urlkeys[@]}" Back
+    do
+        [[ $choice = Back ]] && break
+        json=$(get_json "${choice}")
+        jq . <<< $json
+        REPLY=
+    done
+}
+
+
+do_get() {
+    json=$(get_json "SDP current state")
+    state=$(jq .current_state <<< "$json")
+    printf "\n"
+    if [[ ${state//\"/} == UNKNOWN ]]
+    then 
+        problem="$(jq .reason <<< "$json")"
+        printf "Problem: %s\n" "${problem//\"/}"
+    else 
+        time=$(jq .last_updated <<< "$json")
+        printf "State: %s\n" "${state//\"/}"
+        printf "Update time: %s\n" "${time//\"/}"
+    fi
+    printf "\n"
+}
+
 
 do_put() {
     local PS3="Enter required state: "
-    current_state=$(curl -s "${URL}" | jq .state | tr -d '\"' )
-    states=($(<<< "$allstates" jq .$current_state[] | tr -d '\"'))
+    states=($( get_json "Allowed target states"|jq .[] | tr -d '\"') )
     select state in "${states[@]}"
     do
         printf "\n"
+        url=$(get_url "SDP target state")
         result=$(curl -s -X PUT -H "Content-Type: application/json" \
-                -d $(jq -cn --arg state ${state} '{"state":$state}') "${URL}")
+                -d $(jq -cn --arg state ${state} '{"value":$state}') "${url}")
         res=$(jq .message <<< "$result")
         if [[ ${res:+yes} == yes ]]
         then
@@ -40,23 +74,21 @@ do_put() {
     done
 }
 
-do_get() {
-    json=$(curl -s "${URL}")
-    state=$(jq .state <<< "$json")
-    printf "\n"
-    if [[ ${state//\"/} == UNKNOWN ]]
-        then 
-            problem="$(jq .reason <<< "$json")"
-            printf "Problem: %s\n" "${problem//\"/}"
-        else 
-            printf "State: %s\n" "${state//\"/}"
-    fi
-    printf "\n"
-}
 
+urlset=$(curl -s "${vanilla_url}"| \
+         jq '[._links.items[]|{key:.Link,value:.href}]|from_entries')
+
+states=($( get_json "Allowed target states"|jq .[] | tr -d '\"') )
+
+urlkeys=()
+while read line
+do
+    [[ $line =~ ^\"Configure ]] && continue
+    urlkeys+=( "${line//\"/}" )
+done < <(jq '.|keys|.[]' <<< $urlset)
 
 PS3="Please enter your choice: "
-select choice in "Get state" "Put state" "Quit"
+select choice in "Get state" "Put state" "All actions" "Quit"
 do
     case ${choice:-$REPLY} in
         Get*) do_get ;;
@@ -64,11 +96,14 @@ do
             do_put 
             REPLY=
             ;;
+        All*)
+            do_all 
+            REPLY=
+            ;;
         [Qq]*) break ;;
         *)
             printf "Enter the number or q to quit\n"
             REPLY=
             ;;
-        
     esac
 done
