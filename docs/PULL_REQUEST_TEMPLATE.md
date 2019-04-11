@@ -1,23 +1,42 @@
-<!-- Provide a general summary of your changes in the Title above! -->
+<!-- The title in the field above should: -->
+<!--   1. Start with the JIRA ticket number (if possible) -->
+<!--   2. Provide a short summary of the key change or changes for this PR -->
 
-## Description:
-<!-- Describe your changes in more detail. If the change fixes an issue or is 
-related to a JIRA ticket, please refer to that here. -->
+# Description
 
-## Testing instructions:
+<!-- Describe your changes in more detail in this section. -->
+<!-- Describe what was changed and why, this does not need to be a long -->
+<!-- description but should help the reviewer know what you have done. -->
+
+## Testing instructions
+
 <!-- Describe how the code in the PR can be tested. -->
-<!-- Include details of the testing environment, set up and the tests that can be run. -->
+
+<!-- If all tests are already being run on the CI environment it is -->
+<!-- to simply describe where to find the test output relevant this change. -->
+<!-- If the change is not yet tested by the CI, please add instructions -->
+<!-- so that the reviewer knows how to verify the change in the PR. -->
 
 ## Types of changes
-<!-- What types of changes does this PR introduce? Put an 'x' in all of the boxes that apply. -->
-- [ ] Bug fix (non-breaking change that fixes an issue)
-- [ ] New feature (non-breaking change that adds functionality)
-- [ ] Breaking change (fix or feature that would cause existing functionality to change)
 
-## Checklist:
-<!-- Go over all of the following points and put and 'x' in the boxes that apply. -->
+<!-- What types of changes does this PR introduce? -->
+<!-- Put an 'x' in all of the boxes that apply. -->
+
+- [ ] New feature
+- [ ] Refactor
+- [ ] Bug fix
+- [ ] Documentation update
+- [ ] Breaking change
+- [ ] Non-breaking change
+
+## Checklist
+
+<!-- Put and 'x' in the boxes that apply. -->
+
+*(Also refer to the [DoD](https://developerskatelescopeorg.readthedocs.io/en/latest/agile_practices/definition_of_done.html) in the SKA developer guidelines)*
+
 - [ ] The code follows the code style of this project.
-- [ ] The changes require a documentation update.
 - [ ] Documentation has been updated accordingly.
-- [ ] Tests cover all changes in this PR.
+- [ ] Tests cover changes in this PR (75% - 90% coverage).
+- [ ] Tests have be added to the CI script.
 - [ ] All new and existing tests passed.
