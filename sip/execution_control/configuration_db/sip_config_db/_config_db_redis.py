@@ -186,8 +186,8 @@ class ConfigDb:
         Args:
             db_key (str): Key at which the dictionary is stored in the db.
             hierarchical (bool): If True, expect the dictionary to have been
-                stored hierarchically. If False, expect the dictionary to have
-                been stored flat.
+            stored hierarchically. If False, expect the dictionary to have
+            been stored flat.
 
         Returns:
             dict, the dictionary stored at key
@@ -211,8 +211,8 @@ class ConfigDb:
             db_key (str): Key where the dictionary is stored
             dict_keys (List[str]): Keys within the dictionary to load.
             hierarchical (bool): If True, expect the dictionary to have been
-                stored hierarchically. If False, expect the dictionary to have
-                been stored flat.
+            stored hierarchically. If False, expect the dictionary to have
+            been stored flat.
 
 
         Returns:
