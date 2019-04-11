@@ -31,7 +31,30 @@ All threads used by the application were pinned to the first CPU socket (the fir
 
 During a test lasting around 26 minutes, a total of ~4.2 TiB of data was successfully received and written out to storage on `/mnt/storage-ssd` without losing a single byte. The measured write rate was consistently around 10 GB/s using 8 writer threads (although that may have been the bandwidth to external buffers on other nodes, as the total capacity here is reported as 67 TB). The `/mnt/storage-nvme` partition, which has a 12 TB capacity, performed similarly well at ~6.8 GB/s using 8 writer threads.
 
-## Testing
+## Build Instructions
+
+To build the code on a local machine, ensure `make` and `CMake` are both installed and give the following commands from the current directory:
+
+```bash
+mkdir build
+cd build
+cmake ..
+make
+```
+
+To run the unit tests from the build directory, either run
+
+```bash
+ctest
+```
+
+or run the unit test binary directly using:
+
+```bash
+./test/recv_test
+```
+
+## Test Instructions
 
 To run the test on P3-ALaSKA, it is sufficient to deploy the Compose file found in the parent directory.
 *Before running the test, check that the IP address of the receiver node (all `destination_host` values) is still correct!* (It may need to be updated if the Swarm cluster has been rebuilt.) Also check that the mount point bound into the container is valid.
