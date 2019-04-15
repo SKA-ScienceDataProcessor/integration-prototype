@@ -109,7 +109,6 @@ TEST(Stream, test_stream_decode)
     free(buf);
 }
 
-
 TEST(Stream, test_stream_receive)
 {
     /* Verify stream_decode() function and verify if correct
