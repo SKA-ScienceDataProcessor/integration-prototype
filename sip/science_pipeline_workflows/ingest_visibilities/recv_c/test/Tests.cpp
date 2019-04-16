@@ -119,23 +119,52 @@ TEST(Stream, test_stream_receive)
         0x1,    // Heap counter.
         0x2,    // Heap size.
         0x3,    // Heap offset.
-        0x6000,
-        0x6001
-        // 0x6005,
-        // 0x6008,
-        // 0x600A
+        0x4,    // packet payload length
+        0x5,    // item descriptor
+        0x6,    // stream control
+        // 0x10,   // item descriptor: name
+        // 0x11,   // item descriptor: description
+        // 0x12,   // item descriptor: shape
+        // 0x13,   // item descriptor: type
+        // 0x14,   // item descriptor: ID
+        // 0x15,   // item descriptor: dtype  
+        0x6000, // Visibility timestamp count
+        0x6001, // Visibility timestamp fraction
+        0x6005, // Visibility baseline count
+        0x6008, // Scan ID 
+        0x600A  // Visibility data 
+
     };
 
     // NEED TO FIGURE OUT HOW TO DO FLOOR IN C
     // ADD DESCRIPTOR AND OTHER VALUES
-    //num_baselines = (512 * 513) // 2
+    // int num_baselines = (512 * 513) // 2
     // Dummy values for items.
+
+    // # Update values in the heap.
+    // item_group['visibility_timestamp_count'].value = 1
+    // item_group['visibility_timestamp_fraction'].value = 0
+    // item_group['visibility_baseline_count'].value = num_baselines
+    // item_group['scan_id'].value = 100000000
+    // item_group['correlator_output_data'].value = vis
+
+    // Alternative to this in C
+    // vis = numpy.zeros(shape=(num_baselines,), dtype=dtype)
+
     const int item_val[] = {
         4,
         10,
         55,
-        1,
-        0
+        55,
+        0,
+        1,              // Visibility timestamp count
+        0,              // Visibility timestamp fraction    
+        // num_baselines,  // Visibility baseline count
+        100000000,      // Scan ID 
+        // vis             // Visibility data 
+
+        // 1,
+        // 0
         
     };
     const unsigned int num_items = sizeof(item_ids) / sizeof(unsigned int);
