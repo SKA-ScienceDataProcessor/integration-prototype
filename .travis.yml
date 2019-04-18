@@ -8,7 +8,9 @@ notifications:
 services:
 - docker
 
-language: python
+language: 
+- python
+- cpp
 
 python:
 - 3.6
@@ -81,7 +83,19 @@ jobs:
     - pip install -r testing_requirements.txt
     script: ./tools/run_tests.sh sip/platform/logging
     after_success: codecov
-
+  
+  - stage: Google Test
+    name: "Testing Ingest Recv"
+    install:
+    - pip install --user cpp-coveralls
+    script:
+      - mkdir sip/science_pipeline_workflows/ingest_visibilities/recv_c/build
+      - cd sip/science_pipeline_workflows/ingest_visibilities/recv_c/build
+      - cmake ..
+      - cmake --build .
+      - ctest
+      - ./test/recv_test
+    after_success: codecov
 
 # language: cpp
 
