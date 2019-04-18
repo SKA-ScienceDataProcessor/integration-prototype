@@ -81,3 +81,27 @@ jobs:
     - pip install -r testing_requirements.txt
     script: ./tools/run_tests.sh sip/platform/logging
     after_success: codecov
+
+
+language: cpp
+
+addons:
+  apt:
+    sources:
+      - ubuntu-toolchain-r-test
+
+before_install:
+  - pip install --user cpp-coveralls
+
+script:
+  - mkdir sip/science_pipeline_workflows/ingest_visibilities/recv_c/build
+  - cd sip/science_pipeline_workflows/ingest_visibilities/recv_c/build
+  - cmake ..
+  - cmake --build .
+  - ctest
+  - ./test/recv_test
+
+# after_success: codecov
+# after_success:
+#   - coveralls --root .. -E ".*external.*" -E ".*CMakeFiles.*" -E ".*test/.*.cpp.*"
+
