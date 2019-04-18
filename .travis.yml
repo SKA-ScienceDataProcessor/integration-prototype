@@ -86,8 +86,6 @@ jobs:
   
   - stage: Google Test
     name: "Testing Ingest Recv"
-    install:
-    - pip install --user cpp-coveralls
     script:
       - mkdir sip/science_pipeline_workflows/ingest_visibilities/recv_c/build
       - cd sip/science_pipeline_workflows/ingest_visibilities/recv_c/build
