@@ -177,6 +177,7 @@ void stream_decode(struct Stream* self, const uchar* buf, int depth)
         printf("     scan_id            : %" PRIu64 "\n", scan_id);
         printf("     num_baselines      : %d\n", self->receiver->num_baselines);
     }
+
     if (!packet_has_stream_control && self->vis_data_heap_offset > 0 &&
             self->receiver->num_baselines > 0)
     {
