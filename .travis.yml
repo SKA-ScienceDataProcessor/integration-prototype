@@ -84,8 +84,13 @@ jobs:
     script: ./tools/run_tests.sh sip/platform/logging
     after_success: codecov
   
-  - stage: Google Test
-    name: "Testing Ingest Recv"
+  - stage: test
+    name: "Visbility Ingest Receiver"
+    addons:
+      apt:
+        packages: lcov
+    install:
+    - pip install -r testing_requirements.txt
     script:
       - mkdir sip/science_pipeline_workflows/ingest_visibilities/recv_c/build
       - cd sip/science_pipeline_workflows/ingest_visibilities/recv_c/build
@@ -93,7 +98,8 @@ jobs:
       - cmake --build .
       - ctest
       - ./test/recv_test
-    after_success: codecov
+    after_success:
+    - bash <(curl -s https://codecov.io/bash) || echo "Codecov did not collect coverage reports"
 
 # language: cpp
 
