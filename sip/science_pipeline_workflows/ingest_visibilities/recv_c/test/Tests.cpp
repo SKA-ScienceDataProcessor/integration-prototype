@@ -108,97 +108,41 @@ TEST(Stream, test_stream_decode)
     free(buf);
 }
 
-typedef enum _item_ids {
-    heap_counter=0x01,
-    heap_size,
-    heap_offset,
-    packet_payload_length,
-    item_descriptor,
-    stream_control,
-    item_desc_name=0x10,
-    item_des_description,
-    item_desc_shape,
-    item_desc_type,
-    item_desc_ID,
-    item_desc_dtype,
-    visibility_timestamp_count=0x6000,
-    visibility_timestamp_fraction,
-    visibility_baseline_count_0x6005,
-    scan_ID=0x6008,
-    visibility_data=0x600A
-} item_id;
 
-typedef struct _item_block {
-    item_id id;
-    uint64_t val;
-    uint64_t imm;
-} item_block;
 
 TEST(Stream, test_stream_receive)
 {
     /* Verify stream_decode() function and verify if correct
     data is received */
 
-    // ADD DESCRIPTOR AND OTHER IDS
-    // SPEAD packet item IDs.
-    // *** APM: No longer required?
-    //~ const unsigned int item_ids[] = {
-        //~ 0x1,    // Heap counter.
-        //~ 0x2,    // Heap size.
-        //~ 0x3,    // Heap offset.
-        //~ 0x4,    // packet payload length
-        //~ 0x5,    // item descriptor
-        //~ 0x6,    // stream control
-        //~ // 0x10,   // item descriptor: name
-        //~ // 0x11,   // item descriptor: description
-        //~ // 0x12,   // item descriptor: shape
-        //~ // 0x13,   // item descriptor: type
-        //~ // 0x14,   // item descriptor: ID
-        //~ // 0x15,   // item descriptor: dtype  
-        //~ 0x6000, // Visibility timestamp count
-        //~ 0x6001, // Visibility timestamp fraction
-        //~ 0x6005, // Visibility baseline count
-        //~ 0x6008, // Scan ID 
-        //~ 0x600A  // Visibility data 
+    typedef enum _item_ids {
+        heap_counter=0x01,
+        heap_size,
+        heap_offset,
+        packet_payload_length,
+        item_descriptor,
+        stream_control,
+        item_desc_name=0x10,
+        item_des_description,
+        item_desc_shape,
+        item_desc_type,
+        item_desc_ID,
+        item_desc_dtype,
+        visibility_timestamp_count=0x6000,
+        visibility_timestamp_fraction,
+        visibility_baseline_count=0x6005,
+        // scan_ID=0x6008,
+        visibility_data=0x600A
+    } item_id;
 
-    //~ };
+    typedef struct _item_block {
+        item_id id;
+        uint64_t val;
+        uint64_t imm;
+    } item_block;
 
-    // NEED TO FIGURE OUT HOW TO DO FLOOR IN C
-    // ADD DESCRIPTOR AND OTHER VALUES
-    // int num_baselines = (512 * 513) // 2
-    // Dummy values for items.
+    int num_baselines = (512 * 513) / 2;
 
-    // # Update values in the heap.
-    // item_group['visibility_timestamp_count'].value = 1
-    // item_group['visibility_timestamp_fraction'].value = 0
-    // item_group['visibility_baseline_count'].value = num_baselines
-    // item_group['scan_id'].value = 100000000
-    // item_group['correlator_output_data'].value = vis
-
-    // Alternative to this in C
-    // vis = numpy.zeros(shape=(num_baselines,), dtype=dtype)
-
-    // *** APM: No longer required?
-    //~ const int item_val[] = {
-        //~ 4,
-        //~ 10,
-        //~ 55,
-        //~ 55,
-        //~ 0,
-        //~ 1,              // Visibility timestamp count
-        //~ 0,              // Visibility timestamp fraction    
-        //~ // num_baselines,  // Visibility baseline count
-        //~ 100000000,      // Scan ID 
-        //~ // vis             // Visibility data 
-
-        //~ // 1,
-        //~ // 0
-        
-    //~ };
-
-
-    // *** APM: This const array contains item-id, 
-    //          item value and immediate flag.
     const item_block p_items[] = { 
 	{heap_counter, 4, 1}, 
 	{heap_size, 10, 1},
@@ -208,7 +152,9 @@ TEST(Stream, test_stream_receive)
 	{stream_control, 1, 1},
 	{visibility_timestamp_count, 1, 1}, 
 	{visibility_timestamp_fraction, 0, 1},
-	{scan_ID, 100000000, 0}
+    {visibility_baseline_count, (uint64_t) num_baselines, 1},
+	//{scan_ID, 100000000, 0}
+    //(visibility_data, , 0)
     };
     const unsigned int num_items = sizeof(p_items) / sizeof(item_block);
     
