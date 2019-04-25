@@ -90,16 +90,9 @@ jobs:
       apt:
         packages: lcov
     install:
-    - pip install -r testing_requirements.txt
-    script:
-      - mkdir sip/science_pipeline_workflows/ingest_visibilities/recv_c/build
-      - cd sip/science_pipeline_workflows/ingest_visibilities/recv_c/build
-      - cmake ..
-      - cmake --build .
-      - ctest
-      - ./test/recv_test
-    after_success:
-    - bash <(curl -s https://codecov.io/bash) || echo "Codecov did not collect coverage reports"
+    - sudo pip install codecov
+    script: ./tools/build_test.sh
+    after_success: codecov
 
 # language: cpp
 
