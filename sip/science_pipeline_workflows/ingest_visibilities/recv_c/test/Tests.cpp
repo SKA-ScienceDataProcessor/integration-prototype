@@ -131,7 +131,7 @@ TEST(Stream, test_stream_receive)
         visibility_timestamp_count=0x6000,
         visibility_timestamp_fraction,
         visibility_baseline_count=0x6005,
-        // scan_ID=0x6008,
+        scan_ID=0x6008,
         visibility_data=0x600A
     } item_id;
 
@@ -145,23 +145,23 @@ TEST(Stream, test_stream_receive)
 
     const item_block p_items[] = { 
 	{heap_counter, 4, 1}, 
-	{heap_size, 10, 1},
-	{heap_offset, 55, 1}, 
+	{heap_size, 10, 1}, // size of heap need
+	{heap_offset, 0, 1}, 
 	{packet_payload_length, 55, 1},
-	{item_descriptor, 0, 0}, 
-	{stream_control, 1, 1},
-	{visibility_timestamp_count, 1, 1}, 
-	{visibility_timestamp_fraction, 0, 1},
+	// {item_descriptor, 0, 0}, 
+	// {stream_control, 1, 1},
+	// {visibility_timestamp_count, 1, 1}, 
+	// {visibility_timestamp_fraction, 0, 1},
     {visibility_baseline_count, (uint64_t) num_baselines, 1},
-	//{scan_ID, 100000000, 0}
-    //(visibility_data, , 0)
+	{scan_ID, 0, 0},
+    {visibility_data, 8, 0}
     };
     const unsigned int num_items = sizeof(p_items) / sizeof(item_block);
     
     uint64_t heap_count;
 
     // Allocate memory for a SPEAD packet.
-    unsigned char* buf = (unsigned char*) malloc(8 + num_items * 8);
+    unsigned char* buf = (unsigned char*) malloc(8 + num_items * 8); // plus payload size
     ASSERT_TRUE(buf != NULL);
 
     // Define SPEAD flavour.
