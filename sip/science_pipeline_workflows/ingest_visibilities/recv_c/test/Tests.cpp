@@ -120,16 +120,16 @@ TEST(Stream, test_stream_receive)
         heap_size,
         heap_offset,
         packet_payload_length,
-        item_descriptor,
-        stream_control,
-        item_desc_name=0x10,
-        item_des_description,
-        item_desc_shape,
-        item_desc_type,
-        item_desc_ID,
-        item_desc_dtype,
-        visibility_timestamp_count=0x6000,
-        visibility_timestamp_fraction,
+        //~ item_descriptor,
+        //~ stream_control,
+        //~ item_desc_name=0x10,
+        //~ item_des_description,
+        //~ item_desc_shape,
+        //~ item_desc_type,
+        //~ item_desc_ID,
+        //~ item_desc_dtype,
+        //~ visibility_timestamp_count=0x6000,
+        //~ visibility_timestamp_fraction,
         visibility_baseline_count=0x6005,
         scan_ID=0x6008,
         visibility_data=0x600A
@@ -142,27 +142,36 @@ TEST(Stream, test_stream_receive)
     } item_block;
 
     int num_baselines = (512 * 513) / 2;
+    float vis_data[2];
+    vis_data[0] = (float)rand()/(float)(RAND_MAX/10.);
+    vis_data[1] = (float)rand()/(float)(RAND_MAX/10.);
+    uint64_t scan_id=0, *scan_ptr=NULL;
+    void *heap_start;
+    float * vis_ptr;
 
     const item_block p_items[] = { 
 	{heap_counter, 4, 1}, 
-	{heap_size, 10, 1}, // size of heap need
+	{heap_size, 16, 1},
 	{heap_offset, 0, 1}, 
-	{packet_payload_length, 55, 1},
-	// {item_descriptor, 0, 0}, 
-	// {stream_control, 1, 1},
-	// {visibility_timestamp_count, 1, 1}, 
-	// {visibility_timestamp_fraction, 0, 1},
-    {visibility_baseline_count, (uint64_t) num_baselines, 1},
+	{packet_payload_length, 16, 1},
+	//~ {item_descriptor, 0, 0}, 
+	//~ {stream_control, 1, 1},
+	//~ {visibility_timestamp_count, 1, 1}, 
+	//~ {visibility_timestamp_fraction, 0, 1},
+	{visibility_baseline_count, (uint64_t) num_baselines, 1},
 	{scan_ID, 0, 0},
-    {visibility_data, 8, 0}
+	{visibility_data, 8, 0}
     };
     const unsigned int num_items = sizeof(p_items) / sizeof(item_block);
     
     uint64_t heap_count;
 
     // Allocate memory for a SPEAD packet.
-    unsigned char* buf = (unsigned char*) malloc(8 + num_items * 8); // plus payload size
+    unsigned char* buf = (unsigned char*) malloc(8 + num_items * 8 + 16);
     ASSERT_TRUE(buf != NULL);
+    
+    // generate visibility data and insert into buf
+    // Use random number generator?
 
     // Define SPEAD flavour.
     const unsigned char heap_address_bits = 48;
@@ -197,6 +206,14 @@ TEST(Stream, test_stream_receive)
 	    case heap_counter : heap_count = p_items[i].val; break;
 	}
     }
+    // get start of heap
+    heap_start = (void *) buf + 8 + num_items * sizeof(uint64_t); // but defined better
+    // insert scan_id at heap_start, 8 bytes
+    scan_ptr =(uint64_t *) heap_start;
+    *scan_ptr = scan_id;
+    vis_ptr = (float *) ++scan_ptr;
+    vis_ptr[0] = vis_data[0];
+    vis_ptr[1] = vis_data[1];
 
     // Create a test receiver.
     struct Receiver* receiver = create_test_receiver();
@@ -210,9 +227,9 @@ TEST(Stream, test_stream_receive)
     printf("completed_streams - %i\n", receiver->completed_streams);
     printf("max_num_buffers - %i\n", receiver->max_num_buffers);
     printf("num_baselines - %i\n", receiver->num_baselines);
-    // printf("buffer_id - %i\n", receiver->buffers[0]->buffer_id);
-    // struct Buffer* buff = receiver->buffers[0];
-    // printf("Buf %i", buff->buffer_id);
+    //~ printf("buffer_id - %i\n", receiver->buffers[0]->buffer_id);
+    //~ struct Buffer* buff = receiver->buffers[0];
+    //~ printf("Buf %i", buff->buffer_id);
 
     // Clean up.
     receiver_free(receiver);
