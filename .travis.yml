@@ -8,9 +8,7 @@ notifications:
 services:
 - docker
 
-language: 
-- python
-- cpp
+language: python
 
 python:
 - 3.6
@@ -83,15 +81,3 @@ jobs:
     - pip install -r testing_requirements.txt
     script: ./tools/run_tests.sh sip/platform/logging
     after_success: codecov
-  
-  - stage: test
-    name: "Visbility Ingest Receiver"
-    install:
-    # (fake) install dependencies (usually involves wget, configure, make, ...)
-    # install into cache folder (build binaries+headers only, no sources and do NOT build there)
-    - mkdir -p $HOME/.cache
-    - touch $HOME/.cache/mydependency.so
-    script: ./tools/build_test.sh
-    after_success:
-      - bash <(curl -s https://codecov.io/bash) -t uuid-repo-token
-
