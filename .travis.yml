@@ -86,27 +86,11 @@ jobs:
   
   - stage: test
     name: "Visbility Ingest Receiver"
-    addons:
-    apt:
-      sources:
-        - ubuntu-toolchain-r-test
-    # install:
-    # # (fake) install dependencies (usually involves wget, configure, make, ...)
-    # # install into cache folder (build binaries+headers only, no sources and do NOT build there)
-    # - mkdir -p $HOME/.cache
-    # - touch $HOME/.cache/mydependency.so
-    before_install:
-    - pip install cpp-coveralls
-
-    script:
-      - mkdir sip/science_pipeline_workflows/ingest_visibilities/recv_c/build
-      - cd sip/science_pipeline_workflows/ingest_visibilities/recv_c/build
-      - cmake ..
-      - ctest
-      - ./test/recv_test
-    # script: ./tools/build_test.sh
-    
+    install:
+    # (fake) install dependencies (usually involves wget, configure, make, ...)
+    # install into cache folder (build binaries+headers only, no sources and do NOT build there)
+    - mkdir -p $HOME/.cache
+    - touch $HOME/.cache/mydependency.so
+    script: ./tools/build_test.sh
     after_success:
-      - coveralls --root .. -E ".*external.*" -E ".*CMakeFiles.*" -E ".*test/.*.cpp.*"
-    # after_success:
-    #   - bash <(curl -s https://codecov.io/bash) -t uuid-repo-token
+      - bash <(curl -s https://codecov.io/bash) -t uuid-repo-token
