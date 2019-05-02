@@ -86,11 +86,19 @@ jobs:
   
   - stage: test
     name: "Visbility Ingest Receiver"
-    install:
-    # (fake) install dependencies (usually involves wget, configure, make, ...)
-    # install into cache folder (build binaries+headers only, no sources and do NOT build there)
-    - mkdir -p $HOME/.cache
-    - touch $HOME/.cache/mydependency.so
+    addons:
+    apt:
+      sources:
+        - ubuntu-toolchain-r-test
+    # install:
+    # # (fake) install dependencies (usually involves wget, configure, make, ...)
+    # # install into cache folder (build binaries+headers only, no sources and do NOT build there)
+    # - mkdir -p $HOME/.cache
+    # - touch $HOME/.cache/mydependency.so
+    before_install:
+    - pip install --user cpp-coveralls
     script: ./tools/build_test.sh
     after_success:
-      - bash <(curl -s https://codecov.io/bash) -t uuid-repo-token
+      - coveralls --root .. -E ".*external.*" -E ".*CMakeFiles.*" -E ".*test/.*.cpp.*"
+    # after_success:
+    #   - bash <(curl -s https://codecov.io/bash) -t uuid-repo-token
