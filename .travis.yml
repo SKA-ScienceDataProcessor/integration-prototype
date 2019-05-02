@@ -97,7 +97,13 @@ jobs:
     # - touch $HOME/.cache/mydependency.so
     before_install:
     - pip install --user cpp-coveralls
-    script: ./tools/build_test.sh
+    script:
+      - mkdir sip/science_pipeline_workflows/ingest_visibilities/recv_c/build
+      - cd sip/science_pipeline_workflows/ingest_visibilities/recv_c/build
+      - cmake ..
+      - ctest.
+      - /test/recv_test
+    # script: ./tools/build_test.sh
     after_success:
       - coveralls --root .. -E ".*external.*" -E ".*CMakeFiles.*" -E ".*test/.*.cpp.*"
     # after_success:
