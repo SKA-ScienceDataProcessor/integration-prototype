@@ -102,8 +102,8 @@ jobs:
       - mkdir sip/science_pipeline_workflows/ingest_visibilities/recv_c/build
       - cd sip/science_pipeline_workflows/ingest_visibilities/recv_c/build
       - cmake ..
-      - ctest.
-      - /test/recv_test
+      - ctest
+      - ./test/recv_test
     # script: ./tools/build_test.sh
     
     after_success:
