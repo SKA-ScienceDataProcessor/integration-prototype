@@ -33,7 +33,8 @@
 
 <!-- Put and 'x' in the boxes that apply. -->
 
-*(Also refer to the [DoD](https://developerskatelescopeorg.readthedocs.io/en/latest/agile_practices/definition_of_done.html) in the SKA developer guidelines)*
+*(Please also refer to the [definition of done](https://bit.ly/ska_dod)
+in the SKA developer guidelines)*
 
 - [ ] The code follows the code style of this project.
 - [ ] Documentation has been updated accordingly.
