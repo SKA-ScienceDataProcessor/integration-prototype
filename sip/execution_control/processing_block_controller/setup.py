@@ -21,7 +21,7 @@ setup(name='skasip-pbc',
           'skasip-docker-swarm>=1.0.10',
           'skasip-logging>=1.0.14',
           'redis==2.10.6',
-          'jinja2==2.10',
+          'jinja2>=2.10.1',
           'celery==4.2.1',
           'PyYAML==4.2b4'
       ],
