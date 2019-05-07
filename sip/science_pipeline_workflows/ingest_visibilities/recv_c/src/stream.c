@@ -146,7 +146,7 @@ void stream_decode(struct Stream* self, const uchar* buf, int depth)
             break;
         case 0x6005:
             /* Visibility baseline count (immediate addressing). */
-            self->receiver->num_baselines = (uint32_t) item_addr;
+            self->receiver->num_baselines = be32toh((uint32_t) item_addr);
             packet_has_header_data = 1;
             break;
         case 0x6008:
