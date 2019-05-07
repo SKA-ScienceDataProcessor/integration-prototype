@@ -1,4 +1,4 @@
-# SIP Demo: Monitoring and Control of the state of SDP
+# Demo 1: Monitoring and Control of the state of SDP
 
 ## 1  Introduction
 
@@ -189,7 +189,7 @@ As shown in the Figure below, these are light-weight prototypes of a number
 of the Execution Control, Tango Control and Platform services identified in
 the SDP architecture.
 
-![Services & Components](figures/services-components.png)
+![Services & Components](figures/services-components.png "")
 
 ### 3.2  Monitoring and Control of SDP
 

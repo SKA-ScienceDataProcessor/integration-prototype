@@ -11,6 +11,8 @@ of the SDP.
 
    background
    quickstart
+   demos_link
+   test
    api
    references
 

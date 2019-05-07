@@ -15,10 +15,16 @@
 import os
 import sys
 import sphinx_rtd_theme
+
 # sys.path.insert(0, os.path.abspath('.'))
 sys.path.insert(0, os.path.abspath(
     os.path.join('..', '..', 'sip', 'execution_control', 'configuration_db')
 ))
+sys.path.insert(0, os.path.abspath(
+    os.path.join('..', '..', 'demos', '01_sdp_states')
+))
+
+
 
 # -- Project information -----------------------------------------------------
 
@@ -50,7 +56,7 @@ extensions = [
     'sphinx.ext.ifconfig',
     'sphinx.ext.viewcode',
     'sphinx.ext.githubpages',
-    'recommonmark'
+    'm2r'
 ]
 
 # Add any paths that contain templates here, relative to this directory.
@@ -59,8 +65,8 @@ templates_path = ['_templates']
 # The suffix(es) of source filenames.
 # You can specify multiple suffix as a list of string:
 #
-# source_suffix = ['.rst', '.md']
-source_suffix = '.rst'
+source_suffix = ['.rst', '.md']
+# source_suffix = '.rst'
 
 # The master toctree document.
 master_doc = 'index'
