@@ -25,12 +25,9 @@ target_link_libraries(vis_recv Threads::Threads)
 
 # Build executable.
 add_executable(recv src/main.c)
-target_link_libraries(recv vis_recv Threads::Threads)
+target_compile_options(recv PRIVATE --coverage)
+target_link_libraries(recv vis_recv Threads::Threads PRIVATE --coverage)
 
-if (COVERAGE)
-    target_compile_options(recv PRIVATE --coverage)
-    target_link_libraries(recv PRIVATE --coverage)
-endif()
 
 # Build tests.
 enable_testing()
