@@ -95,10 +95,10 @@ jobs:
     install:
     - pip install -r testing_requirements.txt
     script:
-      - CXX=/usr/bin/g++-6 CC=/usr/bin/gcc-6 cmake -DCOVERAGE=1 .
       - mkdir sip/science_pipeline_workflows/ingest_visibilities/recv_c/build 
       - cd sip/science_pipeline_workflows/ingest_visibilities/recv_c/build
-      - cmake -DCOVERALLS=ON -DCMAKE_BUILD_TYPE=Debug .. 
+      # - cmake -DCOVERALLS=ON -DCMAKE_BUILD_TYPE=Debug .. 
+      - CXX=/usr/bin/g++-6 CC=/usr/bin/gcc-6 cmake -DCOVERAGE=1 .
       - cmake --build .
       - ctest 
       - ./test/recv_test

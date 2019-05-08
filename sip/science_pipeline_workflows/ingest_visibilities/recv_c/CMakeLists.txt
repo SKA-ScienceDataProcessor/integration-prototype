@@ -28,8 +28,8 @@ add_executable(recv src/main.c)
 target_link_libraries(recv vis_recv Threads::Threads)
 
 if (COVERAGE)
-    target_compile_options(tests PRIVATE --coverage)
-    target_link_libraries(tests PRIVATE --coverage)
+    target_compile_options(recv PRIVATE --coverage)
+    target_link_libraries(recv PRIVATE --coverage)
 endif()
 
 # Build tests.
