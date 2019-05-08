@@ -86,7 +86,7 @@ jobs:
   
   - stage: test
     name: "Visbility Ingest Receiver"
-    before_install:
+    install:
     - pip install -r testing_requirements.txt
   script:
     - mkdir sip/science_pipeline_workflows/ingest_visibilities/recv_c/build 
