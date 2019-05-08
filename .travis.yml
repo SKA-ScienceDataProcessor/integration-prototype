@@ -87,7 +87,7 @@ jobs:
   - stage: test
     name: "Visbility Ingest Receiver"
     before_install:
-  - pip install --user cpp-coveralls
+    - pip install --user cpp-coveralls
   script:
     - mkdir sip/science_pipeline_workflows/ingest_visibilities/recv_c/build 
     - cd sip/science_pipeline_workflows/ingest_visibilities/recv_c/build
