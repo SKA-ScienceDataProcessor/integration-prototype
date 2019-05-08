@@ -132,19 +132,17 @@ TEST(Stream, test_stream_receive)
 
     int num_baselines = 512 *513 / 2;
     struct  DataType vis_data = {0,0,{{1.5,2.5},{3.5,4.5},{5.5,6.5},{7.5,8.5}}};
-    // float vis_data[2];
-    // vis_data[0] = (float)rand()/(float)(RAND_MAX/10.);
-    // vis_data[1] = (float)rand()/(float)(RAND_MAX/10.);
     uint64_t scan_id=0, *scan_ptr=NULL;
     void *heap_start;
     struct DataType * vis_ptr;
+    size_t heap_sz = 8 + sizeof(vis_data);
 
     const item_block p_items[] = { 
 	{heap_counter, 2, 1}, 
-	{heap_size, 16, 1},
+	{heap_size, (uint64_t) heap_sz, 1},
 	{heap_offset, 0, 1}, 
-	{packet_payload_length, 16, 1},
-	{visibility_baseline_count, (uint64_t) num_baselines, 1},
+	{packet_payload_length, (uint64_t) heap_sz, 1},
+	{visibility_baseline_count, (uint64_t) htobe32((uint32_t)num_baselines), 1},
 	{scan_ID, 0, 0},
 	{visibility_data, 8, 0}
     };
@@ -152,8 +150,8 @@ TEST(Stream, test_stream_receive)
     const unsigned int num_items = sizeof(p_items) / sizeof(item_block);
 
     // Allocate memory for a SPEAD packet.
-    unsigned char* buf = (unsigned char*) malloc(8 + num_items * 8 + 8 + sizeof(vis_data));
-    ASSERT_TRUE(buf != NULL);
+    unsigned char* buf = (unsigned char*) malloc(8 + num_items * 8 + heap_sz);
+    ASSERT_NE(buf, nullptr);
 
     // Define SPEAD flavour.
     const unsigned char heap_address_bits = 48;
@@ -172,49 +170,52 @@ TEST(Stream, test_stream_receive)
     // Construct SPEAD packet payload containing items in
     // "immediate addressing mode".
     uint64_t* items = (uint64_t*) &buf[8];
-    uint64_t heap_count;
     for (unsigned int i = 0; i < num_items; i++)
     {
         const uint64_t item_id = (uint64_t) p_items[i].id;
         const uint64_t item_addr_or_val = (uint64_t) p_items[i].val;
-	    const uint64_t imm_or_abs = p_items[i].imm << 63;
-        //printf("Item Value: %i\n", item_val[i]);
+        const uint64_t imm_or_abs = p_items[i].imm << 63;
         const uint64_t item =
                 imm_or_abs |
                 (item_id << heap_address_bits) |
                 item_addr_or_val;
         items[i] = htobe64(item);
+	/* APM - the following is for picking up any values we may wish
+	 * to use for testing later. Place a star-slash at
+	 * the end of this line to include the below code. 
 	switch (p_items[i].id)
 	{
+	    // heap_count will need to be defined.
 	    case heap_counter : heap_count = p_items[i].val; break;
-	}
+	} /* */
     }
 
     // get start of heap
-    heap_start = buf + 8 + num_items * sizeof(uint64_t);
+    heap_start = (void *)&items[num_items];
 
     // insert scan_id at heap_start, 8 bytes
     scan_ptr = (uint64_t *) heap_start;
+    // APM - Should it be this:
     *scan_ptr = scan_id;
-    *scan_ptr = htobe64(scan_id);
-    ++scan_ptr;
-    vis_ptr = (struct DataType *) scan_ptr;
+    // ... or this?
+    // *scan_ptr = htobe64(scan_id);
+    vis_ptr = (struct DataType *) (scan_ptr+1);
     memcpy((void *)vis_ptr, (void *) &vis_data, sizeof(vis_data));
 
     // Create a test receiver.
     struct Receiver* receiver = create_test_receiver();
-    ASSERT_TRUE(receiver != NULL);
+    ASSERT_NE(receiver, nullptr);
 
     // Passing the buffer and stream to stream decode
     stream_decode(receiver->streams[0], buf, 0);
 
     // Testing
-    ASSERT_TRUE(receiver->streams[0] != NULL);
-    ASSERT_TRUE(receiver->buffers[0] != NULL);
-    ASSERT_TRUE(receiver->num_buffers != 0);
-    ASSERT_TRUE(num_baselines == receiver->buffers[0]->num_baselines);
-    ASSERT_TRUE(vis_ptr->fd == receiver->buffers[0]->vis_data->fd);
-    ASSERT_TRUE(vis_ptr->tci == receiver->buffers[0]->vis_data->tci);
+    ASSERT_NE(receiver->streams[0], nullptr);
+    ASSERT_NE(receiver->buffers[0], nullptr);
+    ASSERT_NE(receiver->num_buffers, 0);
+    EXPECT_EQ(num_baselines, receiver->buffers[0]->num_baselines);
+    EXPECT_EQ(vis_ptr->fd, receiver->buffers[0]->vis_data->fd);
+    EXPECT_EQ(vis_ptr->tci, receiver->buffers[0]->vis_data->tci);
 
     // Clean up.
     receiver_free(receiver);
