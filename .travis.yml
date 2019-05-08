@@ -86,24 +86,18 @@ jobs:
   
   - stage: test
     name: "Visbility Ingest Receiver"
-    addons:
-    apt:
-      sources:
-        - ubuntu-toolchain-r-test
-      packages:
-        - g++-6
     install:
     - pip install -r testing_requirements.txt
     script:
       - mkdir sip/science_pipeline_workflows/ingest_visibilities/recv_c/build 
-      - cd sip/science_pipeline_workflows/ingest_visibilities/recv_c/build
-      # - cmake -DCOVERALLS=ON -DCMAKE_BUILD_TYPE=Debug .. 
-      - CXX=/usr/bin/g++-6 CC=/usr/bin/gcc-6 cmake -DCOVERAGE=1 ..
+      - cd sip/science_pipeline_workflows/ingest_visibilities/recv_c/build 
+      - cmake -DCOVERAGE=1 ..
+      # - cmake -DCOVERALLS=ON -DCMAKE_BUILD_TYPE=Debug ..
       - cmake --build .
       - ctest 
       - ./test/recv_test
-  after_success:
-    - coveralls --root . -E ".*CMakeFiles.*"
+    after_success:
+      - coveralls --root . -E ".*CMakeFiles.*"
   # after_success:
   #   - coveralls --exclude lib --exclude tests --gcov-options '\-lp' 
     # install:
