@@ -2,16 +2,7 @@ cmake_minimum_required(VERSION 3.1)
 project(vis_recv_c C CXX)
 find_package(Threads REQUIRED)
 
-option(COVERALLS "Turn on coveralls support" OFF)
-option(COVERALLS_UPLOAD "Upload the generated coveralls json" ON)
-
-set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} 
-	${PROJECT_SOURCE_DIR}/coveralls-cmake/cmake)
-
-if (COVERALLS)
-	include(Coveralls)
-	coveralls_turn_on_coverage()
-endif()
+SET(COVERAGE OFF CACHE BOOL "Coverage")
 
 # List of source files.
 include_directories(src)
@@ -36,13 +27,9 @@ target_link_libraries(vis_recv Threads::Threads)
 add_executable(recv src/main.c)
 target_link_libraries(recv vis_recv Threads::Threads)
 
-# Setup the coveralls target and tell it to gather
-# coverage data for all the lib sources.
-if (COVERALLS)
-	coveralls_setup(
-        "${recv_SRC}" 
-        ${COVERALLS_UPLOAD}                 
-        "${PROJECT_SOURCE_DIR}/coveralls-cmake/cmake")
+if (COVERAGE)
+    target_compile_options(tests PRIVATE --coverage)
+    target_link_libraries(tests PRIVATE --coverage)
 endif()
 
 # Build tests.
