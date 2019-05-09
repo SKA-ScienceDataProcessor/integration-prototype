@@ -1,7 +1,7 @@
 [![Build Status](https://travis-ci.com/SKA-ScienceDataProcessor/integration-prototype.svg?branch=master)](https://travis-ci.com/SKA-ScienceDataProcessor/integration-prototype)
 [![codecov](https://codecov.io/gh/SKA-ScienceDataProcessor/integration-prototype/branch/master/graph/badge.svg)](https://codecov.io/gh/SKA-ScienceDataProcessor/integration-prototype)
 
-[![Coverage Status](https://coveralls.io/repos/github/SKA-ScienceDataProcessor/integration-prototype/badge.svg)](https://coveralls.io/github/SKA-ScienceDataProcessor/integration-prototype)
+[![Coverage Status](https://coveralls.io/repos/github/SKA-ScienceDataProcessor/integration-prototype/badge.svg?branch=feature/c_travis)](https://coveralls.io/github/SKA-ScienceDataProcessor/integration-prototype?branch=feature/c_travis)
 
 # SDP Integration Prototype
 
