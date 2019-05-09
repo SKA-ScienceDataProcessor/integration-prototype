@@ -88,5 +88,13 @@ jobs:
     name: "Visbility Ingest Receiver"
     install:
     - pip install -r testing_requirements.txt
+    # script:
+    #   ./tools/run_c_tests.sh
     script:
-      ./tools/run_c_tests.sh
+      - mkdir sip/science_pipeline_workflows/ingest_visibilities/recv_c/build 
+      - cd sip/science_pipeline_workflows/ingest_visibilities/recv_c/build 
+      - cmake --enable-gcov .. 
+      - make 
+      - make check
+    after_success:
+      - coveralls --exclude lib --exclude tests --gcov-options '\-lp'
