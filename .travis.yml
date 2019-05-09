@@ -89,22 +89,6 @@ jobs:
     install:
     - pip install -r testing_requirements.txt
     script:
-      - mkdir sip/science_pipeline_workflows/ingest_visibilities/recv_c/build 
-      - cd sip/science_pipeline_workflows/ingest_visibilities/recv_c/build 
-      # - cmake -DCOVERAGE=1 ..
-      - cmake -DCOVERALLS=ON -DCMAKE_BUILD_TYPE=Debug ..
-      - cmake --build . && cmake --build . --target coveralls
-      - ctest 
-      - ./test/recv_test
+      ./tools/run_c_tests.sh
     # after_success:
     #   - coveralls --root . -E ".*CMakeFiles.*"
-  # after_success:
-  #   - coveralls --exclude lib --exclude tests --gcov-options '\-lp' 
-    # install:
-    # # (fake) install dependencies (usually involves wget, configure, make, ...)
-    # # install into cache folder (build binaries+headers only, no sources and do NOT build there)
-    # - mkdir -p $HOME/.cache
-    # - touch $HOME/.cache/mydependency.so
-    # script: ./tools/build_test.sh
-    # after_success:
-    #   - bash <(curl -s https://codecov.io/bash) -t uuid-repo-token
