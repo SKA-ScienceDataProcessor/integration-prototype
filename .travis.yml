@@ -90,5 +90,3 @@ jobs:
     - pip install -r testing_requirements.txt
     script:
       ./tools/run_c_tests.sh
-    # after_success:
-    #   - coveralls --root . -E ".*CMakeFiles.*"
