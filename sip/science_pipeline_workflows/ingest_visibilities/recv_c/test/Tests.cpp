@@ -216,6 +216,8 @@ TEST(Stream, test_stream_receive)
     EXPECT_EQ(num_baselines, receiver->buffers[0]->num_baselines);
     EXPECT_EQ(vis_ptr->fd, receiver->buffers[0]->vis_data->fd);
     EXPECT_EQ(vis_ptr->tci, receiver->buffers[0]->vis_data->tci);
+    EXPECT_FLOAT_EQ(vis_ptr->vis[1].x, receiver->buffers[0]->vis_data->vis[1].x);
+    EXPECT_FLOAT_EQ(vis_ptr->vis[2].y, receiver->buffers[0]->vis_data->vis[2].y);
 
     // Clean up.
     receiver_free(receiver);
