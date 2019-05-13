@@ -32,7 +32,9 @@ jobs:
     - docker swarm init
     - docker service create -p 6379:6379 --name=config_db redis:5.0.1-alpine
     script: ./tools/run_tests.sh sip/execution_control/configuration_db
-    after_success: coveralls
+    after_success:
+    - codecov
+    - coveralls
 
   - stage: test
     name: "Execution Control: Processing Block Controller"
@@ -44,7 +46,9 @@ jobs:
     - docker service create -p 6379:6379 --name=config_db redis:5.0.1-alpine
     script:
     - ./tools/run_tests.sh sip/execution_control/processing_block_controller
-    after_success: coveralls
+    after_success:
+    - codecov
+    - coveralls
 
   - stage: test
     name: "Execution Control: Processing Controller"
@@ -56,7 +60,9 @@ jobs:
     - docker service create -p 6379:6379 --name=config_db redis:5.0.1-alpine
     script:
     - ./tools/run_tests.sh sip/execution_control/processing_controller
-    after_success: coveralls
+    after_success:
+    - codecov
+    - coveralls
 
   - stage: test
     name: "Execution Control: Master Controller"
@@ -67,7 +73,9 @@ jobs:
       - docker swarm init
       - docker service create -p 6379:6379 --name=config_db redis:5.0.1-alpine
     script: ./tools/run_tests.sh sip/execution_control/master_controller
-    after_success: coveralls
+    after_success:
+    - codecov
+    - coveralls
 
   - stage: test
     name: "Tango Control: Flask Master"
@@ -75,18 +83,24 @@ jobs:
     - pip install -r testing_requirements.txt
     - pip install -r sip/tango_control/flask_master/requirements.txt
     script: ./tools/run_tests.sh sip/tango_control/flask_master
-    after_success: coveralls
+    after_success:
+    - codecov
+    - coveralls
 
   - stage: test
     name: "Platform: Logging library (skasip-logging)"
     install:
     - pip install -r testing_requirements.txt
     script: ./tools/run_tests.sh sip/platform/logging
-    after_success: coveralls
+    after_success:
+    - codecov
+    - coveralls
   
-#  - stage: test
-#    name: "Visibility Ingest Receiver"
-#    install:
-#    - pip install -r testing_requirements.txt
-#    script:
-#      ./tools/run_c_tests.sh
+  - stage: test
+    name: "Visibility Ingest Receiver"
+    install:
+    - pip install -r testing_requirements.txt
+    - pip install urllib3==1.21.1
+    - pip install cpp-coveralls==0.4.2
+    script:
+      ./tools/run_c_tests.sh
