@@ -92,9 +92,7 @@ jobs:
     install:
     - pip install -r testing_requirements.txt
     script: ./tools/run_tests.sh sip/platform/logging
-    after_success:
-    - codecov
-    - coveralls
+    after_success: coveralls
   
 #  - stage: test
 #    name: "Visibility Ingest Receiver"
