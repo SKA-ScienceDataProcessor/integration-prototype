@@ -88,5 +88,6 @@ jobs:
     name: "Visbility Ingest Receiver"
     install:
     - pip install -r testing_requirements.txt
+    - apt-get install cppcheck
     script:
       ./tools/run_c_tests.sh
