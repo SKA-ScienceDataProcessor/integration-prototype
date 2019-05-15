@@ -31,20 +31,6 @@ if (COVERALLS)
         "${PROJECT_SOURCE_DIR}/coveralls-cmake/cmake")
 endif()
 
-find_program(CMAKE_CXX_CPPCHECK NAMES cppcheck)
-
-if (CMAKE_CXX_CPPCHECK)
-    message("-- Cppcheck found " ${CMAKE_CXX_CPPCHECK})
-    list(
-        APPEND CMAKE_CXX_CPPCHECK
-            "--enable=warning,style,portability" 
-            "--suppress=*:${PROJECT_SOURCE_DIR}/gtest*"
-    )
-else()
-    message("-- Cppcheck not found")
-    set(CMAKE_CXX_CPPCHECK "")
-endif()
-
 # Get version number from file and add to definitions for compiler.
 file(STRINGS "VERSION" RECV_VERSION)
 add_definitions(-DRECV_VERSION="${RECV_VERSION}")
