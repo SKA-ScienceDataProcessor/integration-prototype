@@ -44,7 +44,7 @@ add_executable(recv src/main.c)
 target_link_libraries(recv vis_recv Threads::Threads)
 
 # Build tests.
-enable_testing()
+include(CTest)
 add_subdirectory(test)
 
 # Build unit testing framework.
