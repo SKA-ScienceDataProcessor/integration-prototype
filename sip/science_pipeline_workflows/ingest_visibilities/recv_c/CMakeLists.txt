@@ -5,6 +5,9 @@ find_package(Threads REQUIRED)
 option(COVERALLS "Turn on coveralls support" OFF)
 option(COVERALLS_UPLOAD "Upload the generated coveralls json" ON)
 
+# Include extra CMake files that are used for testing and linting.
+include(${PROJECT_SOURCE_DIR}/cmake/clang_tools.cmake)
+
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} 
 	${PROJECT_SOURCE_DIR}/coveralls-cmake/cmake)
 
