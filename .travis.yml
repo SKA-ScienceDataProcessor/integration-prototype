@@ -89,6 +89,5 @@ jobs:
     install:
     - pip install -r testing_requirements.txt
     - sudo apt-get install cppcheck -y
-    - sudo apt-get install clang -y
     script:
       ./tools/run_c_tests.sh
