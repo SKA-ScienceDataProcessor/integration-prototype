@@ -88,11 +88,7 @@ jobs:
     name: "Visbility Ingest Receiver"
     install:
     - pip install -r testing_requirements.txt
-    addons:
-        apt:
-            sources:
-                - llvm-toolchain-trusty-5.0
-            packages:
-                - clang-5.0
+    compiler:
+      - clang
     script:
       ./tools/run_c_tests.sh
