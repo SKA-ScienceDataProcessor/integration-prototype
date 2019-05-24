@@ -86,9 +86,10 @@ jobs:
   
   - stage: test
     name: "Visbility Ingest Receiver"
-    install:
-    - pip install -r testing_requirements.txt
     compiler:
       - clang
+    install:
+    - pip install -r testing_requirements.txt
+    - sudo apt-get install cppcheck -y
     script:
       ./tools/run_c_tests.sh
