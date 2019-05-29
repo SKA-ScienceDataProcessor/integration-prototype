@@ -5,14 +5,6 @@ find_package(Threads REQUIRED)
 option(COVERALLS "Turn on coveralls support" OFF)
 option(COVERALLS_UPLOAD "Upload the generated coveralls json" ON)
 
-# Include extra CMake files that are used for testing and linting.
-include(${PROJECT_SOURCE_DIR}/cmake/clang_tools.cmake)
-
-option(WERROR "Turn warnings into errors" OFF)
-if (WERROR)
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Werror")
-endif ()
-
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} 
 	${PROJECT_SOURCE_DIR}/coveralls-cmake/cmake)
 
@@ -38,6 +30,14 @@ if (COVERALLS)
         ${COVERALLS_UPLOAD}                 
         "${PROJECT_SOURCE_DIR}/coveralls-cmake/cmake")
 endif()
+
+# Include extra CMake files that are used for testing and linting.
+include(${PROJECT_SOURCE_DIR}/cmake/clang_tools.cmake)
+
+option(WERROR "Turn warnings into errors" OFF)
+if (WERROR)
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Werror")
+endif ()
 
 # Get version number from file and add to definitions for compiler.
 file(STRINGS "VERSION" RECV_VERSION)
