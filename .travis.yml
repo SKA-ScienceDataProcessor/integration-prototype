@@ -12,6 +12,10 @@ language:
 - python
 - cpp
 
+compiler:
+- clang
+- gcc
+
 python:
 - 3.6
 
@@ -94,7 +98,13 @@ jobs:
     name: "Visibility Ingest Receiver"
     install:
     - pip install -r testing_requirements.txt
-    - sudo apt-get install cppcheck -y
+    - sudo apt-get install -y cppcheck
+    - sudo apt-get install -y gcc
+    - sudo apt-get install -y g++
+    - sudo apt-get install -y clang
+    - sudo apt-get install -y clang-tidy
+    - sudo apt-get install -y clang-tools
+    - sudo apt-get install -y clang-format
     - pip install urllib3==1.21.1
     - pip install cpp-coveralls==0.4.2
     script:
