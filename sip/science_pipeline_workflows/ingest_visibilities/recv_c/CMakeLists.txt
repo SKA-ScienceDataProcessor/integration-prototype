@@ -8,8 +8,10 @@ option(COVERALLS_UPLOAD "Upload the generated coveralls json" ON)
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} 
 	${PROJECT_SOURCE_DIR}/coveralls-cmake/cmake)
 
-include(Coveralls)
-coveralls_turn_on_coverage()
+if (COVERALLS)
+	include(Coveralls)
+	coveralls_turn_on_coverage()
+endif()
 
 # List of source files.
 include_directories(src)
@@ -22,18 +24,12 @@ set(recv_SRC
     ${PROJECT_SOURCE_DIR}/src/timer.c
 )
 
-coveralls_setup(
-    "${recv_SRC}"
-    ${COVERALLS_UPLOAD}
-    "${PROJECT_SOURCE_DIR}/coveralls-cmake/cmake")
-
-# Include extra CMake files that are used for testing and linting.
-include(${PROJECT_SOURCE_DIR}/cmake/clang_tools.cmake)
-
-option(WERROR "Turn warnings into errors" OFF)
-if (WERROR)
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Werror")
-endif ()
+if (COVERALLS)
+	coveralls_setup(
+        "${recv_SRC}"
+        ${COVERALLS_UPLOAD}
+        "${PROJECT_SOURCE_DIR}/coveralls-cmake/cmake")
+endif()
 
 # Get version number from file and add to definitions for compiler.
 file(STRINGS "VERSION" RECV_VERSION)
@@ -52,5 +48,12 @@ include(CTest)
 add_subdirectory(test)
 
 # Build unit testing framework.
-
 add_subdirectory(gtest)
+
+# Include extra CMake files that are used for testing and linting.
+include(${PROJECT_SOURCE_DIR}/cmake/clang_tools.cmake)
+
+option(WERROR "Turn warnings into errors" OFF)
+if (WERROR)
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Werror")
+endif ()
