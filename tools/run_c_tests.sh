@@ -12,7 +12,6 @@ make
 cd .. && rm -r -f build && mkdir build && cd build
 cmake -DCOVERALLS=ON -DCMAKE_BUILD_TYPE=Debug ..
 make
-./test/recv_test
 make coveralls
 
 ctest -T memcheck
