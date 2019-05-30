@@ -4,6 +4,7 @@ find_package(Threads REQUIRED)
 
 option(COVERALLS "Turn on coveralls support" OFF)
 option(COVERALLS_UPLOAD "Upload the generated coveralls json" ON)
+option(ADDRESS_SANITIZER "Enable Clang AddressSanitizer" OFF)
 
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} 
 	${PROJECT_SOURCE_DIR}/coveralls-cmake/cmake)
@@ -31,6 +32,13 @@ if (COVERALLS)
         "${PROJECT_SOURCE_DIR}/coveralls-cmake/cmake")
 endif()
 
+# Include extra CMake files that are used for testing and linting.
+if (ADDRESS_SANITIZER)
+    message(STATUS "AddressSanitizer enabled for debug build")
+    set(CMAKE_CXX_FLAGS_DEBUG
+        "${CMAKE_CXX_FLAGS_DEBUG} -O1 -fno-omit-frame-pointer -fsanitize=address")
+endif ()
+
 # Get version number from file and add to definitions for compiler.
 file(STRINGS "VERSION" RECV_VERSION)
 add_definitions(-DRECV_VERSION="${RECV_VERSION}")
@@ -49,11 +57,3 @@ add_subdirectory(test)
 
 # Build unit testing framework.
 add_subdirectory(gtest)
-
-# Include extra CMake files that are used for testing and linting.
-include(${PROJECT_SOURCE_DIR}/cmake/clang_tools.cmake)
-
-option(WERROR "Turn warnings into errors" OFF)
-if (WERROR)
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Werror")
-endif ()
