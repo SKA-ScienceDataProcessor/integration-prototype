@@ -1,20 +1,11 @@
-cmake_minimum_required(VERSION 3.1)
+cmake_minimum_required(VERSION 3.2)
 project(vis_recv_c C CXX)
 find_package(Threads REQUIRED)
 
-option(COVERALLS "Turn on coveralls support" OFF)
-option(COVERALLS_UPLOAD "Upload the generated coveralls json" ON)
-option(ADDRESS_SANITIZER "Enable Clang AddressSanitizer" OFF)
-
-set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} 
-	${PROJECT_SOURCE_DIR}/coveralls-cmake/cmake)
-
-if (COVERALLS)
-	include(Coveralls)
-	coveralls_turn_on_coverage()
-endif()
-
+# -----------------------------------------------------------------------------
 # List of source files.
+# -----------------------------------------------------------------------------
+
 include_directories(src)
 set(recv_SRC
     ${PROJECT_SOURCE_DIR}/src/buffer.c
@@ -25,6 +16,21 @@ set(recv_SRC
     ${PROJECT_SOURCE_DIR}/src/timer.c
 )
 
+# -----------------------------------------------------------------------------
+# Coveralls
+# -----------------------------------------------------------------------------
+
+option(COVERALLS "Turn on coveralls support" OFF)
+option(COVERALLS_UPLOAD "Upload the generated coveralls json" ON)
+
+set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH}
+	${PROJECT_SOURCE_DIR}/coveralls-cmake/cmake)
+
+if (COVERALLS)
+	include(Coveralls)
+	coveralls_turn_on_coverage()
+endif()
+
 if (COVERALLS)
 	coveralls_setup(
         "${recv_SRC}"
@@ -32,12 +38,38 @@ if (COVERALLS)
         "${PROJECT_SOURCE_DIR}/coveralls-cmake/cmake")
 endif()
 
-# Include extra CMake files that are used for testing and linting.
-if (ADDRESS_SANITIZER)
-    message(STATUS "AddressSanitizer enabled for debug build")
-    set(CMAKE_CXX_FLAGS_DEBUG
-        "${CMAKE_CXX_FLAGS_DEBUG} -O1 -fno-omit-frame-pointer -fsanitize=address")
-endif ()
+# -----------------------------------------------------------------------------
+# Google Sanitizers
+# -----------------------------------------------------------------------------
+
+if(ENABLE_ASAN)
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O1")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fuse-ld=gold")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fno-omit-frame-pointer")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fsanitize=address")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fsanitize=leak")
+endif()
+
+if(ENABLE_USAN)
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fuse-ld=gold")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fsanitize=undefined")
+endif()
+
+if(ENABLE_TSAN)
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fuse-ld=gold")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fsanitize=thread")
+endif()
+
+# -----------------------------------------------------------------------------
+# Valgrind
+# -----------------------------------------------------------------------------
+
+include (CTest)
+
+# -----------------------------------------------------------------------------
+# Unit test
+# -----------------------------------------------------------------------------
 
 # Get version number from file and add to definitions for compiler.
 file(STRINGS "VERSION" RECV_VERSION)
