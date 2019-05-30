@@ -8,10 +8,8 @@ option(COVERALLS_UPLOAD "Upload the generated coveralls json" ON)
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} 
 	${PROJECT_SOURCE_DIR}/coveralls-cmake/cmake)
 
-if (COVERALLS)
-	include(Coveralls)
-	coveralls_turn_on_coverage()
-endif()
+include(Coveralls)
+coveralls_turn_on_coverage()
 
 # List of source files.
 include_directories(src)
@@ -24,12 +22,10 @@ set(recv_SRC
     ${PROJECT_SOURCE_DIR}/src/timer.c
 )
 
-if (COVERALLS)
-	coveralls_setup(
-        "${recv_SRC}" 
-        ${COVERALLS_UPLOAD}                 
-        "${PROJECT_SOURCE_DIR}/coveralls-cmake/cmake")
-endif()
+coveralls_setup(
+    "${recv_SRC}"
+    ${COVERALLS_UPLOAD}
+    "${PROJECT_SOURCE_DIR}/coveralls-cmake/cmake")
 
 # Include extra CMake files that are used for testing and linting.
 include(${PROJECT_SOURCE_DIR}/cmake/clang_tools.cmake)
