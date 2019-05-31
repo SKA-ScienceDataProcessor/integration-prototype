@@ -17,7 +17,7 @@ make coveralls
 echo -e "\n ${bold}*** Running Valgrind using Ctest testing tool *** ${normal} \n"
 ctest -T memcheck
 
-echo -e "\n ${bold}*** Running Undefined Behavior Sanitizer *** ${normal} \n"
+echo -e "\n ${bold}*** Running Undefined Behaviour Sanitizer *** ${normal} \n"
 cd .. && rm -r -f build && mkdir build && cd build
 cmake -DENABLE_USAN=ON ..
 make
