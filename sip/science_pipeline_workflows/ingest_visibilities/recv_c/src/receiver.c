@@ -120,6 +120,8 @@ void receiver_free(struct Receiver* self)
     for (int i = 0; i < self->num_streams; ++i) stream_free(self->streams[i]);
     for (int i = 0; i < self->num_buffers; ++i) buffer_free(self->buffers[i]);
     pthread_mutex_destroy(&self->lock);
+    free(self->streams);
+    free(self->buffers);
     free(self->output_root);
     free(self);
 }
