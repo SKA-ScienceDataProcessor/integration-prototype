@@ -1,6 +1,8 @@
-cmake_minimum_required(VERSION 3.2)
+cmake_minimum_required(VERSION 3.6)
 project(vis_recv_c C CXX)
 find_package(Threads REQUIRED)
+
+set(CMAKE_CXX_STANDARD 14)
 
 # -----------------------------------------------------------------------------
 # List of source files.
