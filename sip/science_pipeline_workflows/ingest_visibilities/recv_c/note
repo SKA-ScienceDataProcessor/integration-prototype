@@ -1,0 +1,24 @@
+
+```text
+sip/science_pipeline_workflows/ingest_visibilities/recv_c/test/Tests.cpp Outdated
+    *scan_ptr = scan_id;
+    *scan_ptr = htobe64(scan_id);
+    ++scan_ptr;
+    vis_ptr = (struct DataType *) scan_ptr;
+  @fdulwich
+fdulwich on 3 May  Member
+I think it would be a bit clearer to write this instead, and remove the line above it:
+
+Suggested change 
+    vis_ptr = (struct DataType *) scan_ptr;
+    struct DataType* vis_ptr = (struct DataType*) (scan_ptr + 1);
+The separate declaration of vis_ptr on line 140 is then also not required.
+
+  @apmcd42
+apmcd42 27 days ago  Member
+I have to admit a preference to putting all variable declarations at the start of a code block. We may be C programmers, but that doesn't make us anarchists :-)
+
+  @fdulwich
+fdulwich 27 days ago  Member
+My motivation for flagging this was because it's logically wrong to increment a variable called scan_ptr, which then makes it no longer point to the scan ID. Code like this is unsafe, as any future use of scan_ptr would then be an error.
+```
