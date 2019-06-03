@@ -49,7 +49,7 @@ setup(name='skasip_config_db',
       install_requires=[
           'redis==2.10.6',
           'jsonschema==2.6.0',
-          'jinja2==2.10',
+          'jinja2>=2.10.1',
           'PyYAML==4.2b4'
       ],
       zip_safe=False,
