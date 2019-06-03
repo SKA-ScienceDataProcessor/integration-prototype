@@ -12,6 +12,9 @@ language:
 - python
 - cpp
 
+compiler:
+  - gcc
+
 python:
 - 3.6
 
