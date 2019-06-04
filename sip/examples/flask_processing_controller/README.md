@@ -23,9 +23,8 @@ docker stack deploy -c docker-compose.dev.yml
 Start the Flask App:
 
 ```bash
-virtualenv -p python3 venv
-source venv/bin/activate
-pip install -r requirements.txt
+pipenv install
+pipenv shell
 export FLASK_APP=app/app.py
 export FLASK_DEBUG=True
 export SIP_PCI_LOG_LEVEL='DEBUG'
@@ -119,9 +118,8 @@ Once the Configuration Database container has started, this service (the
 Processing controller Inteface service) can be started as follows:
 
 ```bash
-virtualenv -p python3 venv
-source venv/bin/activate
-pip install -r requirements.txt
+pipenv install
+pipenv shell
 export FLASK_APP=app/app.py
 export FLASK_DEBUG=True
 export SIP_PCI_LOG_LEVEL='DEBUG'
@@ -173,8 +171,8 @@ Redis Database container exists (see instructions above). Unit tests can then
 be run with the following commands:
 
 ```bash
-virtualenv -p python3 venv
-source venv/bin/activate
+pipenv install
+pipenv shell
 pip install pytest
 pip install pytest-codestyle
 pip install pytest-pylint

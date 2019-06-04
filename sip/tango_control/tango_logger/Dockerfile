@@ -3,8 +3,9 @@ LABEL maintainer="Brian McIlwrath <brian.mcilwrath@stfc.ac.uk>"
 
 USER root
 
-COPY requirements.txt .
-RUN pip3 install -r requirements.txt
+COPY Pipfile* ./
+RUN pip3 install --no-cache-dir pipenv && \
+    pipenv install --system --deploy
 
 USER sip
 

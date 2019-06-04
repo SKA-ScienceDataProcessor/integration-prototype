@@ -2,8 +2,9 @@ FROM skasip/tango_docker_base:1.1.3
 LABEL maintainer="Benjamin Mort <ben.mort@gmail.com>"
 
 USER root
-COPY requirements.txt .
-RUN pip3 install -r requirements.txt
+COPY Pipfile* ./
+RUN pip3 install --no-cache-dir pipenv && \
+    pipenv install --system --deploy
 
 USER sip
 RUN mkdir ~/.ipython

@@ -1,0 +1,29 @@
+{
+    "_meta": {
+        "hash": {
+            "sha256": "dc5e1056bf230dccb4253de67a6f49300e06d501f32c8a494be63dc3be5b5043"
+        },
+        "pipfile-spec": 6,
+        "requires": {
+            "python_version": "3.6"
+        },
+        "sources": [
+            {
+                "name": "pypi",
+                "url": "https://pypi.org/simple",
+                "verify_ssl": true
+            }
+        ]
+    },
+    "default": {
+        "skasip-logging": {
+            "hashes": [
+                "sha256:a648d8ec50e2e29732b158c426868671f2153fbd2008563d50a77c07787868f9",
+                "sha256:b5645e62d8a0fc52381c32530ce6ca2b21223833b8a5a5525eb98957e22e8ce4"
+            ],
+            "index": "pypi",
+            "version": "==1.0.14"
+        }
+    },
+    "develop": {}
+}

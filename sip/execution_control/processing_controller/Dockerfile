@@ -1,8 +1,9 @@
 FROM python:3.6.4-alpine3.7
 LABEL maintainer="Benjamin Mort <ben.mort@gmail.com>"
 
-COPY requirements.txt .
-RUN pip install --no-cache-dir -U -r requirements.txt && \
+COPY Pipfile* ./
+RUN pip install --no-cache-dir pipenv && \
+    pipenv install --system --deploy && \
     find /usr/local/lib/python3.6/ -name 'tests' -exec rm -r '{}' + && \
     rm -r /root/.cache
 
