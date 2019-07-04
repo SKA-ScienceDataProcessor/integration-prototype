@@ -25,6 +25,8 @@ APP = celery.Celery(broker=BROKER, backend=BACKEND)
 
 
 execution_task_name = 'sip_pbc.tasks.execute_processing_block'
+if os.getenv('USE_DLG', None):
+    execution_task_name = 'dlg_pbc.tasks.execute_processing_block'
 
 class ProcessingBlockScheduler:
     # pylint: disable=too-few-public-methods
