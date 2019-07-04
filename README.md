@@ -4,6 +4,12 @@
 
 # SDP Integration Prototype
 
+*******************************************************************************************
+*******************************************************************************************
+# PLEASE NOTE THIS REPO IS NO LONGER UNDER DEVELOPMENT AND SHOULD BE CONSIDERED ARCHIVED
+*******************************************************************************************
+*******************************************************************************************
+
 ## Introduction
 
 The SDP Integration prototype is a project to develop a lightweight prototype 
