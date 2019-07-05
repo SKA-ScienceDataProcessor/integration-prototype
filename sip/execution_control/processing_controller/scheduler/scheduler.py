@@ -23,10 +23,10 @@ BROKER = os.getenv('CELERY_BROKER_URL', 'redis://localhost:6379/1')
 BACKEND = os.getenv('CELERY_RESULT_BACKEND', 'redis://localhost:6379/2')
 APP = celery.Celery(broker=BROKER, backend=BACKEND)
 
-
-execution_task_name = 'sip_pbc.tasks.execute_processing_block'
+EXECUTION_TASK_NAME = 'sip_pbc.tasks.execute_processing_block'
 if os.getenv('USE_DLG', None):
-    execution_task_name = 'dlg_pbc.tasks.execute_processing_block'
+    EXECUTION_TASK_NAME = 'dlg_pbc.tasks.execute_processing_block'
+
 
 class ProcessingBlockScheduler:
     # pylint: disable=too-few-public-methods
@@ -138,7 +138,7 @@ class ProcessingBlockScheduler:
                     LOG.info('------------------------------------')
                     LOG.info('>>> Executing %s! <<<', item)
                     LOG.info('------------------------------------')
-                    APP.send_task(execution_task_name, args=(item,))
+                    APP.send_task(EXECUTION_TASK_NAME, args=(item,))
                     self._num_pbcs += 1
                 else:
                     LOG.info('Waiting for resources for %s', next_pb[2])
