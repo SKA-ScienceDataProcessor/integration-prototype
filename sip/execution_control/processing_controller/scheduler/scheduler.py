@@ -4,19 +4,28 @@
 Implemented with a set of long running threads.
 """
 import datetime
+import os
 import sys
 import time
 from threading import Thread, active_count
 
 import celery
 from celery.app.control import Inspect
-from sip_pbc.tasks import APP, execute_processing_block
 
 from sip_config_db.scheduling import ProcessingBlock, ProcessingBlockList
 from sip_config_db.utils.datetime_utils import datetime_from_isoformat
 from .log import LOG
 from .pb_queue import ProcessingBlockQueue
 from .release import __service_name__
+
+
+BROKER = os.getenv('CELERY_BROKER_URL', 'redis://localhost:6379/1')
+BACKEND = os.getenv('CELERY_RESULT_BACKEND', 'redis://localhost:6379/2')
+APP = celery.Celery(broker=BROKER, backend=BACKEND)
+
+EXECUTION_TASK_NAME = 'sip_pbc.tasks.execute_processing_block'
+if os.getenv('USE_DLG', None):
+    EXECUTION_TASK_NAME = 'dlg_pbc.tasks.execute_processing_block'
 
 
 class ProcessingBlockScheduler:
@@ -129,7 +138,7 @@ class ProcessingBlockScheduler:
                     LOG.info('------------------------------------')
                     LOG.info('>>> Executing %s! <<<', item)
                     LOG.info('------------------------------------')
-                    execute_processing_block.delay(item)
+                    APP.send_task(EXECUTION_TASK_NAME, args=(item,))
                     self._num_pbcs += 1
                 else:
                     LOG.info('Waiting for resources for %s', next_pb[2])
@@ -137,7 +146,7 @@ class ProcessingBlockScheduler:
     def _monitor_pbc_status(self):
         """Monitor the PBC status."""
         LOG.info('Starting to Monitor PBC status.')
-        inspect = celery.current_app.control.inspect()
+        inspect = APP.control.inspect()
         workers = inspect.ping()
         start_time = time.time()
         while workers is None:
@@ -156,13 +165,12 @@ class ProcessingBlockScheduler:
         while True:
             LOG.info('Checking PBC status (%d/%d)', self._num_pbcs,
                      self._max_pbcs)
-            celery_app = celery.current_app
-            inspect = celery_app.control.inspect()
+            inspect = APP.control.inspect()
             workers = inspect.ping()
             if workers is None:
                 LOG.warning('PBC service not found!')
             else:
-                LOG.info('PBC state:  %s', celery_app.events.State())
+                LOG.info('PBC state:  %s', APP.events.State())
                 _active = inspect.active()
                 _scheduled = inspect.scheduled()
                 for worker in workers:
