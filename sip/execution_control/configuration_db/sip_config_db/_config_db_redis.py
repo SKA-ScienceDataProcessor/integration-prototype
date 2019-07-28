@@ -400,6 +400,7 @@ class ConfigDb:
         Args:
             names (str): Names of keys to delete
             pipeline (bool): True, start a transaction block. Default false.
+
         """
         if pipeline:
             self._pipeline.delete(*names)
@@ -430,6 +431,7 @@ class ConfigDb:
             event_name (str): Event list key.
             event_type (str): Event type field
             block_id (str): Event block Id field
+
         """
         self._db.rpush(event_name, dict(type=event_type, id=block_id))
 
