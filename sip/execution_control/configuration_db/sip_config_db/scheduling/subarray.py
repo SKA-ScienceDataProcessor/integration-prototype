@@ -86,6 +86,7 @@ class Subarray:
 
         Args:
             parameters_dict (dict): Dictionary of Subarray parameters
+
         """
         DB.set_hash_value(self._key, 'parameters', parameters_dict)
         self.publish("parameters_updated")
