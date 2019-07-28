@@ -12,6 +12,7 @@ def add_workflow_definitions(workflows_path: str):
 
     Args:
         workflows_path (str): Path used to store workflow definitions
+
     """
     workflow_files = [join(workflows_path, fn)
                       for fn in listdir(workflows_path)
