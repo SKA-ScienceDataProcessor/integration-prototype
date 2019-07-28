@@ -75,6 +75,7 @@ class ProcessingBlockQueue:
 
         Args:
             block_id (str):
+
         """
         with self._mutex:
             entry = self._block_map[block_id]
