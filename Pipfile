@@ -1,0 +1,28 @@
+[[source]]
+name = "pypi"
+url = "https://pypi.org/simple"
+verify_ssl = true
+
+[packages]
+docker = "*"
+jinja2 = "*"
+jsonschema = "*"
+m2r = "*"
+PyYAML = "*"
+redis = "~=2.10.6"
+Sphinx = "*"
+sphinx_rtd_theme = "*"
+sphinxcontrib-websupport = "*"
+
+[dev-packages]
+doc8 = "*"
+pylint = "*"
+pytest = "*"
+pytest-pylint = "*"
+pytest-codestyle = "*"
+pytest-pydocstyle = "*"
+pytest-cov = "*"
+sphinx-autobuild = "*"
+
+[requires]
+python_version = "3.6"

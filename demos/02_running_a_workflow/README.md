@@ -1,4 +1,4 @@
-# SIP Demo: Running a workflow
+# Demo 2: Running a workflow
 
 ## 1.  Introduction
 
