@@ -1,4 +1,4 @@
 redis==2.10.6
 jsonschema==2.6.0
 jinja2>=2.10.1
-PyYAML==4.2b4
+PyYAML==5.4
