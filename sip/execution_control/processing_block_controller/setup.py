@@ -23,7 +23,7 @@ setup(name='skasip-pbc',
           'redis==2.10.6',
           'jinja2>=2.10.1',
           'celery==4.2.1',
-          'PyYAML==4.2b4'
+          'PyYAML==5.4'
       ],
       zip_safe=False,
       classifiers=[

@@ -5,4 +5,4 @@ redis==2.10.6
 jinja2>=2.10.1
 celery==4.2.1
 kombu==4.3.0
-PyYAML==4.2b4
+PyYAML==5.4
